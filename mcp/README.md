@@ -12,8 +12,10 @@ MCP 관련 부속 파일 자리. 상태: 비어 있음.
 - 들어옴: 없음 / 나감: 없음 (예정)
 
 ## 관련
-- 루트 `mcp_server.py`: 자체 MCP 서버 (내부 도구 6종, 공개 도구 3종 예정)
+- 루트 `mcp_server.py`: 내부 도구 6종 골격, `X-Service-Key` 검문 (fetch_article·get_user_memory만 구현)
+- `tests/mcp/list_tools.py`: 도구 목록·키 검문 검수
 
 ## 할 일
 - [ ] 폴더 용도 확정
+- [ ] lookup_registry, check_pricing 구현 / probe_mcp, read_skill은 뼈대 완성 후
 - [ ] 공개 MCP 연결 설정 예시 작성 (공개 도구 3종 구현 후)
