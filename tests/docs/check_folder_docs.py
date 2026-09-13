@@ -20,7 +20,8 @@ def check_folder(name: str) -> dict:
     if readme.exists():
         text = readme.read_text(encoding="utf-8")
         result["readme_lines"] = len(text.splitlines())
-        result["readme_ok"] = result["readme_lines"] <= 30 and EM_DASH not in text
+        result["todo_section"] = "\n## 할 일\n" in text
+        result["readme_ok"] = result["readme_lines"] <= 30 and EM_DASH not in text and result["todo_section"]
     if changelog.exists():
         text = changelog.read_text(encoding="utf-8")
         entries = [line for line in text.splitlines() if line.startswith("- ")]
