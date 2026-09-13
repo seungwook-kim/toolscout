@@ -7,6 +7,7 @@
 - `curator.py`: 큐레이터. 선별, 사용자별 정렬, 검증 요청, 비움 판단 (예정)
 - `verifier.py`: 검증관. E2B 4단계, SKILL.md 판독 (예정)
 - `explainer.py`: 해설가. 원문 재조회, 카드 JSON 작성 (예정)
+- `tracing.py`: Langfuse 스팬 래퍼. 키 없음·인증 실패면 로컬 JSONL 로그로 대체, trace_id는 항상 발급
 
 ## 들어오는 데이터
 - `pipeline/`에서 정규화·중복 제거된 항목

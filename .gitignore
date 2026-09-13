@@ -1,6 +1,9 @@
 # 비밀값
 .env
 
+# Langfuse 대체 로컬 트레이스 로그
+toolscout_trace.jsonl
+
 # 파이썬 캐시·가상환경
 __pycache__/
 *.pyc
