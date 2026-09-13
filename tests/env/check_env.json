@@ -1,0 +1,82 @@
+{
+  "checked_at": "2026-09-13T11:05:20+00:00",
+  "python_version": "3.12.14",
+  "pip_check": {
+    "tool": "uv pip",
+    "returncode": 0,
+    "output": "Checked 92 packages in 4ms\nAll installed packages are compatible"
+  },
+  "langchain_core": {
+    "tool": "uv pip",
+    "version": "1.6.3",
+    "requires": [
+      "httpx",
+      "jsonpatch",
+      "langchain-protocol",
+      "langsmith",
+      "packaging",
+      "pydantic",
+      "pyyaml",
+      "tenacity",
+      "typing-extensions",
+      "uuid-utils"
+    ]
+  },
+  "imports": {
+    "langchain_core": {
+      "ok": true,
+      "version": "1.6.3"
+    },
+    "mcp": {
+      "ok": true,
+      "version": "2.2.0"
+    },
+    "anthropic": {
+      "ok": true,
+      "version": "1.5.0"
+    },
+    "google.genai": {
+      "ok": true,
+      "version": "2.23.0"
+    },
+    "langfuse": {
+      "ok": true,
+      "version": "4.15.2"
+    },
+    "e2b": {
+      "ok": true,
+      "version": "2.49.1"
+    },
+    "feedparser": {
+      "ok": true,
+      "version": "6.0.14"
+    },
+    "sqlmodel": {
+      "ok": true,
+      "version": "0.0.42"
+    }
+  },
+  "must_fail": {
+    "langgraph": {
+      "ok": false,
+      "error": "ModuleNotFoundError: No module named 'langgraph'"
+    },
+    "langchain": {
+      "ok": false,
+      "error": "ModuleNotFoundError: No module named 'langchain'"
+    }
+  },
+  "mcp_module_file": "site-packages/mcp/__init__.py",
+  "checks": {
+    "python_3_12": true,
+    "pip_check_pass": true,
+    "import_langgraph_ImportError": true,
+    "import_langchain_ImportError": true,
+    "import_langchain_core_ok": true,
+    "langchain_core_requires_no_langgraph": true,
+    "required_imports_ok": true,
+    "mcp_sdk_2x": true,
+    "mcp_not_shadowed": true
+  },
+  "pass": true
+}

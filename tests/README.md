@@ -5,7 +5,7 @@
 실행은 프로젝트 루트에서 `uv run python -m tests.<폴더>.<파일>` 형식으로 한다.
 
 ## 폴더
-- `env/`: 설치 환경 검사 (예정)
+- `env/check_env.py`: pip check, langgraph·langchain 미설치, 필수 import 검사 → `env/check_env.json`
 - `mcp/`: MCP 서버 도구 목록·키 검문 (예정)
 - `sources/`: 소스 수집 리포트 (예정)
 - `docs/check_folder_docs.py`: 주요 폴더 README 30줄·CHANGELOG 형식·긴 줄표 검사
