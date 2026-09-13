@@ -1,0 +1,68 @@
+{
+  "checked_at": "2026-09-13T13:45:37+00:00",
+  "total_in_window": 2233,
+  "counts": {
+    "openai": {
+      "fetched": 1192,
+      "in_window": 1,
+      "error": null
+    },
+    "google_ai": {
+      "fetched": 20,
+      "in_window": 0,
+      "error": null
+    },
+    "aitimes": {
+      "fetched": 50,
+      "in_window": 18,
+      "error": null
+    },
+    "geeknews": {
+      "fetched": 50,
+      "in_window": 38,
+      "error": null
+    },
+    "techcrunch_ai": {
+      "fetched": 19,
+      "in_window": 2,
+      "error": null
+    },
+    "venturebeat_ai": {
+      "fetched": 0,
+      "in_window": 0,
+      "error": "HTTP 429"
+    },
+    "reddit_localllama": {
+      "fetched": 25,
+      "in_window": 20,
+      "error": null
+    },
+    "hackernews": {
+      "fetched": 189,
+      "in_window": 189,
+      "error": null
+    },
+    "mcp_registry": {
+      "fetched": 2000,
+      "in_window": 1964,
+      "error": "페이지 상한 20회 도달, 일부만 수집"
+    },
+    "anthropic_skills": {
+      "fetched": 1,
+      "in_window": 1,
+      "error": null
+    }
+  },
+  "failed_sources": [
+    "venturebeat_ai",
+    "mcp_registry"
+  ],
+  "invalid_items_by_source": [],
+  "checks": {
+    "소스_10곳_모두_실행": true,
+    "정규화_스키마·창_유효": true,
+    "벤처비트_요약_500자_이하": true,
+    "실패는_기록되고_전체는_계속": true
+  },
+  "pass": true
+}
