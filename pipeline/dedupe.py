@@ -1,6 +1,6 @@
 """중복 제거: 링크가 같으면 하나로, 뉴스 제목이 비슷하면 대표 1건 + 함께 보도한 곳 목록으로 묶는다.
 
-MCP·스킬은 이름이 비슷해도 다른 도구일 수 있어 링크 중복만 제거한다.
+MCP·스킬은 이름이 비슷해도 다른 도구일 수 있어 제목으로 묶지 않는다. MCP는 링크가 아니라 이름으로 중복을 판단한다.
 """
 import re
 from difflib import SequenceMatcher
@@ -27,10 +27,12 @@ def dedupe(items: list[dict]) -> list[dict]:
     """입력은 normalize를 거친 항목. 출력 항목에는 also_reported_by [{source, url}]가 붙는다."""
     by_url: dict[str, dict] = {}
     for item in sorted(items, key=_rank):
-        if item["url"] in by_url:
-            by_url[item["url"]]["also_reported_by"].append({"source": item["source"], "url": item["url"]})
+        # 레지스트리에서는 다른 서버가 같은 저장소·웹사이트 링크를 공유하므로 MCP는 이름(제목)으로 구분한다
+        key = f"mcp:{item['title']}" if item["type"] == "mcp" else item["url"]
+        if key in by_url:
+            by_url[key]["also_reported_by"].append({"source": item["source"], "url": item["url"]})
         else:
-            by_url[item["url"]] = {**item, "also_reported_by": []}
+            by_url[key] = {**item, "also_reported_by": []}
 
     groups: list[dict] = []
     keys: list[str] = []
