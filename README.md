@@ -91,7 +91,7 @@ flowchart TD
 | LLM | Anthropic, Gemini 유료, OpenAI(대체) | 선별·검증·해설은 비용과 실패 비용이 달라 역할마다 모델을 나눈다. 전부 학습 미사용 요금제 |
 | 루프 | `agent/loop.py` 직접 구현 + `langchain-core` | 판단 루프는 직접 짜고, core에서는 도구 스키마와 메시지 형식만 빌린다 |
 | 자동화 | n8n | 시간, 순서, 재시도, 발송만 맡긴다 |
-| DB | SQLModel, SQLite(개발) / Supabase(운영) | `DATABASE_URL` 하나로 전환한다 |
+| DB | SQLModel, Supabase(Postgres) | 개발과 운영 모두 Supabase 하나, 연결은 `DATABASE_URL` |
 | 동작 검증 | E2B | 관리형 호스팅에서 도커 안 도커가 안 되므로 외부 마이크로 VM을 쓴다 |
 | 트레이싱 | Langfuse | 브리핑 1회가 트레이스 1개, 카드마다 `trace_id` |
 | 수집 | httpx, feedparser | RSS와 공개 API, 전부 무료 |
@@ -109,7 +109,7 @@ flowchart TD
 뼈대 완성 전이라 4단계의 브리핑 생성은 아직 동작하지 않는다.
 
 1. 환경 파일 복사: `cp .env.example .env`
-2. `.env`에 키 채우기: `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `MCP_SERVICE_KEY` 등
+2. `.env`에 키 채우기: `DATABASE_URL`(Supabase), `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `MCP_SERVICE_KEY` 등
 3. 실행: `docker compose up -d` (로컬 Langfuse까지 띄우려면 `docker compose --profile langfuse up -d`)
 4. 첫 브리핑 확인: `http://localhost:8000` 접속, 받은 메일의 카드마다 `trace_id`가 있는지 확인
 
