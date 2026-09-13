@@ -1,0 +1,23 @@
+[project]
+name = "toolscout"
+version = "0.1.0"
+description = "매일 아침 AI 소식과 새 MCP·스킬을 사용자 기준으로 골라 한글로 해설하는 개인 에이전트"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+# 기술 고정 목록. langchain(메타 패키지)·langgraph·임베딩·벡터DB는 넣지 않는다.
+dependencies = [
+    "fastapi>=0.141",
+    "uvicorn>=0.52",
+    "mcp>=2.2,<3",
+    "langchain-core>=1.6,<2",
+    "anthropic>=1.5",
+    "google-genai>=2.23",
+    "httpx>=0.28",
+    "feedparser>=6.0",
+    "sqlmodel>=0.0.42",
+    "langfuse>=4.15,<5",
+    "e2b>=2.49",
+]
+
+[tool.uv]
+package = false
