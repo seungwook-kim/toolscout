@@ -9,6 +9,7 @@
 - `mcp/`: MCP 서버 도구 목록·키 검문 (예정)
 - `sources/`: 소스 수집 리포트 (예정)
 - `docs/check_folder_docs.py`: 주요 폴더 README 30줄·CHANGELOG 형식·긴 줄표 검사
+- `docs/check_readme.py`: 루트 README 사양(절, 배지, mermaid, 이모지 규칙) 검사
 
 ## 들어오는 데이터
 - 각 폴더의 코드, 실제 외부 소스 응답
