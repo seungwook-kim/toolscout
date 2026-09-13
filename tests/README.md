@@ -11,6 +11,7 @@
 - `models/check_models.py`: 모델표·429·503 전환·공급자별 변환, 키 있으면 실제 호출
 - `db/check_tables.py`: 표 9개·Postgres DDL·제약, DATABASE_URL 있으면 Supabase에 실제 생성
 - `sources/run_today.py`: 10곳 실제 수집 → `sources/today_counts.json`, `sources/report.md`
+- `pipeline/run_dedupe.py`: 정리·중복 제거 단위 검사 + 오늘 전후 건수 → `pipeline/dedupe_counts.json`
 
 ## 들어오고 나가는 데이터
 - 들어옴: 각 폴더의 코드, 실제 외부 소스 응답
@@ -20,6 +21,5 @@
 - 모든 주요 폴더 (기능 하나 끝날 때마다 여기에 검수 스크립트를 남긴다)
 
 ## 할 일
-- [ ] `pipeline/` 중복 제거 전후 건수 (착수 9번)
 - [ ] `agent/` 루프 실행, `mcp/list_tools.py` 도구 6개·키 검문 (착수 10·11번)
 - [ ] 키·Docker·Supabase 준비 후 미실행 검수 재실행
