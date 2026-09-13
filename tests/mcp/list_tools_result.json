@@ -1,0 +1,46 @@
+{
+  "tools": [
+    "check_pricing",
+    "fetch_article",
+    "get_user_memory",
+    "lookup_registry",
+    "probe_mcp",
+    "read_skill"
+  ],
+  "no_key_status": 401,
+  "wrong_key_status": 401,
+  "mcp_without_trailing_slash": 6,
+  "calls": {
+    "other_domain": {
+      "status": "rejected",
+      "reason": "허용 도메인 밖: example.com",
+      "text_head": ""
+    },
+    "other_user": {
+      "status": "rejected",
+      "reason": "브리핑 사용자 본인이 아님",
+      "text_head": ""
+    },
+    "not_implemented": {
+      "status": "not_implemented",
+      "tool": "lookup_registry",
+      "text_head": ""
+    },
+    "allowed_fetch": {
+      "status": "ok",
+      "url": "https://github.com/modelcontextprotocol/python-sdk",
+      "truncated": true,
+      "text_head": "<data source=\"https://github.com/modelcontextprotocol/python"
+    }
+  },
+  "checks": {
+    "tools_list_6개": true,
+    "키_없으면_401": true,
+    "틀린_키_401": true,
+    "허용_밖_도메인_rejected": true,
+    "다른_사용자_rejected": true,
+    "미구현_도구_not_implemented": true,
+    "허용_도메인_data_감싸기_3000자": true
+  },
+  "pass": true
+}
