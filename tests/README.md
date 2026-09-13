@@ -7,6 +7,7 @@
 ## 폴더
 - `env/check_env.py`: pip check, langgraph·langchain 미설치, 필수 import 검사 → `env/check_env.json`
 - `env/check_env_example.py`: `.env.example` 키 19개, `.env` git 무시 검사
+- `models/check_models.py`: 모델표·출처·하드코딩·429·503 전환·공급자별 변환 검사, 키 있으면 실제 호출
 - `mcp/`: MCP 서버 도구 목록·키 검문 (예정)
 - `sources/`: 소스 수집 리포트 (예정)
 - `docs/check_folder_docs.py`: 주요 폴더 README 30줄·CHANGELOG 형식·긴 줄표 검사
