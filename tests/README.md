@@ -7,7 +7,8 @@
 - `docs/check_readme.py`: 루트 README 사양(절, 배지, mermaid, 이모지 규칙)
 - `env/check_env.py`: pip check, langgraph·langchain 미설치, 필수 import → `env/check_env.json`
 - `env/check_env_example.py`: `.env.example` 키 19개, `.env` git 무시
-- `env/check_docker.py`: compose config·Dockerfile (feat/05-docker 브랜치에 있음)
+- `env/check_config.py`: .env 로더 해석·깨진 줄 경고·값 비출력, 키는 설정됨/비어있음만
+- `env/check_docker.py`: 로컬 docker 없으면 GitHub Actions `ci` 결과(4단계)로 판정, compose·Dockerfile 정적 검사
 - `models/check_models.py`: 모델표·429·503 전환·공급자별 변환, 키 있으면 실제 호출
 - `db/check_tables.py`: 표 9개·Postgres DDL·제약, DATABASE_URL 있으면 Supabase에 실제 생성
 - `sources/run_today.py`: 10곳 실제 수집 → `sources/today_counts.json`, `sources/report.md`
