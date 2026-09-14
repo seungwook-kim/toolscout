@@ -47,6 +47,7 @@ class User(SQLModel, table=True):
     channel: str = "email"
     class_code: str | None = Field(default=None, index=True)
     is_admin: bool = False
+    is_test: bool = Field(default=False, index=True)  # 개발 모드 가짜 프로필. 무료 모델에는 이 사용자만 보낸다
     mcp_key_hash: str | None = Field(default=None, unique=True)
     created_at: datetime = Field(default_factory=utcnow)
 
@@ -201,6 +202,33 @@ def get_engine(url: URL | None = None) -> Engine:
 
 def init_db(engine: Engine | None = None) -> None:
     SQLModel.metadata.create_all(engine or get_engine())
+
+
+# 개발 모드 가짜 프로필 2개 (계획안 부록 B 검수 기준의 프로필 A·B). .test 도메인이라 실제로 발송되지 않는다
+TEST_USERS = [
+    {"email": "test-backend@toolscout.test", "role": "자바 백엔드 개발자",
+     "profile_tools_tags": ["java", "spring", "n8n"], "profile_free_text": "n8n으로 사내 AI 브리핑 봇을 만든다"},
+    {"email": "test-marketer@toolscout.test", "role": "마케터",
+     "profile_tools_tags": ["notion"], "profile_free_text": "노션으로 캠페인 기록과 콘텐츠 일정을 관리한다"},
+]
+
+
+def seed_test_users(engine: Engine | None = None) -> list[int]:
+    """가짜 프로필을 이메일 기준으로 한 번만 만든다. 반환: 사용자 id 목록."""
+    from sqlmodel import select
+
+    ids = []
+    with Session(engine or get_engine()) as s:
+        for profile in TEST_USERS:
+            user = s.exec(select(User).where(User.email == profile["email"])).first()
+            if user is None:
+                user = User(**profile, is_test=True)
+                s.add(user)
+            user.is_test = True
+            s.commit()
+            s.refresh(user)
+            ids.append(user.id)
+    return ids
 
 
 @contextmanager

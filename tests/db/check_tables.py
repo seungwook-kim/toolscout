@@ -11,7 +11,7 @@ from pathlib import Path
 from sqlalchemy import CheckConstraint, inspect
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.schema import CreateTable
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, select
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -79,16 +79,31 @@ def url_checks() -> dict:
     }
 
 
-def live_create() -> str:
+def live_create() -> dict:
+    """Supabase에 표 9개를 만들고 가짜 프로필 2개를 넣는다. 이미 있는 표에 칸이 빠졌는지도 본다."""
     if not os.environ.get("DATABASE_URL"):
-        return "미실행(Supabase 미설정)"
+        return {"status": "미실행(DATABASE_URL 비어있음)", "ok": False}
     try:
         engine = db.get_engine()
         db.init_db(engine)
-        names = set(inspect(engine).get_table_names())
-        return "성공" if set(db.TABLES) <= names else f"누락 {sorted(set(db.TABLES) - names)}"
+        inspector = inspect(engine)
+        names = set(inspector.get_table_names())
+        user_columns = {c["name"] for c in inspector.get_columns("users")} if "users" in names else set()
+        test_ids = db.seed_test_users(engine)
+        with db.session(engine) as s:
+            test_users = s.exec(select(db.User).where(db.User.is_test == True)).all()  # noqa: E712
+        result = {
+            "status": "성공",
+            "tables_created": sorted(set(db.TABLES) & names),
+            "missing_tables": sorted(set(db.TABLES) - names),
+            "users_is_test_column": "is_test" in user_columns,
+            "test_user_ids": test_ids,
+            "test_users": [{"id": u.id, "role": u.role, "tools": u.profile_tools_tags} for u in test_users],
+        }
+        result["ok"] = not result["missing_tables"] and result["users_is_test_column"] and len(test_users) >= 2
+        return result
     except Exception as exc:
-        return f"실패 {type(exc).__name__}: {config.redact(str(exc))[:200]}"
+        return {"status": f"실패 {type(exc).__name__}: {config.redact(str(exc))[:200]}", "ok": False}
 
 
 def main() -> int:
@@ -107,10 +122,14 @@ def main() -> int:
         "check_제약_4개": CHECKS <= constraints,
         "sqlite_흔적_없음": "sqlite" not in (ROOT / "db.py").read_text(encoding="utf-8").lower(),
         "DATABASE_URL_없으면_명확한_에러": missing_url_raises(),
+        "users_is_test_칸": "is_test" in columns["users"],
+        "가짜_프로필_2개_정의": [u["role"] for u in db.TEST_USERS] == ["자바 백엔드 개발자", "마케터"],
         **url_checks(),
     }
+    live = live_create()
+    checks["supabase_표9개·가짜프로필2개"] = live["ok"]
     report = {"checks": checks, "missing_columns": missing, "json_columns": json_cols,
-              "live_create": live_create(), "pass": all(checks.values())}
+              "live_create": live, "pass": all(checks.values())}
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report["pass"] else 1
 

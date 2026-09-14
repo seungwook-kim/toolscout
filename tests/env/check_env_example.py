@@ -12,9 +12,9 @@ KEYS = [
     "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "E2B_API_KEY", "GITHUB_TOKEN", "SKILLSMP_API_KEY",
     "SUPABASE_URL", "SUPABASE_KEY", "DATABASE_URL", "LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST",
     "GMAIL_USER", "GMAIL_APP_PASSWORD", "MCP_SERVICE_KEY", "SESSION_SECRET", "DAILY_QUESTION_LIMIT",
-    "DAILY_PROBE_LIMIT", "ADMIN_EMAILS",
+    "DAILY_PROBE_LIMIT", "ADMIN_EMAILS", "DEV_MODE", "OPENROUTER_API_KEY",
 ]
-DEFAULTS = {"DAILY_QUESTION_LIMIT": "10", "DAILY_PROBE_LIMIT": "3"}
+DEFAULTS = {"DAILY_QUESTION_LIMIT": "10", "DAILY_PROBE_LIMIT": "3", "DEV_MODE": "1"}
 
 
 def main() -> int:
@@ -27,7 +27,7 @@ def main() -> int:
     tracked = subprocess.run(["git", "ls-files", "--error-unmatch", ".env"], cwd=ROOT, capture_output=True).returncode == 0
     checks = {
         "키_목록_일치": list(pairs) == KEYS,
-        "값은_비움_기본값_2개만": all(pairs.get(k, "") == DEFAULTS.get(k, "") for k in KEYS),
+        "값은_비움_기본값만": all(pairs.get(k, "") == DEFAULTS.get(k, "") for k in KEYS),
         "env_gitignore": ignored,
         "env_추적안됨": not tracked,
     }
