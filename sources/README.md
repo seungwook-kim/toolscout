@@ -6,7 +6,8 @@
 - `common.py`: 정규화 항목 모양, 정직한 User-Agent HTTP 클라이언트, 날짜 해석, SourceResult(stats 포함)
 - `rss.py`: RSS 6곳 (오픈AI, 구글 AI, AI타임스, 긱뉴스, 테크크런치 AI, 레딧)
 - `hackernews.py`: Algolia, AI 또는 LLM (optionalWords), points 20 이상
-- `mcp_registry.py`: 7일 창, GitHub 저장소 있는 서버, 게시자당 3건, 버전 업은 별 50 이상
+- `mcp_registry.py`: 7일 창, GitHub 저장소 있는 서버, 게시자당 3건, 버전 업 별 50 이상, 별 수 상위 신규 20·버전 업 10
+- `github_stars.py`: 별 수 조회와 items.stars·stars_checked_at 24시간 캐시 (DB 없으면 메모리만)
 - `anthropic_skills.py`: anthropics/skills 커밋
 - `collect.py`: 전체 수집. 필터 값·캐시를 받아 재측정 가능, 실패 소스는 기록하고 계속
 
@@ -18,6 +19,6 @@
 - `pipeline/`: 출력을 받아 정리·중복 제거 / `tests/sources/`: 오늘 건수 리포트
 
 ## 할 일
-- [ ] 수집량 기준 결정: 필터 후에도 912~943건 (MCP 7일 신규 등록만 648건)
-- [ ] MCP 수집 시간 137초 (버전 이력·별 수 조회). 날마다 캐시를 DB에 둘지
+- [ ] MCP 수집 115초 중 대부분이 레지스트리 목록·버전 이력 조회. 버전 이력도 캐시할지
+- [ ] 저장소를 공유하는 MCP 서버는 items.url(저장소 주소)이 겹친다. 브리핑 저장 때 처리
 - [ ] Glama, SkillsMP 2차 테스트 (계획안 9.1 측정예정)

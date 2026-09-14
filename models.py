@@ -51,18 +51,20 @@ PROD_MODELS: ModelTable = {
 # 선별·게이트는 빠른 모델, 검증관·해설가는 한국어가 되는 모델. 2026-09-14 실측(한국어 JSON 요약·도구 호출)으로 배정:
 # nex-n2.5-mini 0.9초·한글 0.9·도구 성공 / nex-n2.5-pro 2.3초·한글 0.9·도구 성공 / nemotron-3-super 7초·한글 0.9·도구 성공
 # gemma-4-31b·26b는 무료 공급자(Google AI Studio) 429가 반복돼 뺐다
+# OpenRouter 무료 모델은 크레딧이 없으면 하루 50회라, 호출이 많은 검증관·해설가는 Gemini 무료 티어를 기본으로 둔다
+# (2026-09-14 사용자 결정. 한도 출처: https://openrouter.ai/docs/api/reference/limits)
 DEV_MODELS: ModelTable = {
     "curator": {
         "primary": {"provider": "gemini", "model": "gemini-3.6-flash"},
         "fallback": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free"},
     },
     "verifier": {
-        "primary": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free"},
-        "fallback": {"provider": "openrouter", "model": "nvidia/nemotron-3-super-120b-a12b:free"},
+        "primary": {"provider": "gemini", "model": "gemini-3.6-flash"},
+        "fallback": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free"},
     },
     "explainer": {
-        "primary": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free"},
-        "fallback": {"provider": "openrouter", "model": "nvidia/nemotron-3-super-120b-a12b:free"},
+        "primary": {"provider": "gemini", "model": "gemini-3.6-flash"},
+        "fallback": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free"},
     },
     "gate": {
         "primary": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free"},
