@@ -17,6 +17,7 @@ dependencies = [
     "sqlmodel>=0.0.42",
     "langfuse>=4.15,<5",
     "e2b>=2.49",
+    "psycopg[binary]>=3.3.5",
 ]
 
 [tool.uv]

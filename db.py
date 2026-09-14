@@ -1,21 +1,30 @@
 """SQLModel 데이터 표 9개 (계획안 9.5).
 
 DB는 Supabase(Postgres) 하나로 간다. 연결 문자열은 .env의 DATABASE_URL에만 둔다.
-Postgres 드라이버 설치와 Supabase 프로젝트 설정은 뒤에서 한다.
+드라이버는 psycopg 3. Supabase에서 복사한 postgresql:// 문자열을 그대로 넣으면 여기서 변환한다.
+연결은 Session pooler(5432) 기준이다.
 기사 본문은 저장하지 않는다. items에는 요약, 링크, 메타데이터만 둔다 (작업 규칙 9).
 """
+import logging
 import os
 from contextlib import contextmanager
 from datetime import date as Date, datetime, timezone
 from functools import lru_cache
 from typing import Any, Iterator
+from urllib.parse import parse_qsl, unquote, urlsplit
 
 from sqlalchemy import CheckConstraint, Column, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import URL, Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
 
 import config  # noqa: F401  .env를 os.environ에 채운다
+
+log = logging.getLogger("toolscout.db")
+
+DRIVER = "postgresql+psycopg"
+SESSION_POOLER_PORT = 5432
+TRANSACTION_POOLER_PORT = 6543
 
 
 def utcnow() -> datetime:
@@ -153,15 +162,40 @@ class Question(SQLModel, table=True):
 TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions"]
 
 
-def database_url() -> str:
-    url = os.environ.get("DATABASE_URL", "").strip()
-    if not url:
+def database_url() -> URL:
+    raw = os.environ.get("DATABASE_URL", "").strip()
+    if not raw:
         raise RuntimeError("DATABASE_URL이 비어 있다. .env에 Supabase Postgres 연결 문자열을 넣는다.")
-    return url
+    return normalize_database_url(raw)
+
+
+def normalize_database_url(raw: str) -> URL:
+    """Supabase 연결 문자열을 psycopg용 SQLAlchemy URL로 바꾼다. 오류 문구에 값을 넣지 않는다.
+
+    - postgres://, postgresql:// → postgresql+psycopg://
+    - 비밀번호의 @ : / # ? 같은 특수문자는 인코딩했든 안 했든 처리한다 (마지막 @를 호스트 경계로 본다)
+    """
+    scheme, sep, rest = raw.partition("://")
+    if not sep or scheme not in ("postgres", "postgresql", DRIVER):
+        raise ValueError("DATABASE_URL은 postgresql://로 시작해야 한다")
+    userinfo, at, hostpart = rest.rpartition("@")
+    if not at:
+        raise ValueError("DATABASE_URL에 사용자·비밀번호 부분이 없다")
+    username, _, password = userinfo.partition(":")
+    parts = urlsplit("//" + hostpart)
+    try:
+        port = parts.port
+    except ValueError:
+        raise ValueError("DATABASE_URL의 포트가 숫자가 아니다") from None
+    if port == TRANSACTION_POOLER_PORT:
+        log.warning("DATABASE_URL이 Transaction pooler(6543)다. Session pooler(5432) 연결 문자열을 권장한다")
+    return URL.create(DRIVER, username=unquote(username) or None, password=unquote(password) or None,
+                      host=parts.hostname, port=port, database=unquote(parts.path.lstrip("/")) or None,
+                      query=dict(parse_qsl(parts.query)))
 
 
 @lru_cache
-def get_engine(url: str | None = None) -> Engine:
+def get_engine(url: URL | None = None) -> Engine:
     return create_engine(url or database_url(), pool_pre_ping=True)
 
 
