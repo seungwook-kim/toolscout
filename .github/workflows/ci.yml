@@ -1,0 +1,40 @@
+# push마다 Docker 구성을 검사한다. 로컬에 Docker가 없어서 GitHub 러너에서 확인한다.
+# compose 파일 검사 → app 이미지 빌드 → app 기동 → /api/health 200
+name: ci
+
+on:
+  push:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: compose 파일 검사
+        run: docker compose config -q
+
+      - name: app 이미지 빌드
+        run: docker compose build app
+
+      - name: app 기동
+        run: docker compose up -d app
+
+      - name: /api/health 200 확인
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/health || true)
+            if [ "$code" = "200" ]; then
+              echo "health 200"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "health 확인 실패"
+          docker compose logs app
+          exit 1
+
+      - name: 정리
+        if: always()
+        run: docker compose down -v
