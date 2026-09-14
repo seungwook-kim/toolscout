@@ -52,7 +52,7 @@ def problems(card: dict) -> list[str]:
 async def run_user(explained: dict, items_by_url: dict[str, dict], redo: Redo) -> dict:
     """해설가 결과(explainer.explain_user) 한 사용자분을 검사한다. redo(item, 이유)는 해설가 재호출.
 
-    반환: {user_id, cards(순위 다시 매김), excluded[{title, url, reasons}], retried, rejected, format_failed}
+    반환: {user_id, cards(순위 다시 매김), excluded[{title, url, reasons}], retried, rejected, format_failed, model_failed}
     """
     kept, excluded, retried = [], [], 0
     with tracing.span("validate", kind="chain", input={"user_id": explained["user_id"], "cards": len(explained["cards"])}) as span:
@@ -75,4 +75,5 @@ async def run_user(explained: dict, items_by_url: dict[str, dict], redo: Redo) -
         span.update(output={"kept": len(cards), "retried": retried, "excluded": excluded},
                     level="WARNING" if excluded else "DEFAULT")
     return {"user_id": explained["user_id"], "cards": cards, "excluded": excluded, "retried": retried,
-            "rejected": explained["rejected"], "format_failed": explained["format_failed"]}
+            "rejected": explained["rejected"], "format_failed": explained["format_failed"],
+            "model_failed": explained.get("model_failed", [])}

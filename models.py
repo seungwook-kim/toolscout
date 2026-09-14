@@ -1,6 +1,6 @@
 """역할별 모델표와 call() (모델표). 모델명은 이 파일에서만 관리한다. 공급자별 호출은 providers.py.
 
-DEV_MODE(기본 1)면 개발 모델표(무료), 0이면 운영 모델표를 쓴다. 호출부는 role만 넘기므로 전환에 코드 변경이 없다.
+DEV_MODE(기본 1)면 개발 모델표(로컬·무료), 0이면 운영 모델표를 쓴다. 호출부는 role만 넘기므로 전환에 코드 변경이 없다.
 개발 모델표에는 is_test 가짜 프로필과 공개 뉴스만 보낸다. 실제 사용자 텍스트는 보내지 않는다 (작업 규칙 7).
 
 모델 ID 출처
@@ -8,16 +8,20 @@ DEV_MODE(기본 1)면 개발 모델표(무료), 0이면 운영 모델표를 쓴�
 - Google Gemini: https://ai.google.dev/gemini-api/docs/models (2026-09-13 확인)
 - OpenAI: https://developers.openai.com/api/docs/models (2026-09-13 확인)
 - OpenRouter 무료: https://openrouter.ai/api/v1/models 에서 id가 :free이고 supported_parameters에 tools가 있는 모델 (2026-09-14 조회)
+- Groq 무료: https://console.groq.com/docs/tool-use 도구 호출 지원 목록과 https://console.groq.com/docs/rate-limits (2026-09-14 확인)
+- Ollama 로컬: https://ollama.com/library, VRAM·도구 호출·한글 실측은 docs/local-model.md (2026-09-14)
 
 메시지는 langchain_core.messages 형식을 쓰고, 반환도 AIMessage(tool_calls 포함)로 통일한다.
-기본 모델이 429·503·529(Anthropic 과부하)를 돌려주면 대체 모델로 1회만 전환한다.
-사고·추론 토큰도 출력 한도를 쓰므로 표에서 thinking(Gemini)·reasoning(OpenRouter)을 낮춰 둔다.
+표의 각 역할은 제공자 순서 목록이다. 429·503·529(Anthropic 과부하)·연결 실패·타임아웃·키 없음이면 다음 제공자로
+넘어가고 제공자마다 한 번만 부른다. 끝까지 실패하거나 전환 대상이 아닌 오류면 ModelUnavailable을 낸다.
+사고·추론 토큰도 출력 한도를 쓰므로 표에서 thinking(Gemini)·reasoning(OpenRouter·Groq·Ollama)을 낮춰 둔다.
 사고 수준 출처: https://ai.google.dev/gemini-api/docs/thinking, https://openrouter.ai/docs/guides/best-practices/reasoning-tokens
 """
 import logging
 import os
 import threading
 import time
+from collections import Counter
 from typing import Any
 
 import httpx
@@ -26,60 +30,75 @@ from langchain_core.utils.function_calling import convert_to_openai_tool
 
 import config  # noqa: F401  .env를 os.environ에 채운다
 from agent import tracing
-from providers import OPTIONS, PROVIDERS
+from providers import OPTIONS, PROVIDERS, MissingKey
 
 log = logging.getLogger("toolscout.models")
 
-ModelTable = dict[str, dict[str, dict[str, str]]]
+ModelTable = dict[str, list[dict[str, Any]]]
 
 PROD_MODELS: ModelTable = {
-    "curator": {  # 큐레이터 선별
-        "primary": {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
-        "fallback": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001"},
-    },
-    "verifier": {  # 검증관
-        "primary": {"provider": "anthropic", "model": "claude-opus-5"},
-        "fallback": {"provider": "anthropic", "model": "claude-sonnet-5"},
-    },
-    "explainer": {  # 해설가
-        "primary": {"provider": "anthropic", "model": "claude-sonnet-5"},
-        "fallback": {"provider": "openai", "model": "gpt-5.6-terra"},
-    },
-    "gate": {  # 게이트
-        "primary": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001"},
-        "fallback": {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
-    },
+    "curator": [  # 큐레이터 선별
+        {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
+        {"provider": "anthropic", "model": "claude-haiku-4-5-20251001"},
+    ],
+    "verifier": [  # 검증관
+        {"provider": "anthropic", "model": "claude-opus-5"},
+        {"provider": "anthropic", "model": "claude-sonnet-5"},
+    ],
+    "explainer": [  # 해설가
+        {"provider": "anthropic", "model": "claude-sonnet-5"},
+        {"provider": "openai", "model": "gpt-5.6-terra"},
+    ],
+    "gate": [  # 게이트
+        {"provider": "anthropic", "model": "claude-haiku-4-5-20251001"},
+        {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
+    ],
 }
 
-# 선별·게이트는 빠른 모델, 검증관·해설가는 한국어가 되는 모델. 2026-09-14 실측(한국어 JSON 요약·도구 호출)으로 배정:
-# nex-n2.5-mini 0.9초·한글 0.9·도구 성공 / nex-n2.5-pro 2.3초·한글 0.9·도구 성공 (둘 다 추론 필수 아님, effort none 지원)
-# gemma-4-31b·26b는 무료 공급자(Google AI Studio) 429가 반복돼 뺐다
-# OpenRouter 무료는 크레딧이 없으면 하루 50회라 호출이 많은 검증관·해설가는 Gemini 무료 티어를 기본으로 둔다
-# (2026-09-14 사용자 결정. 한도 출처: https://openrouter.ai/docs/api/reference/limits)
+# 개발 모드 제공자 순서: ollama(로컬) → groq(무료) → gemini(무료) → openrouter(무료) (2026-09-14 사용자 결정)
+# - 로컬 모델은 VRAM 8~9GB 안에서 가장 큰 모델을 실측으로 골랐다: gemma3:12b Q4_K_M, num_ctx 8192에서 8.96GiB (docs/local-model.md)
+#   gemma3:12b는 도구 호출을 지원하지 않아 JSON만 내는 큐레이터·게이트에만 쓰고, 해설가·검증관은 groq부터 시작한다 (사용자 결정)
+#   num_ctx 8192는 서버 환경변수 OLLAMA_CONTEXT_LENGTH, 온도 0은 호출에서. 사고 모델이 아니라 reasoning을 넘기지 않는다
+# - Groq는 도구 호출 지원 목록에서 한국어가 되는 qwen3를 해설가·검증관에, 가벼운 gpt-oss-20b를 선별·게이트에 둔다.
+#   분당 토큰 8K가 모델별이라 역할을 두 모델로 나눴다. 2026-09-14 목록 API·실제 도구 호출·JSON 응답으로 확정
+#   (tests/models/check_groq.py, 하루 1,000회·분당 8,000토큰. llama-3.3-70b-versatile은 이 계정에서 404)
+# - gemma-4-31b·26b는 무료 공급자(Google AI Studio) 429가 반복돼 뺐다 / OpenRouter 무료는 크레딧이 없으면 하루 50회
+LOCAL_JSON_MODEL = {"provider": "ollama", "model": "gemma3:12b"}
+GROQ_FAST = {"provider": "groq", "model": "openai/gpt-oss-20b", "reasoning": "low"}
+GROQ_KOREAN = {"provider": "groq", "model": "qwen/qwen3.8-27b", "reasoning": "none"}
 DEV_MODELS: ModelTable = {
-    "curator": {
-        "primary": {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
-        "fallback": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free", "reasoning": "none"},
-    },
-    "verifier": {
-        "primary": {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "low"},
-        "fallback": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free", "reasoning": "none"},
-    },
-    "explainer": {
-        "primary": {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "low"},
-        "fallback": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free", "reasoning": "none"},
-    },
-    "gate": {
-        "primary": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free", "reasoning": "none"},
-        "fallback": {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
-    },
+    "curator": [LOCAL_JSON_MODEL, GROQ_FAST,
+                {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
+                {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free", "reasoning": "none"}],
+    "verifier": [GROQ_KOREAN,
+                 {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "low"},
+                 {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free", "reasoning": "none"}],
+    "explainer": [GROQ_KOREAN,
+                  {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "low"},
+                  {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free", "reasoning": "none"}],
+    "gate": [LOCAL_JSON_MODEL, GROQ_FAST,
+             {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
+             {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free", "reasoning": "none"}],
 }
 
 FALLBACK_STATUS = {429, 503, 529}  # 529는 Anthropic 과부하
-# 개발 모드 무료 등급 호출 간격(초). OpenRouter 무료는 분당 20회
-FREE_TIER_MIN_INTERVAL = {"gemini": 4.0, "openrouter": 3.5}
+SLOT_NAMES = ["primary", "fallback", "fallback2", "fallback3"]
+# 개발 모드 무료 등급 호출 간격(초). OpenRouter 무료는 분당 20회.
+# Groq 무료는 분당 30회지만 분당 토큰 8,000이 먼저 막힌다. 해설가 1회가 용어집·원문 포함 약 3~4K 토큰이라 분당 2회로 둔다
+FREE_TIER_MIN_INTERVAL = {"gemini": 4.0, "openrouter": 3.5, "groq": 30.0}
 _last_call: dict[str, float] = {}
 _throttle_lock = threading.Lock()
+# 이 프로세스에서 성공한 호출 수 (제공자:모델) 와 전환 사유. 하루 실행 보고의 "사용한 제공자"
+PROVIDER_CALLS: Counter = Counter()
+FAILOVERS: Counter = Counter()
+
+
+class ModelUnavailable(Exception):
+    """역할의 제공자 목록을 끝까지 시도해도 답을 못 받았다. 파이프라인은 그 사용자·카드만 건너뛴다."""
+
+    def __init__(self, role: str, attempts: list[str]):
+        super().__init__(f"{role} 모델 장애: {'; '.join(attempts)}")
+        self.role, self.attempts = role, attempts
 
 
 def dev_mode() -> bool:
@@ -93,20 +112,43 @@ def active_models() -> ModelTable:
 
 def call(role: str, messages: list[BaseMessage], tools: list[Any] | None = None, *,
          temperature: float | None = None) -> AIMessage:
-    """역할에 맞는 모델을 부른다. 429·503·529면 대체 모델로 1회 전환한다.
+    """역할에 맞는 모델을 순서대로 부른다. 전환 대상 오류면 다음 제공자로 한 번씩 넘어간다.
 
-    temperature는 받는 공급자(Gemini, OpenRouter)에만 넘긴다. Anthropic SDK 1.5 create에는 인자가 없다.
+    temperature는 받는 공급자에만 넘긴다. Anthropic SDK 1.5 create에는 인자가 없다.
     """
-    table = active_models()[role]
+    chain = active_models()[role]
     openai_tools = [convert_to_openai_tool(t) for t in tools] if tools else None
-    try:
-        return _call_one(role, "primary", table["primary"], messages, openai_tools, temperature)
-    except Exception as exc:
-        status = status_code(exc)
-        if status not in FALLBACK_STATUS:
-            raise
-        log.warning("%s 기본 모델 %s 응답 %s, 대체 모델로 전환", role, table["primary"]["model"], status)
-        return _call_one(role, "fallback", table["fallback"], messages, openai_tools, temperature)
+    attempts: list[str] = []
+    for index, spec in enumerate(chain):
+        try:
+            result = _call_one(role, SLOT_NAMES[index], spec, messages, openai_tools, temperature)
+            PROVIDER_CALLS[f"{spec['provider']}:{spec['model']}"] += 1
+            return result
+        except Exception as exc:
+            reason = failover_reason(exc)
+            attempts.append(f"{spec['provider']} {reason or type(exc).__name__}")
+            if reason is None:
+                raise ModelUnavailable(role, attempts) from exc
+            FAILOVERS[f"{spec['provider']}:{reason}"] += 1
+            if index + 1 < len(chain):
+                log.warning("%s %s %s, 다음 제공자 %s로 전환", role, spec["provider"], reason, chain[index + 1]["provider"])
+            else:
+                raise ModelUnavailable(role, attempts) from exc
+    raise ModelUnavailable(role, attempts)
+
+
+def failover_reason(exc: Exception) -> str | None:
+    """다음 제공자로 넘어갈 오류면 짧은 사유, 아니면 None."""
+    status = status_code(exc)
+    if status in FALLBACK_STATUS:
+        return str(status)
+    if isinstance(exc, MissingKey):
+        return "키 없음"
+    if isinstance(exc, httpx.TimeoutException):
+        return "타임아웃"
+    if isinstance(exc, httpx.TransportError):
+        return "연결 실패"
+    return None
 
 
 def status_code(exc: Exception) -> int | None:
@@ -120,7 +162,7 @@ def status_code(exc: Exception) -> int | None:
     return None
 
 
-def _options(spec: dict[str, str], temperature: float | None) -> dict[str, Any]:
+def _options(spec: dict[str, Any], temperature: float | None) -> dict[str, Any]:
     """표의 thinking·reasoning과 호출의 temperature 중 그 공급자가 받는 것만 고른다."""
     wanted: dict[str, Any] = {k: v for k, v in spec.items() if k not in ("provider", "model")}
     if temperature is not None:
@@ -140,7 +182,7 @@ def _throttle(provider: str) -> None:
         _last_call[provider] = time.monotonic()
 
 
-def _call_one(role: str, slot: str, spec: dict[str, str], messages: list[BaseMessage], tools,
+def _call_one(role: str, slot: str, spec: dict[str, Any], messages: list[BaseMessage], tools,
               temperature: float | None = None) -> AIMessage:
     adapter = PROVIDERS[spec["provider"]]
     options = _options(spec, temperature)
@@ -151,7 +193,8 @@ def _call_one(role: str, slot: str, spec: dict[str, str], messages: list[BaseMes
         usage = result.usage_metadata or {}
         span.update(output={"text": result.text, "tool_calls": result.tool_calls},
                     usage_details={"input": usage.get("input_tokens", 0), "output": usage.get("output_tokens", 0)})
-        result.response_metadata.update(role=role, slot=slot, trace_id=span.trace_id)
+        result.response_metadata.update(role=role, slot=slot, trace_id=span.trace_id,
+                                        provider=spec["provider"], model=spec["model"])
         return result
 
 

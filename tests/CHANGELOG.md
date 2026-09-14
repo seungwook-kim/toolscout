@@ -1,5 +1,11 @@
 # tests/ CHANGELOG
 
+- 2026-09-14 · pipeline/daily_report.json·format_failures.json 첫 기록, run_daily --fake에 수집 결과 꺼내기 검사 · 첫 실제 하루 실행 · run_daily 실제 통과(4항목), --fake 30항목 통과
+
+- 2026-09-14 · models/check_groq.py 추가 · GROQ_API_KEY 발급 후 모델표 groq 모델 확정 · 통과(qwen3.8-27b·gpt-oss-20b 목록·도구 호출·JSON 성공, llama-3.3-70b는 404), check_models 개발 4역할 첫 제공자 실제 호출 통과
+
+- 2026-09-14 · models/check_local_models.py 추가, check_models 제공자 순서·모델 장애·ollama·groq 검사, check_tables briefings 빈 행 구조, check_env_example GROQ 키, run_daily --fake 모델 장애·빈 행·옵션 검사 · 로컬 모델 전환(세션 4) · check_models·check_tables 통과, run_daily --fake 29항목 통과
+
 - 2026-09-14 · pipeline/run_daily.py 추가, check_main.start 서버 출력을 PIPE에서 임시 로그 파일로 변경 · 하루 실행 검수. 읽지 않는 PIPE 버퍼가 차서 도구 호출 20~40회 뒤 서버가 멈추는 것을 재현·확인 · run_daily --fake 21항목 통과, 수정 후 같은 서버에 호출 200회 통과
 
 - 2026-09-14 · agent/run_explainer.py 추가 · 해설가 검수(가짜 모델 경로 + 실제 for_me 비교) · --fake 8항목 통과, 실제 모드는 무료 한도 초기화 후 실행

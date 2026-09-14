@@ -56,7 +56,8 @@ async def run(role: str, system_prompt: str, user_input: str, allowed_tools: lis
                     usage[key] += (ai.usage_metadata or {}).get(key, 0)
                 if not ai.tool_calls:
                     result = {"status": "ok", "output": parse_output(ai.text), "steps": step,
-                              "trace_id": root.trace_id, "tool_calls": tool_calls, "usage": usage, "raw": ai.text}
+                              "trace_id": root.trace_id, "tool_calls": tool_calls, "usage": usage, "raw": ai.text,
+                              "provider": ai.response_metadata.get("provider"), "model": ai.response_metadata.get("model")}
                     emit("final", step=step, status="ok")
                     root.update(output=result)
                     return result

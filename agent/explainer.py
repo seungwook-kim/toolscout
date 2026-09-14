@@ -4,6 +4,7 @@
 - 프로필·큐레이터 근거·항목·원문을 넣어 모델을 한 번 부른다 (항목당 호출 1회, 온도 0, 도구 호출은 항목당 1회로 상한 3 안)
 - "나한테는"이 프로필과 이어지지 않으면 카드를 반려하고 이유를 남긴다. 억지로 채우지 않는다
 - 원문·요약 같은 외부 텍스트는 루프가 <data>로 감싸 지시로 취급하지 않는다
+- 모델 장애(제공자 전부 실패)면 그 카드만 건너뛰고 model_failed에 이유를 남긴다
 """
 from contextlib import AsyncExitStack
 from dataclasses import asdict
@@ -33,7 +34,7 @@ PROMPT = f"""너는 toolscout 해설가다. 한 사용자에게 보여줄 카드
 
 
 async def explain_item(item: dict, memory: dict, client, stats: Stats, model_call=None, feedback: str | None = None) -> dict:
-    """반환: {status: card|rejected|format_failed, card?, reason?, item}. feedback은 검증 노드가 돌려보낸 이유 (재시도 1회)."""
+    """반환: {status: card|rejected|format_failed|model_failed, card?, reason?, item}. feedback은 검증 노드가 돌려보낸 이유."""
     prompt = PROMPT if feedback is None else f"{PROMPT}\n\n검증 노드가 직전 카드를 돌려보냈다 ({feedback}). 이 문제를 고쳐 다시 쓴다."
     with tracing.span(f"card:{item['title'][:60]}", kind="chain",
                       input={"url": item["url"], "user_id": memory["user_id"], "feedback": feedback}) as span:
@@ -53,8 +54,14 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
                 if point.evidence_url != item["url"]:
                     raise ValueError("evidence_url은 입력의 항목 링크만 쓸 수 있다")
 
-        parsed = await structured.ask_json(ROLE, prompt, payload, schemas.ExplainerOutput, stats, links_from_input,
-                                           f"카드 {memory['user_id']}:{item['title'][:30]}", model_call)
+        label = f"카드 {memory['user_id']}:{item['title'][:30]}"
+        try:
+            parsed = await structured.ask_json(ROLE, prompt, payload, schemas.ExplainerOutput, stats, links_from_input,
+                                               label, model_call)
+        except models.ModelUnavailable as exc:
+            outcome = {"status": "model_failed", "reason": stats.model_failed(label, exc), "item": item}
+            span.update(output={"status": outcome["status"], "reason": outcome["reason"]}, level="WARNING")
+            return outcome
         if parsed is None:
             outcome = {"status": "format_failed", "item": item}
         elif parsed.reject:
@@ -73,13 +80,15 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
 async def explain_user(plan: dict, memory: dict, client, stats: Stats, model_call=None) -> dict:
     if models.dev_mode() and not memory.get("is_test"):
         raise PermissionError("개발 모드에서는 is_test 사용자만 무료 모델에 보낸다 (작업 규칙 7)")
-    result = {"user_id": plan["user_id"], "cards": [], "rejected": [], "format_failed": []}
+    result = {"user_id": plan["user_id"], "cards": [], "rejected": [], "format_failed": [], "model_failed": []}
     for item in plan["news"] + plan["tools"]:
         outcome = await explain_item(item, memory, client, stats, model_call)
         if outcome["status"] == "card":
             result["cards"].append(outcome["card"] | {"rank": len(result["cards"]) + 1})
         elif outcome["status"] == "rejected":
             result["rejected"].append({"title": item["title"], "url": item["url"], "reason": outcome["reason"]})
+        elif outcome["status"] == "model_failed":
+            result["model_failed"].append({"title": item["title"], "url": item["url"], "reason": outcome["reason"]})
         else:
             result["format_failed"].append({"title": item["title"], "url": item["url"]})
     return result

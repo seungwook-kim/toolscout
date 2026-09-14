@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-14 · 큐레이터·해설가 모델 장애 단위 건너뜀, structured 실패 예시에 제공자·모델 기록·예시 전부 보관, loop 결과에 제공자·모델 · 로컬 모델 전환과 모델 장애 결정(세션 4) · run_daily --fake 29항목 통과
+
 - 2026-09-14 · explainer.explain_item에 feedback 인자 추가 · 검증 노드가 돌려보낸 이유를 붙여 1회 재시도하려고 · run_daily --fake에서 영어 첫 응답이 재시도로 복구됨 확인
 
 - 2026-09-14 · explainer.py·glossary.md 추가, JSON 규격 응답을 structured.py로 분리 · 계획안 5장 해설가·부록 B 4, 무료 한도 절약으로 항목당 원문 1회·모델 1회 · run_explainer --fake 8항목 통과, 실제 모델 검수는 한도 초기화 후
