@@ -1,0 +1,26 @@
+[
+  {
+    "at": "2026-09-14T23:36:21+09:00",
+    "date": "2026-09-14",
+    "label": "선별 1묶음",
+    "attempt": 1,
+    "error": "id가 1~20를 한 번씩 덮지 않음 (받은 19건)",
+    "provider": "ollama",
+    "model": "gemma3:12b",
+    "raw_head": "```json\n{\"judgments\": [{\"id\": 1, \"ai_related\": true, \"worth_today\": true, \"topic\": \"industry\", \"reason\": \"AI 커뮤니티의 구글 딥마인드 관련 루머는 AI 산업 전반에 대한 관심과 우려를 반영.\"}, {\"id\": 2, \"ai_related\": true, \"worth_today\": false, \"topic\": \"coding_tools\", \"reason\": \"AI를 활용하지 않는 음악 앱 개발은 AI 개발자와 직접적인 관련성이 낮음.\"}, {\"id\": 3",
+    "raw_tail": " 경쟁을 보여줌.\"}, {\"id\": 19, \"ai_related\": true, \"worth_today\": true, \"topic\": \"safety_policy\", \"reason\": \"트럼프 대통령의 AI 관련 발언은 AI 개발 방향에 대한 논쟁을 보여줌.\"}]}\n```",
+    "trace_id": "7c45d4178f4dfda3995a82f886e938f9"
+  },
+  {
+    "at": "2026-09-14T23:36:21+09:00",
+    "date": "2026-09-14",
+    "label": "카드 1:와이즈넛, 대화로 만드는 AI 에이전트 공개…“기능 수",
+    "attempt": 1,
+    "error": "summary_ko: String should have at most 120 characters",
+    "provider": "groq",
+    "model": "qwen/qwen3.8-27b",
+    "raw_head": "{\n\"reject\": false,\n\"reject_reason\": null,\n\"summary_ko\": \"와이즈넛이 자연어 대화로 AI 에이전트를 제작하고 기능을 수정·추가할 수 있는 고도화 기능을 공개했다. 별도 개발 없이 업무 특성에 맞는 에이전트를 구성할 수 있으며, 지자체 축제 운영 등 공공 분야 사례를 함께 시연했다.\",\n\"for_me\": \"n8n으로 사내 AI 브리핑 봇을 만드는 과정에서, 대화 기반 에이전트 구축 방식이 워크플로 자동화 노드 조립보다 빠른 프로토타이핑이나 기능 수정에 참고가 될 수 있습니다.\",\n\"pros\"",
+    "raw_tail": "\"지자체·공공기관 특화 사례 중심이라 사내 시스템 연동 적합성은 확인이 필요하다\",\n\"evidence_url\": \"https://www.aitimes.com/news/articleView.html?idxno=215238\"\n}\n],\n\"install_cmd\": null\n}",
+    "trace_id": "7c45d4178f4dfda3995a82f886e938f9"
+  }
+]
