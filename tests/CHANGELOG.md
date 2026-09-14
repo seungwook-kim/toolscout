@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-14 · agent/run_explainer.py 추가 · 해설가 검수(가짜 모델 경로 + 실제 for_me 비교) · --fake 8항목 통과, 실제 모드는 무료 한도 초기화 후 실행
+
 - 2026-09-14 · agent/run_curator.py 추가, check_models에 옵션 전달·호출 간격 검사 · 큐레이터 검수 · 2차 통과(선별 94·두 사용자 겹침 0·검증 요청 5). Gemini 무료 하루 한도 소진으로 대체 경로로 확인
 - 2026-09-14 · run_today 선별 호출 수·MCP 분할 검사, check_tables items.stars_checked_at 확인, run_loop 실패 시 ExceptionGroup 원인 기록 · MCP 상위 30·Gemini 해설가 결정 반영 · 통과(run_today 161건, check_models Gemini 4역할, run_loop Gemini 안녕·도구 1개, 첫 실행 1회 일시 오류 후 통과)
 - 2026-09-14 · 실제 연결 검수 재실행 · .env DATABASE_URL 줄 수정·OpenRouter 키 재발급 후 · check_tables 통과(Supabase 표 9개·가짜 프로필 2개), check_models 통과(개발 모델 4역할 실제 호출, 1회 ReadTimeout 후 재실행 성공), run_loop 통과(nex-n2.5-pro 안녕·도구 1개, Langfuse 트레이스 확인)
