@@ -4,7 +4,7 @@ pydantic 모델로 두어 모델 출력 검증과 문서화를 한 곳에서 한
 """
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # 주제 10개 (고정). 계획안에 목록이 없어 2026-09-14 초안을 만들고 같은 날 사용자가 확정했다. 여기 한 곳에서만 고친다
 TOPICS: dict[str, str] = {
@@ -59,3 +59,53 @@ class VerifyRequest(BaseModel):
 
 class VerifyRequests(BaseModel):
     requests: list[VerifyRequest] = Field(default_factory=list, max_length=MAX_VERIFY)
+
+
+# 해설가 ------------------------------------------------------------------
+
+MAX_SUMMARY, MAX_FOR_ME, MAX_POINTS = 120, 150, 3
+SOURCE_UNCHECKED = "원문 확인 필요"
+
+
+class Evidence(BaseModel):
+    """장점·단점 한 줄과 근거 링크 (링크 필수)."""
+    text: str = Field(min_length=2, max_length=100)
+    evidence_url: str = Field(pattern=r"^https?://\S+$")
+
+
+class ExplainerOutput(BaseModel):
+    """해설가 모델이 채우는 부분. 반려면 reject_reason만 있으면 된다."""
+    reject: bool = False
+    reject_reason: str | None = None
+    summary_ko: str = Field(default="", max_length=MAX_SUMMARY)
+    for_me: str = Field(default="", max_length=MAX_FOR_ME)
+    pros: list[Evidence] = Field(default_factory=list, max_length=MAX_POINTS)
+    cons: list[Evidence] = Field(default_factory=list, max_length=MAX_POINTS)
+    install_cmd: str | None = None
+
+    @model_validator(mode="after")
+    def _complete(self):
+        if self.reject and not (self.reject_reason or "").strip():
+            raise ValueError("reject가 true면 reject_reason이 필요하다")
+        if not self.reject and not (self.summary_ko.strip() and self.for_me.strip()):
+            raise ValueError("반려가 아니면 summary_ko와 for_me가 필요하다")
+        return self
+
+
+class Card(BaseModel):
+    """카드 JSON (계획안 9.3). 검증 노드와 저장이 이 규격을 쓴다. verification·risk_signal은 검증관 단계에서 채운다."""
+    item_id: int | None = None
+    type: Literal["news", "mcp", "skill"]
+    title: str = Field(min_length=1)
+    url: str = Field(pattern=r"^https?://\S+$")
+    summary_ko: str = Field(min_length=1, max_length=MAX_SUMMARY)
+    for_me: str = Field(min_length=1, max_length=MAX_FOR_ME)
+    why_this_card: str = Field(min_length=1, max_length=120)
+    pros: list[Evidence] = Field(default_factory=list, max_length=MAX_POINTS)
+    cons: list[Evidence] = Field(default_factory=list, max_length=MAX_POINTS)
+    verification: dict | None = None
+    risk_signal: dict | None = None
+    install_cmd: str | None = None
+    source_checked: bool
+    notice: str | None = None  # 원문을 못 읽었으면 "원문 확인 필요"
+    trace_id: str = Field(min_length=1)  # trace_id 없는 카드는 만들지 않는다 (작업 규칙 10)
