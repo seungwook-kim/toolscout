@@ -1,49 +1,38 @@
 {
   "input_items": 161,
-  "selected": 34,
+  "selected": 94,
   "selected_by_type": {
-    "mcp": 12,
-    "news": 22
+    "news": 64,
+    "mcp": 29,
+    "skill": 1
   },
   "topics": {
-    "MCP·도구 연동": 11,
-    "산업·투자·기업 동향": 5,
-    "모델 출시·성능": 5,
-    "오픈소스·로컬 모델": 4,
-    "보안·안전·정책": 5,
-    "에이전트·프레임워크": 3,
-    "코딩 도구·IDE": 1
+    "보안·안전·정책": 20,
+    "MCP·도구 연동": 22,
+    "에이전트·프레임워크": 10,
+    "오픈소스·로컬 모델": 11,
+    "모델 출시·성능": 12,
+    "업무 자동화·노코드": 2,
+    "산업·투자·기업 동향": 11,
+    "데이터·검색·RAG": 3,
+    "코딩 도구·IDE": 3
   },
-  "seed": 189790542,
-  "calls": 20,
+  "seed": 41590813,
+  "calls": 13,
   "tokens": {
-    "input": 47781,
-    "output": 51086
+    "input": 39230,
+    "output": 7782
   },
-  "seconds": 374.1,
-  "format_failures": 12,
-  "unrecovered": 4,
+  "seconds": 62.9,
+  "format_failures": 1,
+  "unrecovered": 0,
   "failure_examples": [
     {
-      "label": "선별 1묶음",
+      "label": "선별 5묶음",
       "attempt": 1,
       "error": "1 validation error for SelectionBatch",
-      "raw": "",
-      "trace_id": "18f46e25b8abd7bdb9ee731c71cfd9bc"
-    },
-    {
-      "label": "선별 1묶음",
-      "attempt": 2,
-      "error": "1 validation error for SelectionBatch",
-      "raw": "",
-      "trace_id": "18f46e25b8abd7bdb9ee731c71cfd9bc"
-    },
-    {
-      "label": "선별 2묶음",
-      "attempt": 1,
-      "error": "1 validation error for SelectionBatch",
-      "raw": "{\"judgments\": [{\"id\": 1, \"ai_related\": false, \"worth_today\": false, \"topic\": \"coding_tools\", \"reason\": \"GNU Guix OS 전환에 관한 경험담으로 AI 개발과 무관함\"}, {\"id\": 2, \"ai_related\": true, \"worth_today\": false, \"topic\": \"open_local\", \"reason\": \"소형 모델의 n-gram 활용 여부를 묻는 단순 커뮤니티 질의 글\"}, {\"id\": 3, \"ai_related\": true, \"worth_today\": true, \"topic\": \"industry\", \"reason\": \"앤트로픽의 나스닥 상장(IPO) 선택 및 주요 AI 기업 동향\"}, {\"id\": 4, ",
-      "trace_id": "18f46e25b8abd7bdb9ee731c71cfd9bc"
+      "raw": "{\"judgments\": [{\"id\": 1, \"ai_related\": true, \"worth_today\": true, \"topic\": \"coding_tools\", \"reason\": \"코그니션의 새로운 AI 코딩 모델 SWE-2 출시 소식으로 유용함\"}, {\"id\": 2, \"ai_related\": true, \"worth_today\": false, \"topic\": \"safety_policy\", \"reason\": \"AI 위험론에 대한 수필 성격의 의견 글로 직접적인 기술 정보 부족\"}, {\"id\": 3, \"ai_related\": true, \"worth_today\": true, \"topic\": \"pricing\", \"reason\": \"앤트로픽의 2분기 연속 흑자 및 기업 실적 소식으로 의미 있음\"}, {\"id\": 4",
+      "trace_id": "64deca3ce630fb2e7cec88a5a95d5183"
     }
   ],
   "users": [
@@ -54,30 +43,30 @@
       "empty_reason": null,
       "news": [
         {
+          "title": "에이전트형 AI를 위한 데이터 준비하기",
+          "why": "내부 문서를 활용해 n8n AI 브리핑 봇을 설계하는 데 필요한 데이터 준비 원칙을 다룬다."
+        },
+        {
+          "title": "앤트로픽·오픈AI·구글, 7월부터 'AI 안전 표준기구' 설립 물밑 논의",
+          "why": "사내 AI 봇 도입 시 적용 가능한 AI 안전 표준 논의다."
+        },
+        {
           "title": "중국 '키미', 클로드 무단 우회 연결 파문…안보·기업 기밀 유출 논란",
-          "why": "사내 AI 봇에 외부 모델을 연결할 때 기업 기밀 유출 위험을 점검할 수 있다."
-        },
-        {
-          "title": "업스테이지, ‘솔라 미니 4’ 무료 프리뷰 공개…“프로급 성능 구현”",
-          "why": "무료 프리뷰 모델로 사내 브리핑 봇의 성능과 비용을 비교하기 좋다."
-        },
-        {
-          "title": "와이즈넛, 대화로 만드는 AI 에이전트 공개…“기능 수정·추가도 손쉽게”",
-          "why": "자연어로 에이전트를 만들 수 있어 n8n 브리핑 봇의 기능을 빠르게 개선할 수 있다."
+          "why": "AI 도구 간 무단 연결과 기업 기밀 유출 위험은 사내 브리핑 봇 설계에 직접 관련된다."
         }
       ],
       "tools": [
         {
+          "title": "GitHub 1.12.1",
+          "why": "n8n 자동화 연동 시 코드·PR·워크플로를 에이전트로 관리할 수 있다."
+        },
+        {
+          "title": "Context7 4.1.0",
+          "why": "Spring과 Java 최신 문서를 에이전트 프롬프트에 반영해 봇 응답 정확도를 높인다."
+        },
+        {
           "title": "gadak 0.22.1",
-          "why": "Jira·Confluence의 로컬 검색으로 사내 브리핑 봇의 지식 출처를 확보할 수 있다."
-        },
-        {
-          "title": "OpenMetadata 1.1.1",
-          "why": "데이터 검색·계보·품질 기능을 MCP로 제공해 봇의 데이터 거버넌스에 활용할 수 있다."
-        },
-        {
-          "title": "com.apify/apify-mcp-server 0.15.7",
-          "why": "다양한 웹사이트를 수집해 사내 AI 브리핑 봇의 외부 자료 원천을 확장할 수 있다."
+          "why": "사내 Jira·Confluence를 검색해 AI 브리핑 봇의 지식원이 된다."
         }
       ]
     },
@@ -88,74 +77,65 @@
       "empty_reason": null,
       "news": [
         {
-          "title": "\"3D 사무실서 일하는 AI 에이전트\"...한컴, 워크포스 플랫폼 '노마디안' 선보여",
-          "why": "콘텐츠 운영에 AI 에이전트를 적용하는 흐름을 파악할 수 있다."
+          "title": "[AI리더의 서가] AI 광고 콘텐츠 제작법",
+          "why": "노션으로 관리하는 캠페인 기록에 바로 적용할 생성형 광고 제작법을 다룬다."
         },
         {
-          "title": "와이즈넛, 대화로 만드는 AI 에이전트 공개…“기능 수정·추가도 손쉽게”",
-          "why": "대사형 에이전트로 캠페인 대응과 콘텐츠 제작 자동화를 검토할 수 있다."
+          "title": "Google은 왜 여전히 수상한 광고를 내보내는가?",
+          "why": "캠페인 광고 집행 시 Google 수상 광고 노출 리스크를 점검하는 데 도움이 된다."
         }
       ],
-      "tools": [
-        {
-          "title": "MCP for Adobe Premiere Pro 1.15.1",
-          "why": "마케팅 영상 편집을 에이전트로 자동화해 콘텐츠 일정에 활용할 수 있다."
-        },
-        {
-          "title": "com.apify/apify-mcp-server 0.15.7",
-          "why": "캠페인 대상 사이트와 경쟁사 자료를 수집해 리서치·콘텐츠 기획에 연결된다."
-        }
-      ]
+      "tools": []
     }
   ],
-  "overlap_items": 2,
+  "overlap_items": 0,
   "reason_examples": [
     {
-      "title": "Desktop Commander 0.2.50",
-      "topic": "MCP·도구 연동",
-      "reason": "터미널 명령과 파일 관리를 지원하는 MCP 서버 업데이트"
+      "title": "Google은 왜 여전히 수상한 광고를 내보내는가?",
+      "topic": "보안·안전·정책",
+      "reason": "AI가 YouTube 광고의 정책 위반 여부를 빠르게 판별한 사례다."
     },
     {
-      "title": "크게 성공하거나 망하거나: 벤처 시장에서 사라지는 중간 지대",
-      "topic": "산업·투자·기업 동향",
-      "reason": "AI 분야 자금 쏠림과 벤처 투자 시장 변화를 다룬 산업 동향"
+      "title": "Oya Browser 1.0.74",
+      "topic": "MCP·도구 연동",
+      "reason": "에이전트용 Chrome 브라우저 MCP의 새 버전이다."
     },
     {
-      "title": "Unity MCP 4.3.3",
-      "topic": "MCP·도구 연동",
-      "reason": "유니티 에디터 자동화를 지원하는 MCP 도구 업데이트"
+      "title": "GCC AI Policy Announcement",
+      "topic": "보안·안전·정책",
+      "reason": "GCC의 AI 활용·통제 정책을 알리는 공지다."
     }
   ],
   "verify": [
     {
-      "title": "Desktop Commander 0.2.50",
+      "title": "Unity MCP 4.3.3",
       "depth": "full",
-      "reason": "로컬 터미널·파일·프로세스 제어를 실제 개발 워크플로우에 적용할 수 있는지 확인"
-    },
-    {
-      "title": "SeleniumBase MCP 4.54.5",
-      "depth": "full",
-      "reason": "CDP 기반 브라우저 자동화가 실제 테스트와 스크래핑에 안정적으로 작동하는지 확인"
-    },
-    {
-      "title": "SpecPilot 1.0.0",
-      "depth": "full",
-      "reason": "저장소 스펙 번들을 생성해 AI 코딩 에이전트와 연동되는지 설치 후 검증"
+      "reason": "Unity 에디터 자동화 기능과 설치 동작을 실제 검증할 가치가 큼"
     },
     {
       "title": "com.apify/apify-mcp-server 0.15.7",
       "depth": "full",
-      "reason": "수많은 웹 수집·자동화 도구를 MCP로 연동할 수 있는지 API 설치 후 확인"
+      "reason": "수천 개의 크롤러를 이용한 데이터 추출 성능과 안정성을 검증할 수 있음"
     },
     {
-      "title": "Kindex 0.38.0",
+      "title": "Context7 4.1.0",
       "depth": "full",
-      "reason": "git 기반 지식 그래프가 코드 컨텍스트를 지속적이고 정확하게 유지하는지 확인"
+      "reason": "코드 문서 검색 품질과 최신성, 응답 품질을 직접 검증할 수 있음"
+    },
+    {
+      "title": "io.github.microsoft/playwright-mcp 0.0.80",
+      "depth": "full",
+      "reason": "주요 브라우저 자동화 도구인 Playwright의 MCP 구현을 직접 확인 가능"
+    },
+    {
+      "title": "MCP for Adobe Premiere Pro 1.15.1",
+      "depth": "full",
+      "reason": "프리미어 프로 연결과 로컬-first 동작을 설치해 실제 검증할 수 있음"
     }
   ],
-  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/18f46e25b8abd7bdb9ee731c71cfd9bc",
+  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/64deca3ce630fb2e7cec88a5a95d5183",
   "checks": {
-    "형식_재시도_후_실패_없음": false,
+    "형식_재시도_후_실패_없음": true,
     "is_test_사용자_2명": true,
     "사용자별_뉴스5·도구3_이하": true,
     "도구는_본_항목_제외": true,
@@ -164,5 +144,5 @@
     "두_사용자_항목_절반_이상_다름": true,
     "trace_있음": true
   },
-  "pass": false
+  "pass": true
 }
