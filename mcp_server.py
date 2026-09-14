@@ -29,7 +29,7 @@ ARTICLE_LIMIT = 3000
 MAX_REDIRECTS = 3
 # 소스 도메인 + 공식 문서 도메인. 하위 도메인 포함
 ALLOWED_DOMAINS = (
-    "openai.com", "blog.google", "aitimes.com", "hada.io", "techcrunch.com", "venturebeat.com", "reddit.com",
+    "openai.com", "blog.google", "aitimes.com", "hada.io", "techcrunch.com", "reddit.com",
     "ycombinator.com", "modelcontextprotocol.io", "github.com", "githubusercontent.com",
     "claude.com", "anthropic.com", "ai.google.dev", "n8n.io", "langfuse.com", "e2b.dev",
 )

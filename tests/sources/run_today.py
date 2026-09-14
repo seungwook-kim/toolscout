@@ -22,9 +22,10 @@ METHOD = {f.name: f"RSS {f.url}" for f in FEEDS} | {
     "mcp_registry": "공식 레지스트리 API /v0/servers, updated_since",
     "anthropic_skills": "GitHub API anthropics/skills 커밋",
 }
-RULE = {"openai": "날짜 창 필터 (전체 글이 옴)", "aitimes": "시간대 없는 날짜는 KST", "venturebeat_ai": "요약 500자 절단",
+RULE = {"openai": "날짜 창 필터 (전체 글이 옴)", "aitimes": "시간대 없는 날짜는 KST",
         "reddit_localllama": "User-Agent 필수", "hackernews": "OR는 optionalWords로", "mcp_registry": "7일 창, 최신 버전만",
         "anthropic_skills": "7일 창, PAT 있으면 사용"}
+EXCLUDED = [("venturebeat_ai", "RSS https://venturebeat.com/category/ai/feed/", "HTTP 429, 봇 UA 차단, 우회 안 함, 제외")]
 
 
 def valid_item(item: dict, now: datetime) -> bool:
@@ -43,9 +44,9 @@ def main() -> int:
     invalid = [i["source"] for i in items if not valid_item(i, now)]
     counts = {r.source: {"fetched": r.fetched, "in_window": len(r.items), "error": r.error} for r in results}
     checks = {
-        "소스_10곳_모두_실행": [r.source for r in results] == EXPECTED,
+        "소스_9곳_모두_실행": [r.source for r in results] == EXPECTED,
         "정규화_스키마·창_유효": not invalid,
-        "벤처비트_요약_500자_이하": all(len(i["summary"]) <= 500 for i in items if i["source"] == "venturebeat_ai"),
+        "제외_소스_수집_안_함": not any(r.source == name for r in results for name, _, _ in EXCLUDED),
         "실패는_기록되고_전체는_계속": all(r.error or r.fetched >= 0 for r in results),
     }
     failed = [r.source for r in results if r.error]
@@ -72,7 +73,9 @@ def write_report(now: datetime, counts: dict, total: int) -> None:
     for name, c in counts.items():
         status = f"실패 ({c['error']})" if c["error"] else "OK"
         lines.append(f"| {name} | {METHOD[name]} | {RULE.get(name, '')} | {c['fetched']} | {c['in_window']} | {status} |")
-    lines += ["", f"창 안 합계: {total}건", ""]
+    lines += ["", f"창 안 합계: {total}건", "", "## 제외한 소스", "", "| 소스 | 방식 | 사유 |", "|---|---|---|"]
+    lines += [f"| {name} | {method} | {reason} |" for name, method, reason in EXCLUDED]
+    lines.append("")
     (HERE / "report.md").write_text("\n".join(lines), encoding="utf-8")
 
 

@@ -23,9 +23,9 @@ FEEDS = [
     Feed("aitimes", "https://www.aitimes.com/rss/allArticle.xml", naive_tz=KST),
     Feed("geeknews", "https://news.hada.io/rss/news"),
     Feed("techcrunch_ai", "https://techcrunch.com/category/artificial-intelligence/feed/"),
-    Feed("venturebeat_ai", "https://venturebeat.com/category/ai/feed/", summary_limit=500),
     Feed("reddit_localllama", "https://www.reddit.com/r/LocalLLaMA/.rss"),
 ]
+# 벤처비트는 제외: 정직한 봇 User-Agent에 HTTP 429로 차단, 우회하지 않는다 (tests/sources/report.md)
 
 
 def fetch_feed(feed: Feed, since: datetime, client: httpx.Client) -> SourceResult:
