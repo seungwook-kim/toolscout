@@ -17,7 +17,7 @@
 - 루트 `models.py`: 역할별 모델 호출 / 루트 `mcp_server.py`: 루프가 부르는 도구
 
 ## 할 일
-- [ ] OpenRouter 키 재발급 후 개발 모델로 "안녕"·도구 1개 실제 실행 (`tests/agent/run_loop.py`)
 - [ ] `curator.py`, `explainer.py` (다음 세션 시작점: 큐레이터)
+- [ ] Langfuse 스팬 전송 제한 시간(5초) 초과로 최상위 스팬이 빠진 트레이스 1건 발생. 제한 시간 조정 여부 결정
 - [ ] `verifier.py`와 되돌림 2개 (뼈대 완성 후)
 - [ ] 에이전트별 도구 호출 상한(계획안 5장 도구 가드) 반영
