@@ -4,17 +4,14 @@
 - 사용자별: 기억(프로필·가중치·본 항목)을 읽어 뉴스 최대 5 + 도구 최대 3. 본 항목과 가중치 -5 주제는 뺀다
   성립하지 않으면 줄이고, 0건이면 "오늘 비움"과 이유를 남긴다
 - 검증 요청: MCP·스킬 후보 중 하루 최대 5건. 이번 단계에서는 목록만 만들고 검증관은 부르지 않는다
-모델 출력은 agent/schemas.py 규격으로 검사하고, 형식이 틀리면 1회 다시 부른다. 그래도 틀리면 실패 예시를 남긴다.
+모델 출력은 agent/schemas.py 규격으로 검사하고, 형식이 틀리면 1회 다시 부른다 (agent/structured.py).
 """
-import json
 import random
-from dataclasses import asdict, dataclass, field
-from functools import partial
-
-from pydantic import BaseModel, ValidationError
+from dataclasses import asdict
 
 import models
-from agent import loop, schemas, tracing
+from agent import schemas, structured, tracing
+from agent.structured import Stats
 
 ROLE = "curator"
 BATCH = 20
@@ -48,39 +45,8 @@ VERIFY_PROMPT = f"""너는 toolscout 큐레이터다. 오늘 도구 후보 중 �
 {JSON_ONLY} 형식: {{"requests": [{{"id": 1, "depth": "full", "reason": "..."}}]}}"""
 
 
-@dataclass
-class Stats:
-    calls: int = 0
-    input_tokens: int = 0
-    output_tokens: int = 0
-    format_failures: int = 0  # 규격에 안 맞은 응답 수 (재시도로 잡힌 것 포함)
-    unrecovered: int = 0  # 재시도 후에도 안 맞은 요청 수
-    failure_examples: list[dict] = field(default_factory=list)
-
-
-async def _ask(prompt: str, payload: list | dict, schema: type[BaseModel], stats: Stats, check=None, label: str = ""):
-    """JSON 규격 응답을 받는다. 규격 위반이면 오류를 알려 1회 다시 부른다. 반환: 규격 객체 또는 None."""
-    error = None
-    for attempt in (1, 2):
-        system = prompt if error is None else f"{prompt}\n\n직전 출력이 규격에 맞지 않았다 ({error}). 규격대로 다시 출력한다."
-        result = await loop.run(ROLE, system, json.dumps(payload, ensure_ascii=False), [], 1,
-                                model_call=partial(models.call, temperature=0))
-        stats.calls += 1
-        stats.input_tokens += result["usage"]["input_tokens"]
-        stats.output_tokens += result["usage"]["output_tokens"]
-        try:
-            parsed = schema.model_validate(result["output"])
-            if check:
-                check(parsed)
-            return parsed
-        except (ValidationError, ValueError) as exc:
-            stats.format_failures += 1
-            error = str(exc).splitlines()[0][:200]
-            if len(stats.failure_examples) < 3:
-                stats.failure_examples.append({"label": label, "attempt": attempt, "error": error,
-                                               "raw": (result.get("raw") or "")[:400], "trace_id": result["trace_id"]})
-    stats.unrecovered += 1
-    return None
+def _ask(prompt, payload, schema, stats: Stats, check=None, label: str = "", model_call=None):
+    return structured.ask_json(ROLE, prompt, payload, schema, stats, check, label, model_call)
 
 
 def _brief(item: dict, n: int) -> dict:
@@ -88,7 +54,7 @@ def _brief(item: dict, n: int) -> dict:
             "summary": item.get("summary", "")[:SUMMARY_CHARS]}
 
 
-async def select(items: list[dict], stats: Stats, rng: random.Random) -> list[dict]:
+async def select(items: list[dict], stats: Stats, rng: random.Random, model_call=None) -> list[dict]:
     """20건 묶음 판정. 반환: AI 관련이고 오늘 볼 만한 항목 (topic·reason이 붙는다)."""
     order = list(range(len(items)))
     rng.shuffle(order)
@@ -102,14 +68,14 @@ async def select(items: list[dict], stats: Stats, rng: random.Random) -> list[di
                 raise ValueError(f"id가 1~{size}를 한 번씩 덮지 않음 (받은 {len(ids)}건)")
 
         parsed = await _ask(SELECT_PROMPT, [_brief(items[i], n) for n, i in enumerate(batch, 1)],
-                            schemas.SelectionBatch, stats, ids_complete, label=f"선별 {start // BATCH + 1}묶음")
+                            schemas.SelectionBatch, stats, ids_complete, f"선별 {start // BATCH + 1}묶음", model_call)
         for judgment in parsed.judgments if parsed else []:
             if judgment.ai_related and judgment.worth_today:
                 selected.append({**items[batch[judgment.id - 1]], "topic": judgment.topic, "reason": judgment.reason})
     return selected
 
 
-async def pick_for_user(selected: list[dict], memory: dict, stats: Stats) -> dict:
+async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_call=None) -> dict:
     """사용자 한 명의 후보. 반환: {user_id, news, tools, empty, empty_reason, excluded}."""
     if models.dev_mode() and not memory.get("is_test"):
         raise PermissionError("개발 모드에서는 is_test 사용자만 무료 모델에 보낸다 (작업 규칙 7)")
@@ -134,7 +100,7 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats) -> dic
             if len(set(ids)) != len(ids) or any(not 1 <= i <= len(pool) for i in ids):
                 raise ValueError(f"{name} id가 후보 범위 밖이거나 중복")
 
-    parsed = await _ask(PICK_PROMPT, payload, schemas.UserPicks, stats, ids_valid, label=f"사용자 {memory['user_id']} 후보")
+    parsed = await _ask(PICK_PROMPT, payload, schemas.UserPicks, stats, ids_valid, f"사용자 {memory['user_id']} 후보", model_call)
     if parsed is None:
         return plan | {"empty": True, "empty_reason": "후보 선정 응답 형식 실패"}
     plan["news"] = [{**news[p.id - 1], "rank": r, "why": p.why} for r, p in enumerate(parsed.news, 1)]
@@ -144,7 +110,7 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats) -> dic
     return plan
 
 
-async def verification_requests(selected: list[dict], stats: Stats) -> list[dict]:
+async def verification_requests(selected: list[dict], stats: Stats, model_call=None) -> list[dict]:
     tools = [item for item in selected if item["type"] in TOOL_TYPES]
     if not tools:
         return []
@@ -155,18 +121,18 @@ async def verification_requests(selected: list[dict], stats: Stats) -> list[dict
         if len(set(ids)) != len(ids) or any(not 1 <= i <= len(tools) for i in ids):
             raise ValueError("id가 후보 범위 밖이거나 중복")
 
-    parsed = await _ask(VERIFY_PROMPT, payload, schemas.VerifyRequests, stats, ids_valid, label="검증 요청")
+    parsed = await _ask(VERIFY_PROMPT, payload, schemas.VerifyRequests, stats, ids_valid, "검증 요청", model_call)
     return [{**tools[r.id - 1], "depth": r.depth, "verify_reason": r.reason} for r in (parsed.requests if parsed else [])]
 
 
-async def run(items: list[dict], memories: list[dict], seed: int | None = None) -> dict:
-    """큐레이터 전체. 반환: {selected, plans, verify, stats, seed, format_failed}."""
+async def run(items: list[dict], memories: list[dict], seed: int | None = None, model_call=None) -> dict:
+    """큐레이터 전체. 반환: {selected, plans, verify, stats, seed, format_failed}. model_call은 검수용 가짜 모델 주입."""
     seed = seed if seed is not None else random.randrange(1 << 30)
     stats = Stats()
     with tracing.span("curator", kind="chain", input={"items": len(items), "users": len(memories), "seed": seed}) as span:
-        selected = await select(items, stats, random.Random(seed))
-        plans = [await pick_for_user(selected, memory, stats) for memory in memories]
-        verify = await verification_requests(selected, stats)
+        selected = await select(items, stats, random.Random(seed), model_call)
+        plans = [await pick_for_user(selected, memory, stats, model_call) for memory in memories]
+        verify = await verification_requests(selected, stats, model_call)
         result = {"selected": selected, "plans": plans, "verify": verify, "stats": asdict(stats), "seed": seed,
                   "format_failed": stats.unrecovered > 0, "trace_id": span.trace_id}
         span.update(output={"selected": len(selected), "plans": [(p["user_id"], len(p["news"]), len(p["tools"])) for p in plans],
