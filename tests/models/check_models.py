@@ -1,7 +1,7 @@
-"""models.py 검수 (착수 프롬프트 0단계 6번, DEV_MODE 모델표 추가).
+"""models.py·providers.py 검수 (착수 프롬프트 0단계 6번, DEV_MODE 모델표, 사고·추론 설정).
 
 실행: uv run python -m tests.models.check_models
-- 키 없이 도는 검사: 운영·개발 모델표, 출처, 하드코딩, 429·503·529 전환, DEV_MODE 전환, 공급자별 변환
+- 키 없이 도는 검사: 운영·개발 모델표, 출처, 하드코딩, 429·503·529 전환, DEV_MODE 전환, 옵션 전달, 호출 간격, 공급자별 변환
 - 실제 호출: 개발 모델표 4역할 기본 모델은 성공해야 통과. 운영 모델표는 키가 없으면 SKIP
 환경변수 값과 키는 출력하지 않는다.
 """
@@ -10,6 +10,7 @@ import os
 import re
 import sys
 import tempfile
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
@@ -20,9 +21,11 @@ ROOT = Path(__file__).resolve().parents[2]
 os.environ.setdefault("LOCAL_TRACE_LOG", str(Path(tempfile.gettempdir()) / "toolscout_test_trace.jsonl"))
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage  # noqa: E402
+from langchain_core.utils.function_calling import convert_to_openai_tool  # noqa: E402
 
 import config  # noqa: E402
 import models  # noqa: E402
+import providers  # noqa: E402
 
 EXPECTED_PROD = {
     "curator": ("gemini-3.6-flash", "claude-haiku-4-5-20251001"),
@@ -77,7 +80,7 @@ def fallback_case(primary_status: int | None, fallback_status: int | None) -> di
     original = dict(models.PROVIDERS)
 
     def fake(status: int | None):
-        def adapter(model, messages, tools):
+        def adapter(model, messages, tools, **_options):
             calls.append(model)
             if status is not None:
                 raise FakeStatus(status)
@@ -103,7 +106,7 @@ def mode_switch() -> bool:
     seen: list[str] = []
     original = dict(models.PROVIDERS)
     for name in models.PROVIDERS:
-        models.PROVIDERS[name] = lambda model, messages, tools, _n=name: seen.append(f"{_n}:{model}") or AIMessage("ok")
+        models.PROVIDERS[name] = lambda model, messages, tools, _n=name, **_o: seen.append(f"{_n}:{model}") or AIMessage("ok")
     try:
         with dev_mode(None):
             models.call("gate", [HumanMessage("x")])
@@ -116,6 +119,47 @@ def mode_switch() -> bool:
     dev = models.DEV_MODELS["gate"]["primary"]
     prod = models.PROD_MODELS["gate"]["primary"]
     return seen == [f"{dev['provider']}:{dev['model']}"] * 2 + [f"{prod['provider']}:{prod['model']}"]
+
+
+def option_routing() -> bool:
+    """온도는 Gemini·OpenRouter에만, 표의 thinking은 Gemini에만, reasoning은 OpenRouter에만 넘어가는지."""
+    seen: dict[str, dict] = {}
+    original = dict(models.PROVIDERS)
+
+    def recorder(name: str):
+        def adapter(model, messages, tools, **kw):
+            seen.setdefault(name, kw)
+            return AIMessage("ok")
+        return adapter
+
+    for name in models.PROVIDERS:
+        models.PROVIDERS[name] = recorder(name)
+    try:
+        with dev_mode("0"):
+            models.call("verifier", [HumanMessage("x")], temperature=0)  # anthropic
+        with dev_mode("1"):
+            models.call("gate", [HumanMessage("x")], temperature=0)  # openrouter
+            models.call("curator", [HumanMessage("x")], temperature=0)  # gemini
+    finally:
+        models.PROVIDERS.update(original)
+    return (seen.get("anthropic") == {} and seen.get("openrouter") == {"temperature": 0, "reasoning": "none"}
+            and seen.get("gemini") == {"temperature": 0, "thinking": "minimal"})
+
+
+def throttle_spacing() -> bool:
+    """개발 모드에서 같은 공급자 연속 호출 사이에 간격이 생기는지."""
+    saved = dict(models.FREE_TIER_MIN_INTERVAL)
+    models.FREE_TIER_MIN_INTERVAL["test-provider"] = 0.3
+    try:
+        with dev_mode("1"):
+            started = time.monotonic()
+            models._throttle("test-provider")
+            models._throttle("test-provider")
+            elapsed = time.monotonic() - started
+    finally:
+        models.FREE_TIER_MIN_INTERVAL.clear()
+        models.FREE_TIER_MIN_INTERVAL.update(saved)
+    return elapsed >= 0.29
 
 
 def dev_table_rules() -> bool:
@@ -135,9 +179,9 @@ def anthropic_conversion() -> bool:
     block = SimpleNamespace(type="tool_use", name="fetch_article", input={"url": "https://a.com"}, id="tu_1")
     fake = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: captured.update(kw) or SimpleNamespace(
         content=[block], usage=SimpleNamespace(input_tokens=3, output_tokens=4), stop_reason="tool_use")))
-    models._anthropic_client = lambda: fake
-    first = models._anthropic("m", [SystemMessage("시스템"), HumanMessage("요약")], [models.convert_to_openai_tool(TOOL)])
-    models._anthropic("m", history(first), None)
+    providers._anthropic_client = lambda: fake
+    first = providers._anthropic("m", [SystemMessage("시스템"), HumanMessage("요약")], [convert_to_openai_tool(TOOL)])
+    providers._anthropic("m", history(first), None)
     msgs = captured["messages"]
     return (first.tool_calls[0]["name"] == "fetch_article" and captured["system"] == "시스템"
             and msgs[1]["content"][0]["type"] == "tool_use" and msgs[2]["content"][0]["type"] == "tool_result")
@@ -151,10 +195,13 @@ def gemini_conversion() -> bool:
     response = SimpleNamespace(candidates=[SimpleNamespace(content=types.Content(role="model", parts=[part]), finish_reason="STOP")],
                                usage_metadata=None)
     fake = SimpleNamespace(models=SimpleNamespace(generate_content=lambda **kw: captured.update(kw) or response))
-    models._gemini_client = lambda: fake
-    first = models._gemini("m", [HumanMessage("요약")], [models.convert_to_openai_tool(TOOL)])
-    tools_ok = captured["config"].tools[0].function_declarations[0].name == "fetch_article"
-    models._gemini("m", history(first), None)
+    providers._gemini_client = lambda: fake
+    first = providers._gemini("m", [HumanMessage("요약")], [convert_to_openai_tool(TOOL)], temperature=0, thinking="minimal")
+    cfg = captured["config"]
+    tools_ok = (cfg.tools[0].function_declarations[0].name == "fetch_article" and cfg.temperature == 0
+                and "minimal" in str(cfg.thinking_config.thinking_level).lower())
+    providers._gemini("m", history(first), None)
+    tools_ok = tools_ok and captured["config"].thinking_config is None  # thinking을 안 주면 설정하지 않는다
     contents = captured["contents"]
     return (tools_ok and first.tool_calls[0]["args"] == {"url": "https://a.com"}
             and contents[1].parts[0].thought_signature == b"sig"
@@ -174,20 +221,22 @@ def openai_compatible_conversion() -> dict:
             return httpx.Response(200, json={"error": {"message": "rate limited upstream", "code": 429}})
         return httpx.Response(200, json=reply)
 
-    models._http_client = lambda: httpx.Client(transport=httpx.MockTransport(handler))
-    first = models._openai("m", [HumanMessage("요약")], [models.convert_to_openai_tool(TOOL)])
-    models._openai("m", history(first), None)
+    providers._http_client = lambda: httpx.Client(transport=httpx.MockTransport(handler))
+    first = providers._openai("m", [HumanMessage("요약")], [convert_to_openai_tool(TOOL)])
+    providers._openai("m", history(first), None)
     roles = [m["role"] for m in captured[-1][1]["messages"]]
-    routed = models._openrouter("m:free", [HumanMessage("요약")], None)
+    routed = providers._openrouter("m:free", [HumanMessage("요약")], None, temperature=0, reasoning="none")
     try:
-        models._openrouter("error-model", [HumanMessage("요약")], None)
+        providers._openrouter("error-model", [HumanMessage("요약")], None)
         body_error = None
-    except models.ProviderError as exc:
+    except providers.ProviderError as exc:
         body_error = exc.status_code
     return {
         "변환_openai_httpx": first.tool_calls[0]["id"] == "c1" and roles == ["system", "user", "assistant", "tool"]
         and captured[0][1]["tools"][0]["function"]["name"] == "fetch_article" and "max_completion_tokens" in captured[0][1],
-        "변환_openrouter_주소·max_tokens": captured[2][0] == models.OPENROUTER_URL and "max_tokens" in captured[2][1]
+        "변환_openrouter_주소·max_tokens·온도·추론끔": captured[2][0] == providers.OPENROUTER_URL and "max_tokens" in captured[2][1]
+        and captured[2][1].get("temperature") == 0 and captured[2][1].get("reasoning") == {"effort": "none"}
+        and "temperature" not in captured[0][1] and "reasoning" not in captured[3][1]
         and routed.response_metadata["provider"] == "openrouter",
         "200_본문_오류는_ProviderError_코드보존": body_error == 429 and body_error in models.FALLBACK_STATUS,
     }
@@ -213,7 +262,7 @@ def main() -> int:
     hardcoded = no_hardcoding()
     cases = {code: fallback_case(int(code), None) for code in ("503", "429", "529")}
     cases |= {"400": fallback_case(400, None), "503_후_대체도_503": fallback_case(503, 503)}
-    originals = (models._anthropic_client, models._gemini_client, models._http_client)
+    originals = (providers._anthropic_client, providers._gemini_client, providers._http_client)
     ok = {"calls": 2, "slot": "fallback", "trace_id": True}
     checks = {
         "운영_모델표_CLAUDE_일치": {r: (t["primary"]["model"], t["fallback"]["model"]) for r, t in models.PROD_MODELS.items()} == EXPECTED_PROD,
@@ -227,10 +276,12 @@ def main() -> int:
         "400_전환_안함": cases["400"] == {"calls": 1, "raised": 400},
         "대체_실패시_추가_전환_없음": cases["503_후_대체도_503"] == {"calls": 2, "raised": 503},
         "변환_anthropic": anthropic_conversion(),
-        "변환_gemini_thought_signature_보존": gemini_conversion(),
+        "변환_gemini_thought_signature·온도·사고수준": gemini_conversion(),
+        "옵션은_받는_공급자에만": option_routing(),
+        "개발모드_무료등급_호출간격": throttle_spacing(),
         **openai_compatible_conversion(),
     }
-    models._anthropic_client, models._gemini_client, models._http_client = originals
+    providers._anthropic_client, providers._gemini_client, providers._http_client = originals
     dev_live = live_calls(models.DEV_MODELS, required=True)
     prod_live = live_calls(models.PROD_MODELS, required=False)
     checks["개발_모델_4역할_실제_호출_성공"] = all(v.startswith("성공") for v in dev_live.values())

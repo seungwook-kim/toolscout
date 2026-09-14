@@ -130,29 +130,13 @@ async def get_user_memory(user_id: int, ctx: Context) -> dict:
             result = _reject("get_user_memory", "브리핑 사용자 본인이 아님")
         else:
             try:
-                result = {"status": "ok", **_read_memory(user_id)}
+                import memory  # 기억 읽기는 memory.py 한 곳에서 한다
+
+                result = {"status": "ok", **memory.read(user_id)}
             except RuntimeError as exc:  # DATABASE_URL 미설정
                 result = {"status": "error", "reason": str(exc)}
         span.update(output={"status": result["status"]})
         return result
-
-
-def _read_memory(user_id: int) -> dict:
-    from sqlmodel import select
-
-    import db
-
-    with db.session() as s:
-        user = s.get(db.User, user_id)
-        if user is None:
-            return {"found": False}
-        weights = {w.topic: w.weight for w in s.exec(select(db.Weight).where(db.Weight.user_id == user_id))}
-        seen = [row.item_id for row in s.exec(select(db.Seen).where(db.Seen.user_id == user_id))]
-        used = [row.item_id for row in s.exec(
-            select(db.Feedback).where(db.Feedback.user_id == user_id, db.Feedback.action == "써봤음"))]
-    return {"found": True, "profile": {"role": user.role, "tools_tags": user.profile_tools_tags,
-                                       "free_text": user.profile_free_text},
-            "weights": weights, "seen_item_ids": seen, "used_item_ids": used}
 
 
 def _not_implemented(tool: str) -> dict:

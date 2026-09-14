@@ -35,7 +35,7 @@ async def run(role: str, system_prompt: str, user_input: str, allowed_tools: lis
               mcp_url: str = DEFAULT_MCP_URL, briefing_user: int | None = None,
               on_event: Callable[[Event], None] | None = None,
               model_call: Callable[..., AIMessage] = models.call) -> dict:
-    """루프를 한 번 돌린다. 반환: {status, output, steps, trace_id, tool_calls}."""
+    """루프를 한 번 돌린다. 반환: {status, output, steps, trace_id, tool_calls, usage, raw}. raw는 마지막 모델 답 원문."""
     if models.dev_mode() and not _notice["shown"]:
         log.warning(DEV_MODE_NOTICE)  # 프로세스당 한 번
         _notice["shown"] = True
@@ -47,13 +47,16 @@ async def run(role: str, system_prompt: str, user_input: str, allowed_tools: lis
         async with AsyncExitStack() as stack:
             client, tool_specs = await _connect(stack, allowed_tools, mcp_url, briefing_user) if allowed_tools else (None, [])
             tool_calls = 0
+            usage = {"input_tokens": 0, "output_tokens": 0}
             for step in range(1, max_steps + 1):
                 emit("model_call", step=step, messages=len(messages))
                 ai = await asyncio.to_thread(model_call, role, messages, tool_specs or None)
                 messages.append(ai)
+                for key in usage:
+                    usage[key] += (ai.usage_metadata or {}).get(key, 0)
                 if not ai.tool_calls:
                     result = {"status": "ok", "output": parse_output(ai.text), "steps": step,
-                              "trace_id": root.trace_id, "tool_calls": tool_calls}
+                              "trace_id": root.trace_id, "tool_calls": tool_calls, "usage": usage, "raw": ai.text}
                     emit("final", step=step, status="ok")
                     root.update(output=result)
                     return result
@@ -65,7 +68,7 @@ async def run(role: str, system_prompt: str, user_input: str, allowed_tools: lis
                     messages.append(ToolMessage(json.dumps(outcome, ensure_ascii=False),
                                                 tool_call_id=call["id"], name=call["name"]))
         result = {"status": "확인 필요", "reason": f"max_steps {max_steps} 초과", "output": None,
-                  "steps": max_steps, "trace_id": root.trace_id, "tool_calls": tool_calls}
+                  "steps": max_steps, "trace_id": root.trace_id, "tool_calls": tool_calls, "usage": usage, "raw": None}
         emit("final", step=max_steps, status="확인 필요")
         root.update(output=result, level="WARNING")
         return result

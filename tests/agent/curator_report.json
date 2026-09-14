@@ -1,0 +1,148 @@
+{
+  "input_items": 161,
+  "selected": 94,
+  "selected_by_type": {
+    "news": 64,
+    "mcp": 29,
+    "skill": 1
+  },
+  "topics": {
+    "보안·안전·정책": 20,
+    "MCP·도구 연동": 22,
+    "에이전트·프레임워크": 10,
+    "오픈소스·로컬 모델": 11,
+    "모델 출시·성능": 12,
+    "업무 자동화·노코드": 2,
+    "산업·투자·기업 동향": 11,
+    "데이터·검색·RAG": 3,
+    "코딩 도구·IDE": 3
+  },
+  "seed": 41590813,
+  "calls": 13,
+  "tokens": {
+    "input": 39230,
+    "output": 7782
+  },
+  "seconds": 62.9,
+  "format_failures": 1,
+  "unrecovered": 0,
+  "failure_examples": [
+    {
+      "label": "선별 5묶음",
+      "attempt": 1,
+      "error": "1 validation error for SelectionBatch",
+      "raw": "{\"judgments\": [{\"id\": 1, \"ai_related\": true, \"worth_today\": true, \"topic\": \"coding_tools\", \"reason\": \"코그니션의 새로운 AI 코딩 모델 SWE-2 출시 소식으로 유용함\"}, {\"id\": 2, \"ai_related\": true, \"worth_today\": false, \"topic\": \"safety_policy\", \"reason\": \"AI 위험론에 대한 수필 성격의 의견 글로 직접적인 기술 정보 부족\"}, {\"id\": 3, \"ai_related\": true, \"worth_today\": true, \"topic\": \"pricing\", \"reason\": \"앤트로픽의 2분기 연속 흑자 및 기업 실적 소식으로 의미 있음\"}, {\"id\": 4",
+      "trace_id": "64deca3ce630fb2e7cec88a5a95d5183"
+    }
+  ],
+  "users": [
+    {
+      "user_id": 1,
+      "role": "자바 백엔드 개발자",
+      "empty": false,
+      "empty_reason": null,
+      "news": [
+        {
+          "title": "에이전트형 AI를 위한 데이터 준비하기",
+          "why": "내부 문서를 활용해 n8n AI 브리핑 봇을 설계하는 데 필요한 데이터 준비 원칙을 다룬다."
+        },
+        {
+          "title": "앤트로픽·오픈AI·구글, 7월부터 'AI 안전 표준기구' 설립 물밑 논의",
+          "why": "사내 AI 봇 도입 시 적용 가능한 AI 안전 표준 논의다."
+        },
+        {
+          "title": "중국 '키미', 클로드 무단 우회 연결 파문…안보·기업 기밀 유출 논란",
+          "why": "AI 도구 간 무단 연결과 기업 기밀 유출 위험은 사내 브리핑 봇 설계에 직접 관련된다."
+        }
+      ],
+      "tools": [
+        {
+          "title": "GitHub 1.12.1",
+          "why": "n8n 자동화 연동 시 코드·PR·워크플로를 에이전트로 관리할 수 있다."
+        },
+        {
+          "title": "Context7 4.1.0",
+          "why": "Spring과 Java 최신 문서를 에이전트 프롬프트에 반영해 봇 응답 정확도를 높인다."
+        },
+        {
+          "title": "gadak 0.22.1",
+          "why": "사내 Jira·Confluence를 검색해 AI 브리핑 봇의 지식원이 된다."
+        }
+      ]
+    },
+    {
+      "user_id": 2,
+      "role": "마케터",
+      "empty": false,
+      "empty_reason": null,
+      "news": [
+        {
+          "title": "[AI리더의 서가] AI 광고 콘텐츠 제작법",
+          "why": "노션으로 관리하는 캠페인 기록에 바로 적용할 생성형 광고 제작법을 다룬다."
+        },
+        {
+          "title": "Google은 왜 여전히 수상한 광고를 내보내는가?",
+          "why": "캠페인 광고 집행 시 Google 수상 광고 노출 리스크를 점검하는 데 도움이 된다."
+        }
+      ],
+      "tools": []
+    }
+  ],
+  "overlap_items": 0,
+  "reason_examples": [
+    {
+      "title": "Google은 왜 여전히 수상한 광고를 내보내는가?",
+      "topic": "보안·안전·정책",
+      "reason": "AI가 YouTube 광고의 정책 위반 여부를 빠르게 판별한 사례다."
+    },
+    {
+      "title": "Oya Browser 1.0.74",
+      "topic": "MCP·도구 연동",
+      "reason": "에이전트용 Chrome 브라우저 MCP의 새 버전이다."
+    },
+    {
+      "title": "GCC AI Policy Announcement",
+      "topic": "보안·안전·정책",
+      "reason": "GCC의 AI 활용·통제 정책을 알리는 공지다."
+    }
+  ],
+  "verify": [
+    {
+      "title": "Unity MCP 4.3.3",
+      "depth": "full",
+      "reason": "Unity 에디터 자동화 기능과 설치 동작을 실제 검증할 가치가 큼"
+    },
+    {
+      "title": "com.apify/apify-mcp-server 0.15.7",
+      "depth": "full",
+      "reason": "수천 개의 크롤러를 이용한 데이터 추출 성능과 안정성을 검증할 수 있음"
+    },
+    {
+      "title": "Context7 4.1.0",
+      "depth": "full",
+      "reason": "코드 문서 검색 품질과 최신성, 응답 품질을 직접 검증할 수 있음"
+    },
+    {
+      "title": "io.github.microsoft/playwright-mcp 0.0.80",
+      "depth": "full",
+      "reason": "주요 브라우저 자동화 도구인 Playwright의 MCP 구현을 직접 확인 가능"
+    },
+    {
+      "title": "MCP for Adobe Premiere Pro 1.15.1",
+      "depth": "full",
+      "reason": "프리미어 프로 연결과 로컬-first 동작을 설치해 실제 검증할 수 있음"
+    }
+  ],
+  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/64deca3ce630fb2e7cec88a5a95d5183",
+  "checks": {
+    "형식_재시도_후_실패_없음": true,
+    "is_test_사용자_2명": true,
+    "사용자별_뉴스5·도구3_이하": true,
+    "도구는_본_항목_제외": true,
+    "비움이면_이유_있음": true,
+    "검증_요청_5건_이하": true,
+    "두_사용자_항목_절반_이상_다름": true,
+    "trace_있음": true
+  },
+  "pass": true
+}
