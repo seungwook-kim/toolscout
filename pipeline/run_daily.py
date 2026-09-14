@@ -54,7 +54,7 @@ def collect_items() -> tuple[list[dict], list[dict]]:
     from sources.collect import collect
 
     results = collect()
-    failures = [{"source": r.name, "error": r.error} for r in results if r.error]
+    failures = [{"source": r.source, "error": r.error} for r in results if r.error]
     return [item for r in results for item in r.items], failures
 
 

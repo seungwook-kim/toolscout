@@ -108,7 +108,17 @@ def unit_checks() -> dict:
             for d, s in [(1, "hackernews"), (2, "openai"), (3, "aitimes"), (4, "openai"), (5, "geeknews"), (6, "hackernews")]]
     pool += [{"type": "mcp", "source": "mcp_registry", "stars": s, "title": f"t{s}"} for s in (5, 500, 50)]
     top = run_daily.top_items(pool, 4)
+    import sources.collect
+    from sources.common import SourceResult
+
+    original_collect = sources.collect.collect
+    sources.collect.collect = lambda: [SourceResult("aitimes", items=[fake_items()[0]]), SourceResult("hackernews", error="시간 초과")]
+    try:
+        collected, source_failures = run_daily.collect_items()
+    finally:
+        sources.collect.collect = original_collect
     return {
+        "수집결과_항목·실패소스_꺼내기": len(collected) == 1 and source_failures == [{"source": "hackernews", "error": "시간 초과"}],
         "정상_카드_통과": validate.problems(card) == [],
         "영어_카드_한글비율_실패": any("한글 비율" in p for p in validate.problems(card | ENGLISH)),
         "제품명_많은_한국어_요약_통과(어절 기준)": validate.hangul_ratio(named) >= 0.6 > char_ratio,
