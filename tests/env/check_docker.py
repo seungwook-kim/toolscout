@@ -33,22 +33,39 @@ def local_compose() -> dict:
     return {"ok": proc.returncode == 0, "reason": proc.stderr.strip()[-500:]}
 
 
+def git_credential_token() -> str:
+    """push에 쓰는 git 자격 증명의 토큰. .env 토큰에 비공개 저장소 권한이 없을 때만 쓴다. 출력하지 않는다."""
+    proc = subprocess.run(["git", "credential", "fill"], cwd=ROOT, input="protocol=https\nhost=github.com\n\n",
+                          capture_output=True, text=True, timeout=30)
+    return next((line[len("password="):] for line in proc.stdout.splitlines() if line.startswith("password=")), "")
+
+
 def ci_result(wait_seconds: int = 0) -> dict:
     """현재 HEAD 커밋의 ci 워크플로우 결과. wait_seconds 동안 완료를 기다린다."""
     match = re.search(r"github\.com[:/](.+?)/(.+?)(?:\.git)?$", git("remote", "get-url", "origin"))
     if not match:
         return {"ok": False, "reason": "origin이 GitHub가 아님"}
     owner, repo, sha = match.group(1), match.group(2), git("rev-parse", "HEAD")
-    headers = {"Accept": "application/vnd.github+json"}
-    if token := os.environ.get("GITHUB_TOKEN"):
-        headers["Authorization"] = f"Bearer {token}"
     base = f"https://api.github.com/repos/{owner}/{repo}/actions"
+    token_source, client = None, None
+    for source, token in (("GITHUB_TOKEN", os.environ.get("GITHUB_TOKEN", "")), ("git 자격 증명", None)):
+        token = git_credential_token() if token is None else token
+        if not token:
+            continue
+        candidate = httpx.Client(timeout=20, headers={"Accept": "application/vnd.github+json",
+                                                      "Authorization": f"Bearer {token}"})
+        if candidate.get(f"{base}/runs", params={"per_page": 1}).status_code == 200:
+            token_source, client = source, candidate
+            break
+        candidate.close()
+    if client is None:
+        return {"ok": False, "reason": "Actions 조회 권한이 있는 토큰 없음"}
     deadline = time.monotonic() + wait_seconds
-    with httpx.Client(timeout=20, headers=headers) as client:
+    try:
         while True:
             response = client.get(f"{base}/runs", params={"head_sha": sha, "per_page": 10})
             if response.status_code != 200:
-                return {"ok": False, "reason": f"Actions 조회 HTTP {response.status_code} (토큰 권한 확인)"}
+                return {"ok": False, "reason": f"Actions 조회 HTTP {response.status_code}"}
             runs = [r for r in response.json().get("workflow_runs", []) if r["name"] == "ci"]
             run = runs[0] if runs else None
             if run and run["status"] == "completed" or time.monotonic() >= deadline:
@@ -57,8 +74,10 @@ def ci_result(wait_seconds: int = 0) -> dict:
         if run is None:
             return {"ok": False, "reason": "이 커밋의 ci 실행 없음 (push 전이거나 대기 중)", "sha": sha[:7]}
         jobs = client.get(f"{base}/runs/{run['id']}/jobs").json().get("jobs", [])
+    finally:
+        client.close()
     steps = {s["name"]: s["conclusion"] for job in jobs for s in job.get("steps", []) if s["name"] in CI_STEPS}
-    return {"ok": run["conclusion"] == "success", "sha": sha[:7], "status": run["status"],
+    return {"ok": run["conclusion"] == "success", "token_source": token_source, "sha": sha[:7], "status": run["status"],
             "conclusion": run["conclusion"], "url": run["html_url"], "steps": steps}
 
 
