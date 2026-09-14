@@ -10,6 +10,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from mcp.client.streamable_http import streamable_http_client
 
 ROOT = Path(__file__).resolve().parents[2]
 KEY = "test-service-key"
+SERVER_LOG = Path(tempfile.gettempdir()) / "toolscout_test_server.log"
 
 
 def free_port() -> int:
@@ -29,9 +31,11 @@ def free_port() -> int:
 
 
 def start(port: int) -> subprocess.Popen:
+    """서버 출력은 임시 폴더 로그 파일로 보낸다. 읽지 않는 PIPE는 버퍼가 차면 서버가 멈춘다 (도구 호출 20~40회에서 확인)."""
     env = os.environ | {"MCP_SERVICE_KEY": KEY, "PYTHONDONTWRITEBYTECODE": "1"}
     cmd = [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", str(port), "--log-level", "warning"]
-    proc = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    with SERVER_LOG.open("w", encoding="utf-8") as log_file:
+        proc = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=log_file, stderr=subprocess.STDOUT)
     for _ in range(100):
         try:
             if httpx.get(f"http://127.0.0.1:{port}/api/health", timeout=1).status_code == 200:
