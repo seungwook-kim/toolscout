@@ -48,22 +48,24 @@ PROD_MODELS: ModelTable = {
     },
 }
 
-# 선별·게이트는 빠른 모델(Gemini Flash, Gemma 4 26B A4B), 검증관·해설가는 한국어가 되는 큰 모델
+# 선별·게이트는 빠른 모델, 검증관·해설가는 한국어가 되는 모델. 2026-09-14 실측(한국어 JSON 요약·도구 호출)으로 배정:
+# nex-n2.5-mini 0.9초·한글 0.9·도구 성공 / nex-n2.5-pro 2.3초·한글 0.9·도구 성공 / nemotron-3-super 7초·한글 0.9·도구 성공
+# gemma-4-31b·26b는 무료 공급자(Google AI Studio) 429가 반복돼 뺐다
 DEV_MODELS: ModelTable = {
     "curator": {
         "primary": {"provider": "gemini", "model": "gemini-3.6-flash"},
-        "fallback": {"provider": "openrouter", "model": "google/gemma-4-26b-a4b-it:free"},
+        "fallback": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free"},
     },
     "verifier": {
-        "primary": {"provider": "openrouter", "model": "google/gemma-4-31b-it:free"},
+        "primary": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free"},
         "fallback": {"provider": "openrouter", "model": "nvidia/nemotron-3-super-120b-a12b:free"},
     },
     "explainer": {
-        "primary": {"provider": "openrouter", "model": "google/gemma-4-31b-it:free"},
+        "primary": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free"},
         "fallback": {"provider": "openrouter", "model": "nvidia/nemotron-3-super-120b-a12b:free"},
     },
     "gate": {
-        "primary": {"provider": "openrouter", "model": "google/gemma-4-26b-a4b-it:free"},
+        "primary": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free"},
         "fallback": {"provider": "gemini", "model": "gemini-3.6-flash"},
     },
 }
