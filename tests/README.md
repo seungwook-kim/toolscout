@@ -13,8 +13,9 @@
 - `db/check_tables.py`: 표 9개·연결 문자열 변환·is_test + Supabase 실제 생성·가짜 프로필 2개(통과 조건)
 - `sources/run_today.py`: 9곳 실제 수집, 300건 ±20% 넘으면 필터 강화 재측정 → `today_counts.json`, `report.md`
 - `pipeline/run_dedupe.py`: 정리·중복 제거 단위 검사 + 오늘 전후 건수 → `pipeline/dedupe_counts.json`
+- `pipeline/run_daily.py`: `--fake`는 가짜 모델로 검증 노드·저장·멱등 21항목(2000-01-01로 저장 후 삭제), 없으면 실제 한 번 → `pipeline/daily_report.json`
 - `mcp/list_tools.py`: 실제 HTTP로 도구 6개·키 검문·거부 규칙 → `mcp/list_tools_result.json`
-- `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인
+- `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)
 - `agent/run_loop.py`: 가짜 모델로 루프 동작 9항목 + 현재 모델표 해설가로 실제 "안녕"·도구 1개(통과 조건)
 - `agent/run_curator.py`: 오늘 수집 + 가짜 프로필 2개로 큐레이터 실행 → `agent/curator_report.json`
 - `agent/run_explainer.py`: `--fake`는 가짜 모델로 카드·반려·재시도·원문 확인 필요 8항목, 없으면 실제 카드 + for_me 3쌍 → `agent/explainer_report.json`

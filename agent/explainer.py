@@ -32,9 +32,11 @@ PROMPT = f"""너는 toolscout 해설가다. 한 사용자에게 보여줄 카드
 {{"reject": false, "reject_reason": null, "summary_ko": "...", "for_me": "...", "pros": [{{"text": "...", "evidence_url": "https://..."}}], "cons": [], "install_cmd": null}}"""
 
 
-async def explain_item(item: dict, memory: dict, client, stats: Stats, model_call=None) -> dict:
-    """반환: {status: card|rejected|format_failed, card?, reason?, item}."""
-    with tracing.span(f"card:{item['title'][:60]}", kind="chain", input={"url": item["url"], "user_id": memory["user_id"]}) as span:
+async def explain_item(item: dict, memory: dict, client, stats: Stats, model_call=None, feedback: str | None = None) -> dict:
+    """반환: {status: card|rejected|format_failed, card?, reason?, item}. feedback은 검증 노드가 돌려보낸 이유 (재시도 1회)."""
+    prompt = PROMPT if feedback is None else f"{PROMPT}\n\n검증 노드가 직전 카드를 돌려보냈다 ({feedback}). 이 문제를 고쳐 다시 쓴다."
+    with tracing.span(f"card:{item['title'][:60]}", kind="chain",
+                      input={"url": item["url"], "user_id": memory["user_id"], "feedback": feedback}) as span:
         source = await loop._call_tool(client, {"name": "fetch_article", "args": {"url": item["url"]}, "id": "source"},
                                        ["fetch_article"]) if client else {"status": "skipped", "reason": "MCP 연결 없음"}
         checked = source.get("status") == "ok"
@@ -51,7 +53,7 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
                 if point.evidence_url != item["url"]:
                     raise ValueError("evidence_url은 입력의 항목 링크만 쓸 수 있다")
 
-        parsed = await structured.ask_json(ROLE, PROMPT, payload, schemas.ExplainerOutput, stats, links_from_input,
+        parsed = await structured.ask_json(ROLE, prompt, payload, schemas.ExplainerOutput, stats, links_from_input,
                                            f"카드 {memory['user_id']}:{item['title'][:30]}", model_call)
         if parsed is None:
             outcome = {"status": "format_failed", "item": item}

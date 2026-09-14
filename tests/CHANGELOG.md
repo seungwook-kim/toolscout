@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-14 · pipeline/run_daily.py 추가, check_main.start 서버 출력을 PIPE에서 임시 로그 파일로 변경 · 하루 실행 검수. 읽지 않는 PIPE 버퍼가 차서 도구 호출 20~40회 뒤 서버가 멈추는 것을 재현·확인 · run_daily --fake 21항목 통과, 수정 후 같은 서버에 호출 200회 통과
+
 - 2026-09-14 · agent/run_explainer.py 추가 · 해설가 검수(가짜 모델 경로 + 실제 for_me 비교) · --fake 8항목 통과, 실제 모드는 무료 한도 초기화 후 실행
 
 - 2026-09-14 · agent/run_curator.py 추가, check_models에 옵션 전달·호출 간격 검사 · 큐레이터 검수 · 2차 통과(선별 94·두 사용자 겹침 0·검증 요청 5). Gemini 무료 하루 한도 소진으로 대체 경로로 확인
