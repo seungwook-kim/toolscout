@@ -11,6 +11,7 @@
 - `env/check_docker.py`: 로컬 docker 없으면 GitHub Actions `ci` 결과(4단계)로 판정, compose·Dockerfile 정적 검사
 - `models/check_models.py`: 모델표, 제공자 순서 전환(429·503·529·연결·타임아웃·키 없음), 모델 장애, 옵션 전달, 호출 간격 + 개발 4역할 실제 호출
 - `models/check_local_models.py`: 로컬 Ollama 모델별 VRAM·도구 호출·한글 요약 3건·선별 20건 시간 → `models/local_models.json`
+- `models/check_groq.py`: Groq 목록 API에 모델표 모델이 있는지, 실제 도구 호출·JSON·한글 한 줄, 한도 헤더 → `models/groq_models.json`
 - `db/check_tables.py`: 표 9개·연결 문자열 변환·is_test·briefings 빈 행 구조 + Supabase 실제 생성·가짜 프로필 2개(통과 조건)
 - `sources/run_today.py`: 9곳 실제 수집, 300건 ±20% 넘으면 필터 강화 재측정 → `today_counts.json`, `report.md`
 - `pipeline/run_dedupe.py`: 정리·중복 제거 단위 검사 + 오늘 전후 건수 → `pipeline/dedupe_counts.json`
@@ -26,4 +27,3 @@
 
 ## 할 일
 - [ ] 원격 무료 한도(Gemini 하루 20회, OpenRouter 하루 50회)는 로컬 모델이 먼저 받으므로 전량 실행만 하루 한 번
-- [ ] GROQ_API_KEY 발급 후 check_models에 Groq 목록 API·실제 도구 호출 확인 추가

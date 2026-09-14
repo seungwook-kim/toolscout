@@ -60,7 +60,8 @@ PROD_MODELS: ModelTable = {
 #   gemma3:12b는 도구 호출을 지원하지 않아 JSON만 내는 큐레이터·게이트에만 쓰고, 해설가·검증관은 groq부터 시작한다 (사용자 결정)
 #   num_ctx 8192는 서버 환경변수 OLLAMA_CONTEXT_LENGTH, 온도 0은 호출에서. 사고 모델이 아니라 reasoning을 넘기지 않는다
 # - Groq는 도구 호출 지원 목록에서 한국어가 되는 qwen3를 해설가·검증관에, 가벼운 gpt-oss-20b를 선별·게이트에 둔다.
-#   분당 토큰 8K가 모델별이라 역할을 두 모델로 나눴다. GROQ_API_KEY 발급 후 목록 API와 실제 도구 호출로 확정한다
+#   분당 토큰 8K가 모델별이라 역할을 두 모델로 나눴다. 2026-09-14 목록 API·실제 도구 호출·JSON 응답으로 확정
+#   (tests/models/check_groq.py, 하루 1,000회·분당 8,000토큰. llama-3.3-70b-versatile은 이 계정에서 404)
 # - gemma-4-31b·26b는 무료 공급자(Google AI Studio) 429가 반복돼 뺐다 / OpenRouter 무료는 크레딧이 없으면 하루 50회
 LOCAL_JSON_MODEL = {"provider": "ollama", "model": "gemma3:12b"}
 GROQ_FAST = {"provider": "groq", "model": "openai/gpt-oss-20b", "reasoning": "low"}
@@ -82,8 +83,9 @@ DEV_MODELS: ModelTable = {
 
 FALLBACK_STATUS = {429, 503, 529}  # 529는 Anthropic 과부하
 SLOT_NAMES = ["primary", "fallback", "fallback2", "fallback3"]
-# 개발 모드 무료 등급 호출 간격(초). OpenRouter 무료는 분당 20회, Groq 무료는 분당 30회
-FREE_TIER_MIN_INTERVAL = {"gemini": 4.0, "openrouter": 3.5, "groq": 2.0}
+# 개발 모드 무료 등급 호출 간격(초). OpenRouter 무료는 분당 20회.
+# Groq 무료는 분당 30회지만 분당 토큰 8,000이 먼저 막힌다. 해설가 1회가 용어집·원문 포함 약 3~4K 토큰이라 분당 2회로 둔다
+FREE_TIER_MIN_INTERVAL = {"gemini": 4.0, "openrouter": 3.5, "groq": 30.0}
 _last_call: dict[str, float] = {}
 _throttle_lock = threading.Lock()
 # 이 프로세스에서 성공한 호출 수 (제공자:모델) 와 전환 사유. 하루 실행 보고의 "사용한 제공자"

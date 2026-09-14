@@ -1,0 +1,116 @@
+{
+  "available_models": [
+    "allam-2-7b",
+    "canopylabs/orpheus-arabic-saudi",
+    "canopylabs/orpheus-v1-english",
+    "groq/compound",
+    "groq/compound-mini",
+    "meta-llama/llama-prompt-guard-2-22m",
+    "meta-llama/llama-prompt-guard-2-86m",
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-safeguard-20b",
+    "qwen/qwen3.6-27b",
+    "qwen/qwen3.8-27b",
+    "whisper-large-v3",
+    "whisper-large-v3-turbo"
+  ],
+  "rows": [
+    {
+      "model": "openai/gpt-oss-20b",
+      "reasoning": "low",
+      "tool_call": {
+        "status": 200,
+        "supported": true,
+        "call": {
+          "name": "fetch_article",
+          "arguments": "{\"url\":\"https://github.com/n8n-io/n8n\"}"
+        },
+        "error": null,
+        "seconds": 0.56
+      },
+      "korean": "n8n이 외부 AI 도구를 호출할 수 있도록 네이티브 MCP 클라이언트 노드를 출시했습니다.",
+      "korean_seconds": 0.56,
+      "json_object": true,
+      "json_seconds": 0.55,
+      "limits": {
+        "x-ratelimit-limit-requests": "1000",
+        "x-ratelimit-limit-tokens": "8000",
+        "x-ratelimit-remaining-requests": "999",
+        "x-ratelimit-remaining-tokens": "7559"
+      },
+      "listed": true
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "reasoning": "none",
+      "tool_call": {
+        "status": 200,
+        "supported": true,
+        "call": {
+          "name": "fetch_article",
+          "arguments": "{\"url\":\"https://github.com/n8n-io/n8n\"}"
+        },
+        "error": null,
+        "seconds": 0.5
+      },
+      "korean": "n8n이 워크플로에서 외부 AI 도구 호출을 위한 네이티브 MCP 클라이언트 노드 출시",
+      "korean_seconds": 0.4,
+      "json_object": true,
+      "json_seconds": 0.42,
+      "limits": {
+        "x-ratelimit-limit-requests": "1000",
+        "x-ratelimit-limit-tokens": "8000",
+        "x-ratelimit-remaining-requests": "999",
+        "x-ratelimit-remaining-tokens": "7414"
+      },
+      "listed": true
+    },
+    {
+      "model": "llama-3.3-70b-versatile",
+      "reasoning": null,
+      "tool_call": {
+        "status": 404,
+        "supported": false,
+        "call": null,
+        "error": "The model `llama-3.3-70b-versatile` does not exist or you do not have access to it.",
+        "seconds": 0.15
+      },
+      "korean": "HTTP 404",
+      "korean_seconds": 0.14,
+      "json_object": false,
+      "json_seconds": 0.15,
+      "limits": {},
+      "listed": false
+    },
+    {
+      "model": "qwen/qwen3.6-27b",
+      "reasoning": null,
+      "tool_call": {
+        "status": 200,
+        "supported": false,
+        "call": null,
+        "error": null,
+        "seconds": 0.88
+      },
+      "korean": "<think>\nHere's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Input Text:** \"n8n ships a native MCP client node so workflows can call external AI tools\"\n   - **Task:** Summarize the English title into a single line in Korean.\n   - **Constraint:** Only write the one-line summary.\n\n2.  **Deconstruct the Input Text:**\n   - \"n8n ships a native MCP client node\" -> n8n이 네이티브 MCP 클라이언트 노드를 제공/출시함\n   - \"so workflows can call external AI tools\" -> 워크플로우가 외부 AI 도구를 호출할 수 있도록 함\n   - Key concepts: n8n, MCP 클라이언트 노드 (네이티브/기본 제공), 워크플로우, 외부 AI 도구 호출/연동\n\n3.  **Identify Core Meaning:**\n   n8n이 워크플로우에서 외부 AI",
+      "korean_seconds": 0.58,
+      "json_object": false,
+      "json_seconds": 0.58,
+      "limits": {
+        "x-ratelimit-limit-requests": "1000",
+        "x-ratelimit-limit-tokens": "8000",
+        "x-ratelimit-remaining-requests": "999",
+        "x-ratelimit-remaining-tokens": "7496"
+      },
+      "listed": true
+    }
+  ],
+  "checks": {
+    "목록_API_200": true,
+    "모델표_groq_모델이_목록에_있음": true,
+    "모델표_groq_모델_도구호출_성공": true,
+    "모델표_groq_모델_JSON_응답": true
+  },
+  "pass": true
+}

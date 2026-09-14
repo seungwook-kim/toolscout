@@ -16,4 +16,3 @@
 
 ## 할 일
 - [ ] 스크린샷 4장 촬영 (뼈대 완성 후)
-- [ ] GROQ_API_KEY 발급 후 local-model.md 선택표의 groq 모델을 목록 API·실제 도구 호출로 확정
