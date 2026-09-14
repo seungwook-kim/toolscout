@@ -5,6 +5,7 @@
   성립하지 않으면 줄이고, 0건이면 "오늘 비움"과 이유를 남긴다
 - 검증 요청: MCP·스킬 후보 중 하루 최대 5건. 이번 단계에서는 목록만 만들고 검증관은 부르지 않는다
 모델 출력은 agent/schemas.py 규격으로 검사하고, 형식이 틀리면 1회 다시 부른다 (agent/structured.py).
+모델 장애(제공자 전부 실패)는 선별 묶음·사용자·검증 요청 단위로 건너뛰고 이유를 stats.model_failures에 남긴다.
 """
 import random
 from dataclasses import asdict
@@ -67,8 +68,13 @@ async def select(items: list[dict], stats: Stats, rng: random.Random, model_call
             if ids != list(range(1, size + 1)):
                 raise ValueError(f"id가 1~{size}를 한 번씩 덮지 않음 (받은 {len(ids)}건)")
 
-        parsed = await _ask(SELECT_PROMPT, [_brief(items[i], n) for n, i in enumerate(batch, 1)],
-                            schemas.SelectionBatch, stats, ids_complete, f"선별 {start // BATCH + 1}묶음", model_call)
+        label = f"선별 {start // BATCH + 1}묶음"
+        try:
+            parsed = await _ask(SELECT_PROMPT, [_brief(items[i], n) for n, i in enumerate(batch, 1)],
+                                schemas.SelectionBatch, stats, ids_complete, label, model_call)
+        except models.ModelUnavailable as exc:
+            stats.model_failed(label, exc)
+            continue
         for judgment in parsed.judgments if parsed else []:
             if judgment.ai_related and judgment.worth_today:
                 selected.append({**items[batch[judgment.id - 1]], "topic": judgment.topic, "reason": judgment.reason})
@@ -76,7 +82,7 @@ async def select(items: list[dict], stats: Stats, rng: random.Random, model_call
 
 
 async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_call=None) -> dict:
-    """사용자 한 명의 후보. 반환: {user_id, news, tools, empty, empty_reason, excluded}."""
+    """사용자 한 명의 후보. 반환: {user_id, news, tools, empty, empty_reason, failed, failure_reason, excluded}."""
     if models.dev_mode() and not memory.get("is_test"):
         raise PermissionError("개발 모드에서는 is_test 사용자만 무료 모델에 보낸다 (작업 규칙 7)")
     seen, weights = set(memory.get("seen_urls", [])), memory.get("weights", {})
@@ -84,6 +90,7 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
     news = [item for item in fresh if item["type"] == "news"]
     tools = [item for item in fresh if item["type"] in TOOL_TYPES]
     plan = {"user_id": memory["user_id"], "news": [], "tools": [], "empty": False, "empty_reason": None,
+            "failed": False, "failure_reason": None,
             "excluded": {"seen": sum(item["url"] in seen for item in selected), "weight_minus5": len(selected) - len(fresh)
                          - sum(item["url"] in seen for item in selected)}}
     if not news and not tools:
@@ -100,7 +107,11 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
             if len(set(ids)) != len(ids) or any(not 1 <= i <= len(pool) for i in ids):
                 raise ValueError(f"{name} id가 후보 범위 밖이거나 중복")
 
-    parsed = await _ask(PICK_PROMPT, payload, schemas.UserPicks, stats, ids_valid, f"사용자 {memory['user_id']} 후보", model_call)
+    label = f"사용자 {memory['user_id']} 후보"
+    try:
+        parsed = await _ask(PICK_PROMPT, payload, schemas.UserPicks, stats, ids_valid, label, model_call)
+    except models.ModelUnavailable as exc:
+        return plan | {"failed": True, "failure_reason": stats.model_failed(label, exc)}
     if parsed is None:
         return plan | {"empty": True, "empty_reason": "후보 선정 응답 형식 실패"}
     plan["news"] = [{**news[p.id - 1], "rank": r, "why": p.why} for r, p in enumerate(parsed.news, 1)]
@@ -121,20 +132,34 @@ async def verification_requests(selected: list[dict], stats: Stats, model_call=N
         if len(set(ids)) != len(ids) or any(not 1 <= i <= len(tools) for i in ids):
             raise ValueError("id가 후보 범위 밖이거나 중복")
 
-    parsed = await _ask(VERIFY_PROMPT, payload, schemas.VerifyRequests, stats, ids_valid, "검증 요청", model_call)
+    try:
+        parsed = await _ask(VERIFY_PROMPT, payload, schemas.VerifyRequests, stats, ids_valid, "검증 요청", model_call)
+    except models.ModelUnavailable as exc:
+        stats.model_failed("검증 요청", exc)
+        return []
     return [{**tools[r.id - 1], "depth": r.depth, "verify_reason": r.reason} for r in (parsed.requests if parsed else [])]
 
 
 async def run(items: list[dict], memories: list[dict], seed: int | None = None, model_call=None) -> dict:
-    """큐레이터 전체. 반환: {selected, plans, verify, stats, seed, format_failed}. model_call은 검수용 가짜 모델 주입."""
+    """큐레이터 전체. 반환: {selected, plans, verify, stats, seed, format_failed, select_failed}. model_call은 검수용 가짜 모델 주입.
+
+    select_failed: 선별 묶음이 모두 모델 장애였다. 이때 사용자별 후보는 만들지 않고 모두 failed로 둔다.
+    """
     seed = seed if seed is not None else random.randrange(1 << 30)
     stats = Stats()
     with tracing.span("curator", kind="chain", input={"items": len(items), "users": len(memories), "seed": seed}) as span:
         selected = await select(items, stats, random.Random(seed), model_call)
-        plans = [await pick_for_user(selected, memory, stats, model_call) for memory in memories]
-        verify = await verification_requests(selected, stats, model_call)
+        batches = -(-len(items) // BATCH)
+        select_failed = batches > 0 and sum(f["label"].startswith("선별") for f in stats.model_failures) == batches
+        if select_failed:
+            plans = [{"user_id": m["user_id"], "news": [], "tools": [], "empty": False, "empty_reason": None, "failed": True,
+                      "failure_reason": "선별 묶음 전부 모델 장애", "excluded": {}} for m in memories]
+            verify = []
+        else:
+            plans = [await pick_for_user(selected, memory, stats, model_call) for memory in memories]
+            verify = await verification_requests(selected, stats, model_call)
         result = {"selected": selected, "plans": plans, "verify": verify, "stats": asdict(stats), "seed": seed,
-                  "format_failed": stats.unrecovered > 0, "trace_id": span.trace_id}
+                  "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id}
         span.update(output={"selected": len(selected), "plans": [(p["user_id"], len(p["news"]), len(p["tools"])) for p in plans],
                             "verify": len(verify), "stats": asdict(stats) | {"failure_examples": len(stats.failure_examples)}})
     return result

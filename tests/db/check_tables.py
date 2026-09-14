@@ -90,6 +90,9 @@ def live_create() -> dict:
         names = set(inspector.get_table_names())
         user_columns = {c["name"] for c in inspector.get_columns("users")} if "users" in names else set()
         item_columns = {c["name"] for c in inspector.get_columns("items")} if "items" in names else set()
+        briefing_columns = {c["name"]: c for c in inspector.get_columns("briefings")}
+        briefing_pk = inspector.get_pk_constraint("briefings")["constrained_columns"]
+        briefing_unique = {u["name"] for u in inspector.get_unique_constraints("briefings")}
         test_ids = db.seed_test_users(engine)
         with db.session(engine) as s:
             test_users = s.exec(select(db.User).where(db.User.is_test == True)).all()  # noqa: E712
@@ -99,11 +102,15 @@ def live_create() -> dict:
             "missing_tables": sorted(set(db.TABLES) - names),
             "users_is_test_column": "is_test" in user_columns,
             "items_stars_checked_at_column": "stars_checked_at" in item_columns,
+            "briefings_empty_row_ready": ("empty_reason" in briefing_columns and briefing_pk == ["id"]
+                                          and briefing_columns["item_id"]["nullable"]
+                                          and "uq_briefings_user_date_item" in briefing_unique),
             "test_user_ids": test_ids,
             "test_users": [{"id": u.id, "role": u.role, "tools": u.profile_tools_tags} for u in test_users],
         }
         result["ok"] = (not result["missing_tables"] and result["users_is_test_column"]
-                        and result["items_stars_checked_at_column"] and len(test_users) >= 2)
+                        and result["items_stars_checked_at_column"] and result["briefings_empty_row_ready"]
+                        and len(test_users) >= 2)
         return result
     except Exception as exc:
         return {"status": f"실패 {type(exc).__name__}: {config.redact(str(exc))[:200]}", "ok": False}
@@ -126,6 +133,8 @@ def main() -> int:
         "sqlite_흔적_없음": "sqlite" not in (ROOT / "db.py").read_text(encoding="utf-8").lower(),
         "DATABASE_URL_없으면_명확한_에러": missing_url_raises(),
         "users_is_test_칸": "is_test" in columns["users"],
+        "briefings_카드0건_행(empty_reason·item_id_NULL허용)": "empty_reason" in columns["briefings"]
+        and tables["briefings"].c.item_id.nullable is True,
         "가짜_프로필_2개_정의": [u["role"] for u in db.TEST_USERS] == ["자바 백엔드 개발자", "마케터"],
         **url_checks(),
     }
