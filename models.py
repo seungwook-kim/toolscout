@@ -95,18 +95,22 @@ def active_models() -> ModelTable:
     return DEV_MODELS if dev_mode() else PROD_MODELS
 
 
-def call(role: str, messages: list[BaseMessage], tools: list[Any] | None = None) -> AIMessage:
-    """역할에 맞는 모델을 부른다. 429·503·529면 대체 모델로 1회 전환한다."""
+def call(role: str, messages: list[BaseMessage], tools: list[Any] | None = None, *,
+         temperature: float | None = None) -> AIMessage:
+    """역할에 맞는 모델을 부른다. 429·503·529면 대체 모델로 1회 전환한다.
+
+    temperature는 받는 공급자(Gemini, OpenRouter)에만 넘긴다. Anthropic SDK 1.5 create에는 인자가 없다.
+    """
     table = active_models()[role]
     openai_tools = [convert_to_openai_tool(t) for t in tools] if tools else None
     try:
-        return _call_one(role, "primary", table["primary"], messages, openai_tools)
+        return _call_one(role, "primary", table["primary"], messages, openai_tools, temperature)
     except Exception as exc:
         status = status_code(exc)
         if status not in FALLBACK_STATUS:
             raise
         log.warning("%s 기본 모델 %s 응답 %s, 대체 모델로 전환", role, table["primary"]["model"], status)
-        return _call_one(role, "fallback", table["fallback"], messages, openai_tools)
+        return _call_one(role, "fallback", table["fallback"], messages, openai_tools, temperature)
 
 
 def status_code(exc: Exception) -> int | None:
@@ -120,11 +124,13 @@ def status_code(exc: Exception) -> int | None:
     return None
 
 
-def _call_one(role: str, slot: str, spec: dict[str, str], messages: list[BaseMessage], tools) -> AIMessage:
+def _call_one(role: str, slot: str, spec: dict[str, str], messages: list[BaseMessage], tools,
+              temperature: float | None = None) -> AIMessage:
     adapter = PROVIDERS[spec["provider"]]
-    with tracing.span(f"llm:{role}:{slot}", kind="generation", model=spec["model"],
+    options = {"temperature": temperature} if temperature is not None and spec["provider"] in ("gemini", "openrouter") else {}
+    with tracing.span(f"llm:{role}:{slot}", kind="generation", model=spec["model"], model_parameters=options or None,
                       input=_summary(messages), metadata={"provider": spec["provider"], "tools": len(tools or [])}) as span:
-        result = adapter(spec["model"], messages, tools)
+        result = adapter(spec["model"], messages, tools, **options)
         usage = result.usage_metadata or {}
         span.update(output={"text": result.text, "tool_calls": result.tool_calls},
                     usage_details={"input": usage.get("input_tokens", 0), "output": usage.get("output_tokens", 0)})
@@ -199,7 +205,7 @@ def _gemini_client():
     return genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 
-def _gemini(model: str, messages: list[BaseMessage], tools) -> AIMessage:
+def _gemini(model: str, messages: list[BaseMessage], tools, temperature: float | None = None) -> AIMessage:
     from google.genai import types
 
     system, conversation = _split_system(messages)
@@ -225,6 +231,7 @@ def _gemini(model: str, messages: list[BaseMessage], tools) -> AIMessage:
     config = types.GenerateContentConfig(
         system_instruction=system or None,
         max_output_tokens=MAX_TOKENS,
+        temperature=temperature,
         tools=[types.Tool(function_declarations=[types.FunctionDeclaration(
             name=t["function"]["name"], description=t["function"].get("description", ""),
             parameters_json_schema=t["function"].get("parameters")) for t in tools])] if tools else None,
@@ -258,9 +265,9 @@ def _openai(model: str, messages: list[BaseMessage], tools) -> AIMessage:
                               model, messages, tools)
 
 
-def _openrouter(model: str, messages: list[BaseMessage], tools) -> AIMessage:
-    return _openai_compatible("openrouter", OPENROUTER_URL, "OPENROUTER_API_KEY", {"max_tokens": MAX_TOKENS},
-                              model, messages, tools)
+def _openrouter(model: str, messages: list[BaseMessage], tools, temperature: float | None = None) -> AIMessage:
+    extra = {"max_tokens": MAX_TOKENS} | ({"temperature": temperature} if temperature is not None else {})
+    return _openai_compatible("openrouter", OPENROUTER_URL, "OPENROUTER_API_KEY", extra, model, messages, tools)
 
 
 def _openai_compatible(provider: str, url: str, key_env: str, limits: dict, model: str,

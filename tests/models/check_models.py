@@ -118,6 +118,30 @@ def mode_switch() -> bool:
     return seen == [f"{dev['provider']}:{dev['model']}"] * 2 + [f"{prod['provider']}:{prod['model']}"]
 
 
+def temperature_routing() -> bool:
+    """call(temperature=0)이 Gemini·OpenRouter에는 넘어가고 Anthropic·OpenAI에는 안 넘어가는지."""
+    seen: dict[str, dict] = {}
+    original = dict(models.PROVIDERS)
+
+    def recorder(name: str):
+        def adapter(model, messages, tools, **kw):
+            seen.setdefault(name, kw)
+            return AIMessage("ok")
+        return adapter
+
+    for name in models.PROVIDERS:
+        models.PROVIDERS[name] = recorder(name)
+    try:
+        with dev_mode("0"):
+            models.call("verifier", [HumanMessage("x")], temperature=0)  # anthropic
+        with dev_mode("1"):
+            models.call("gate", [HumanMessage("x")], temperature=0)  # openrouter
+            models.call("curator", [HumanMessage("x")], temperature=0)  # gemini
+    finally:
+        models.PROVIDERS.update(original)
+    return seen.get("anthropic") == {} and seen.get("openrouter") == {"temperature": 0} and seen.get("gemini") == {"temperature": 0}
+
+
 def dev_table_rules() -> bool:
     specs = [spec for table in models.DEV_MODELS.values() for spec in table.values()]
     return (set(models.DEV_MODELS) == set(EXPECTED_PROD)
@@ -152,8 +176,8 @@ def gemini_conversion() -> bool:
                                usage_metadata=None)
     fake = SimpleNamespace(models=SimpleNamespace(generate_content=lambda **kw: captured.update(kw) or response))
     models._gemini_client = lambda: fake
-    first = models._gemini("m", [HumanMessage("요약")], [models.convert_to_openai_tool(TOOL)])
-    tools_ok = captured["config"].tools[0].function_declarations[0].name == "fetch_article"
+    first = models._gemini("m", [HumanMessage("요약")], [models.convert_to_openai_tool(TOOL)], temperature=0)
+    tools_ok = captured["config"].tools[0].function_declarations[0].name == "fetch_article" and captured["config"].temperature == 0
     models._gemini("m", history(first), None)
     contents = captured["contents"]
     return (tools_ok and first.tool_calls[0]["args"] == {"url": "https://a.com"}
@@ -178,7 +202,7 @@ def openai_compatible_conversion() -> dict:
     first = models._openai("m", [HumanMessage("요약")], [models.convert_to_openai_tool(TOOL)])
     models._openai("m", history(first), None)
     roles = [m["role"] for m in captured[-1][1]["messages"]]
-    routed = models._openrouter("m:free", [HumanMessage("요약")], None)
+    routed = models._openrouter("m:free", [HumanMessage("요약")], None, temperature=0)
     try:
         models._openrouter("error-model", [HumanMessage("요약")], None)
         body_error = None
@@ -187,7 +211,8 @@ def openai_compatible_conversion() -> dict:
     return {
         "변환_openai_httpx": first.tool_calls[0]["id"] == "c1" and roles == ["system", "user", "assistant", "tool"]
         and captured[0][1]["tools"][0]["function"]["name"] == "fetch_article" and "max_completion_tokens" in captured[0][1],
-        "변환_openrouter_주소·max_tokens": captured[2][0] == models.OPENROUTER_URL and "max_tokens" in captured[2][1]
+        "변환_openrouter_주소·max_tokens·온도": captured[2][0] == models.OPENROUTER_URL and "max_tokens" in captured[2][1]
+        and captured[2][1].get("temperature") == 0 and "temperature" not in captured[0][1]
         and routed.response_metadata["provider"] == "openrouter",
         "200_본문_오류는_ProviderError_코드보존": body_error == 429 and body_error in models.FALLBACK_STATUS,
     }
@@ -227,7 +252,8 @@ def main() -> int:
         "400_전환_안함": cases["400"] == {"calls": 1, "raised": 400},
         "대체_실패시_추가_전환_없음": cases["503_후_대체도_503"] == {"calls": 2, "raised": 503},
         "변환_anthropic": anthropic_conversion(),
-        "변환_gemini_thought_signature_보존": gemini_conversion(),
+        "변환_gemini_thought_signature·온도": gemini_conversion(),
+        "온도는_anthropic에_안_넘김": temperature_routing(),
         **openai_compatible_conversion(),
     }
     models._anthropic_client, models._gemini_client, models._http_client = originals
