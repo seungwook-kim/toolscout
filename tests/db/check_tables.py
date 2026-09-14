@@ -89,6 +89,7 @@ def live_create() -> dict:
         inspector = inspect(engine)
         names = set(inspector.get_table_names())
         user_columns = {c["name"] for c in inspector.get_columns("users")} if "users" in names else set()
+        item_columns = {c["name"] for c in inspector.get_columns("items")} if "items" in names else set()
         test_ids = db.seed_test_users(engine)
         with db.session(engine) as s:
             test_users = s.exec(select(db.User).where(db.User.is_test == True)).all()  # noqa: E712
@@ -97,10 +98,12 @@ def live_create() -> dict:
             "tables_created": sorted(set(db.TABLES) & names),
             "missing_tables": sorted(set(db.TABLES) - names),
             "users_is_test_column": "is_test" in user_columns,
+            "items_stars_checked_at_column": "stars_checked_at" in item_columns,
             "test_user_ids": test_ids,
             "test_users": [{"id": u.id, "role": u.role, "tools": u.profile_tools_tags} for u in test_users],
         }
-        result["ok"] = not result["missing_tables"] and result["users_is_test_column"] and len(test_users) >= 2
+        result["ok"] = (not result["missing_tables"] and result["users_is_test_column"]
+                        and result["items_stars_checked_at_column"] and len(test_users) >= 2)
         return result
     except Exception as exc:
         return {"status": f"실패 {type(exc).__name__}: {config.redact(str(exc))[:200]}", "ok": False}

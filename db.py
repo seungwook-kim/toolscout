@@ -77,6 +77,7 @@ class Item(SQLModel, table=True):
     source_tier: int | None = None
     version: str | None = None
     stars: int | None = None
+    stars_checked_at: datetime | None = None  # GitHub 별 수 조회 시각. 24시간 캐시 기준
     deadline_at: datetime | None = None
 
 
@@ -200,8 +201,16 @@ def get_engine(url: URL | None = None) -> Engine:
     return create_engine(url or database_url(), pool_pre_ping=True)
 
 
+# 표를 만든 뒤에 추가한 칸. create_all은 이미 있는 표에 칸을 더하지 않으므로 없을 때만 추가한다
+ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE")]
+
+
 def init_db(engine: Engine | None = None) -> None:
-    SQLModel.metadata.create_all(engine or get_engine())
+    engine = engine or get_engine()
+    SQLModel.metadata.create_all(engine)
+    with engine.begin() as connection:
+        for table, column, sql_type in ADDED_COLUMNS:
+            connection.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {sql_type}")
 
 
 # 개발 모드 가짜 프로필 2개 (계획안 부록 B 검수 기준의 프로필 A·B). .test 도메인이라 실제로 발송되지 않는다

@@ -2,19 +2,25 @@
 
 실행: uv run python -m tests.sources.run_today
 결과: tests/sources/today_counts.json (건수만), tests/sources/report.md
-- 기본 필터(MCP 게시자당 3건, 해커뉴스 20점)로 측정하고, 합계가 300건 안팎(±20%)을 넘으면
-  같은 캐시로 게시자당 2건·30점을 재측정한다 (2026-09-14 사용자 결정)
+- 기본 필터(MCP 게시자당 3건·신규 별 수 상위 20·버전 업 상위 10, 해커뉴스 20점)로 측정하고,
+  합계가 300건 안팎(±20%)을 넘으면 같은 캐시로 게시자당 2건·30점을 재측정한다 (2026-09-14 사용자 결정)
+- 중복 제거 후 건수와 큐레이터 선별 호출 수(20건 묶음)도 남긴다
 수집 항목 원문은 저장소에 두지 않고 임시 폴더 캐시에만 둔다 (9번 중복 제거 검수가 읽는다).
 """
 import json
+import math
 import sys
 import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from pipeline.dedupe import dedupe
+from pipeline.normalize import normalize
 from sources.collect import NEWS_WINDOW, TOOL_WINDOW, collect
 from sources.rss import FEEDS
+
+SELECT_BATCH = 20
 
 HERE = Path(__file__).parent
 CACHE = Path(tempfile.gettempdir()) / "toolscout_items_today.json"
@@ -29,7 +35,7 @@ METHOD = {f.name: f"RSS {f.url}" for f in FEEDS} | {
 }
 RULE = {"openai": "날짜 창 필터 (전체 글이 옴)", "aitimes": "시간대 없는 날짜는 KST",
         "reddit_localllama": "User-Agent 필수", "hackernews": "OR는 optionalWords로, points N 이상",
-        "mcp_registry": "7일 창, GitHub 저장소, 게시자당 N건, 버전 업은 별 50 이상",
+        "mcp_registry": "7일 창, GitHub 저장소, 게시자당 N건, 버전 업 별 50 이상, 별 수 상위 신규 20·버전 업 10",
         "anthropic_skills": "7일 창, PAT 있으면 사용"}
 EXCLUDED = [("venturebeat_ai", "RSS https://venturebeat.com/category/ai/feed/", "HTTP 429, 봇 UA 차단, 우회 안 함, 제외")]
 
@@ -47,12 +53,19 @@ def measure(now: datetime, config: dict, cache: dict) -> dict:
     started = time.perf_counter()
     results = collect(now, cache=cache, **config)
     items = [item for r in results for item in r.items]
+    grouped = dedupe(normalize(items))  # 큐레이터가 실제로 받는 건수
     return {
         "config": config, "seconds": round(time.perf_counter() - started, 1), "total": len(items), "items": items,
+        "after_dedupe": len(grouped), "curator_select_calls": math.ceil(len(grouped) / SELECT_BATCH),
         "results": results,
         "counts": {r.source: {"fetched": r.fetched, "kept": len(r.items), "error": r.error, **({"stats": r.stats} if r.stats else {})}
                    for r in results},
     }
+
+
+def _mcp_split_ok(results) -> bool:
+    stats = next((r.stats for r in results if r.source == "mcp_registry"), {})
+    return stats.get("신규_상위", 99) <= 20 and stats.get("버전업_상위", 99) <= 10
 
 
 def main() -> int:
@@ -69,6 +82,7 @@ def main() -> int:
         "정규화_스키마·창_유효": not invalid,
         "제외_소스_수집_안_함": not any(r.source == name for r in final["results"] for name, _, _ in EXCLUDED),
         "실패_소스_없음": not any(r.error for r in final["results"]),
+        "MCP_신규20·버전업10_이하": _mcp_split_ok(final["results"]),
     }
     report = {"checked_at": now.isoformat(timespec="seconds"), "target": f"{TARGET}건 ±{int(TOLERANCE * 100)}%",
               "measurements": [{k: v for k, v in run.items() if k not in ("items", "results")} for run in runs],
@@ -100,7 +114,8 @@ def write_report(now: datetime, runs: list[dict], within: bool) -> None:
         if registry:
             lines.append("")
             lines.append("MCP 레지스트리 단계별: " + ", ".join(f"{k} {v}" for k, v in registry.items()))
-        lines += ["", f"합계: {run['total']}건 · 소요 {run['seconds']}초", ""]
+        lines += ["", f"합계: {run['total']}건 · 중복 제거 후 {run['after_dedupe']}건 · "
+                      f"큐레이터 선별 호출 {run['curator_select_calls']}회 · 소요 {run['seconds']}초", ""]
     lines += [f"판정: {'목표 안팎, 확정' if within else '목표 초과, 결정 필요'}", "",
               "## 제외한 소스", "", "| 소스 | 방식 | 사유 |", "|---|---|---|"]
     lines += [f"| {name} | {method} | {reason} |" for name, method, reason in EXCLUDED]

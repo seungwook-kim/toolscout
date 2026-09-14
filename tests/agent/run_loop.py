@@ -92,7 +92,9 @@ async def live(mcp_url: str) -> dict:
         tool = await loop.run("explainer", '반드시 fetch_article 도구로 기사를 읽은 뒤 {"summary": "..."} JSON 한 줄로 요약한다.',
                               ARTICLE, ["fetch_article"], 4, mcp_url=mcp_url, briefing_user=1)
     except Exception as exc:
-        out["error"] = f"{type(exc).__name__}: {config.redact(str(exc))[:200]}"
+        while isinstance(exc, BaseExceptionGroup) and len(exc.exceptions) == 1:  # MCP 클라이언트 TaskGroup이 감싼 원인을 꺼낸다
+            exc = exc.exceptions[0]
+        out["error"] = f"{type(exc).__name__}: {config.redact(str(exc))[:300]}"
         out["checks"] = {"실제_안녕": False, "실제_도구1개": False}
         return out
     out.update(hello=hello, one_tool=tool, trace_urls=[tracing.trace_url(hello["trace_id"]), tracing.trace_url(tool["trace_id"])])
