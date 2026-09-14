@@ -2,6 +2,14 @@
 
 새 세션은 맨 위 항목을 읽고 시작한다. 폴더별 상세 이력은 각 폴더의 `CHANGELOG.md`, 남은 작업은 각 폴더 README의 `## 할 일`에 있다.
 
+- 세션 3 · 2026-09-14 · 큐레이터·해설가·검증 노드·저장·하루 실행 (가짜 모델 검수 통과, main 머지 완료)
+  - 끝난 것 (main 머지): 큐레이터(선별·사용자별 후보·검증 요청), JSON 규격 응답·1회 재시도(`agent/structured.py`), 해설가·용어집 30개, 검증 노드(`pipeline/validate.py`), 저장(`pipeline/persist.py`), 하루 실행(`pipeline/run_daily.py`), MCP 수집 별 수 24시간 캐시·신규 20·버전 업 10, 개발 모델 사고·추론 설정과 호출 간격
+  - 검수: run_curator 실제 통과(호출 13·63초·선별 94·두 사용자 겹침 0·검증 요청 5), run_explainer --fake 8항목, run_daily --fake 21항목(Supabase 실제 저장·재실행 멱등·발송 사용자 건너뜀) 통과
+  - 무료 모델 형식 실패: 큐레이터 1차 12회(재시도 후 4건 실패, 사고·추론 토큰이 출력 한도 소진) → 설정 조정 후 1회(재시도로 복구)
+  - 미완: 실제 모델 run_daily·run_explainer. Gemini·OpenRouter 무료 하루 한도 모두 소진으로 큐레이터 첫 호출에서 멈춤, 저장 0건
+  - 결정 필요: 기본·대체 모델이 둘 다 실패할 때 처리(지금은 실행 전체가 멈춤), 한글 비율 어절 기준 60% 확인, 카드 0건 사용자 발송 방식
+  - 다음 시작점: 9월 15일 16:00 KST 이후 `tests.pipeline.run_daily` 실제 한 번 → 이메일 발송(sent_at 기록) + n8n W1
+
 - 세션 2 · 2026-09-14 · 지난 결정 반영과 막힌 검수 마무리 (4번 통과, main 머지 완료)
   - 끝난 것 (main 머지): Docker CI (GitHub Actions 4단계 성공), `config.py` .env 로더(값 출력 금지 규칙), psycopg와 연결 문자열 자동 변환, Gemini·Anthropic 클라이언트 닫힘 버그, 529 전환, 계획안 부록 F, mcp/ 용도, 벤처비트 제외, DEV_MODE 모델표·OpenRouter, users.is_test·가짜 프로필 2개, MCP·해커뉴스 수집 필터
   - 4번 통과: check_env / check_tables (Supabase 표 9개, is_test 칸, 가짜 프로필 id 1·2) / check_models (개발 모델 4역할 실제 호출) / run_loop (nex-n2.5-pro 안녕·도구 1개, Langfuse 트레이스)
