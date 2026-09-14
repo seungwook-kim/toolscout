@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-# 주제 10개 (고정). 계획안에 목록이 없어 2026-09-14 초안으로 정했다. 확정 전까지 여기 한 곳에서만 고친다
+# 주제 10개 (고정). 계획안에 목록이 없어 2026-09-14 초안을 만들고 같은 날 사용자가 확정했다. 여기 한 곳에서만 고친다
 TOPICS: dict[str, str] = {
     "model_release": "모델 출시·성능",
     "agent_framework": "에이전트·프레임워크",

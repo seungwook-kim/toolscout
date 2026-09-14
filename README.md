@@ -140,6 +140,7 @@ toolscout/
 ├── main.py              FastAPI 앱 (/ 화면, /api/ 기능, /mcp MCP 서버)
 ├── mcp_server.py        자체 MCP 서버 (내부 도구 6종, 공개 도구 3종 예정)
 ├── models.py            역할별 기본/대체 모델표와 call()
+├── providers.py         공급자별 호출 (Anthropic, Gemini, OpenAI 호환)
 ├── db.py                SQLModel 데이터 표 9개 (Supabase)
 ├── config.py            .env 로더 (값은 출력하지 않음)
 ├── events.py, gate.py, memory.py
