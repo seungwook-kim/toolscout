@@ -15,6 +15,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.engine import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
 
+import config  # noqa: F401  .env를 os.environ에 채운다
+
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)

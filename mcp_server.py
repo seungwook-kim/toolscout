@@ -18,6 +18,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+import config  # noqa: F401  .env를 os.environ에 채운다 (MCP_SERVICE_KEY 등)
 from agent import tracing
 
 log = logging.getLogger("toolscout.mcp")

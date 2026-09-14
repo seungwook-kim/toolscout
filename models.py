@@ -18,6 +18,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langchain_core.messages import convert_to_openai_messages
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
+import config  # noqa: F401  .env를 os.environ에 채운다
 from agent import tracing
 
 log = logging.getLogger("toolscout.models")
