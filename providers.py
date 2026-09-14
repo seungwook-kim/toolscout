@@ -1,7 +1,8 @@
-"""공급자별 모델 호출 (Anthropic, Gemini, OpenAI 호환). 모델명과 역할 배정은 models.py에만 둔다.
+"""공급자별 모델 호출 (Anthropic, Gemini, OpenAI 호환: OpenAI·OpenRouter·Groq·Ollama). 모델명과 역할 배정은 models.py에만 둔다.
 
 모두 langchain_core 메시지를 받아 AIMessage(tool_calls 포함)로 돌려준다.
-선택 옵션: temperature(Gemini·OpenRouter), thinking(Gemini thinking_level), reasoning(OpenRouter reasoning.effort).
+선택 옵션: temperature(Gemini·OpenRouter·Groq·Ollama), thinking(Gemini thinking_level),
+reasoning(OpenRouter reasoning.effort, Groq·Ollama reasoning_effort).
 """
 import json
 import os
@@ -16,6 +17,10 @@ import config  # noqa: F401  .env를 os.environ에 채운다
 MAX_TOKENS = 4096
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+OLLAMA_URL = "http://localhost:11434/v1/chat/completions"  # 로컬 Ollama OpenAI 호환, 키 불필요
+REMOTE_TIMEOUT = 120
+LOCAL_TIMEOUT = 30  # 로컬 모델이 30초 안에 답하지 않으면 타임아웃으로 다음 제공자
 
 
 class ProviderError(Exception):
@@ -24,6 +29,10 @@ class ProviderError(Exception):
     def __init__(self, message: str, status_code: Any = None):
         super().__init__(message)
         self.status_code = status_code if isinstance(status_code, int) else None
+
+
+class MissingKey(Exception):
+    """키가 비어 있어 부르지 않은 공급자. models.call이 다음 제공자로 넘어간다. 키 이름만 담는다."""
 
 
 def _split_system(messages: list[BaseMessage]) -> tuple[str, list[BaseMessage]]:
@@ -141,10 +150,10 @@ def _gemini(model: str, messages: list[BaseMessage], tools, temperature: float |
     )
 
 
-# OpenAI 호환 (OpenAI, OpenRouter). httpx로 직접 호출해 새 라이브러리를 늘리지 않는다 ------
+# OpenAI 호환 (OpenAI, OpenRouter, Groq, Ollama). httpx로 직접 호출해 새 라이브러리를 늘리지 않는다 ------
 
-def _http_client() -> httpx.Client:
-    return httpx.Client(timeout=120)
+def _http_client(timeout: float = REMOTE_TIMEOUT) -> httpx.Client:
+    return httpx.Client(timeout=timeout)
 
 
 def _openai(model: str, messages: list[BaseMessage], tools) -> AIMessage:
@@ -163,13 +172,43 @@ def _openrouter(model: str, messages: list[BaseMessage], tools, temperature: flo
     return _openai_compatible("openrouter", OPENROUTER_URL, "OPENROUTER_API_KEY", extra, model, messages, tools)
 
 
-def _openai_compatible(provider: str, url: str, key_env: str, extra: dict, model: str,
-                       messages: list[BaseMessage], tools) -> AIMessage:
+def _groq(model: str, messages: list[BaseMessage], tools, temperature: float | None = None,
+          reasoning: str | None = None) -> AIMessage:
+    """reasoning: reasoning_effort (모델마다 받는 값이 다르다. 모델표에 맞는 값을 둔다)."""
+    extra: dict[str, Any] = {"max_tokens": MAX_TOKENS}
+    if temperature is not None:
+        extra["temperature"] = temperature
+    if reasoning:
+        extra["reasoning_effort"] = reasoning
+    return _openai_compatible("groq", GROQ_URL, "GROQ_API_KEY", extra, model, messages, tools)
+
+
+def _ollama(model: str, messages: list[BaseMessage], tools, temperature: float | None = None,
+            reasoning: str | None = None) -> AIMessage:
+    """로컬 Ollama. reasoning=none이면 사고를 끈다 (사고 모델 실측: 사고 토큰 0).
+
+    OpenAI 호환 API는 요청의 options.num_ctx를 무시한다 (2026-09-14 실측). num_ctx 8192는 서버 환경변수
+    OLLAMA_CONTEXT_LENGTH=8192로 고정한다 (docs/local-model.md).
+    """
+    extra: dict[str, Any] = {"max_tokens": MAX_TOKENS}
+    if temperature is not None:
+        extra["temperature"] = temperature
+    if reasoning:
+        extra["reasoning_effort"] = reasoning
+    return _openai_compatible("ollama", OLLAMA_URL, None, extra, model, messages, tools, timeout=LOCAL_TIMEOUT)
+
+
+def _openai_compatible(provider: str, url: str, key_env: str | None, extra: dict, model: str,
+                       messages: list[BaseMessage], tools, timeout: float = REMOTE_TIMEOUT) -> AIMessage:
     body: dict[str, Any] = {"model": model, "messages": convert_to_openai_messages(messages), **extra}
     if tools:
         body["tools"] = tools
-    headers = {"Authorization": f"Bearer {os.environ.get(key_env, '')}"}
-    with _http_client() as client:
+    headers = {}
+    if key_env:
+        if not os.environ.get(key_env):
+            raise MissingKey(f"{key_env} 비어있음")
+        headers["Authorization"] = f"Bearer {os.environ[key_env]}"
+    with _http_client(timeout) as client:
         response = client.post(url, headers=headers, json=body)
         response.raise_for_status()
     data = response.json()
@@ -189,7 +228,9 @@ def _openai_compatible(provider: str, url: str, key_env: str, extra: dict, model
 
 PROVIDERS: dict[str, Callable[..., AIMessage]] = {
     "anthropic": _anthropic, "gemini": _gemini, "openai": _openai, "openrouter": _openrouter,
+    "groq": _groq, "ollama": _ollama,
 }
 # 공급자별로 받는 선택 옵션. models._call_one이 이 목록에 있는 것만 넘긴다
 OPTIONS: dict[str, tuple[str, ...]] = {"anthropic": (), "openai": (), "gemini": ("temperature", "thinking"),
-                                       "openrouter": ("temperature", "reasoning")}
+                                       "openrouter": ("temperature", "reasoning"), "groq": ("temperature", "reasoning"),
+                                       "ollama": ("temperature", "reasoning")}

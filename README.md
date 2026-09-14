@@ -152,7 +152,7 @@ toolscout/
 ├── mcp/                 공개 MCP 설정 예시, E2B 안 tools/list 스크립트
 ├── n8n/workflows/       W0~W4 워크플로우 JSON
 ├── tests/               기능별 검수 스크립트
-├── docs/                계획안.md, img/
+├── docs/                계획안.md, local-model.md, img/
 ├── .github/workflows/   CI (Docker 구성 검사)
 ├── docker-compose.yml
 └── Dockerfile

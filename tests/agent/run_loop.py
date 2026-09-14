@@ -80,13 +80,8 @@ async def mechanics(mcp_url: str) -> dict:
 
 
 async def live(mcp_url: str) -> dict:
-    """현재 모델표(DEV_MODE면 개발 모델)의 해설가로 실제 실행한다. 키가 없으면 실패로 기록한다."""
-    spec = models.active_models()["explainer"]["primary"]
-    key_env = {"anthropic": "ANTHROPIC_API_KEY", "gemini": "GEMINI_API_KEY", "openai": "OPENAI_API_KEY",
-               "openrouter": "OPENROUTER_API_KEY"}[spec["provider"]]
-    if not os.environ.get(key_env):
-        return {"model": spec["model"], "error": f"{key_env} 비어있음", "checks": {"실제_안녕": False, "실제_도구1개": False}}
-    out: dict = {"model": spec["model"]}
+    """현재 모델표(DEV_MODE면 개발 모델)의 해설가로 실제 실행한다. 제공자 순서대로 전환되며, 쓴 제공자를 남긴다."""
+    out: dict = {"chain": [f"{s['provider']}:{s['model']}" for s in models.active_models()["explainer"]]}
     try:
         hello = await loop.run("explainer", '한국어로 짧게 답하고 {"reply": "..."} JSON만 출력한다.', "안녕", [], 2)
         tool = await loop.run("explainer", '반드시 fetch_article 도구로 기사를 읽은 뒤 {"summary": "..."} JSON 한 줄로 요약한다.',
@@ -97,7 +92,8 @@ async def live(mcp_url: str) -> dict:
         out["error"] = f"{type(exc).__name__}: {config.redact(str(exc))[:300]}"
         out["checks"] = {"실제_안녕": False, "실제_도구1개": False}
         return out
-    out.update(hello=hello, one_tool=tool, trace_urls=[tracing.trace_url(hello["trace_id"]), tracing.trace_url(tool["trace_id"])])
+    out.update(hello=hello, one_tool=tool, trace_urls=[tracing.trace_url(hello["trace_id"]), tracing.trace_url(tool["trace_id"])],
+               used=[f"{r.get('provider')}:{r.get('model')}" for r in (hello, tool)])
     out["checks"] = {
         "실제_안녕": hello["status"] == "ok" and isinstance(hello["output"], dict),
         "실제_도구1개": tool["status"] == "ok" and tool["tool_calls"] >= 1,

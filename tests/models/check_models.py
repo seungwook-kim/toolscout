@@ -1,8 +1,9 @@
-"""models.py·providers.py 검수 (착수 프롬프트 0단계 6번, DEV_MODE 모델표, 사고·추론 설정).
+"""models.py·providers.py 검수 (착수 프롬프트 0단계 6번, DEV_MODE 모델표, 사고·추론 설정, 로컬·Groq 제공자 순서).
 
 실행: uv run python -m tests.models.check_models
-- 키 없이 도는 검사: 운영·개발 모델표, 출처, 하드코딩, 429·503·529 전환, DEV_MODE 전환, 옵션 전달, 호출 간격, 공급자별 변환
-- 실제 호출: 개발 모델표 4역할 기본 모델은 성공해야 통과. 운영 모델표는 키가 없으면 SKIP
+- 키 없이 도는 검사: 운영·개발 모델표, 출처, 하드코딩, 429·503·529·연결 실패·타임아웃·키 없음 전환,
+  모델 장애(ModelUnavailable), DEV_MODE 전환, 옵션 전달, 호출 간격, 공급자별 변환
+- 실제 호출: 개발 모델표 4역할 첫 제공자(로컬)는 성공해야 통과. 운영 모델표는 키가 없으면 SKIP
 환경변수 값과 키는 출력하지 않는다.
 """
 import json
@@ -34,10 +35,11 @@ EXPECTED_PROD = {
     "gate": ("claude-haiku-4-5-20251001", "gemini-3.6-flash"),
 }
 SOURCES = ["platform.claude.com/docs", "ai.google.dev/gemini-api/docs/models", "developers.openai.com/api/docs/models",
-           "openrouter.ai/api/v1/models"]
-MODEL_NAME = re.compile(r"claude-(opus|sonnet|haiku|fable)|gemini-\d|gpt-\d|gemma-\d|nemotron|:free")
+           "openrouter.ai/api/v1/models", "console.groq.com/docs", "ollama.com/library"]
+MODEL_NAME = re.compile(r"claude-(opus|sonnet|haiku|fable)|gemini-\d|gpt-\d|gpt-oss|gemma-?\d|qwen\d|llama\d|nemotron|:free")
 KEY_ENV = {"anthropic": "ANTHROPIC_API_KEY", "gemini": "GEMINI_API_KEY", "openai": "OPENAI_API_KEY",
-           "openrouter": "OPENROUTER_API_KEY"}
+           "openrouter": "OPENROUTER_API_KEY", "groq": "GROQ_API_KEY", "ollama": None}
+DEV_ORDER = ["ollama", "groq", "gemini", "openrouter"]
 TOOL = {"name": "fetch_article", "description": "기사 원문", "parameters": {"type": "object", "properties": {"url": {"type": "string"}}}}
 
 
@@ -88,17 +90,43 @@ def fallback_case(primary_status: int | None, fallback_status: int | None) -> di
         return adapter
 
     table = models.PROD_MODELS["explainer"]
-    models.PROVIDERS[table["primary"]["provider"]] = fake(primary_status)
-    models.PROVIDERS[table["fallback"]["provider"]] = fake(fallback_status)
+    models.PROVIDERS[table[0]["provider"]] = fake(primary_status)
+    models.PROVIDERS[table[1]["provider"]] = fake(fallback_status)
     try:
         with dev_mode("0"):
             result = models.call("explainer", [HumanMessage("안녕")])
         outcome = {"slot": result.response_metadata.get("slot"), "trace_id": bool(result.response_metadata.get("trace_id"))}
-    except FakeStatus as exc:
-        outcome = {"raised": exc.status_code}
+    except models.ModelUnavailable as exc:
+        outcome = {"raised": models.status_code(exc.__cause__)}
     finally:
         models.PROVIDERS.update(original)
     return {"calls": len(calls), **outcome}
+
+
+def dev_chain_case(errors: dict[str, Exception | None]) -> dict:
+    """개발 모델표 큐레이터 제공자 순서(ollama→groq→gemini→openrouter). errors: 제공자 → 낼 예외(None이면 성공)."""
+    calls: list[str] = []
+    original = dict(models.PROVIDERS)
+
+    def fake(name: str):
+        def adapter(model, messages, tools, **_options):
+            calls.append(name)
+            if errors.get(name) is not None:
+                raise errors[name]
+            return AIMessage(content=f"ok:{name}")
+        return adapter
+
+    for name in DEV_ORDER:
+        models.PROVIDERS[name] = fake(name)
+    try:
+        with dev_mode("1"):
+            result = models.call("curator", [HumanMessage("안녕")])
+        outcome = {"slot": result.response_metadata.get("slot"), "provider": result.response_metadata.get("provider")}
+    except models.ModelUnavailable as exc:
+        outcome = {"unavailable": len(exc.attempts)}
+    finally:
+        models.PROVIDERS.update(original)
+    return {"calls": calls, **outcome}
 
 
 def mode_switch() -> bool:
@@ -116,13 +144,13 @@ def mode_switch() -> bool:
             models.call("gate", [HumanMessage("x")])
     finally:
         models.PROVIDERS.update(original)
-    dev = models.DEV_MODELS["gate"]["primary"]
-    prod = models.PROD_MODELS["gate"]["primary"]
+    dev = models.DEV_MODELS["gate"][0]
+    prod = models.PROD_MODELS["gate"][0]
     return seen == [f"{dev['provider']}:{dev['model']}"] * 2 + [f"{prod['provider']}:{prod['model']}"]
 
 
 def option_routing() -> bool:
-    """온도는 Gemini·OpenRouter에만, 표의 thinking은 Gemini에만, reasoning은 OpenRouter에만 넘어가는지."""
+    """온도는 받는 공급자에만, thinking은 Gemini에만, reasoning은 OpenRouter·Groq·Ollama에만 넘어가는지."""
     seen: dict[str, dict] = {}
     original = dict(models.PROVIDERS)
 
@@ -138,12 +166,14 @@ def option_routing() -> bool:
         with dev_mode("0"):
             models.call("verifier", [HumanMessage("x")], temperature=0)  # anthropic
         with dev_mode("1"):
-            models.call("gate", [HumanMessage("x")], temperature=0)  # openrouter
-            models.call("curator", [HumanMessage("x")], temperature=0)  # gemini
+            for index, spec in enumerate(models.DEV_MODELS["curator"]):  # ollama, groq, gemini, openrouter
+                models._call_one("curator", models.SLOT_NAMES[index], spec, [HumanMessage("x")], None, 0)
     finally:
         models.PROVIDERS.update(original)
     return (seen.get("anthropic") == {} and seen.get("openrouter") == {"temperature": 0, "reasoning": "none"}
-            and seen.get("gemini") == {"temperature": 0, "thinking": "minimal"})
+            and seen.get("gemini") == {"temperature": 0, "thinking": "minimal"}
+            and seen.get("ollama") == {"temperature": 0}
+            and seen.get("groq") == {"temperature": 0, "reasoning": "low"})
 
 
 def throttle_spacing() -> bool:
@@ -163,9 +193,12 @@ def throttle_spacing() -> bool:
 
 
 def dev_table_rules() -> bool:
-    specs = [spec for table in models.DEV_MODELS.values() for spec in table.values()]
+    """선별·게이트는 ollama부터, 해설가·검증관은 로컬 모델이 도구 호출을 못 해 groq부터 (docs/local-model.md)."""
+    specs = [spec for chain in models.DEV_MODELS.values() for spec in chain]
+    order = {role: [s["provider"] for s in chain] for role, chain in models.DEV_MODELS.items()}
     return (set(models.DEV_MODELS) == set(EXPECTED_PROD)
-            and all(s["provider"] in ("gemini", "openrouter") for s in specs)
+            and order["curator"] == order["gate"] == DEV_ORDER
+            and order["explainer"] == order["verifier"] == DEV_ORDER[1:]
             and all(s["model"].endswith(":free") for s in specs if s["provider"] == "openrouter"))
 
 
@@ -221,7 +254,27 @@ def openai_compatible_conversion() -> dict:
             return httpx.Response(200, json={"error": {"message": "rate limited upstream", "code": 429}})
         return httpx.Response(200, json=reply)
 
-    providers._http_client = lambda: httpx.Client(transport=httpx.MockTransport(handler))
+    timeouts: list[float] = []
+    headers: list[dict] = []
+
+    def client(timeout=providers.REMOTE_TIMEOUT):
+        timeouts.append(timeout)
+        return httpx.Client(transport=httpx.MockTransport(lambda r: headers.append(dict(r.headers)) or handler(r)))
+
+    providers._http_client = client
+    saved_keys = {k: os.environ.get(k) for k in ("OPENAI_API_KEY", "OPENROUTER_API_KEY")}
+    os.environ.update({k: "test-key" for k in saved_keys})  # 가짜 전송이라 실제 키가 필요 없다. 끝나면 되돌린다
+    try:
+        return _openai_compatible_cases(captured, timeouts, headers)
+    finally:
+        for k, v in saved_keys.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+
+def _openai_compatible_cases(captured: list, timeouts: list, headers: list) -> dict:
     first = providers._openai("m", [HumanMessage("요약")], [convert_to_openai_tool(TOOL)])
     providers._openai("m", history(first), None)
     roles = [m["role"] for m in captured[-1][1]["messages"]]
@@ -231,7 +284,23 @@ def openai_compatible_conversion() -> dict:
         body_error = None
     except providers.ProviderError as exc:
         body_error = exc.status_code
+    local = providers._ollama("local", [HumanMessage("요약")], None, temperature=0, reasoning="none")
+    local_ok = (captured[-1][0] == providers.OLLAMA_URL and captured[-1][1].get("reasoning_effort") == "none"
+                and "authorization" not in headers[-1] and timeouts[-1] == providers.LOCAL_TIMEOUT
+                and local.response_metadata["provider"] == "ollama")
+    saved_groq = os.environ.pop("GROQ_API_KEY", None)
+    before = len(captured)
+    try:
+        providers._groq("g", [HumanMessage("요약")], None)
+        missing = False
+    except providers.MissingKey:
+        missing = len(captured) == before
+    finally:
+        if saved_groq is not None:
+            os.environ["GROQ_API_KEY"] = saved_groq
     return {
+        "변환_ollama_주소·키없음·30초·사고끔": local_ok,
+        "groq_키없으면_요청없이_MissingKey": missing,
         "변환_openai_httpx": first.tool_calls[0]["id"] == "c1" and roles == ["system", "user", "assistant", "tool"]
         and captured[0][1]["tools"][0]["function"]["name"] == "fetch_article" and "max_completion_tokens" in captured[0][1],
         "변환_openrouter_주소·max_tokens·온도·추론끔": captured[2][0] == providers.OPENROUTER_URL and "max_tokens" in captured[2][1]
@@ -243,11 +312,20 @@ def openai_compatible_conversion() -> dict:
 
 
 def live_calls(table: dict, required: bool) -> dict:
+    """운영 모델표: 역할별 첫 모델만 부른다(키 없으면 SKIP). 개발 모델표: 제공자 순서대로 실제 전환하며 부른다."""
     out = {}
-    for role, slots in table.items():
-        spec = slots["primary"]
-        if not os.environ.get(KEY_ENV[spec["provider"]]):
-            out[role] = f"{'실패' if required else 'SKIP'}(키 없음) {spec['model']}"
+    for role, chain in table.items():
+        if required:
+            try:
+                reply = models.call(role, [HumanMessage("안녕이라고만 답해")])
+                meta = reply.response_metadata
+                out[role] = f"성공 {meta['provider']}:{meta['model']} ({meta['slot']}): {reply.text.strip()[:20]}"
+            except models.ModelUnavailable as exc:
+                out[role] = f"실패 {config.redact(str(exc))[:160]}"
+            continue
+        spec = chain[0]
+        if KEY_ENV[spec["provider"]] and not os.environ.get(KEY_ENV[spec["provider"]]):
+            out[role] = f"SKIP(키 없음) {spec['model']}"
             continue
         try:
             reply = models._call_one(role, "primary", spec, [HumanMessage("안녕이라고만 답해")], None)
@@ -262,11 +340,20 @@ def main() -> int:
     hardcoded = no_hardcoding()
     cases = {code: fallback_case(int(code), None) for code in ("503", "429", "529")}
     cases |= {"400": fallback_case(400, None), "503_후_대체도_503": fallback_case(503, 503)}
+    chain_all = dev_chain_case({"ollama": httpx.ReadTimeout("느림"), "groq": providers.MissingKey("GROQ_API_KEY 비어있음"),
+                                "gemini": FakeStatus(429), "openrouter": None})
+    chain_connect = dev_chain_case({"ollama": httpx.ConnectError("꺼짐"), "groq": None})
+    chain_400 = dev_chain_case({"ollama": FakeStatus(400)})
+    chain_dead = dev_chain_case({name: FakeStatus(429) for name in DEV_ORDER})
     originals = (providers._anthropic_client, providers._gemini_client, providers._http_client)
     ok = {"calls": 2, "slot": "fallback", "trace_id": True}
     checks = {
-        "운영_모델표_CLAUDE_일치": {r: (t["primary"]["model"], t["fallback"]["model"]) for r, t in models.PROD_MODELS.items()} == EXPECTED_PROD,
-        "개발_모델표_4역할·무료만": dev_table_rules(),
+        "운영_모델표_CLAUDE_일치": {r: (t[0]["model"], t[1]["model"]) for r, t in models.PROD_MODELS.items()} == EXPECTED_PROD,
+        "개발_모델표_순서_ollama→groq→gemini→openrouter": dev_table_rules(),
+        "개발_타임아웃·키없음·429_차례로_전환": chain_all == {"calls": DEV_ORDER, "slot": "fallback3", "provider": "openrouter"},
+        "개발_연결실패_다음으로": chain_connect == {"calls": ["ollama", "groq"], "slot": "fallback", "provider": "groq"},
+        "개발_400은_전환없이_모델장애": chain_400 == {"calls": ["ollama"], "unavailable": 1},
+        "개발_전부_429면_모델장애": chain_dead == {"calls": DEV_ORDER, "unavailable": 4},
         "DEV_MODE_전환_기본1": mode_switch(),
         "출처_URL_주석": all(s in text for s in SOURCES),
         "다른_파일_모델명_하드코딩_없음": not hardcoded,
@@ -286,6 +373,7 @@ def main() -> int:
     prod_live = live_calls(models.PROD_MODELS, required=False)
     checks["개발_모델_4역할_실제_호출_성공"] = all(v.startswith("성공") for v in dev_live.values())
     report = {"dev_mode": models.dev_mode(), "checks": checks, "fallback_cases": cases, "hardcoded_files": hardcoded,
+              "dev_chain_cases": {"all": chain_all, "connect": chain_connect, "400": chain_400, "dead": chain_dead},
               "live_dev": dev_live, "live_prod": prod_live, "pass": all(checks.values())}
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report["pass"] else 1
