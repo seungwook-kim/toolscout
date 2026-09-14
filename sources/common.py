@@ -6,7 +6,9 @@ from typing import TypedDict
 
 import httpx
 
-USER_AGENT = "toolscout/0.1 (personal AI briefing agent; +https://github.com/seungwook-kim/toolscout)"
+import config  # noqa: F401  .env를 os.environ에 채운다 (GITHUB_TOKEN 등)
+
+USER_AGENT ="toolscout/0.1 (personal AI briefing agent; +https://github.com/seungwook-kim/toolscout)"
 KST = timezone(timedelta(hours=9))
 
 

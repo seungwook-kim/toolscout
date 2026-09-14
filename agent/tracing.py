@@ -14,6 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
+import config  # noqa: F401  .env를 os.environ에 채운다
+
 log = logging.getLogger("toolscout.tracing")
 
 LOCAL_LOG = Path(os.environ.get("LOCAL_TRACE_LOG", "toolscout_trace.jsonl"))
