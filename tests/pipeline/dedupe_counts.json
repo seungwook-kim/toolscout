@@ -1,0 +1,64 @@
+{
+  "before": 2233,
+  "after_normalize": 2233,
+  "after_link_dedupe": 2229,
+  "after_title_grouping": 2227,
+  "by_type_before": {
+    "news": 268,
+    "mcp": 1964,
+    "skill": 1
+  },
+  "by_type_after": {
+    "mcp": 1964,
+    "skill": 1,
+    "news": 262
+  },
+  "news_groups_with_others": 6,
+  "group_examples": [
+    {
+      "title": "A.I. Was Supposed to Give Us New Killer Apps. What Happened?",
+      "source": "hackernews",
+      "also": [
+        "hackernews"
+      ]
+    },
+    {
+      "title": "Why are AI agents lying, cheating and coordinating?",
+      "source": "hackernews",
+      "also": [
+        "hackernews"
+      ]
+    },
+    {
+      "title": "Void Linux Maintainer Orphans 100 Packages over AI Policy Dispute",
+      "source": "hackernews",
+      "also": [
+        "hackernews"
+      ]
+    },
+    {
+      "title": "P(doom)",
+      "source": "hackernews",
+      "also": [
+        "geeknews"
+      ]
+    },
+    {
+      "title": "Find investors for your startup – Investor Match Guarantee",
+      "source": "hackernews",
+      "also": [
+        "hackernews"
+      ]
+    }
+  ],
+  "checks": {
+    "추적_파라미터·조각_제거": true,
+    "HTML_제거": true,
+    "같은_링크_하나로": true,
+    "비슷한_제목_묶음_대표는_공식": true,
+    "MCP는_제목_비슷해도_안_묶음": true,
+    "MCP는_링크_같아도_이름_다르면_안_묶음": true,
+    "오늘_데이터_실행": true
+  },
+  "pass": true
+}

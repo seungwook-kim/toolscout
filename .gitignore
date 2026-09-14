@@ -1,7 +1,30 @@
 # 비밀값
 .env
+.env.*
+!.env.example
 
-# 파이썬 캐시·가상환경
+# 로컬 작업 도구 설정 (저장소에 올리지 않음)
+.claude/
+CLAUDE.md
+착수_프롬프트.md
+
+# Langfuse 대체 로컬 트레이스 로그
+toolscout_trace.jsonl
+*.log
+
+# 파이썬 캐시·가상환경·빌드 산출물
 __pycache__/
-*.pyc
+*.py[cod]
 .venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+
+# 에디터·OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
