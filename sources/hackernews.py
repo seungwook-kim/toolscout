@@ -2,6 +2,7 @@
 
 Algolia는 질의 문자열의 OR를 연산자로 보지 않아 "AI OR LLM"을 그대로 넣으면 세 단어를 모두 찾는다.
 그래서 두 단어를 optionalWords로 넘겨 "AI 또는 LLM" 의미로 묻는다.
+수집 필터: 점수(points) min_points 이상만 (2026-09-14 사용자 승인, 기본 20).
 """
 from datetime import datetime, timezone
 
@@ -12,12 +13,13 @@ from sources.common import SourceResult, error_text, make_item
 URL = "https://hn.algolia.com/api/v1/search_by_date"
 TERMS = "AI LLM"
 PAGE_SIZE = 200
+MIN_POINTS = 20
 
 
-def fetch(since: datetime, client: httpx.Client) -> SourceResult:
+def fetch(since: datetime, client: httpx.Client, *, min_points: int = MIN_POINTS) -> SourceResult:
     result = SourceResult("hackernews")
-    params = {"query": TERMS, "optionalWords": TERMS, "tags": "story",
-              "numericFilters": f"created_at_i>{int(since.timestamp())}", "hitsPerPage": PAGE_SIZE}
+    params = {"query": TERMS, "optionalWords": TERMS, "tags": "story", "hitsPerPage": PAGE_SIZE,
+              "numericFilters": f"created_at_i>{int(since.timestamp())},points>={min_points}"}
     try:
         response = client.get(URL, params=params)
         response.raise_for_status()
@@ -26,6 +28,7 @@ def fetch(since: datetime, client: httpx.Client) -> SourceResult:
         result.error = error_text(exc)
         return result
     result.fetched = len(hits)
+    result.stats = {"점수_기준": min_points}
     for hit in hits:
         story_url = hit.get("url") or f"https://news.ycombinator.com/item?id={hit['objectID']}"
         published = datetime.fromtimestamp(hit["created_at_i"], tz=timezone.utc)

@@ -29,6 +29,7 @@ class SourceResult:
     items: list[Item] = field(default_factory=list)
     fetched: int = 0  # 창(24시간·7일) 적용 전 받은 건수
     error: str | None = None
+    stats: dict = field(default_factory=dict)  # 필터 단계별 건수 (리포트용)
 
 
 def http_client() -> httpx.Client:
