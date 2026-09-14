@@ -12,13 +12,15 @@ NEWS_WINDOW = timedelta(hours=24)
 TOOL_WINDOW = timedelta(days=7)
 
 
-def collect(now: datetime | None = None) -> list[SourceResult]:
+def collect(now: datetime | None = None, *, mcp_per_publisher: int = mcp_registry.MAX_PER_PUBLISHER,
+            hn_min_points: int = hackernews.MIN_POINTS, cache: dict | None = None) -> list[SourceResult]:
+    """cache를 넘기면 레지스트리 목록·버전 이력·별 수 조회를 재사용한다 (같은 날 필터 값만 바꿔 재측정할 때)."""
     now = now or datetime.now(timezone.utc)
     news_since, tool_since = now - NEWS_WINDOW, now - TOOL_WINDOW
     jobs = [(feed.name, lambda c, f=feed: fetch_feed(f, news_since, c)) for feed in FEEDS]
     jobs += [
-        ("hackernews", lambda c: hackernews.fetch(news_since, c)),
-        ("mcp_registry", lambda c: mcp_registry.fetch(tool_since, c)),
+        ("hackernews", lambda c: hackernews.fetch(news_since, c, min_points=hn_min_points)),
+        ("mcp_registry", lambda c: mcp_registry.fetch(tool_since, c, per_publisher=mcp_per_publisher, cache=cache)),
         ("anthropic_skills", lambda c: anthropic_skills.fetch(tool_since, c)),
     ]
     results = []

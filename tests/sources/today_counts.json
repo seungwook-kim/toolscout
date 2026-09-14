@@ -1,68 +1,154 @@
 {
-  "checked_at": "2026-09-13T13:45:37+00:00",
-  "total_in_window": 2233,
-  "counts": {
-    "openai": {
-      "fetched": 1192,
-      "in_window": 1,
-      "error": null
+  "checked_at": "2026-09-14T06:45:36+00:00",
+  "target": "300건 ±20%",
+  "measurements": [
+    {
+      "config": {
+        "mcp_per_publisher": 3,
+        "hn_min_points": 20
+      },
+      "seconds": 136.9,
+      "total": 943,
+      "counts": {
+        "openai": {
+          "fetched": 1192,
+          "kept": 1,
+          "error": null
+        },
+        "google_ai": {
+          "fetched": 20,
+          "kept": 0,
+          "error": null
+        },
+        "aitimes": {
+          "fetched": 50,
+          "kept": 14,
+          "error": null
+        },
+        "geeknews": {
+          "fetched": 50,
+          "kept": 50,
+          "error": null
+        },
+        "techcrunch_ai": {
+          "fetched": 19,
+          "kept": 2,
+          "error": null
+        },
+        "reddit_localllama": {
+          "fetched": 25,
+          "kept": 22,
+          "error": null
+        },
+        "hackernews": {
+          "fetched": 18,
+          "kept": 18,
+          "error": null,
+          "stats": {
+            "점수_기준": 20
+          }
+        },
+        "mcp_registry": {
+          "fetched": 5289,
+          "kept": 835,
+          "error": null,
+          "stats": {
+            "창_안_active": 5289,
+            "github_저장소": 4437,
+            "게시자": 1709,
+            "신규": 670,
+            "버전업_별50이상": 165,
+            "버전업_제외": 1197,
+            "게시자_상한으로_제외": 2405
+          }
+        },
+        "anthropic_skills": {
+          "fetched": 1,
+          "kept": 1,
+          "error": null
+        }
+      }
     },
-    "google_ai": {
-      "fetched": 20,
-      "in_window": 0,
-      "error": null
-    },
-    "aitimes": {
-      "fetched": 50,
-      "in_window": 18,
-      "error": null
-    },
-    "geeknews": {
-      "fetched": 50,
-      "in_window": 38,
-      "error": null
-    },
-    "techcrunch_ai": {
-      "fetched": 19,
-      "in_window": 2,
-      "error": null
-    },
-    "venturebeat_ai": {
-      "fetched": 0,
-      "in_window": 0,
-      "error": "HTTP 429"
-    },
-    "reddit_localllama": {
-      "fetched": 25,
-      "in_window": 20,
-      "error": null
-    },
-    "hackernews": {
-      "fetched": 189,
-      "in_window": 189,
-      "error": null
-    },
-    "mcp_registry": {
-      "fetched": 2000,
-      "in_window": 1964,
-      "error": "페이지 상한 20회 도달, 일부만 수집"
-    },
-    "anthropic_skills": {
-      "fetched": 1,
-      "in_window": 1,
-      "error": null
+    {
+      "config": {
+        "mcp_per_publisher": 2,
+        "hn_min_points": 30
+      },
+      "seconds": 3.3,
+      "total": 912,
+      "counts": {
+        "openai": {
+          "fetched": 1192,
+          "kept": 1,
+          "error": null
+        },
+        "google_ai": {
+          "fetched": 20,
+          "kept": 0,
+          "error": null
+        },
+        "aitimes": {
+          "fetched": 50,
+          "kept": 14,
+          "error": null
+        },
+        "geeknews": {
+          "fetched": 50,
+          "kept": 50,
+          "error": null
+        },
+        "techcrunch_ai": {
+          "fetched": 19,
+          "kept": 2,
+          "error": null
+        },
+        "reddit_localllama": {
+          "fetched": 25,
+          "kept": 22,
+          "error": null
+        },
+        "hackernews": {
+          "fetched": 11,
+          "kept": 11,
+          "error": null,
+          "stats": {
+            "점수_기준": 30
+          }
+        },
+        "mcp_registry": {
+          "fetched": 5289,
+          "kept": 811,
+          "error": null,
+          "stats": {
+            "창_안_active": 5289,
+            "github_저장소": 4437,
+            "게시자": 1709,
+            "신규": 648,
+            "버전업_별50이상": 163,
+            "버전업_제외": 1154,
+            "게시자_상한으로_제외": 2472
+          }
+        },
+        "anthropic_skills": {
+          "fetched": 1,
+          "kept": 1,
+          "error": null
+        }
+      }
     }
-  },
-  "failed_sources": [
-    "venturebeat_ai",
-    "mcp_registry"
   ],
+  "final_config": {
+    "mcp_per_publisher": 2,
+    "hn_min_points": 30
+  },
+  "final_total": 912,
+  "within_target": false,
   "invalid_items_by_source": [],
   "checks": {
-    "소스_10곳_모두_실행": true,
+    "소스_9곳_모두_실행": true,
     "정규화_스키마·창_유효": true,
-    "벤처비트_요약_500자_이하": true,
-    "실패는_기록되고_전체는_계속": true
+    "제외_소스_수집_안_함": true,
+    "실패_소스_없음": true
   },
   "pass": true
 }

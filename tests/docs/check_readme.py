@@ -17,6 +17,14 @@ EMOJI = re.compile("[\U0001F000-\U0001FAFF☀-➿⬀-⯿]")
 FLOW_WORDS = ["n8n", "큐레이터", "검증관", "해설가", "발송", "되돌림", "기억", "Claude Code", "공개 MCP"]
 
 
+def tree_block(text: str, marker: str) -> str | None:
+    """marker 뒤 첫 번째 toolscout/ 트리 코드 블록."""
+    if marker not in text:
+        return None
+    match = re.search(r"```text\n(toolscout/\n.*?)```", text[text.index(marker):], re.S)
+    return match.group(1) if match else None
+
+
 def main() -> int:
     text = (ROOT / "README.md").read_text(encoding="utf-8")
     lines = text.splitlines()
@@ -40,6 +48,8 @@ def main() -> int:
         "이모지_본문에_없음": not any(EMOJI.search(line) for line in body),
         "이모지_절당_1개_이하": all(len(EMOJI.findall(h)) <= 1 for h in headings),
         "300줄_이하": len(lines) <= 300,
+        "계획안_부록F_트리와_동일": tree_block(text, "프로젝트 구조") == tree_block(
+            (ROOT / "docs" / "계획안.md").read_text(encoding="utf-8"), "## 부록 F"),
     }
     report = {"lines": len(lines), "checks": checks, "pass": all(checks.values())}
     print(json.dumps(report, ensure_ascii=False, indent=2))

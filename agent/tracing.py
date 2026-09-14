@@ -109,6 +109,12 @@ def flush() -> None:
         _state["client"].flush()
 
 
+def trace_url(trace_id: str) -> str | None:
+    """Langfuse 트레이스 주소. 로컬 로그 모드면 None."""
+    client = _state["client"] if mode() == "langfuse" else None
+    return client.get_trace_url(trace_id=trace_id) if client else None
+
+
 def _write_local(current: Span, duration_ms: float) -> None:
     record = {
         "at": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),

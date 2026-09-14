@@ -1,12 +1,16 @@
 """역할별 모델표와 call() (모델표). 모델명은 이 파일에서만 관리한다.
 
-모델 ID 출처 (2026-09-13 확인)
-- Anthropic: https://platform.claude.com/docs/en/about-claude/models/overview
-- Google Gemini: https://ai.google.dev/gemini-api/docs/models
-- OpenAI: https://developers.openai.com/api/docs/models
+DEV_MODE(기본 1)면 개발 모델표(무료), 0이면 운영 모델표를 쓴다. 호출부는 role만 넘기므로 전환에 코드 변경이 없다.
+개발 모델표에는 is_test 가짜 프로필과 공개 뉴스만 보낸다. 실제 사용자 텍스트는 보내지 않는다 (작업 규칙 7).
+
+모델 ID 출처
+- Anthropic: https://platform.claude.com/docs/en/about-claude/models/overview (2026-09-13 확인)
+- Google Gemini: https://ai.google.dev/gemini-api/docs/models (2026-09-13 확인)
+- OpenAI: https://developers.openai.com/api/docs/models (2026-09-13 확인)
+- OpenRouter 무료: https://openrouter.ai/api/v1/models 에서 id가 :free이고 supported_parameters에 tools가 있는 모델 (2026-09-14 조회)
 
 메시지는 langchain_core.messages 형식을 쓰고, 반환도 AIMessage(tool_calls 포함)로 통일한다.
-기본 모델이 429·503을 돌려주면 대체 모델로 1회만 전환한다.
+기본 모델이 429·503·529(Anthropic 과부하)를 돌려주면 대체 모델로 1회만 전환한다.
 """
 import json
 import logging
@@ -23,7 +27,9 @@ from agent import tracing
 
 log = logging.getLogger("toolscout.models")
 
-MODELS: dict[str, dict[str, dict[str, str]]] = {
+ModelTable = dict[str, dict[str, dict[str, str]]]
+
+PROD_MODELS: ModelTable = {
     "curator": {  # 큐레이터 선별
         "primary": {"provider": "gemini", "model": "gemini-3.6-flash"},
         "fallback": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001"},
@@ -42,14 +48,54 @@ MODELS: dict[str, dict[str, dict[str, str]]] = {
     },
 }
 
-FALLBACK_STATUS = {429, 503}
+# 선별·게이트는 빠른 모델, 검증관·해설가는 한국어가 되는 모델. 2026-09-14 실측(한국어 JSON 요약·도구 호출)으로 배정:
+# nex-n2.5-mini 0.9초·한글 0.9·도구 성공 / nex-n2.5-pro 2.3초·한글 0.9·도구 성공 / nemotron-3-super 7초·한글 0.9·도구 성공
+# gemma-4-31b·26b는 무료 공급자(Google AI Studio) 429가 반복돼 뺐다
+DEV_MODELS: ModelTable = {
+    "curator": {
+        "primary": {"provider": "gemini", "model": "gemini-3.6-flash"},
+        "fallback": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free"},
+    },
+    "verifier": {
+        "primary": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free"},
+        "fallback": {"provider": "openrouter", "model": "nvidia/nemotron-3-super-120b-a12b:free"},
+    },
+    "explainer": {
+        "primary": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free"},
+        "fallback": {"provider": "openrouter", "model": "nvidia/nemotron-3-super-120b-a12b:free"},
+    },
+    "gate": {
+        "primary": {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free"},
+        "fallback": {"provider": "gemini", "model": "gemini-3.6-flash"},
+    },
+}
+
+FALLBACK_STATUS = {429, 503, 529}  # 529는 Anthropic 과부하
 MAX_TOKENS = 4096
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+
+class ProviderError(Exception):
+    """HTTP 200이지만 본문이 오류인 응답. status_code가 있으면 대체 전환 판단에 쓴다."""
+
+    def __init__(self, message: str, status_code: Any = None):
+        super().__init__(message)
+        self.status_code = status_code if isinstance(status_code, int) else None
+
+
+def dev_mode() -> bool:
+    """DEV_MODE가 0이 아니면 개발 모드다. 값이 없으면 1로 본다."""
+    return os.environ.get("DEV_MODE", "1").strip() != "0"
+
+
+def active_models() -> ModelTable:
+    return DEV_MODELS if dev_mode() else PROD_MODELS
 
 
 def call(role: str, messages: list[BaseMessage], tools: list[Any] | None = None) -> AIMessage:
-    """역할에 맞는 모델을 부른다. 429·503이면 대체 모델로 1회 전환한다."""
-    table = MODELS[role]
+    """역할에 맞는 모델을 부른다. 429·503·529면 대체 모델로 1회 전환한다."""
+    table = active_models()[role]
     openai_tools = [convert_to_openai_tool(t) for t in tools] if tools else None
     try:
         return _call_one(role, "primary", table["primary"], messages, openai_tools)
@@ -130,7 +176,8 @@ def _anthropic(model: str, messages: list[BaseMessage], tools) -> AIMessage:
     if tools:
         kwargs["tools"] = [{"name": t["function"]["name"], "description": t["function"].get("description", ""),
                             "input_schema": t["function"].get("parameters", {"type": "object"})} for t in tools]
-    response = _anthropic_client().messages.create(**kwargs)
+    client = _anthropic_client()  # 변수에 잡아 둬야 요청 전에 클라이언트가 닫히지 않는다
+    response = client.messages.create(**kwargs)
     blocks = response.content
     return AIMessage(
         content="".join(b.text for b in blocks if b.type == "text"),
@@ -181,7 +228,8 @@ def _gemini(model: str, messages: list[BaseMessage], tools) -> AIMessage:
             parameters_json_schema=t["function"].get("parameters")) for t in tools])] if tools else None,
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
     )
-    response = _gemini_client().models.generate_content(model=model, contents=contents, config=config)
+    client = _gemini_client()  # 변수에 잡아 둬야 요청 전에 클라이언트가 닫히지 않는다
+    response = client.models.generate_content(model=model, contents=contents, config=config)
     candidate = response.candidates[0] if response.candidates else None
     parts = list(candidate.content.parts or []) if candidate and candidate.content else []
     calls = [p.function_call for p in parts if p.function_call]
@@ -197,22 +245,35 @@ def _gemini(model: str, messages: list[BaseMessage], tools) -> AIMessage:
     )
 
 
-# OpenAI (httpx로 직접 호출. 새 라이브러리를 늘리지 않는다) ------------------
+# OpenAI 호환 (OpenAI, OpenRouter). httpx로 직접 호출해 새 라이브러리를 늘리지 않는다 ------
 
 def _http_client() -> httpx.Client:
     return httpx.Client(timeout=120)
 
 
 def _openai(model: str, messages: list[BaseMessage], tools) -> AIMessage:
-    body: dict[str, Any] = {"model": model, "messages": convert_to_openai_messages(messages),
-                            "max_completion_tokens": MAX_TOKENS}
+    return _openai_compatible("openai", OPENAI_URL, "OPENAI_API_KEY", {"max_completion_tokens": MAX_TOKENS},
+                              model, messages, tools)
+
+
+def _openrouter(model: str, messages: list[BaseMessage], tools) -> AIMessage:
+    return _openai_compatible("openrouter", OPENROUTER_URL, "OPENROUTER_API_KEY", {"max_tokens": MAX_TOKENS},
+                              model, messages, tools)
+
+
+def _openai_compatible(provider: str, url: str, key_env: str, limits: dict, model: str,
+                       messages: list[BaseMessage], tools) -> AIMessage:
+    body: dict[str, Any] = {"model": model, "messages": convert_to_openai_messages(messages), **limits}
     if tools:
         body["tools"] = tools
-    headers = {"Authorization": f"Bearer {os.environ.get('OPENAI_API_KEY', '')}"}
+    headers = {"Authorization": f"Bearer {os.environ.get(key_env, '')}"}
     with _http_client() as client:
-        response = client.post(OPENAI_URL, headers=headers, json=body)
+        response = client.post(url, headers=headers, json=body)
         response.raise_for_status()
     data = response.json()
+    if not data.get("choices"):  # OpenRouter는 상위 공급자 오류를 200 본문의 error로 돌려줄 때가 있다
+        error = data.get("error") or {}
+        raise ProviderError(f"{provider} 오류 응답: {str(error.get('message', ''))[:200]}", error.get("code"))
     message = data["choices"][0]["message"]
     usage = data.get("usage") or {}
     return AIMessage(
@@ -220,8 +281,10 @@ def _openai(model: str, messages: list[BaseMessage], tools) -> AIMessage:
         tool_calls=[{"name": tc["function"]["name"], "args": json.loads(tc["function"]["arguments"] or "{}"),
                      "id": tc["id"], "type": "tool_call"} for tc in message.get("tool_calls") or []],
         usage_metadata=_usage(usage.get("prompt_tokens"), usage.get("completion_tokens")),
-        response_metadata={"provider": "openai", "model": model, "finish_reason": data["choices"][0].get("finish_reason")},
+        response_metadata={"provider": provider, "model": model, "finish_reason": data["choices"][0].get("finish_reason")},
     )
 
 
-PROVIDERS: dict[str, Callable[..., AIMessage]] = {"anthropic": _anthropic, "gemini": _gemini, "openai": _openai}
+PROVIDERS: dict[str, Callable[..., AIMessage]] = {
+    "anthropic": _anthropic, "gemini": _gemini, "openai": _openai, "openrouter": _openrouter,
+}
