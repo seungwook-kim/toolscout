@@ -145,7 +145,7 @@ def live_calls() -> dict:
 def main() -> int:
     text = (ROOT / "models.py").read_text(encoding="utf-8")
     hardcoded = no_hardcoding()
-    cases = {"503": fallback_case(503, None), "429": fallback_case(429, None),
+    cases = {"503": fallback_case(503, None), "429": fallback_case(429, None), "529": fallback_case(529, None),
              "400": fallback_case(400, None), "503_후_대체도_503": fallback_case(503, 503)}
     originals = (models._anthropic_client, models._gemini_client, models._http_client)
     checks = {
@@ -154,6 +154,7 @@ def main() -> int:
         "다른_파일_모델명_하드코딩_없음": not hardcoded,
         "503_대체_1회": cases["503"] == {"calls": 2, "slot": "fallback", "trace_id": True},
         "429_대체_1회": cases["429"] == {"calls": 2, "slot": "fallback", "trace_id": True},
+        "529_대체_1회": cases["529"] == {"calls": 2, "slot": "fallback", "trace_id": True},
         "400_전환_안함": cases["400"] == {"calls": 1, "raised": 400},
         "대체_실패시_추가_전환_없음": cases["503_후_대체도_503"] == {"calls": 2, "raised": 503},
         "변환_anthropic": anthropic_conversion(),

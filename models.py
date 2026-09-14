@@ -6,7 +6,7 @@
 - OpenAI: https://developers.openai.com/api/docs/models
 
 메시지는 langchain_core.messages 형식을 쓰고, 반환도 AIMessage(tool_calls 포함)로 통일한다.
-기본 모델이 429·503을 돌려주면 대체 모델로 1회만 전환한다.
+기본 모델이 429·503·529(Anthropic 과부하)를 돌려주면 대체 모델로 1회만 전환한다.
 """
 import json
 import logging
@@ -42,13 +42,13 @@ MODELS: dict[str, dict[str, dict[str, str]]] = {
     },
 }
 
-FALLBACK_STATUS = {429, 503}
+FALLBACK_STATUS = {429, 503, 529}  # 529는 Anthropic 과부하
 MAX_TOKENS = 4096
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 
 
 def call(role: str, messages: list[BaseMessage], tools: list[Any] | None = None) -> AIMessage:
-    """역할에 맞는 모델을 부른다. 429·503이면 대체 모델로 1회 전환한다."""
+    """역할에 맞는 모델을 부른다. 429·503·529면 대체 모델로 1회 전환한다."""
     table = MODELS[role]
     openai_tools = [convert_to_openai_tool(t) for t in tools] if tools else None
     try:
@@ -130,7 +130,8 @@ def _anthropic(model: str, messages: list[BaseMessage], tools) -> AIMessage:
     if tools:
         kwargs["tools"] = [{"name": t["function"]["name"], "description": t["function"].get("description", ""),
                             "input_schema": t["function"].get("parameters", {"type": "object"})} for t in tools]
-    response = _anthropic_client().messages.create(**kwargs)
+    client = _anthropic_client()  # 변수에 잡아 둬야 요청 전에 클라이언트가 닫히지 않는다
+    response = client.messages.create(**kwargs)
     blocks = response.content
     return AIMessage(
         content="".join(b.text for b in blocks if b.type == "text"),
@@ -181,7 +182,8 @@ def _gemini(model: str, messages: list[BaseMessage], tools) -> AIMessage:
             parameters_json_schema=t["function"].get("parameters")) for t in tools])] if tools else None,
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
     )
-    response = _gemini_client().models.generate_content(model=model, contents=contents, config=config)
+    client = _gemini_client()  # 변수에 잡아 둬야 요청 전에 클라이언트가 닫히지 않는다
+    response = client.models.generate_content(model=model, contents=contents, config=config)
     candidate = response.candidates[0] if response.candidates else None
     parts = list(candidate.content.parts or []) if candidate and candidate.content else []
     calls = [p.function_call for p in parts if p.function_call]
