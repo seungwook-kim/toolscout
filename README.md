@@ -140,17 +140,19 @@ toolscout/
 ├── main.py              FastAPI 앱 (/ 화면, /api/ 기능, /mcp MCP 서버)
 ├── mcp_server.py        자체 MCP 서버 (내부 도구 6종, 공개 도구 3종 예정)
 ├── models.py            역할별 기본/대체 모델표와 call()
-├── db.py                SQLModel 데이터 표 9개
+├── db.py                SQLModel 데이터 표 9개 (Supabase)
+├── config.py            .env 로더 (값은 출력하지 않음)
 ├── events.py, gate.py, memory.py
-├── agent/               loop.py, curator.py, verifier.py, explainer.py
+├── agent/               loop.py, tracing.py, curator.py, verifier.py, explainer.py
 ├── sources/             소스별 수집 파서
 ├── pipeline/            normalize.py, dedupe.py
 ├── routes/              웹앱 화면·API 라우터
 ├── web/                 정적 HTML·JS
-├── mcp/                 MCP 부속 파일
+├── mcp/                 공개 MCP 설정 예시, E2B 안 tools/list 스크립트
 ├── n8n/workflows/       W0~W4 워크플로우 JSON
 ├── tests/               기능별 검수 스크립트
 ├── docs/                계획안.md, img/
+├── .github/workflows/   CI (Docker 구성 검사)
 ├── docker-compose.yml
 └── Dockerfile
 ```
