@@ -12,8 +12,8 @@
 - `sources/check_fallbacks.py`: MCP 레지스트리 재시도·전날 결과, 긱뉴스 외부 링크 / `sources/run_today.py`: 9곳 실제 수집 건수 → `report.md`
 - `pipeline/run_dedupe.py`: 정리·중복 제거 단위 검사 + 전후 건수
 - `pipeline/run_daily.py`: `--fake`는 검증 노드·저장·멱등·모델 장애·빈 행·옵션 29항목(2000-01-01 저장 후 삭제), 없으면 실제 한 번(`--users --limit`) → `pipeline/daily_report.json`, 형식 실패는 `pipeline/format_failures.json`
-- `pipeline/check_deliver.py`: 메일 렌더링(trace_id·이스케이프·빈 행) + sent_at 멱등 + 가짜 SMTP 발송(ADMIN_EMAILS·실패 사용자만 남김) + API 키
-- `pipeline/check_scheduler.py`: 가짜 시계로 07:00 실행·08:00 발송·따라잡기·22시 이후 안 함·실행 끝난 뒤 발송·재시도
+- `pipeline/check_deliver.py`: 메일 렌더링(trace_id·이스케이프·빈 행) + sent_at 멱등 + 가짜 SMTP 발송·실패 알림 + DB 깨우기 + API 키
+- `pipeline/check_scheduler.py`: 가짜 시계로 예열·실행·발송·따라잡기, 실행 실패 30분 재시도·빠진 사용자만·DB 실패·실패 알림 한 번
 - `feedback/check_appendix_c.py`: 부록 C 기준 3개(관심없음 3회 → 다음 날 순위·트레이스 -3, 써봤음 → 같은 주제 도구 앞, 만료 링크 기록 0)
 - `mcp/list_tools.py`: 실제 HTTP로 도구 6개·키 검문·거부 규칙 → `mcp/list_tools_result.json`
 - `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)

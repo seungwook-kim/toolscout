@@ -4,6 +4,7 @@
 - 렌더링: 카드 전체·trace_id·뉴스/도구 칸·"오늘 새 도구 없음"·빈 행·이스케이프·위험 링크 차단
 - DB(날짜 2000-01-02로 넣고 끝나면 지움): 발송함 → sent_at 기록 → 다시 불러도 0통(멱등), 개발 모드는 is_test만
 - 발송(가짜 SMTP): 개발 모드는 ADMIN_EMAILS로 받는 사람을 바꾸고 제목에 [개발 모드], 보낸 사용자만 sent_at, 설정 없으면 기록 안 함
+- 실패 알림(W4): ADMIN_EMAILS에 한 통, 메일 설정·받는 사람이 없으면 보내지 않고 결과만 / DB 깨우기 접속
 - API(uvicorn 실제 기동, 예약 꺼짐): 서비스 키 없으면 401, 상태
 실제 메일은 보내지 않는다.
 """
@@ -19,7 +20,7 @@ from sqlalchemy import delete, insert, select
 import db
 import memory
 import models
-from pipeline import briefing_mail, deliver
+from pipeline import briefing_mail, deliver, persist
 from tests.app.check_main import KEY, free_port, start
 
 
@@ -157,6 +158,38 @@ def send_checks(user_ids: list[int]) -> dict:
     }
 
 
+def alert_checks() -> dict:
+    """실패 알림(W4)과 DB 깨우기. 가짜 SMTP, 환경변수는 가짜 값으로 바꿨다가 되돌린다."""
+    keys = ("GMAIL_USER", "GMAIL_APP_PASSWORD", "ADMIN_EMAILS")
+    saved = {k: os.environ.get(k) for k in keys}
+    try:
+        os.environ.update({"GMAIL_USER": "sender@example.test", "GMAIL_APP_PASSWORD": "fakepassword0000", "ADMIN_EMAILS": "me@example.test"})
+        FakeSMTP.sent, FakeSMTP.fail_subject = [], None
+        sent = deliver.send_alert("09월 16일 하루 실행 실패", ["하루 실행을 3번 시도했지만 끝내지 못했어요."], smtp_factory=FakeSMTP)
+        mail = FakeSMTP.sent[-1] if FakeSMTP.sent else {}
+        os.environ["GMAIL_APP_PASSWORD"] = ""
+        mail_error = deliver.send_alert("검수", ["검수"], smtp_factory=FakeSMTP)
+        os.environ["ADMIN_EMAILS"] = ""
+        no_admin = deliver.send_alert("검수", ["검수"], smtp_factory=FakeSMTP)
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    try:
+        persist.wake_db()
+        woke = True
+    except Exception:
+        woke = False
+    return {
+        "실패알림_ADMIN_EMAILS에_한통": sent == "sent" and mail.get("to") == "me@example.test"
+        and mail.get("subject") == "[toolscout 실패 알림] 09월 16일 하루 실행 실패",
+        "실패알림_메일설정없으면_mail_error·ADMIN없으면_no_admin": mail_error == "mail_error" and no_admin == "no_admin",
+        "DB_깨우기_접속": woke,
+    }
+
+
 def api_checks() -> dict:
     port = free_port()
     os.environ["MCP_SERVICE_KEY"] = KEY
@@ -179,7 +212,7 @@ def api_checks() -> dict:
 def main() -> int:
     user_ids = memory.test_user_ids()[:2]  # 프로필 A·B만 쓴다
     try:
-        checks = {"개발_모드": models.dev_mode(), **render_checks(), **db_checks(user_ids), **send_checks(user_ids), **api_checks()}
+        checks = {"개발_모드": models.dev_mode(), **render_checks(), **db_checks(user_ids), **send_checks(user_ids), **alert_checks(), **api_checks()}
     finally:
         cleanup()
     report = {"checks": checks, "pass": all(checks.values())}

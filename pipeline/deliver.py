@@ -87,6 +87,21 @@ def admin_emails() -> list[str]:
     return [e.strip() for e in os.environ.get("ADMIN_EMAILS", "").split(",") if e.strip()]
 
 
+def send_alert(title: str, lines: list[str], smtp_factory=None) -> str:
+    """실패 알림 (계획안 W4). ADMIN_EMAILS에게 한 통. 반환: sent / no_admin / mail_error. 오류 값·설정 값은 넣지 않는다."""
+    admins = admin_emails()
+    if not admins:
+        log.warning("실패 알림 받을 ADMIN_EMAILS 없음: %s", title)
+        return "no_admin"
+    text = "\n".join(lines + ["", "앱 로그(app.log)와 GET /api/w1/status에서 자세한 내용을 볼 수 있어요."])
+    try:
+        send_single(admins, f"[toolscout 실패 알림] {title}", text, smtp_factory=smtp_factory)
+        return "sent"
+    except MailError as exc:
+        log.warning("실패 알림 메일도 못 보냄(%s): %s", str(exc).split(":")[0], title)
+        return "mail_error"
+
+
 def outbox(day: date, notify_until: str | None = None) -> list[dict]:
     """반환: [{user_id, to, role, subject, html, text, cards, empty_reason, trace_ids}] (user_id 순)."""
     query = (select(db.Briefing.user_id, db.Briefing.card_json, db.Briefing.empty_reason, db.Briefing.trace_id,
