@@ -122,7 +122,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
                 results.append(entry | {"status": "model_failed", "reason": plan["failure_reason"], "cards": 0})
                 continue
             items_by_url = {item["url"]: item for item in plan["news"] + plan["tools"]}
-            checked = {"cards": [], "rejected": [], "excluded": [], "retried": 0, "format_failed": [], "model_failed": []}
+            checked = {"cards": [], "rejected": [], "excluded": [], "fixed": [], "retried": 0, "format_failed": [], "model_failed": []}
             if items_by_url:
                 async with AsyncExitStack() as stack:
                     client, _ = await loop._connect(stack, ["fetch_article"], mcp_url, plan["user_id"])
@@ -132,7 +132,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
                         return await explainer.explain_item(item, mem, client, stats, model_call, feedback=feedback)
 
                     checked = await validate.run_user(explained, items_by_url, redo)
-            entry |= {"rejected": checked["rejected"], "excluded": checked["excluded"], "retried": checked["retried"],
+            entry |= {"rejected": checked["rejected"], "excluded": checked["excluded"], "retried": checked["retried"], "fixed": checked.get("fixed", []),
                       "format_failed": checked["format_failed"], "model_failed": checked["model_failed"],
                       "titles": [c["title"] for c in checked["cards"]]}
             if not checked["cards"] and checked["model_failed"]:

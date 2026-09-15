@@ -64,7 +64,10 @@ class VerifyRequests(BaseModel):
 # 해설가 ------------------------------------------------------------------
 
 MAX_SUMMARY, MAX_FOR_ME, MAX_POINTS = 120, 150, 3
+MAX_DRAFT_SUMMARY = 600  # 해설가 초안은 길게 받아 검증 노드가 문장 끝에서 120자로 자른다
+MIN_RELEVANCE = 3  # 해설가가 매긴 관련도(1~5)가 이보다 낮으면 카드를 반려한다 (2026-09-15 사용자 결정)
 SOURCE_UNCHECKED = "원문 확인 필요"
+COLLECTION_STALE = "수집 실패, 전날 기준"
 
 
 class Evidence(BaseModel):
@@ -74,11 +77,15 @@ class Evidence(BaseModel):
 
 
 class ExplainerOutput(BaseModel):
-    """해설가 모델이 채우는 부분. 반려면 reject_reason만 있으면 된다."""
+    """해설가 모델이 채우는 부분. 반려면 reject_reason만 있으면 된다.
+
+    요약 길이·빈 값은 여기서 막지 않는다. 검증 노드가 두 단계로 처리한다 (1: 문장 끝에서 자름, 2: 이유를 돌려 1회 자가 수정).
+    """
     reject: bool = False
     reject_reason: str | None = None
-    summary_ko: str = Field(default="", max_length=MAX_SUMMARY)
-    for_me: str = Field(default="", max_length=MAX_FOR_ME)
+    relevance: int | None = Field(default=None, ge=1, le=5)
+    summary_ko: str | None = Field(default=None, max_length=MAX_DRAFT_SUMMARY)
+    for_me: str | None = Field(default=None, max_length=MAX_DRAFT_SUMMARY)
     pros: list[Evidence] = Field(default_factory=list, max_length=MAX_POINTS)
     cons: list[Evidence] = Field(default_factory=list, max_length=MAX_POINTS)
     install_cmd: str | None = None
@@ -87,8 +94,6 @@ class ExplainerOutput(BaseModel):
     def _complete(self):
         if self.reject and not (self.reject_reason or "").strip():
             raise ValueError("reject가 true면 reject_reason이 필요하다")
-        if not self.reject and not (self.summary_ko.strip() and self.for_me.strip()):
-            raise ValueError("반려가 아니면 summary_ko와 for_me가 필요하다")
         return self
 
 
@@ -106,6 +111,14 @@ class Card(BaseModel):
     verification: dict | None = None
     risk_signal: dict | None = None
     install_cmd: str | None = None
+    relevance: int = Field(ge=MIN_RELEVANCE, le=5)  # 해설가가 매긴 이 사용자와의 관련도
     source_checked: bool
-    notice: str | None = None  # 원문을 못 읽었으면 "원문 확인 필요"
+    notice: str | None = None  # "원문 확인 필요", "수집 실패, 전날 기준"을 " · "로 잇는다
     trace_id: str = Field(min_length=1)  # trace_id 없는 카드는 만들지 않는다 (작업 규칙 10)
+
+
+class DraftCard(Card):
+    """해설가가 만든 검증 전 카드. 요약이 길거나 비어 있을 수 있고, 검증 노드를 거쳐 Card가 된다."""
+    summary_ko: str = Field(default="", max_length=MAX_DRAFT_SUMMARY)
+    for_me: str = Field(default="", max_length=MAX_DRAFT_SUMMARY)
+    relevance: int | None = Field(default=None, ge=1, le=5)

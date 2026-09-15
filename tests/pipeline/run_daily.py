@@ -27,8 +27,9 @@ from tests.app.check_main import KEY, free_port, start
 HERE = Path(__file__).parent
 FAKE_DAY = date(2000, 1, 1)
 FAKE_HOST = "https://example.test/"
-KOREAN = {"summary_ko": "테스트 도구가 새 버전을 냈다. 설치 절차가 짧아졌다.", "for_me": "사내 브리핑 봇을 만들 때 참고할 수 있다."}
-ENGLISH = {"summary_ko": "Test tool released a new version today.", "for_me": "Useful when building an internal bot."}
+KOREAN = {"summary_ko": "테스트 도구가 새 버전을 냈다. 설치 절차가 짧아졌다.", "for_me": "사내 브리핑 봇을 만들 때 참고할 수 있다.", "relevance": 4}
+LONG_SUMMARY = "테스트 도구가 새 버전을 냈다. 설치 절차가 짧아졌고 설정 파일 하나로 끝난다. " + "추가 설명이 길게 이어진다 " * 8 + "마지막 문장이다."
+ENGLISH = {"summary_ko": "Test tool released a new version today.", "for_me": "Useful when building an internal bot.", "relevance": 4}
 OUTAGE = models.ModelUnavailable("explainer", ["ollama 타임아웃", "groq 키 없음", "gemini 429", "openrouter 429"])
 
 
@@ -65,6 +66,12 @@ def fake_model(mode: str = "normal"):
             elif "BROKEN" in title and title not in broken_once:
                 broken_once.add(title)
                 return AIMessage('{"summary_ko": "끊긴 응답')
+            elif "LOW" in title:
+                body = KOREAN | {"relevance": 2, "for_me": "억지로 이어 붙인 연결이다."}
+            elif "EMPTY" in title and not retry:
+                body = {"reject": False, "relevance": 4, "summary_ko": None, "for_me": None}
+            elif "LONG" in title:
+                body = KOREAN | {"summary_ko": LONG_SUMMARY, "pros": [{"text": "설치가 쉽다", "evidence_url": url}]}
             elif "ALWAYS_ENGLISH" in title or ("ENGLISH" in title and not retry):
                 body = ENGLISH | {"pros": [{"text": "Easy to install", "evidence_url": url}]}
             else:
@@ -74,9 +81,11 @@ def fake_model(mode: str = "normal"):
 
 
 def fake_items() -> list[dict]:
-    news = ["검수 뉴스 BROKEN 한 번 끊김", "ENGLISH 첫 응답만 영어", "ALWAYS_ENGLISH 계속 영어", "REJECT 마케터만 반려"]
+    news = ["검수 뉴스 BROKEN 한 번 끊김", "ENGLISH 첫 응답만 영어", "ALWAYS_ENGLISH 계속 영어", "REJECT 마케터만 반려 LONG 요약이 긺",
+            "EMPTY 첫 응답 빈 요약"]
     rows = [{"title": t, "url": f"{FAKE_HOST}news/{n}", "type": "news", "source": "aitimes"} for n, t in enumerate(news)]
     rows += [{"title": t, "url": f"{FAKE_HOST}repo", "type": "mcp", "source": "mcp_registry"} for t in ("검수 MCP 알파", "검수 MCP 베타")]
+    rows.append({"title": "검수 MCP LOW 관련도 낮음", "url": f"{FAKE_HOST}low", "type": "mcp", "source": "mcp_registry"})
     return [r | {"published_at": "2000-01-01T00:00:00+00:00", "summary": "검수용 항목"} for r in rows]
 
 
@@ -99,7 +108,7 @@ def cleanup() -> None:
 
 
 def unit_checks() -> dict:
-    card = {"type": "news", "title": "t", "url": "https://a.test/x", "why_this_card": "이유", "source_checked": True,
+    card = {"type": "news", "title": "t", "url": "https://a.test/x", "why_this_card": "이유", "source_checked": True, "relevance": 4,
             "trace_id": "abc", "pros": [{"text": "설치가 쉽다", "evidence_url": "https://a.test/x"}], **KOREAN}
     named = "Anthropic이 Claude Code에 스킬 기능을 추가했다. 에이전트가 SKILL.md 설명서를 불러 반복 작업을 처리한다."
     letters = [ch for ch in named if re.match(r"[가-힣A-Za-z]", ch)]
@@ -126,7 +135,11 @@ def unit_checks() -> dict:
         "근거_링크_다르면_실패": any("근거 링크" in p for p in validate.problems(
             card | {"pros": [{"text": "설치가 쉽다", "evidence_url": "https://other.test"}]})),
         "근거_링크_없으면_실패": bool(validate.problems(card | {"pros": [{"text": "설치가 쉽다"}]})),
-        "요약_120자_넘으면_실패": bool(validate.problems(card | {"summary_ko": "가" * 121})),
+        "요약_120자_넘고_문장끝_없으면_실패": any("문장 끝이 없다" in p for p in validate.problems(card | {"summary_ko": "가" * 121})),
+        "요약_120자_넘으면_문장끝에서_자름": validate.fit_summary(LONG_SUMMARY)[0].endswith("설정 파일 하나로 끝난다.")
+        and len(validate.fit_summary(LONG_SUMMARY)[0]) <= 120,
+        "빈_요약은_자가수정_요청": any("빈 값" in p for p in validate.problems(card | {"summary_ko": ""})),
+        "relevance_없으면_실패": any("relevance" in p for p in validate.problems({k: v for k, v in card.items() if k != "relevance"})),
         "trace_id_없으면_실패": bool(validate.problems(card | {"trace_id": ""})),
         "limit_상위N_비율유지·공식최신·별순": [i["title"] for i in top] == ["n4", "n2", "n3", "t500"],
         "옵션_users·limit_해석": vars(run_daily.parse_args(["--users", "1", "--limit", "40"]))
@@ -184,8 +197,13 @@ async def fake_run(mcp_url: str) -> dict:
             "영어_첫응답_재시도후_살아남음": all("ENGLISH 첫 응답만 영어" in u["titles"] for u in users.values()),
             "계속_영어면_제외_이유기록": all(any(e["title"] == "ALWAYS_ENGLISH 계속 영어" and "한글 비율" in " ".join(e["reasons"])
                                             for e in u["excluded"]) for u in users.values()),
-            "마케터만_반려_이유기록": [r["title"] for r in users[marketer]["rejected"]] == ["REJECT 마케터만 반려"]
-                                     and not users[backend]["rejected"],
+            "마케터만_반려_이유기록": "REJECT 마케터만 반려 LONG 요약이 긺" in [r["title"] for r in users[marketer]["rejected"]]
+                                     and "REJECT 마케터만 반려 LONG 요약이 긺" not in [r["title"] for r in users[backend]["rejected"]],
+            "긴_요약은_문장끝에서_잘라_통과": any(f["title"].startswith("REJECT") for f in users[backend]["fixed"])
+                                           and "REJECT 마케터만 반려 LONG 요약이 긺" in users[backend]["titles"],
+            "빈_요약은_자가수정_뒤_통과": all("EMPTY 첫 응답 빈 요약" in u["titles"] for u in users.values()),
+            "관련도_3미만은_반려·이유": all(any(r["title"] == "검수 MCP LOW 관련도 낮음" and "관련도 2/5" in r["reason"]
+                                                for r in u["rejected"]) for u in users.values()),
             "같은_저장소_MCP_앞순위만_저장": all(len(u["duplicates"]) == 1 for u in users.values()),
             "저장수_일치": len(after_first["briefings"]) == first["totals"]["cards"] > 0,
             "sent_at_null": all(b[3] is None for b in after_first["briefings"]),

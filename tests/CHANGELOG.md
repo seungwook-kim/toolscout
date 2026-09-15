@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · run_daily --fake에 긴 요약 자르기·빈 요약 자가 수정·관련도 2 반려 검사, 가짜 해설가 답에 relevance · 세션 7 결정 1·6 · run_daily --fake·run_explainer --fake 통과
+
 - 2026-09-15 · run_daily --fake에 회귀 검사 3항목(잘린 JSON 형식 실패, 후보 단계 상한·순서) · 빈 후보 메일 버그 · 통과
 
 - 2026-09-15 · 개발 프로필 3개(A·B·C)에 맞춰 check_tables·check_deliver·run_curator·run_daily 조건 수정(A·B 비교는 그대로) · 프로필 C 추가 · check_tables·check_deliver·run_daily --fake·run_explainer --fake 통과
