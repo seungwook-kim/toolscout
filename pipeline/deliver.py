@@ -87,12 +87,13 @@ def admin_emails() -> list[str]:
     return [e.strip() for e in os.environ.get("ADMIN_EMAILS", "").split(",") if e.strip()]
 
 
-def outbox(day: date) -> list[dict]:
+def outbox(day: date, notify_until: str | None = None) -> list[dict]:
     """반환: [{user_id, to, role, subject, html, text, cards, empty_reason, trace_ids}] (user_id 순)."""
     query = (select(db.Briefing.user_id, db.Briefing.card_json, db.Briefing.empty_reason, db.Briefing.trace_id,
                     db.User.email, db.User.role)
              .join(db.User, db.User.id == db.Briefing.user_id)
              .where(db.Briefing.date == day, db.Briefing.sent_at.is_(None))
+             .where(db.User.notify_time <= notify_until if notify_until else True)
              .order_by(db.Briefing.user_id, db.Briefing.rank))
     if models.dev_mode():
         query = query.where(db.User.is_test == True)  # noqa: E712
@@ -140,7 +141,8 @@ def build_email(message: dict, sender: str, recipients: list[str], dev: bool) ->
     return email
 
 
-def send_day(day: date, *, console: bool = False, preview_dir: Path | None = None, smtp_factory=None) -> dict:
+def send_day(day: date, notify_until: str | None = None, *, console: bool = False, preview_dir: Path | None = None,
+             smtp_factory=None) -> dict:
     """그날 미발송 메일을 보낸다. 반환: {date, dev_mode, mode, sent[], failed[], rows_marked}.
 
     mode: smtp(실제 발송) / console(보내지 않고 콘솔·DB만) / config_missing(메일 설정 없음, 기록 안 함)
@@ -152,7 +154,7 @@ def send_day(day: date, *, console: bool = False, preview_dir: Path | None = Non
     if smtp_factory is DirMailer:
         sender, password = sender or "toolscout@example.test", password or "fake"
     with tracing.span("W1:send", kind="chain", input={"date": str(day), "dev_mode": dev}) as span:
-        messages = outbox(day)
+        messages = outbox(day, notify_until)
         for message in messages:
             if preview_dir:
                 preview_dir.mkdir(parents=True, exist_ok=True)

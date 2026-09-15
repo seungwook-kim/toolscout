@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · web/check_settings.py 추가, check_scheduler 알림 시각마다 발송 · 웹앱 2단계 · check_settings 10항목·check_scheduler 통과
+
 - 2026-09-15 · web/common.py·web/check_auth.py 추가, check_main 루트 기대값(로그인으로 이동), check_tables 표 10개, check_env_example APP_BASE_URL · 웹앱 본체 1단계 로그인 · check_auth 15항목·check_main·check_tables·check_env_example 통과
 
 - 2026-09-15 · sources/check_fallbacks.py 추가 · 세션 7 결정 4·5 (MCP 재시도·전날 결과, 긱뉴스 외부 링크) · 7항목 통과

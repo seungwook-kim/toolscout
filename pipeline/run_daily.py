@@ -91,7 +91,7 @@ def empty_reason(plan: dict, checked: dict) -> str:
 
 
 async def run(today: date | None = None, *, items: list[dict] | None = None, mcp_url: str = loop.DEFAULT_MCP_URL,
-              model_call=None, users: int | None = None, limit: int | None = None) -> dict:
+              model_call=None, users: int | None = None, limit: int | None = None, user_ids: list[int] | None = None) -> dict:
     """반환: 사용자별 저장 결과와 합계. items·model_call은 검수용 주입 (없으면 실제 수집·실제 모델)."""
     today = today or today_kst()
     started = time.perf_counter()
@@ -106,7 +106,9 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
         prepared = dedupe(normalize(items))
         curator_input = top_items(prepared, limit)
         sent = await asyncio.to_thread(persist.sent_user_ids, today)
-        user_ids = [uid for uid in await asyncio.to_thread(target_user_ids) if uid not in sent][:users or None]
+        allowed = await asyncio.to_thread(target_user_ids)
+        wanted = [uid for uid in user_ids if uid in allowed] if user_ids is not None else allowed  # 설정 화면 "지금 만들기"는 본인만
+        user_ids = [uid for uid in wanted if uid not in sent][:users or None]
         memories = []
         for uid in user_ids:
             mem = memory.read(uid, today)
@@ -141,7 +143,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
                 continue
             reason = None if checked["cards"] else empty_reason(plan, checked)
             saved = await asyncio.to_thread(persist.save_user, plan["user_id"], today, checked["cards"], items_by_url,
-                                            trace_id=root.trace_id, empty_reason=reason)
+                                            trace_id=root.trace_id, empty_reason=reason, pool_size=len(curator_input))
             results.append(entry | {"status": saved["status"], "cards": saved["saved"], "empty_reason": reason,
                                     "duplicates": saved["duplicates"]})
 

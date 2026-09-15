@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-15 · run_daily user_ids(설정 화면 지금 만들기는 본인만)·pool_size 저장, deliver 알림 시각 필터, scheduler 알림 시각마다 발송 · 웹앱 2단계 알림 시간 설정 · check_scheduler·run_daily --fake·check_deliver 통과
+
 - 2026-09-15 · deliver.send_single(메일 한 통), MAIL_FAKE_DIR이면 폴더로 쓰는 검수용 발송기 · 로그인 링크 메일과 웹 검수 · check_auth 통과
 
 - 2026-09-15 · run_daily --date(검수용 날짜), scheduler 시작 로그에 예열 시각, 앱 로그 UTF-8(로그온 작업이 cmd 리다이렉트로 띄움, 저장소 밖 start_app.cmd) · 세션 7 결정 7·9, 검증 실행을 실제 날짜 기억과 섞지 않으려고 · app.log UTF-8 엄격 디코딩 성공, run_daily --fake 통과

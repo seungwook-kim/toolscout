@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 import mcp_server
 from agent import tracing
 from pipeline import scheduler
-from routes import auth, pages, w1
+from routes import auth, pages, settings, w1
 
 WEB = Path(__file__).parent / "web"
 
@@ -41,6 +41,7 @@ def health() -> dict:
 
 app.include_router(auth.router)  # 로그인·세션
 app.include_router(pages.router)  # 화면 (/, /login, /settings, /history, /f)
+app.include_router(settings.router)  # 프로필·기억 지우기·계정 삭제·오늘 브리핑 지금 만들기
 app.include_router(w1.router)  # 아침 브리핑 작업을 직접 부르는 API (실행·발송·상태)
 app.mount("/static", StaticFiles(directory=WEB), name="static")
 app.mount("/mcp", mcp_app)
