@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-15 · run_daily가 사용자마다 run_stats(선별·반려·제외·검증 요청·검증 0)를 briefings에, persist가 items.published_at(원문 공개 시각) 저장 · 화면 파이프라인 칸과 도구 공개 시점 (사용자 승인) · run_daily --fake·check_design 통과
 - 2026-09-15 · persist.related_pool, run_daily 월요일(또는 --related) 관련 카드, briefing_mail "이번 주 관련 MCP·스킬" 칸 · F3-b 관련 카드(주 1회, 월요일 최대 3장) · run_daily --fake 관련 카드 5항목·check_deliver 통과
 - 2026-09-15 · scheduler: 월요일 06:55 예열 뒤·하루 실행 전에 memory.merge_weights(늦게 켜져도 실행 전 한 번, 실패해도 실행은 계속), 상태에 last_merge · 계획안 W4 주간 기억 합치기 · check_scheduler 23항목 통과
 - 2026-09-15 · persist.save_catalog, run_daily가 큐레이터 뒤 선별 통과 도구를 items에 쌓음(catalog_saved), items.description · 관련 카드(F3-b) 후보 목록, 사용자 결정 · run_daily --fake 도구 목록 4항목 추가 통과, check_tables(Supabase 열 추가) 통과

@@ -80,6 +80,7 @@ class Item(SQLModel, table=True):
     version: str | None = None
     stars: int | None = None
     stars_checked_at: datetime | None = None  # GitHub 별 수 조회 시각. 24시간 캐시 기준
+    published_at: datetime | None = None  # 원문 공개·등록 시각(UTC). 화면 도구 카드의 "공개 N일 전" (2026-09-15 추가)
     deadline_at: datetime | None = None
 
 
@@ -136,6 +137,8 @@ class Briefing(SQLModel, table=True):
     card_json: dict[str, Any] | None = Field(default=None, sa_column=_jsonb(nullable=True))
     empty_reason: str | None = None
     pool_size: int | None = None  # 그날 큐레이터 입력 건수 ("N건 중 M건"의 N)
+    # 그날 이 사용자 실행 숫자 {selected, rejected, excluded, verify_requested, verified}. 화면 파이프라인 칸용 (2026-09-15 추가)
+    run_stats: dict[str, Any] | None = Field(default=None, sa_column=_jsonb(nullable=True))
     # trace_id 없는 카드는 만들지 않는다 (작업 규칙 10). 빈 행도 그날 실행의 trace_id를 남긴다
     trace_id: str = Field(sa_column=Column(String, nullable=False))
     sent_at: datetime | None = None
@@ -226,7 +229,8 @@ def get_engine(url: URL | None = None) -> Engine:
 # 표를 만든 뒤에 추가한 칸. create_all은 이미 있는 표에 칸을 더하지 않으므로 없을 때만 추가한다
 ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE"), ("briefings", "empty_reason", "VARCHAR"),
                  ("users", "notify_time", "VARCHAR NOT NULL DEFAULT '08:00'"), ("briefings", "pool_size", "INTEGER"),
-                 ("feedback", "weight_delta", "INTEGER NOT NULL DEFAULT 0"), ("items", "description", "VARCHAR")]
+                 ("feedback", "weight_delta", "INTEGER NOT NULL DEFAULT 0"), ("items", "description", "VARCHAR"),
+                 ("items", "published_at", "TIMESTAMP WITHOUT TIME ZONE"), ("briefings", "run_stats", "JSONB")]
 
 # 이미 만든 briefings 표를 카드 0건 행을 담을 수 있게 바꾼다 (2026-09-14). 데이터는 지우지 않고, 여러 번 돌려도 같다
 # (user_id, date, item_id) 복합 기본키 → id 기본키 + 같은 조합 유일(NULL도 같은 값으로 봄)
