@@ -249,17 +249,22 @@ def init_db(engine: Engine | None = None) -> None:
             connection.exec_driver_sql(statement)
 
 
-# 개발 모드 가짜 프로필 2개 (계획안 부록 B 검수 기준의 프로필 A·B). .test 도메인이라 실제로 발송되지 않는다
+# 개발 모드 프로필 (is_test). 주소는 .test 도메인이고, 개발 모드 발송은 받는 사람을 ADMIN_EMAILS로 바꾼다
+# - A·B: 계획안 부록 B 검수 기준의 가짜 프로필 (두 브리핑이 다르게 나오는지 비교)
+# - C: 개발자 본인 관심사를 공개돼도 되는 수준으로 적은 프로필. 무료 모델에 들어간다 (2026-09-15 사용자 승인)
 TEST_USERS = [
     {"email": "test-backend@toolscout.test", "role": "자바 백엔드 개발자",
      "profile_tools_tags": ["java", "spring", "n8n"], "profile_free_text": "n8n으로 사내 AI 브리핑 봇을 만든다"},
     {"email": "test-marketer@toolscout.test", "role": "마케터",
      "profile_tools_tags": ["notion"], "profile_free_text": "노션으로 캠페인 기록과 콘텐츠 일정을 관리한다"},
+    {"email": "test-ai-learner@toolscout.test", "role": "AI 에이전트를 공부하는 개발자",
+     "profile_tools_tags": ["python", "claude code", "mcp"],
+     "profile_free_text": "AI 에이전트를 공부하고 있어 새 모델, 에이전트 프레임워크, MCP 도구 소식이 궁금하다"},
 ]
 
 
 def seed_test_users(engine: Engine | None = None) -> list[int]:
-    """가짜 프로필을 이메일 기준으로 한 번만 만든다. 반환: 사용자 id 목록."""
+    """개발 모드 프로필을 이메일 기준으로 한 번만 만든다. 반환: 사용자 id 목록 (A, B, C 순)."""
     from sqlmodel import select
 
     ids = []

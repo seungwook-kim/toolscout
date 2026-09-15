@@ -160,7 +160,7 @@ async def fake_run(mcp_url: str) -> dict:
         "outage": {k: outage[k] for k in ("totals", "all_users_failed", "model_failures")},
         "dead": {k: dead[k] for k in ("totals", "all_users_failed")} | {"exit_code": run_daily.exit_code(dead)},
         "checks": unit_checks() | {
-            "is_test_사용자_2명만": sorted(users) == sorted(user_ids) and len(user_ids) == 2,
+            "is_test_사용자_전부": sorted(users) == sorted(user_ids) and len(user_ids) >= 2,
             "영어_첫응답_재시도후_살아남음": all("ENGLISH 첫 응답만 영어" in u["titles"] for u in users.values()),
             "계속_영어면_제외_이유기록": all(any(e["title"] == "ALWAYS_ENGLISH 계속 영어" and "한글 비율" in " ".join(e["reasons"])
                                             for e in u["excluded"]) for u in users.values()),

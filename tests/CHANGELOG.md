@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · 개발 프로필 3개(A·B·C)에 맞춰 check_tables·check_deliver·run_curator·run_daily 조건 수정(A·B 비교는 그대로) · 프로필 C 추가 · check_tables·check_deliver·run_daily --fake·run_explainer --fake 통과
+
 - 2026-09-15 · pipeline/check_scheduler.py 추가, check_deliver를 가짜 SMTP 발송 검사로 변경, n8n/check_workflows.py 삭제, check_docker·check_readme·check_folder_docs·check_env_example에서 n8n 제거·SCHEDULER_ENABLED 추가, 검수 서버는 예약 끔 · n8n 제외 결정 · check_scheduler 11·check_deliver 24항목, check_readme·check_folder_docs·check_env_example·check_main 통과
 
 - 2026-09-15 · check_docker가 CI 6단계(app 4·n8n 2) 모두 success인지 확인 · CI에 n8n 워크플로우 가져오기 추가 · check_docker 통과(ced74b9, n8n 기동·가져오기 success)

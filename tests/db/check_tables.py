@@ -80,7 +80,7 @@ def url_checks() -> dict:
 
 
 def live_create() -> dict:
-    """Supabase에 표 9개를 만들고 가짜 프로필 2개를 넣는다. 이미 있는 표에 칸이 빠졌는지도 본다."""
+    """Supabase에 표 9개를 만들고 개발 프로필 A·B·C를 넣는다. 이미 있는 표에 칸이 빠졌는지도 본다."""
     if not os.environ.get("DATABASE_URL"):
         return {"status": "미실행(DATABASE_URL 비어있음)", "ok": False}
     try:
@@ -135,7 +135,7 @@ def main() -> int:
         "users_is_test_칸": "is_test" in columns["users"],
         "briefings_카드0건_행(empty_reason·item_id_NULL허용)": "empty_reason" in columns["briefings"]
         and tables["briefings"].c.item_id.nullable is True,
-        "가짜_프로필_2개_정의": [u["role"] for u in db.TEST_USERS] == ["자바 백엔드 개발자", "마케터"],
+        "개발_프로필_A·B·C_정의": [u["role"] for u in db.TEST_USERS] == ["자바 백엔드 개발자", "마케터", "AI 에이전트를 공부하는 개발자"],
         **url_checks(),
     }
     live = live_create()

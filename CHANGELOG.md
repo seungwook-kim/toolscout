@@ -8,8 +8,10 @@
   - 검수: check_scheduler 11항목, check_deliver 24항목(가짜 SMTP), check_main·check_readme·check_folder_docs·check_env_example 통과, CI 4단계 success(b1e72f1)
   - 실제 메일: 9/15 브리핑(사용자 1·카드 5·반려 1·호출 11·416초)을 개발 모드로 ADMIN_EMAILS에 Gmail SMTP 발송, 받은편지함 도착 확인(카드마다 trace_id). 트레이스 https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/74fd811dfd31cc41164570abf9b27ed9
   - 관찰: gemma3 첫 로드 30초 초과로 선별 1묶음 groq 전환, groq 429 2회·gemini 429 1회로 카드 1장 openrouter. MCP 레지스트리는 이번엔 성공
-  - 미완: 앱 상시 실행(예약은 앱이 떠 있어야 돈다)과 다음 날 07:00·08:00 자동 실행 확인
-  - 결정 필요: PC 켤 때 앱 자동 시작 여부, gemma3 첫 로드 타임아웃, groq 429. 계획안 위험 목록의 "강사 기준: n8n 필수/가산점" 확인
+  - 앱 상시 실행: Windows 로그온 작업 `toolscout app` 등록(창 없이 uvicorn, 로그 %LOCALAPPDATA%\toolscout\app.log), 상태 API로 예약 켜짐·다음 예정 07:00 확인
+  - 프로필: 메일이 가짜 프로필 A 기준이라 개발자 본인 프로필 C(AI 에이전트를 공부하는 개발자·Python·Claude Code·MCP) 추가, 매일 A·B·C 세 통 (사용자 결정)
+  - 미완: 다음 날 07:00·08:00 자동 실행 확인
+  - 결정 필요: gemma3 첫 로드 타임아웃, groq 429. 계획안 위험 목록의 "강사 기준: n8n 필수/가산점" 확인
   - 다음 시작점: 앱을 켜 두고 다음 날 07:00 실행·08:00 메일 자동 도착 확인 (뼈대 완성)
 
 - 세션 5 · 2026-09-15 · 전량 하루 실행, 08:00 발송 준비·기록, n8n W1 (main 머지 완료)
