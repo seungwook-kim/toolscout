@@ -104,6 +104,11 @@ class Probe(SQLModel, table=True):
     requirements: list[str] = Field(default_factory=list, sa_column=_jsonb())
     log: str | None = None
     probed_at: datetime = Field(default_factory=utcnow)
+    status: str | None = None  # done | incomplete (가드 거부는 저장하지 않는다) (세션 8 추가)
+    kind: str | None = None  # npm | pypi | remote
+    command: str | None = None  # 검증한 설치 명령 또는 원격 URL
+    tools: list[str] = Field(default_factory=list, sa_column=_jsonb())  # tools/list로 받은 도구 이름
+    stages: dict[str, Any] | None = Field(default=None, sa_column=_jsonb(nullable=True))  # 단계별 상태·ms·메모
 
 
 class SkillReview(SQLModel, table=True):
@@ -118,6 +123,29 @@ class SkillReview(SQLModel, table=True):
     risk_quote: str | None = None
     regex_hits: list[str] = Field(default_factory=list, sa_column=_jsonb())
     completeness: str | None = None
+    tools_needed: str | None = None  # 필요 도구 (세션 8 추가)
+    official: bool | None = None  # anthropics/skills면 위험 신호 생략
+    source_url: str | None = None
+    llm_signal: str | None = None  # 모델 판정 ok|caution (정규식과 다르면 risk_signal은 unverified)
+    status: str | None = None  # done | incomplete
+    reviewed_at: datetime | None = None
+
+
+class VerifyRequest(SQLModel, table=True):
+    """검증 요청 (세션 8, 2026-09-15 사용자 결정: 새 표). W1 07:00 큐레이터가 만들고 다음 날 06:00 W1-a가 처리한다."""
+    __tablename__ = "verify_requests"
+    __table_args__ = (CheckConstraint("status IN ('pending', 'done', 'incomplete', 'rejected', 'failed')", name="ck_verify_requests_status"),)
+
+    item_id: int = Field(foreign_key="items.id", primary_key=True)
+    kind: str  # mcp | skill
+    depth: str  # full | remote | read
+    reason: str | None = None
+    install: dict[str, Any] | None = Field(default=None, sa_column=_jsonb(nullable=True))  # 레지스트리 packages·remotes 요약
+    requested_on: Date = Field(index=True)
+    status: str = "pending"  # 대기 → 완료 | 미완료(내일 재시도) | 거부(가드·하루 한도) | 실패(설치 실패·원문 접근 불가)
+    attempts: int = 0
+    last_error: str | None = None
+    updated_at: datetime = Field(default_factory=utcnow)
 
 
 class Briefing(SQLModel, table=True):
@@ -186,7 +214,8 @@ class UsedToken(SQLModel, table=True):
     expires_at: datetime
 
 
-TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions", "used_tokens"]
+TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions", "used_tokens",
+          "verify_requests"]
 
 
 def database_url() -> URL:
@@ -230,7 +259,12 @@ def get_engine(url: URL | None = None) -> Engine:
 ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE"), ("briefings", "empty_reason", "VARCHAR"),
                  ("users", "notify_time", "VARCHAR NOT NULL DEFAULT '08:00'"), ("briefings", "pool_size", "INTEGER"),
                  ("feedback", "weight_delta", "INTEGER NOT NULL DEFAULT 0"), ("items", "description", "VARCHAR"),
-                 ("items", "published_at", "TIMESTAMP WITHOUT TIME ZONE"), ("briefings", "run_stats", "JSONB")]
+                 ("items", "published_at", "TIMESTAMP WITHOUT TIME ZONE"), ("briefings", "run_stats", "JSONB"),
+                 ("probes", "status", "VARCHAR"), ("probes", "kind", "VARCHAR"), ("probes", "command", "VARCHAR"),
+                 ("probes", "tools", "JSONB NOT NULL DEFAULT '[]'::jsonb"), ("probes", "stages", "JSONB"),
+                 ("skill_reviews", "tools_needed", "VARCHAR"), ("skill_reviews", "official", "BOOLEAN"),
+                 ("skill_reviews", "source_url", "VARCHAR"), ("skill_reviews", "llm_signal", "VARCHAR"),
+                 ("skill_reviews", "status", "VARCHAR"), ("skill_reviews", "reviewed_at", "TIMESTAMP WITHOUT TIME ZONE")]
 
 # 이미 만든 briefings 표를 카드 0건 행을 담을 수 있게 바꾼다 (2026-09-14). 데이터는 지우지 않고, 여러 번 돌려도 같다
 # (user_id, date, item_id) 복합 기본키 → id 기본키 + 같은 조합 유일(NULL도 같은 값으로 봄)

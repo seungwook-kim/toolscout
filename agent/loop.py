@@ -85,7 +85,8 @@ async def _connect(stack: AsyncExitStack, allowed: list[str], url: str, briefing
     headers = {"X-Service-Key": os.environ.get("MCP_SERVICE_KEY", "")}
     if briefing_user is not None:
         headers["X-Briefing-User"] = str(briefing_user)
-    http = await stack.enter_async_context(httpx2.AsyncClient(headers=headers, timeout=httpx2.Timeout(30, read=120)))
+    # 읽기 제한은 probe_mcp(설치 90초 + 실행 30초 + 도구 목록 30초)가 끝날 때까지 기다리게 240초
+    http = await stack.enter_async_context(httpx2.AsyncClient(headers=headers, timeout=httpx2.Timeout(30, read=240)))
     client = await stack.enter_async_context(Client(streamable_http_client(url, http_client=http)))
     listed = (await client.list_tools()).tools
     specs = [{"name": t.name, "description": t.description or "", "parameters": t.input_schema}

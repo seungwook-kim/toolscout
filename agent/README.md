@@ -3,7 +3,8 @@
 에이전트 3개와 공통 판단 루프. 상태: 검증관 빼고 구현 (계획안 5장, 9.3).
 
 ## 파일
-- `loop.py`: `run(role, system_prompt, user_input, allowed_tools, max_steps, max_tool_calls)`. 모델 → 도구 요청 → MCP 실행 → 재호출. 상한 넘는 도구 요청은 거부 결과
+- `loop.py`: `run(role, system_prompt, user_input, allowed_tools, max_steps, max_tool_calls)`. 모델 → 도구 요청 → MCP 실행 → 재호출(MCP 읽기 240초)
+- `probe.py`: probe_mcp 구현. E2B에서 ① 설치 90초(네트워크) ② 실행 30초 ③ 도구 목록(차단, mcp/sandbox_probe.py) ④ 인증 요구, 가드·하루 30건, probes 저장
 - `tracing.py`: Langfuse 스팬 래퍼. 키 없음·인증 실패면 로컬 JSONL 로그로 대체, trace_id는 항상 발급, `trace_url()`
 - `structured.py`: JSON 규격 응답 받기. 온도 0, pydantic 검사, 형식 실패면 1회 재시도, 실패 예시(제공자·모델 포함)와 모델 장애 기록
 - `curator.py`: 큐레이터. 20건 무작위 묶음 선별 → 사용자별 뉴스 5·도구 3(본 항목·가중치 -5 제외, 고른 뒤 가중치로 한 번 더 정렬) → 검증 요청 5

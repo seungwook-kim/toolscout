@@ -1,9 +1,10 @@
 """자체 MCP 서버: 내부 도구 6종 골격 (계획안 5장 도구 가드, 9.3).
 
-이번 단계는 fetch_article, get_user_memory만 실제로 구현하고 나머지는 not_implemented를 돌려준다.
+fetch_article, get_user_memory, probe_mcp(agent/probe.py)를 실제로 구현하고 나머지는 not_implemented를 돌려준다.
 /mcp 전체를 서비스 키(X-Service-Key)로 검문한다. 공개 도구 3종과 사용자 키는 뒤에서 붙인다.
 거부는 오류 없이 {"status": "rejected"}로 돌려주고 횟수를 센다.
 """
+import asyncio
 import hmac
 import logging
 import os
@@ -158,9 +159,18 @@ async def check_pricing(model: str) -> dict:
 
 
 @mcp.tool()
-async def probe_mcp(install_command: str, kind: str) -> dict:
-    """E2B 샌드박스에서 MCP 설치·실행·도구 목록·인증 요구를 확인한다. (뼈대 완성 후 구현)"""
-    return _not_implemented("probe_mcp")
+async def probe_mcp(install_command: str = "", kind: str = "npm", url: str = "", item_id: int | None = None) -> dict:
+    """E2B 샌드박스에서 MCP 동작 검증 4단계(설치·실행·도구 목록·인증 요구). kind는 npm|pypi|remote, remote면 url.
+    curl·wget·sh -c·bash -c가 든 명령은 거부, 자동 검증 하루 30건. item_id가 있으면 probes에 저장. 도구가 올바르게 동작하는지는 범위 밖."""
+    from agent import probe  # E2B SDK는 쓸 때만 불러온다
+
+    with tracing.span("tool:probe_mcp", kind="tool", input={"install_command": install_command, "kind": kind, "url": url,
+                                                             "item_id": item_id}) as span:
+        result = await asyncio.to_thread(probe.run, install_command, kind, url, item_id)
+        if result["status"] == "rejected":
+            _reject("probe_mcp", result["reason"])
+        span.update(output={k: v for k, v in result.items() if k != "log"})
+        return result
 
 
 @mcp.tool()
