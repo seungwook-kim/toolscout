@@ -94,5 +94,29 @@
     "raw_head": "{\n  \"reject\": false,\n  \"reject_reason\": null,\n  \"summary_ko\": \"Unity Editor를 AI 에이전트나 터미널에서 제어하는 MCP 프레임워크입니다. 별도 프로세스 없이 Editor가 HTTP로 MCP를 제공하며, C# 메서드에 [McpTool]만 붙이면 도구를 정의할 수 있습니다.\",\n  \"for_me\": \"Claude Code와 MCP를 다루는 개발자로서, Unity 환경에서 에이전트가 에디터를 직접 조작하는 워크플로를 구축하거나 학습하는 데 활용할 수 있습니다.\",\n  \"pros",
     "raw_tail": "com/isuzu-shiranui/UnityMCP\"\n    }\n  ],\n  \"install_cmd\": \"curl -fsSL https://raw.githubusercontent.com/isuzu-shiranui/UnityMCP/main/install.sh | sh\"\n}",
     "trace_id": "d8fcb03eac94c16b76e4636b0423debf"
+  },
+  {
+    "at": "2026-09-15T14:35:52+09:00",
+    "date": "2000-01-05",
+    "label": "선별 1묶음",
+    "attempt": 1,
+    "error": "judgments.1.reason: Field required",
+    "provider": "ollama",
+    "model": "gemma3:12b",
+    "raw_head": "```json\n{\n  \"judgments\": [\n    {\"id\": 1, \"ai_related\": true, \"worth_today\": true, \"topic\": \"model_release\", \"reason\": \"새로운 음악 앱 개발에 사용자 참여를 유도하는 실험적 접근 방식 소개.\"},\n    {\"id\": 2, \"ai_related\": true, \"worth_today\": true, \"topic\": \"agent_framework\", \"summary\": \"생산성 플랫폼의 에이전트 기반 업무 방식 전환을 보여주는 Superhuman의",
+    "raw_tail": "{\"id\": 20, \"ai_related\": true, \"worth_today\": true, \"topic\": \"model_release\", \"reason\": \"Christina Koch와 James Manyika의 우주, 기술, 발견에 대한 대화.\"}\n  ]\n}\n```",
+    "trace_id": "f94a15ec3416b08f3c7863adc9facf59"
+  },
+  {
+    "at": "2026-09-15T14:35:52+09:00",
+    "date": "2000-01-05",
+    "label": "선별 1묶음",
+    "attempt": 2,
+    "error": "judgments.1.reason: Field required",
+    "provider": "ollama",
+    "model": "gemma3:12b",
+    "raw_head": "```json\n{\n  \"judgments\": [\n    {\"id\": 1, \"ai_related\": true, \"worth_today\": false, \"topic\": \"model_release\", \"reason\": \"음악 앱 관련 소식으로 AI 기술 활용 사례를 보여주지만, 긴급한 업데이트는 아님.\"},\n    {\"id\": 2, \"ai_related\": true, \"worth_today\": true, \"topic\": \"agent_framework\", \"summary\": \"생산성 플랫폼의 에이전트 기능 강화는 주목할 만한 트렌드.\"},",
+    "raw_tail": "드 공유.\"},\n    {\"id\": 20, \"ai_related\": true, \"worth_today\": false, \"topic\": \"industry\", \"reason\": \"Google의 우주, 기술, 발견 관련 대화는 특정 이벤트 홍보에 해당.\"}\n  ]\n}\n```",
+    "trace_id": "f94a15ec3416b08f3c7863adc9facf59"
   }
 ]

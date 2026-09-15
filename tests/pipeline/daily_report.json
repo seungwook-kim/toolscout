@@ -1,95 +1,109 @@
 {
-  "date": "2026-09-15",
+  "date": "2000-01-05",
   "dev_mode": true,
   "options": {
     "users": 1,
     "limit": 40
   },
-  "collected": 183,
-  "prepared": 183,
+  "collected": 181,
+  "prepared": 181,
   "curator_input": 40,
   "source_failures": [],
   "skipped_sent_users": [],
-  "selected": 31,
-  "verify_requests": 4,
+  "selected": 14,
+  "verify_requests": 1,
   "users": [
     {
       "user_id": 1,
       "role": "자바 백엔드 개발자",
-      "planned": 6,
+      "planned": 3,
       "rejected": [
         {
-          "title": "뉴엔AI, 산업 AI 데이터 분석 기술로 북미 진출…뉴저지주에 법인 설립",
-          "url": "https://www.aitimes.com/news/articleView.html?idxno=215267",
-          "reason": "해당 기사는 뷰티 산업 특화 AI 플랫폼의 북미 법인 설립 및 비즈니스 확장 소식이며, 사용자가 개발 중인 n8n 기반 사내 AI 브리핑 봇의 기술 구현이나 RAG 아키텍처 설계에 직접적으로 활용할 수 있는 정보가 부족합니다."
+          "title": "\"탈모약 개발·암 진단·주식 투자도 AI로\"...LG, 전문가 AI로 승부수",
+          "url": "https://www.aitimes.com/news/articleView.html?idxno=215257",
+          "reason": "LG의 산업 특화 AI(제조·과학·금융) 공개 뉴스는 자바 백엔드 개발자가 n8n으로 만드는 사내 AI 브리핑 봇 개발과 직접적인 기술적 연관성이 부족함"
+        },
+        {
+          "title": "코그니션, 키미 K3 기반 코딩 모델 'SWE-2' 출시...\"페이블 5.1 맞먹는 성능\"",
+          "url": "https://www.aitimes.com/news/articleView.html?idxno=215233",
+          "reason": "사용자가 n8n으로 사내 AI 브리핑 봇을 만드는 중인데, 해당 기사는 코그니션의 데빈(Devin) 서비스 내부에서만 제공되는 코딩 모델 SWE-2에 대한 내용으로, 사용자가 직접 설치하거나 API를 통해 활용할 수 없어 실질적 관련성이 낮음"
+        },
+        {
+          "title": "Microsoft’s new AI ‘code of conduct’ tells models not to hack systems or trick humans",
+          "url": "https://techcrunch.com/2026/09/14/microsofts-new-ai-code-of-conduct-tells-models-not-to-hack-systems-or-trick-humans",
+          "reason": "사용자가 n8n으로 AI 브리핑 봇을 개발하는 실무자이고, 해당 기사는 모델 학습 단계의 거버넌스 원칙에 관한 것으로 개발 도구나 워크플로 구성에 직접 적용할 수 있는 정보가 부족함"
         }
       ],
       "excluded": [],
       "retried": 0,
+      "fixed": [],
       "format_failed": [],
       "model_failed": [],
-      "titles": [
-        "How Fyxer built an AI executive assistant people trust",
-        "업스테이지, ‘솔라 미니 4’ 무료 프리뷰 공개…“프로급 성능 구현”",
-        "삼성SDS, 클로드로 ‘원스톱 AI 도입 체계’ 강화…앤트로픽 셀렉트 티어 파트너 등재",
-        "Desktop Commander 0.2.50",
-        "GitHub 1.12.1"
-      ],
-      "status": "saved",
-      "cards": 5,
-      "empty_reason": null,
+      "titles": [],
+      "status": "empty",
+      "cards": 0,
+      "empty_reason": "후보 3건 모두 빠짐 (반려 3, 검증 제외 0, 형식 실패 0)",
       "duplicates": []
     }
   ],
   "totals": {
     "users": 1,
     "briefings": 1,
-    "empty_users": 0,
+    "empty_users": 1,
     "failed_users": 0,
-    "cards": 5,
-    "rejected": 1,
+    "cards": 0,
+    "rejected": 3,
     "excluded": 0,
-    "calls": 11,
-    "input_tokens": 25435,
-    "output_tokens": 4579,
-    "format_failures": 1,
-    "unrecovered": 0
+    "calls": 8,
+    "input_tokens": 18328,
+    "output_tokens": 3840,
+    "format_failures": 2,
+    "unrecovered": 1
   },
   "all_users_failed": false,
   "providers": {
-    "groq:openai/gpt-oss-20b": 1,
-    "ollama:gemma3:12b": 3,
-    "groq:qwen/qwen3.8-27b": 5,
-    "gemini:gemini-3.6-flash": 1,
-    "openrouter:nex-agi/nex-n2.5-pro:free": 1
+    "ollama:gemma3:12b": 5,
+    "groq:qwen/qwen3.8-27b": 3
   },
-  "failovers": {
-    "ollama:타임아웃": 1,
-    "groq:429": 2,
-    "gemini:429": 1
-  },
+  "failovers": {},
+  "rate_limits_429": {},
   "model_failures": [],
   "failure_examples": [
     {
-      "label": "카드 1:업스테이지, ‘솔라 미니 4’ 무료 프리뷰 공개…“프로",
+      "label": "선별 1묶음",
       "attempt": 1,
-      "error": "summary_ko: String should have at most 120 characters",
-      "provider": "gemini",
-      "model": "gemini-3.6-flash",
-      "raw_head": "```json\n{\n  \"reject\": false,\n  \"reject_reason\": null,\n  \"summary_ko\": \"업스테이지가 최신 모델 '솔라 프로 4' 성능에 근접하면서 크기는 7분의 1로 줄인 '솔라 미니 4'의 무료 프리뷰를 공개했다. 22일 정식 API 오픈 예정으로, 빠른 응답 속도와 한국어 이해, 정보 추출 성능을 갖췄다.\",\n  \"for_me\": \"n8n으로 사내 AI 브리핑 봇을 만들 때 빠른 응답과 저렴한 비용으로 한국어 정보 추출 및 요약 기능을 연동하는 경량 모델 API로 활용할 수 있습니다.\",\n",
-      "raw_tail": "사전 안내 없이 일시 중단되거나 종료될 수 있음\",\n      \"evidence_url\": \"https://www.aitimes.com/news/articleView.html?idxno=215245\"\n    }\n  ],\n  \"install_cmd\": null\n}\n```",
-      "trace_id": "74fd811dfd31cc41164570abf9b27ed9"
+      "error": "judgments.1.reason: Field required",
+      "provider": "ollama",
+      "model": "gemma3:12b",
+      "raw_head": "```json\n{\n  \"judgments\": [\n    {\"id\": 1, \"ai_related\": true, \"worth_today\": true, \"topic\": \"model_release\", \"reason\": \"새로운 음악 앱 개발에 사용자 참여를 유도하는 실험적 접근 방식 소개.\"},\n    {\"id\": 2, \"ai_related\": true, \"worth_today\": true, \"topic\": \"agent_framework\", \"summary\": \"생산성 플랫폼의 에이전트 기반 업무 방식 전환을 보여주는 Superhuman의",
+      "raw_tail": "{\"id\": 20, \"ai_related\": true, \"worth_today\": true, \"topic\": \"model_release\", \"reason\": \"Christina Koch와 James Manyika의 우주, 기술, 발견에 대한 대화.\"}\n  ]\n}\n```",
+      "trace_id": "f94a15ec3416b08f3c7863adc9facf59"
+    },
+    {
+      "label": "선별 1묶음",
+      "attempt": 2,
+      "error": "judgments.1.reason: Field required",
+      "provider": "ollama",
+      "model": "gemma3:12b",
+      "raw_head": "```json\n{\n  \"judgments\": [\n    {\"id\": 1, \"ai_related\": true, \"worth_today\": false, \"topic\": \"model_release\", \"reason\": \"음악 앱 관련 소식으로 AI 기술 활용 사례를 보여주지만, 긴급한 업데이트는 아님.\"},\n    {\"id\": 2, \"ai_related\": true, \"worth_today\": true, \"topic\": \"agent_framework\", \"summary\": \"생산성 플랫폼의 에이전트 기능 강화는 주목할 만한 트렌드.\"},",
+      "raw_tail": "드 공유.\"},\n    {\"id\": 20, \"ai_related\": true, \"worth_today\": false, \"topic\": \"industry\", \"reason\": \"Google의 우주, 기술, 발견 관련 대화는 특정 이벤트 홍보에 해당.\"}\n  ]\n}\n```",
+      "trace_id": "f94a15ec3416b08f3c7863adc9facf59"
     }
   ],
-  "format_failures_recorded": 1,
-  "trace_id": "74fd811dfd31cc41164570abf9b27ed9",
-  "seconds": 416.1,
-  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/74fd811dfd31cc41164570abf9b27ed9",
+  "format_failures_recorded": 2,
+  "trace_id": "f94a15ec3416b08f3c7863adc9facf59",
+  "seconds": 586.6,
+  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/f94a15ec3416b08f3c7863adc9facf59",
   "checks": {
     "대상_사용자_모두_브리핑_저장": true,
     "모델장애_사용자_없음": true,
     "트레이스_URL": true,
     "저장_행마다_trace_id·sent_at_null": true
+  },
+  "cleanup": {
+    "date": "2000-01-05",
+    "briefings_deleted": 1,
+    "seen_deleted": 0
   },
   "pass": true
 }

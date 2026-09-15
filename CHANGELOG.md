@@ -2,6 +2,14 @@
 
 새 세션은 맨 위 항목을 읽고 시작한다. 폴더별 상세 이력은 각 폴더의 `CHANGELOG.md`, 남은 작업은 각 폴더 README의 `## 할 일`에 있다.
 
+- 세션 7 · 2026-09-15 · 세션 6 문제 정리 결정 1~9 반영 (main 머지 완료)
+  - 끝난 것: 검증 노드 두 단계(요약 문장 끝 자르기, 빈 값·남은 문제 1회 자가 수정 후 제외), 해설가 relevance(1~5)·3 미만 반려·프롬프트(두 문장·120자·빈 값 금지), 06:55 예열·로컬 첫 호출 90초·이후 30초, 429는 60초 뒤 같은 제공자 1회 재시도·해설가 대체 groq → gemma3 → gemini → openrouter, MCP 레지스트리 60초·2번 더·마지막 성공 결과 재사용("수집 실패, 전날 기준"), 긱뉴스 외부 링크(없으면 요약만), app.log UTF-8, 계획안 부록 B·9.2("개발 중 앱 내 스케줄러, 배포 시 n8n 크론이 /api/w1/run 호출"), run_daily --date
+  - 검수: check_models, check_scheduler 12항목, check_fallbacks 7항목, run_daily --fake(긴 요약·빈 요약·관련도 2 포함), run_explainer --fake, check_folder_docs·check_readme 통과
+  - 검증 실행(--users 1 --limit 40, 검수 날짜 2000-01-05, 끝나고 삭제): 586.6초, 호출 8(ollama 5·groq 3), 429 0회, 전환 0회, 형식 실패 2회(선별 1묶음 gemma3가 reason 칸 누락, 재시도도 누락 → 20건 묶음 1개 빠짐), 백엔드 카드 0(해설가가 뉴스 3건 모두 reject), 트레이스 https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/f94a15ec3416b08f3c7863adc9facf59
+  - 확인: 긱뉴스 RSS에는 외부 출처 링크가 없어 지금은 전부 요약만. 이번 검증 실행에서는 카드가 검증 노드까지 오지 않아 두 단계 경로는 가짜 모델로만 확인
+  - 결정 필요: 큐레이터 선별 형식 실패(gemma3 reason 누락)로 묶음이 통째로 빠지는 문제, 해설가가 더 엄격해져 빈 브리핑이 늘 수 있음(내일 A·B·C 메일로 확인)
+  - 다음 시작점: 사용자가 9/16 08:00 메일 3통 확인 → 피드백 버튼(W3): 메일 카드 서명 링크 3종, /api/feedback, weights·seen 쓰기, 다음 날 정렬 반영 → 검증관
+
 - 세션 6 · 2026-09-15 · n8n 제거, 앱 안 예약과 Gmail 직접 발송 (main 머지 완료)
   - 결정(사용자): n8n 구조 제외, 07:00 실행·08:00 발송은 FastAPI 앱 안에서 예약, 개발 모드도 ADMIN_EMAILS(본인)에게만 실제 발송 허용
   - 끝난 것: `pipeline/scheduler.py`(07:00·08:00, 놓친 실행 22:00 전 따라잡기, 실행 끝난 뒤 발송, 발송 실패 10분 간격 2번 더), `pipeline/deliver.py` Gmail SMTP 발송(보낸 사용자만 sent_at), `routes/w1.py` 수동 실행·발송·상태, n8n 폴더·compose 서비스·CI 단계·문서 제거
