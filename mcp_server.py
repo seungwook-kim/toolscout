@@ -1,6 +1,6 @@
 """자체 MCP 서버: 내부 도구 6종 골격 (계획안 5장 도구 가드, 9.3).
 
-fetch_article, get_user_memory, probe_mcp(agent/probe.py)를 실제로 구현하고 나머지는 not_implemented를 돌려준다.
+fetch_article, get_user_memory, probe_mcp(agent/probe.py), read_skill(agent/skill_check.py)을 실제로 구현하고 나머지는 not_implemented를 돌려준다.
 /mcp 전체를 서비스 키(X-Service-Key)로 검문한다. 공개 도구 3종과 사용자 키는 뒤에서 붙인다.
 거부는 오류 없이 {"status": "rejected"}로 돌려주고 횟수를 센다.
 """
@@ -175,8 +175,16 @@ async def probe_mcp(install_command: str = "", kind: str = "npm", url: str = "",
 
 @mcp.tool()
 async def read_skill(url: str) -> dict:
-    """SKILL.md 원문을 읽어 <data>로 감싸 돌려준다. (뼈대 완성 후 구현)"""
-    return _not_implemented("read_skill")
+    """SKILL.md 원문을 GitHub·SkillsMP에서만 읽어 10,000자로 자르고 <data>로 감싸 돌려준다.
+    정규식 위험 신호(외부 전송·자격증명 요청·권한 상승·숨은 명령·판독 지시)와 걸린 문장을 함께. 안전 보증이 아니라 위험 신호 표시."""
+    from agent import skill_check
+
+    with tracing.span("tool:read_skill", kind="tool", input={"url": url}) as span:
+        result = await asyncio.to_thread(skill_check.read, url)
+        if result["status"] == "rejected":
+            _reject("read_skill", result["reason"])
+        span.update(output={k: v for k, v in result.items() if k != "text"})
+        return result
 
 
 class ServiceKeyGuard:

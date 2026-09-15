@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · verify/check_skill_read.py와 fixtures(가짜 스킬 3: 외부 전송·판독 지시 삽입·깨끗함) 추가 · 세션 8 검증관 3단계 · 13항목 통과
 - 2026-09-15 · verify/check_probe.py 추가, check_tables 표 11개·JSONB 9칸(verify_requests·probes 칸 추가) · 세션 8 검증관 2단계 · 10항목·check_tables·list_tools·run_loop 통과
 - 2026-09-15 · e2b/smoke.py 추가 · 세션 8 검증관 1단계 E2B 연결 · 생성 954ms·echo 307ms·폐기 150ms, Python 3.11·Node 20·npm 10, deny_out 뒤 외부 통신 차단 확인
 - 2026-09-15 · web/check_design.py 추가, check_rules의 옛 CSS 두 칸 항목을 참고 파일 style 기준으로, check_tables JSONB 칸 수 5 → 6(briefings.run_stats) · 디자인 기준 적용·읽기 전용 데이터 · 통과

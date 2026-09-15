@@ -4,6 +4,7 @@
 
 ## 파일
 - `loop.py`: `run(role, system_prompt, user_input, allowed_tools, max_steps, max_tool_calls)`. 모델 → 도구 요청 → MCP 실행 → 재호출(MCP 읽기 240초)
+- `skill_check.py`: read_skill 구현. GitHub·SkillsMP 원문 10,000자·<data>, 정규식 5종(외부 전송·자격증명·권한 상승·숨은 명령·판독 지시)과 인용
 - `probe.py`: probe_mcp 구현. E2B에서 ① 설치 90초(네트워크) ② 실행 30초 ③ 도구 목록(차단, mcp/sandbox_probe.py) ④ 인증 요구, 가드·하루 30건, probes 저장
 - `tracing.py`: Langfuse 스팬 래퍼. 키 없음·인증 실패면 로컬 JSONL 로그로 대체, trace_id는 항상 발급, `trace_url()`
 - `structured.py`: JSON 규격 응답 받기. 온도 0, pydantic 검사, 형식 실패면 1회 재시도, 실패 예시(제공자·모델 포함)와 모델 장애 기록
