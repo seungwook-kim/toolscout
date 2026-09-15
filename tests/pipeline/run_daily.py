@@ -107,6 +107,17 @@ def cleanup() -> None:
         c.execute(delete(db.Item).where(db.Item.id.in_(item_ids)))
 
 
+def cleanup_date(day: date, user_ids: list[int], started: datetime) -> dict:
+    """검수용 날짜로 실제 실행한 뒤 그 날짜 브리핑과 이번 실행이 만든 seen만 지운다 (실제 날짜의 기억을 건드리지 않게)."""
+    with db.get_engine().begin() as c:
+        item_ids = [r[0] for r in c.execute(select(db.Briefing.item_id).where(
+            db.Briefing.date == day, db.Briefing.user_id.in_(user_ids), db.Briefing.item_id.is_not(None)))]
+        seen = c.execute(delete(db.Seen).where(db.Seen.user_id.in_(user_ids), db.Seen.item_id.in_(item_ids),
+                                               db.Seen.shown_at >= started)).rowcount
+        briefings = c.execute(delete(db.Briefing).where(db.Briefing.date == day, db.Briefing.user_id.in_(user_ids))).rowcount
+    return {"date": str(day), "briefings_deleted": briefings, "seen_deleted": seen}
+
+
 def unit_checks() -> dict:
     card = {"type": "news", "title": "t", "url": "https://a.test/x", "why_this_card": "이유", "source_checked": True, "relevance": 4,
             "trace_id": "abc", "pros": [{"text": "설치가 쉽다", "evidence_url": "https://a.test/x"}], **KOREAN}
@@ -142,8 +153,8 @@ def unit_checks() -> dict:
         "relevance_없으면_실패": any("relevance" in p for p in validate.problems({k: v for k, v in card.items() if k != "relevance"})),
         "trace_id_없으면_실패": bool(validate.problems(card | {"trace_id": ""})),
         "limit_상위N_비율유지·공식최신·별순": [i["title"] for i in top] == ["n4", "n2", "n3", "t500"],
-        "옵션_users·limit_해석": vars(run_daily.parse_args(["--users", "1", "--limit", "40"]))
-        | {"mcp_url": None} == {"users": 1, "limit": 40, "mcp_url": None},
+        "옵션_users·limit·date_해석": vars(run_daily.parse_args(["--users", "1", "--limit", "40", "--date", "2000-01-05"]))
+        | {"mcp_url": None} == {"users": 1, "limit": 40, "date": date(2000, 1, 5), "mcp_url": None},
     }
 
 
@@ -260,8 +271,11 @@ def main() -> int:
             finally:
                 cleanup()
         else:
-            args = run_daily.parse_args([a for a in sys.argv[1:] if a != "--fake"])
-            report = live_report(asyncio.run(run_daily.run(mcp_url=mcp_url, users=args.users, limit=args.limit)))
+            args = run_daily.parse_args([a for a in sys.argv[1:] if a not in ("--fake", "--cleanup")])
+            started = datetime.now(timezone.utc)
+            report = live_report(asyncio.run(run_daily.run(args.date, mcp_url=mcp_url, users=args.users, limit=args.limit)))
+            if "--cleanup" in sys.argv and args.date:
+                report["cleanup"] = cleanup_date(args.date, [u["user_id"] for u in report["users"]], started)
     finally:
         proc.terminate()
         proc.wait(timeout=10)

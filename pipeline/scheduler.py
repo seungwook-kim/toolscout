@@ -1,4 +1,4 @@
-"""앱 안 예약 작업 (계획안 9.2 W1). n8n 대신 FastAPI 앱이 떠 있는 동안 돈다 (2026-09-15 사용자 결정).
+"""앱 안 예약 작업 (계획안 9.2 W1). 개발 중에는 FastAPI 앱이 떠 있는 동안 여기서 돌고, 배포 단계에서 n8n 크론이 /api/w1/run을 부르는 형태로 바꾼다 (2026-09-15 사용자 결정).
 
 - 매일 06:55 KST 로컬 모델 예열(models.warm_local), 07:00 하루 실행(run_daily.run), 08:00 발송(deliver.send_day)
 - 07:00에 앱이 꺼져 있었으면 그날 22:00 전에 켜질 때 바로 따라잡는다. 대상 사용자 중 그날 briefings가 없는 사람이 있을 때만
@@ -123,7 +123,8 @@ class Scheduler:
     def start(self) -> None:
         if self._task is None or self._task.done():
             self._task = asyncio.create_task(self.loop())
-            log.warning("예약 작업 시작: 매일 %s 하루 실행, %s 발송 (KST)", RUN_AT.strftime("%H:%M"), SEND_AT.strftime("%H:%M"))
+            log.warning("예약 작업 시작: 매일 %s 예열, %s 하루 실행, %s 발송 (KST)", WARM_AT.strftime("%H:%M"), RUN_AT.strftime("%H:%M"),
+                        SEND_AT.strftime("%H:%M"))
 
     async def stop(self) -> None:
         if self._task is not None:

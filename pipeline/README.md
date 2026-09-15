@@ -24,6 +24,6 @@
 - `tests/pipeline/`: run_dedupe, run_daily, check_deliver, check_scheduler
 
 ## 할 일
-- [ ] 다음 날 07:00·08:00 자동 실행 확인. 앱은 Windows 로그온 작업 `toolscout app`으로 뜬다(로그 `%LOCALAPPDATA%\toolscout\app.log`)
+- [ ] 다음 날 07:00·08:00 자동 실행 확인. 앱은 로그온 작업 `toolscout app` → `%LOCALAPPDATA%\toolscout\start_app.cmd`로 뜬다(로그 UTF-8 `app.log`)
 - [ ] 피드백 버튼 서명 링크 (W3)
 - [ ] 한국어·영어 같은 소식 묶기 (제목 유사도로는 안 잡힘, 큐레이터 단계에서 판단할지 결정)

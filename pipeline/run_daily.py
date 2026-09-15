@@ -185,6 +185,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="toolscout 하루 실행 (발송 전까지)")
     parser.add_argument("--users", type=int, default=None, help="처리할 사용자 수 (디버깅 1)")
     parser.add_argument("--limit", type=int, default=None, help="큐레이터 입력 상위 N건 (디버깅 40)")
+    parser.add_argument("--date", type=date.fromisoformat, default=None, help="브리핑 날짜 (기본 오늘 KST). 검수용 날짜로 돌릴 때")
     parser.add_argument("--mcp-url", default=loop.DEFAULT_MCP_URL)
     return parser.parse_args(argv)
 
@@ -192,7 +193,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     try:
-        report = asyncio.run(run(mcp_url=args.mcp_url, users=args.users, limit=args.limit))
+        report = asyncio.run(run(args.date, mcp_url=args.mcp_url, users=args.users, limit=args.limit))
     finally:
         tracing.flush()
     print(json.dumps(report, ensure_ascii=False, indent=2))
