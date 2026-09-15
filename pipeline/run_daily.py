@@ -160,8 +160,12 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
                 results.append(entry | {"status": "model_failed", "reason": "카드 해설 모델 장애", "cards": 0})
                 continue
             reason = None if checked["cards"] else empty_reason(plan, checked)
+            run_stats = {"selected": len(curated["selected"]), "rejected": len(checked["rejected"]),
+                         "excluded": len(checked["excluded"]) + len(checked["format_failed"]),
+                         "verify_requested": len(curated["verify"]), "verified": 0}  # 검증관은 아직 없다
             saved = await asyncio.to_thread(persist.save_user, plan["user_id"], today, checked["cards"], items_by_url,
-                                            trace_id=root.trace_id, empty_reason=reason, pool_size=len(curator_input))
+                                            trace_id=root.trace_id, empty_reason=reason, pool_size=len(curator_input),
+                                            run_stats=run_stats)
             results.append(entry | {"status": saved["status"], "cards": saved["saved"], "empty_reason": reason,
                                     "duplicates": saved["duplicates"]})
 

@@ -4,86 +4,132 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>toolscout 설정</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
   <link rel="stylesheet" href="/static/app.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#15181E">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
 </head>
 <body>
-  <header class="top" id="top"></header>
-  <main class="wrap">
-    <h1>프로필과 설정</h1>
-    <p class="muted small" id="intro"></p>
-    <div class="panel" id="notice" hidden></div>
+  <header class="mast" id="mast"></header>
+  <main>
+    <section class="sec">
+      <div class="sec-h"><h2>프로필</h2><span class="hint" id="intro"></span></div>
+      <div class="forme" id="notice" hidden><b>안내</b><p id="notice-text"></p></div>
+      <form id="profile-form">
+        <div class="item">
+          <div class="mark"></div>
+          <div>
+            <div class="topic" id="roles-label">직군 (필수)</div>
+            <div class="acts" id="roles" role="group" aria-labelledby="roles-label"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="mark"></div>
+          <div>
+            <div class="topic">주제 관심도</div>
+            <details class="why" id="topics-box">
+              <summary>직군에 맞춰 채워져 있어요. 펼쳐서 조정</summary>
+              <div id="topics"></div>
+            </details>
+          </div>
+        </div>
+        <div class="item">
+          <div class="mark"></div>
+          <div>
+            <label class="topic" for="tools">쓰는 도구 (쉼표로 구분)</label>
+            <div class="acts"><input id="tools" type="text" placeholder="python, claude code, notion"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="mark"></div>
+          <div>
+            <label class="topic" for="free">자유 한 줄 (선택, 100자까지)</label>
+            <div class="acts"><input id="free" type="text" maxlength="100" placeholder="예: 사내 AI 브리핑 봇을 만들고 있어요"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="mark"></div>
+          <div>
+            <label class="topic" for="channel">알림 채널과 시간</label>
+            <div class="acts">
+              <select id="channel"></select>
+              <select id="time" aria-label="알림 시간"></select>
+            </div>
+          </div>
+        </div>
+        <div class="acts"><button class="go" type="submit">저장</button><span class="fb" id="save-msg"></span></div>
+      </form>
+    </section>
 
-    <form class="panel" id="profile">
-      <div class="field">
-        <label>직군 (필수)</label>
-        <div class="row roles" id="roles"></div>
+    <section class="sec">
+      <div class="sec-h"><h2>오늘 브리핑 지금 만들기</h2><span class="hint">10분쯤 걸려요</span></div>
+      <div class="item">
+        <div class="mark"></div>
+        <div>
+          <p class="sum">오늘 뉴스와 도구를 모아 내 기준으로 바로 골라 해설합니다.</p>
+          <div class="acts"><button class="act p" id="make-now" type="button">지금 만들기</button><span class="fb" id="now-msg"></span></div>
+        </div>
       </div>
-      <details class="field" id="topics-box">
-        <summary>주제 관심도 조정 (직군에 맞춰 자동으로 채워져요)</summary>
-        <div class="topics" id="topics"></div>
-      </details>
-      <div class="field">
-        <label for="tools">쓰는 도구 (쉼표로 구분)</label>
-        <input id="tools" type="text" placeholder="python, claude code, notion">
-      </div>
-      <div class="field">
-        <label for="free">자유 한 줄 (선택)</label>
-        <input id="free" type="text" maxlength="100" placeholder="예: 사내 AI 브리핑 봇을 만들고 있어요">
-      </div>
-      <div class="row">
-        <div class="field"><label for="channel">알림 채널</label><select id="channel"></select></div>
-        <div class="field"><label for="time">알림 시간</label><select id="time"></select></div>
-      </div>
-      <div class="row"><button class="btn primary" type="submit">저장</button><span class="msg" id="save-msg"></span></div>
-    </form>
+    </section>
 
-    <div class="panel">
-      <h2>오늘 브리핑 지금 만들기</h2>
-      <p class="muted small">오늘 뉴스와 도구를 모아 내 기준으로 바로 골라 해설합니다. 10분쯤 걸려요.</p>
-      <div class="row"><button class="btn" id="make-now" type="button">지금 만들기</button><span class="msg" id="now-msg"></span></div>
-    </div>
-
-    <div class="panel">
-      <h2>기억과 계정</h2>
-      <div class="row">
-        <button class="btn" id="forget" type="button">내 기억 지우기</button>
-        <button class="btn danger" id="delete" type="button">계정 삭제</button>
+    <section class="sec">
+      <div class="sec-h"><h2>기억과 계정</h2></div>
+      <div class="item">
+        <div class="mark"></div>
+        <div>
+          <p class="sum">기억을 지우면 주제 가중치, 본 항목, 피드백 기록이 사라지고 프로필은 남아요. 계정 삭제는 되돌릴 수 없어요.</p>
+          <div class="acts">
+            <button class="act" id="forget" type="button">내 기억 지우기</button>
+            <button class="act" id="delete" type="button">계정 삭제</button>
+            <span class="fb" id="danger-msg"></span>
+          </div>
+        </div>
       </div>
-      <p class="msg" id="danger-msg"></p>
-    </div>
+    </section>
   </main>
   <script src="/static/app.js"></script>
   <script>
     let state = null;
     let touched = false;
+    let selectedRole = null;
     const $ = (id) => document.getElementById(id);
 
     function renderTopics(weights) {
-      $("topics").innerHTML = Object.entries(state.topics).map(([id, label]) => `
-        <div class="t"><span class="name">${TS.esc(label)}</span>
-          <input type="range" min="-5" max="5" step="1" data-topic="${id}" value="${weights[id] ?? 0}">
-          <output>${weights[id] ?? 0}</output></div>`).join("");
+      $("topics").innerHTML = Object.entries(state.topics).map(([id, name]) => `
+        <div class="forme"><b>${TS.esc(name)}</b><span><input type="range" min="-5" max="5" step="1" data-topic="${id}" value="${weights[id] ?? 0}" aria-label="${TS.esc(name)} 관심도"><output>${weights[id] ?? 0}</output></span></div>`).join("");
       $("topics").querySelectorAll("input").forEach((input) => {
         input.oninput = () => { input.nextElementSibling.textContent = input.value; touched = true; };
       });
     }
 
+    function renderRoles(current) {
+      selectedRole = current;
+      $("roles").innerHTML = state.roles.map((role) =>
+        `<button class="act" type="button" aria-pressed="${role === selectedRole}" data-role="${TS.esc(role)}">${TS.esc(role)}</button>`).join("");
+      $("roles").querySelectorAll("button").forEach((b) => {
+        b.onclick = () => {
+          selectedRole = b.dataset.role;
+          $("roles").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          if (!touched && !state.profile.has_weights) renderTopics(state.presets[selectedRole]);
+        };
+      });
+    }
+
     async function load() {
-      await TS.header("/settings");
       state = await TS.api("/api/profile");
+      await TS.mast({ active: "/settings", title: "설정", basis: TS.basis(state) });
       const p = state.profile;
-      $("intro").textContent = state.first_time ? "처음 오셨네요. 직군을 고르고 저장하면 내일 아침부터 내 기준 브리핑이 와요." : "바꾼 내용은 다음 브리핑부터 반영돼요.";
+      $("intro").textContent = state.first_time ? "처음 오셨네요. 직군을 고르고 저장하면 내일 아침부터 내 기준 브리핑이 와요." : "바뀐 내용은 다음 브리핑부터 반영돼요.";
       if (state.first_time) {
         $("notice").hidden = false;
-        $("notice").innerHTML = state.dev_mode
-          ? "<b>안내</b> 개발 모드에서는 프로필과 질문이 무료 모델(로컬·Groq·Gemini·OpenRouter)로 전송될 수 있어요. 공개돼도 괜찮은 내용만 적어 주세요."
-          : "<b>안내</b> 프로필 3칸과 질문은 해설을 위해 학습에 쓰지 않는 유료 API로 전송됩니다. 회사 기밀은 적지 마세요.";
+        $("notice-text").textContent = state.dev_mode
+          ? "개발 모드에서는 프로필과 질문이 무료 모델(로컬·Groq·Gemini·OpenRouter)로 전송될 수 있어요. 공개돼도 괜찮은 내용만 적어 주세요."
+          : "프로필 3칸과 질문은 해설을 위해 학습에 쓰지 않는 유료 API로 전송됩니다. 회사 기밀은 적지 마세요.";
       }
-      $("roles").innerHTML = state.roles.map((role) => `
-        <label><input type="radio" name="role" value="${TS.esc(role)}" ${role === p.role ? "checked" : ""}><span>${TS.esc(role)}</span></label>`).join("");
-      $("roles").querySelectorAll("input").forEach((input) => {
-        input.onchange = () => { if (!touched && !p.has_weights) renderTopics(state.presets[input.value]); };
-      });
+      renderRoles(p.role);
       renderTopics(p.weights);
       $("tools").value = (p.tools_tags || []).join(", ");
       $("free").value = p.free_text || "";
@@ -91,15 +137,14 @@
       $("time").innerHTML = state.notify_times.map((t) => `<option ${t === p.notify_time ? "selected" : ""}>${t}</option>`).join("");
     }
 
-    $("profile").onsubmit = async (event) => {
+    $("profile-form").onsubmit = async (event) => {
       event.preventDefault();
-      const role = document.querySelector("input[name=role]:checked");
-      if (!role) return TS.message($("save-msg"), "직군을 골라 주세요", true);
+      if (!selectedRole) return TS.message($("save-msg"), "직군을 골라 주세요", true);
       const weights = {};
       $("topics").querySelectorAll("input").forEach((input) => { weights[input.dataset.topic] = Number(input.value); });
       try {
         const data = await TS.api("/api/profile", { method: "POST", body: {
-          role: role.value, weights, tools_tags: $("tools").value.split(","), free_text: $("free").value,
+          role: selectedRole, weights, tools_tags: $("tools").value.split(","), free_text: $("free").value,
           channel: $("channel").value, notify_time: $("time").value } });
         TS.message($("save-msg"), data.message);
         if (state.first_time) { state.first_time = false; $("intro").textContent = "저장했어요. 아래에서 오늘 브리핑을 바로 만들 수 있어요."; }

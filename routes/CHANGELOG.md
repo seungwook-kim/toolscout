@@ -1,5 +1,6 @@
 # routes/ CHANGELOG
 
+- 2026-09-15 · briefings.py 응답에 카드마다 item_meta(별 수·버전·출처·공개 시각), 그날 run_stats(선별·반려·검증) · 새 화면 파이프라인·도구 메타 칸 (사용자 승인: 읽기 전용으로 채우기) · check_design A 5항목·check_briefings 통과
 - 2026-09-15 · ask.py 키워드 검색에 items.description(수집 원문 설명) 포함 · 쌓인 도구 목록을 질문 후보로 · check_ask 20항목 통과
 - 2026-09-15 · ask.py 추가(POST·GET /api/ask) · 웹앱 본체 5단계 질문창 W2, 부록 E · check_ask 20항목 통과 (흔한 단어 "MCP"가 847건 걸려 최신순 60건에서 어제 카드가 빠지던 문제를 일치 점수순으로 수정)
 - 2026-09-15 · feedback.py 추가(웹 세션·메일 서명 링크) · 웹앱 본체 4단계 W3 · check_feedback 14항목·check_appendix_c 6항목 통과 (/api/feedback/link/note를 {id}/note가 먼저 잡던 문제를 :int로 수정)

@@ -1,5 +1,7 @@
 # web/ CHANGELOG
 
+- 2026-09-15 · history.html: 날짜 칩과 그날 칸을 날짜마다 접었다 펴는 details 칸으로(머리는 .sec-h, 처음 펼칠 때 불러옴), app.css 보충에 접힘 삼각형 · 사용자 요청 · check_briefings·check_design 통과
+- 2026-09-15 · 화면 전체를 docs/design-reference.html 기준으로(app.css 참고 style 그대로 + 토큰만 쓴 보충, 마스트헤드·파이프라인·.item/.tool·질문 스레드·고정 입력바, 설정·지난 브리핑·로그인·피드백은 같은 마스트헤드와 .sec/.item), PWA manifest·아이콘 · 사용자 디자인 기준 지시 · check_design·tests/web 회귀 통과, 폰 390·PC 1280 가로 넘침 0
 - 2026-09-15 · cards.js: related 카드는 "이번 주 관련 MCP·스킬" 칸에 따로 · F3-b 관련 카드 · check_rules·check_briefings 통과
 - 2026-09-15 · app.css: "어떻게 만들어졌나" 링크를 카드 흐름 안으로(긴 제목과 겹침) · 웹앱 본체 8단계 스크린샷에서 발견 · 폰 412폭 가로 넘침 0, check_rules 통과
 - 2026-09-15 · history.html 추가, cards.js mount에 날짜 문구(오늘/이날) · 웹앱 본체 6단계 지난 브리핑(F8) · check_briefings 12항목 통과

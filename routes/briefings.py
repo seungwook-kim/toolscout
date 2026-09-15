@@ -1,6 +1,7 @@
 """브리핑 조회 API (계획안 9.3 "브리핑 API", F8 지난 브리핑). 모두 세션 필요, 본인 브리핑만.
 
 - GET /api/briefings/today, GET /api/briefings?date=: 그날 카드(카드 JSON + 내 피드백 상태), "N건 중 M건", 기준 한 줄, empty_reason
+  카드마다 item_meta(별 수·공개 시각·버전·출처), 그날 실행 숫자 run_stats(선별·반려·검증). 화면 표시용 읽기 전용 (2026-09-15 추가)
   관리자(ADMIN_EMAILS)에게만 카드마다 Langfuse 트레이스 주소
 - GET /api/briefings/dates: 내 브리핑이 있는 날짜 목록
 - GET /api/search?q=: 내 브리핑에 나왔던 항목의 제목·이름 키워드 검색 (DB LIKE, LLM 없음)
@@ -48,24 +49,28 @@ def feedback_state(user_id: int, item_ids: list[int]) -> dict[int, dict]:
 def briefing_for(user: db.User, day: date) -> dict:
     with db.get_engine().connect() as conn:
         rows = conn.execute(select(db.Briefing.item_id, db.Briefing.rank, db.Briefing.card_json, db.Briefing.empty_reason,
-                                   db.Briefing.pool_size, db.Briefing.trace_id, db.Briefing.sent_at, db.Item.topic)
+                                   db.Briefing.pool_size, db.Briefing.trace_id, db.Briefing.sent_at, db.Item.topic,
+                                   db.Briefing.run_stats, db.Item.stars, db.Item.published_at, db.Item.version, db.Item.source)
                             .outerjoin(db.Item, db.Item.id == db.Briefing.item_id)
                             .where(db.Briefing.user_id == user.id, db.Briefing.date == day).order_by(db.Briefing.rank)).all()
     admin = is_admin(user.email)
-    cards, empty_reason, pool_size = [], None, None
+    cards, empty_reason, pool_size, run_stats = [], None, None, None
     state = feedback_state(user.id, [r.item_id for r in rows if r.item_id])
     for row in rows:
         pool_size = row.pool_size or pool_size
+        run_stats = row.run_stats or run_stats
         if row.card_json is None:
             empty_reason = row.empty_reason
             continue
         card = dict(row.card_json) | {"item_id": row.item_id, "topic": row.topic, "topic_label": TOPICS.get(row.topic or "", ""),
-                                      "feedback": state.get(row.item_id, {"actions": [], "reason": None, "memo": None, "ids": {}})}
+                                      "feedback": state.get(row.item_id, {"actions": [], "reason": None, "memo": None, "ids": {}}),
+                                      "item_meta": {"stars": row.stars, "version": row.version, "source": row.source,
+                                                    "published_at": row.published_at.isoformat() + "Z" if row.published_at else None}}
         if admin:
             card["trace_url"] = tracing.trace_url(row.trace_id) or f"trace_id {row.trace_id}"
         cards.append(card)
     return {"date": str(day), "profile_line": profile_line(user), "pool_size": pool_size, "count": len(cards),
-            "cards": cards, "empty_reason": empty_reason, "exists": bool(rows), "is_admin": admin,
+            "cards": cards, "empty_reason": empty_reason, "exists": bool(rows), "is_admin": admin, "run_stats": run_stats,
             "sent": any(r.sent_at for r in rows)}
 
 

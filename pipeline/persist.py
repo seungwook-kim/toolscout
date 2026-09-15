@@ -9,7 +9,7 @@
 - 관련 카드 후보(related_pool): 도구 목록에서 안 본 것을 프로필 도구 태그·써봤음 도구 이름 일치 > 주제 가중치 > 별 수로 100건 이내 (계획안 5장)
 """
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 
 from sqlalchemy import case, delete, func, literal, or_, select
 from sqlalchemy.dialects.postgresql import insert
@@ -48,6 +48,15 @@ def pending_urls(user_id: int, today: date) -> set[str]:
         return {row[0] for row in rows}
 
 
+def published(item: dict) -> datetime | None:
+    """수집 항목의 published_at(UTC ISO)을 naive UTC로. 없거나 깨졌으면 None."""
+    try:
+        value = datetime.fromisoformat(str(item.get("published_at") or ""))
+    except ValueError:
+        return None
+    return value.astimezone(timezone.utc).replace(tzinfo=None) if value.tzinfo else value
+
+
 CATALOG_TYPES = ("mcp", "skill")
 DESCRIPTION_CHARS = 300
 
@@ -62,14 +71,16 @@ def save_catalog(today: date, selected: list[dict]) -> int:
         return 0
     values = [{"date": today, "type": item["type"], "topic": item.get("topic"), "title": item["title"][:300], "url": url,
                "description": (item.get("summary") or "").strip()[:DESCRIPTION_CHARS] or None, "source": item.get("source", "unknown"),
-               "source_tier": SOURCE_TIER.get(item.get("source", "")), "version": item.get("version"), "stars": item.get("stars")}
+               "source_tier": SOURCE_TIER.get(item.get("source", "")), "version": item.get("version"), "stars": item.get("stars"),
+               "published_at": published(item)}
               for url, item in unique.items()]
     statement = insert(db.Item).values(values)
     statement = statement.on_conflict_do_update(index_elements=["url"], set_={
         "topic": func.coalesce(statement.excluded.topic, db.Item.topic),
         "description": func.coalesce(statement.excluded.description, db.Item.description),
         "version": func.coalesce(statement.excluded.version, db.Item.version),
-        "stars": func.coalesce(statement.excluded.stars, db.Item.stars)})
+        "stars": func.coalesce(statement.excluded.stars, db.Item.stars),
+        "published_at": func.coalesce(statement.excluded.published_at, db.Item.published_at)})
     with db.get_engine().begin() as connection:
         connection.execute(statement)
     return len(values)
@@ -124,11 +135,13 @@ def _item_row(item: dict, card: dict, today: date) -> dict:
     return {"date": today, "type": card["type"], "topic": item.get("topic"), "title": card["title"], "url": card["url"],
             "summary_ko": card["summary_ko"], "description": (item.get("summary") or "").strip()[:DESCRIPTION_CHARS] or None,
             "source": item.get("source", "unknown"),
-            "source_tier": SOURCE_TIER.get(item.get("source", "")), "version": item.get("version"), "stars": item.get("stars")}
+            "source_tier": SOURCE_TIER.get(item.get("source", "")), "version": item.get("version"), "stars": item.get("stars"),
+            "published_at": published(item)}
 
 
 def save_user(user_id: int, today: date, cards: list[dict], items_by_url: dict[str, dict], *,
-              trace_id: str | None = None, empty_reason: str | None = None, pool_size: int | None = None) -> dict:
+              trace_id: str | None = None, empty_reason: str | None = None, pool_size: int | None = None,
+              run_stats: dict | None = None) -> dict:
     """한 사용자의 오늘 카드를 한 트랜잭션으로 저장한다. 반환: {status, saved, duplicates}.
 
     cards가 비었으면 empty_reason·trace_id로 빈 행 하나를 남긴다 (status "empty").
@@ -150,7 +163,7 @@ def save_user(user_id: int, today: date, cards: list[dict], items_by_url: dict[s
         if not cards:
             connection.execute(insert(db.Briefing).values(user_id=user_id, date=today, item_id=None, rank=0, card_json=None,
                                                           empty_reason=empty_reason, trace_id=trace_id, sent_at=None,
-                                                          pool_size=pool_size))
+                                                          pool_size=pool_size, run_stats=run_stats))
             return {"status": "empty", "saved": 0, "duplicates": []}
 
         saved, duplicates, used = 0, [], set()
@@ -159,7 +172,8 @@ def save_user(user_id: int, today: date, cards: list[dict], items_by_url: dict[s
             statement = insert(db.Item).values(row)
             statement = statement.on_conflict_do_update(index_elements=["url"], set_={
                 "topic": func.coalesce(statement.excluded.topic, db.Item.topic),
-                "summary_ko": func.coalesce(db.Item.summary_ko, statement.excluded.summary_ko)}).returning(db.Item.id)
+                "summary_ko": func.coalesce(db.Item.summary_ko, statement.excluded.summary_ko),
+                "published_at": func.coalesce(statement.excluded.published_at, db.Item.published_at)}).returning(db.Item.id)
             item_id = connection.execute(statement).scalar_one()
             if item_id in used:
                 duplicates.append({"title": card["title"], "url": card["url"]})
@@ -168,7 +182,7 @@ def save_user(user_id: int, today: date, cards: list[dict], items_by_url: dict[s
             saved += 1
             connection.execute(insert(db.Briefing).values(
                 user_id=user_id, date=today, item_id=item_id, rank=saved, card_json=card | {"item_id": item_id, "rank": saved},
-                pool_size=pool_size,
+                pool_size=pool_size, run_stats=run_stats,
                 trace_id=card["trace_id"], sent_at=None))
             connection.execute(insert(db.Seen).values(user_id=user_id, item_id=item_id, shown_at=db.utcnow())
                                .on_conflict_do_nothing(index_elements=["user_id", "item_id"]))

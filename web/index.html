@@ -4,74 +4,92 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>toolscout 오늘 브리핑</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
   <link rel="stylesheet" href="/static/app.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#15181E">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
 </head>
 <body>
-  <header class="top" id="top"></header>
-  <main class="wrap">
-    <section id="head">
-      <h1 id="title">오늘 브리핑</h1>
-      <div class="muted small" id="summary"></div>
-    </section>
-    <section id="briefing"><div class="empty">불러오는 중이에요</div></section>
+  <header class="mast" id="mast"></header>
 
-    <section class="panel ask" id="ask">
-      <h2>이 브리핑에 대해 물어보기</h2>
-      <div class="log" id="log"></div>
-      <form id="ask-form">
-        <input id="question" type="text" maxlength="300" placeholder="예: 오늘 나온 MCP 중에 노션이랑 붙는 거 있어?" autocomplete="off">
-        <button class="btn primary" type="submit">묻기</button>
-      </form>
-      <div class="muted small" id="ask-meta"></div>
+  <main>
+    <div id="briefing"><section class="sec"><div class="empty">불러오는 중이에요</div></section></div>
+
+    <section class="sec ask">
+      <div class="sec-h"><h2>이 브리핑에 대해 물어보기</h2><span class="hint">오늘 안에서 이어 물을 수 있어요</span></div>
+      <div class="thread" id="thread"></div>
     </section>
   </main>
+
+  <div class="askbar">
+    <form id="ask-form">
+      <input id="question" type="text" maxlength="300" placeholder="이어서 물어보세요" aria-label="질문" autocomplete="off">
+      <span class="quota" id="quota"></span>
+      <button type="submit">묻기</button>
+    </form>
+  </div>
+
   <script src="/static/app.js"></script>
   <script src="/static/cards.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
 
-    function addTurn(question, answer) {
-      const sources = (answer.sources || []).map((s) => {
+    function quota(data) {
+      $("quota").textContent = data.limit != null ? `${data.remaining} / ${data.limit}` : `${data.remaining}`;
+    }
+
+    // 답 말풍선. 확인한 곳 칩(.refs), out이면 "AI 질문이었어요", 연속 out이면 질문 예시
+    function answerHtml(answer) {
+      const refs = (answer.sources || []).map((s) => {
         const url = TS.safeUrl(s.url);
-        return url ? `<a href="${TS.esc(url)}" target="_blank" rel="noopener">${TS.esc(s.title || url)}</a>` : "";
-      }).filter(Boolean).join(" · ");
-      const retry = answer.gate === "out" ? ' <button class="btn small retry" type="button">AI 질문이었어요</button>' : "";
-      const examples = answer.examples ? `<div class="small muted">이렇게 물어볼 수 있어요: ${answer.examples.map(TS.esc).join(" / ")}</div>` : "";
-      $("log").insertAdjacentHTML("beforeend", `<div class="q">${TS.esc(question)}</div>
-        <div class="a">${TS.esc(answer.answer)}${sources ? `<div class="small">확인한 곳: ${sources}</div>` : ""}${retry}${examples}</div>`);
-      const button = $("log").lastElementChild.querySelector(".retry");
+        return url ? `<a href="${TS.esc(url)}" target="_blank" rel="noopener">확인한 곳 · ${TS.esc(s.title || TS.host(url))}</a>` : "";
+      }).filter(Boolean).join("");
+      const retry = answer.gate === "out" ? '<div class="acts"><button class="act" type="button" data-retry>AI 질문이었어요</button></div>' : "";
+      const examples = answer.examples ? `<p>이렇게 물어볼 수 있어요: ${answer.examples.map(TS.esc).join(" / ")}</p>` : "";
+      return `<div class="a">${TS.esc(answer.answer)}${refs ? `<div class="refs">${refs}</div>` : ""}${examples}${retry}</div>`;
+    }
+
+    function bindRetry(bubble, question) {
+      const button = bubble.querySelector("[data-retry]");
       if (button) button.onclick = () => { button.disabled = true; ask(question, true); };
+    }
+
+    function addTurn(question, answer) {
+      $("thread").insertAdjacentHTML("beforeend", `<div class="q">${TS.esc(question)}</div>${answerHtml(answer)}`);
+      bindRetry($("thread").lastElementChild, question);
     }
 
     async function ask(question, forceUnclear = false) {
       const submit = $("ask-form").querySelector("button");
       submit.disabled = true;
-      $("ask-meta").textContent = "답을 찾는 중이에요. 원문을 다시 읽으면 1~2분 걸릴 수 있어요";
+      $("thread").insertAdjacentHTML("beforeend", `<div class="q">${TS.esc(question)}</div><div class="a">답을 찾는 중이에요. 원문을 다시 읽으면 1~2분 걸릴 수 있어요</div>`);
+      const waiting = $("thread").lastElementChild;
       try {
         const data = await TS.api("/api/ask", { method: "POST", body: { question, force_unclear: forceUnclear } });
-        addTurn(question, data);
-        $("ask-meta").textContent = `오늘 남은 질문 ${data.remaining}회`;
+        waiting.outerHTML = answerHtml(data);
+        bindRetry($("thread").lastElementChild, question);
+        quota({ remaining: data.remaining, limit: window.questionLimit });
       } catch (e) {
-        $("ask-meta").textContent = e.message;
+        waiting.textContent = e.message;
       } finally {
         submit.disabled = false;
       }
     }
 
     async function load() {
-      const me = await TS.header("/");
-      const briefing = await TS.api("/api/briefings/today");
-      const d = new Date(briefing.date + "T00:00:00");
-      $("title").textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 브리핑`;
-      const counts = briefing.pool_size ? `${briefing.pool_size}건 중 ${briefing.count}건` : `${briefing.count}건`;
-      $("summary").innerHTML = `${counts} · 기준: ${TS.esc(briefing.profile_line)}${me.dev_mode ? " · 개발 모드: 질문은 무료 모델로 전송돼요" : ""}`;
+      const [briefing, profile] = await Promise.all([TS.api("/api/briefings/today"), TS.api("/api/profile")]);
+      await TS.mast({ active: "/", title: "오늘의 도구", when: TS.longDate(briefing.date), basis: TS.basis(profile), pipe: Cards.pipe(briefing) });
       Cards.mount($("briefing"), briefing);
       try {
         const history = await TS.api("/api/ask");
+        window.questionLimit = history.limit;
         history.turns.forEach((t) => addTurn(t.question, t));
-        $("ask-meta").textContent = `오늘 남은 질문 ${history.remaining}회`;
+        quota(history);
       } catch (e) {
-        $("ask-meta").textContent = e.message;
+        $("quota").textContent = "";
       }
     }
 
