@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · feedback/check_merge.py 추가, check_scheduler에 월요일 합치기 4항목 · W4-c 주간 기억 합치기 · 10항목·23항목 통과
 - 2026-09-15 · run_daily --fake에 도구 목록 쌓기 4항목, check_tables items 열에 description · W4-b 관련 카드 후보 목록 · 통과
 - 2026-09-15 · check_scheduler에 실행 재시도·빠진 사용자만 다시·DB 실패 간격·실패 알림 한 번, check_deliver에 send_alert·wake_db · W4-a 재실행·실패 알림 · 19항목·check_deliver 통과
 - 2026-09-15 · web/check_rules.py 추가 · 웹앱 본체 7단계 규칙(세션·남의 데이터 거부·반응형·긴 줄표·SSE와 공개 MCP 제외) · 11항목 통과, 세션 없이 열리는 API는 5개(상태·로그인 요청·로그아웃·메일 서명 링크 2)

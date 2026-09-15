@@ -8,6 +8,7 @@
 - 하루 실행이 실패하거나 브리핑 없는 대상 사용자가 남으면 30분 뒤 그 사용자만 다시, 2번까지 (계획안 "W1이 죽고 재실행", 부록 B 모델 장애)
 - 재실행까지 실패하거나 발송이 끝내 실패하면 ADMIN_EMAILS에 실패 알림 한 통 (계획안 W4). 같은 날 같은 일은 한 번만
 - 06:55 예열 때 DB에 한 번 접속한다 (Supabase 깨우기, 계획안 W4)
+- 월요일에는 하루 실행 전에 주간 기억 합치기(memory.merge_weights). 06:55 뒤에 켜져도 그날 실행 전에 한 번 (계획안 W4)
 - 절전으로 시계가 건너뛰어도 늦게라도 돌도록 최대 60초마다 벽시계를 다시 본다
 - 상태(다음 예정·마지막 실행·마지막 발송)는 GET /api/w1/status. SCHEDULER_ENABLED=0이면 켜지 않는다 (검수 서버)
 """
@@ -18,6 +19,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from typing import Any, Awaitable, Callable
 
+import memory
 import models
 from memory import NOTIFY_TIMES
 from pipeline import deliver, persist, run_daily
@@ -47,13 +49,15 @@ class Scheduler:
     send: Callable[..., Any] = deliver.send_day
     warm: Callable[[], Any] = models.warm_local
     wake_db: Callable[[], Any] = persist.wake_db
+    merge: Callable[[date], Any] = memory.merge_weights
     missing_users: Callable[[date], Awaitable[list[int]]] = _missing_users
     alert: Callable[[str, list[str]], str] = deliver.send_alert
     now: Callable[[], datetime] = lambda: datetime.now(run_daily.KST)
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep
     state: dict = field(default_factory=lambda: {"last_run": None, "last_send": None, "last_warm": None,
                                                  "warm_done": None, "run_checked": None, "sent_slots": {},
-                                                 "run_attempts": {}, "run_retry_at": None, "alerts": {}})
+                                                 "run_attempts": {}, "run_retry_at": None, "alerts": {},
+                                                 "merge_done": None, "last_merge": None})
     _run_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _task: asyncio.Task | None = None
 
@@ -146,6 +150,8 @@ class Scheduler:
             self.state["last_warm"] = {"results": await asyncio.to_thread(self.warm), "db": await self._wake_db(),
                                        "at": self.now().isoformat()}
             self.state["warm_done"] = today
+        if today.weekday() == 0 and WARM_AT <= now.time() < CATCH_UP_UNTIL and self.state["merge_done"] != today:
+            await self._merge(today)
         retry_at = self.state["run_retry_at"]
         if RUN_AT <= now.time() < CATCH_UP_UNTIL and self.state["run_checked"] != today and (retry_at is None or now >= retry_at):
             await self._daily_run(today)
@@ -154,6 +160,16 @@ class Scheduler:
             if slot <= now.time() < CATCH_UP_UNTIL and slot not in done:
                 await self.send_now(today, slot.strftime("%H:%M"))
                 done.add(slot)
+
+    async def _merge(self, today: date) -> None:
+        try:
+            result = await asyncio.to_thread(self.merge, today)
+            self.state["last_merge"] = {"date": str(today), "reverted": len(result["reverted"]), "topics": result["topics"],
+                                        "at": self.now().isoformat()}
+        except Exception as exc:  # 합치기 실패는 브리핑을 막지 않는다. 다음 월요일에 다시 돈다
+            log.exception("주간 기억 합치기 실패")
+            self.state["last_merge"] = {"date": str(today), "error": type(exc).__name__, "at": self.now().isoformat()}
+        self.state["merge_done"] = today
 
     async def _wake_db(self) -> str:
         try:
@@ -201,7 +217,7 @@ class Scheduler:
 
     def status(self) -> dict:
         return {"enabled": self._task is not None and not self._task.done(), "running": self.running(),
-                "next_event": self.next_event().isoformat(), **{k: self.state[k] for k in ("last_warm", "last_run", "last_send")},
+                "next_event": self.next_event().isoformat(), **{k: self.state[k] for k in ("last_warm", "last_merge", "last_run", "last_send")},
                 "run_retry_at": self.state["run_retry_at"].isoformat() if self.state["run_retry_at"] else None,
                 "alerts": {str(day): kinds for day, kinds in self.state["alerts"].items()}}
 

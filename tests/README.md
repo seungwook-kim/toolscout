@@ -14,7 +14,7 @@
 - `pipeline/run_daily.py`: `--fake`는 검증 노드·저장·멱등·모델 장애·빈 행·도구 목록 쌓기·옵션(2000-01-01 저장 후 삭제), 없으면 실제 한 번(`--users --limit`) → `daily_report.json`, 형식 실패는 `format_failures.json`
 - `pipeline/check_deliver.py`: 메일 렌더링(trace_id·이스케이프·빈 행) + sent_at 멱등 + 가짜 SMTP 발송·실패 알림 + DB 깨우기 + API 키
 - `pipeline/check_scheduler.py`: 가짜 시계로 예열·실행·발송·따라잡기, 실행 실패 30분 재시도·빠진 사용자만·DB 실패·실패 알림 한 번
-- `feedback/check_appendix_c.py`: 부록 C 기준 3개(관심없음 3회 → 다음 날 순위·트레이스 -3, 써봤음 → 같은 주제 도구 앞, 만료 링크 기록 0)
+- `feedback/check_appendix_c.py`: 부록 C 기준 3개(관심없음 3회 순위·트레이스 -3, 써봤음 같은 주제 도구 앞, 만료 링크 기록 0) / `check_merge.py`: 주간 합치기(30일 무반응 주제만 피드백만큼 되돌림·설정 값 유지·멱등)
 - `mcp/list_tools.py`: 실제 HTTP로 도구 6개·키 검문·거부 규칙 → `mcp/list_tools_result.json`
 - `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)
 - `web/`: check_auth(매직링크)·check_settings·check_briefings(본인 카드·검색·화면)·check_feedback(버튼·취소·링크)·check_ask(게이트·한도·맥락·도구 3회, `--live-gate`)·check_rules(API 23개 세션·남의 데이터·반응형·긴 줄표·SSE 없음)

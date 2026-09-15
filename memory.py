@@ -1,14 +1,15 @@
-"""두 층 기억 읽기·쓰기·잊기 (계획안 5장 기억 설계, 부록 C). 합치기(주간 정규화)는 W4에서 붙인다.
+"""두 층 기억 읽기·쓰기·합치기·잊기 (계획안 5장 기억 설계, 부록 C).
 
 - 전체 기억: 구조화 프로필(직군 선택·주제 10개 관심도·쓰는 도구 태그·자유 한 줄), 주제 가중치, 써봤음 항목
 - 일일 기억: 오늘 보여준 항목, 오늘 질문 횟수
 - 쓰기: 프로필 저장(가중치 초기값), 피드백 버튼 (routes/feedback.py가 apply_feedback을 부른다)
+- 합치기: 매주 월요일, 30일 동안 누르지 않은 주제는 피드백으로 바뀐 만큼 되돌려 프로필 기준값(직군 프리셋, 설정에서 고친 값)으로
 - 잊기: 「내 기억 지우기」는 weights·seen·feedback 삭제, 계정 삭제는 사용자와 딸린 기록 전부
 검색도 임베딩도 없다. 기사 본문·다른 사용자 정보·검증 로그는 넣지 않는다.
 """
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
 
-from sqlalchemy import delete
+from sqlalchemy import delete, update
 from sqlmodel import func, select
 
 import db
@@ -94,10 +95,15 @@ def save_profile(user_id: int, *, role: str, tools_tags: list[str], free_text: s
         user.notify_time, user.channel = notify_time, channel
         s.add(user)
         existing = {w.topic: w for w in s.exec(select(db.Weight).where(db.Weight.user_id == user_id))}
+        changed = [topic for topic, value in clean.items() if topic in existing and existing[topic].weight != value]
         for topic, value in clean.items():
             row = existing.get(topic) or db.Weight(user_id=user_id, topic=topic)
             row.weight, row.updated_at = value, db.utcnow()
             s.add(row)
+        if changed:  # 설정에서 값을 고친 주제는 그 값이 새 기준이다. 합치기가 예전 피드백만큼 다시 빼지 않게 기록을 0으로
+            item_ids = select(db.Item.id).where(db.Item.topic.in_(changed))
+            s.execute(update(db.Feedback).where(db.Feedback.user_id == user_id, db.Feedback.item_id.in_(item_ids))
+                   .values(weight_delta=0))
         s.commit()
 
 
@@ -181,6 +187,42 @@ def note_feedback(user_id: int, feedback_id: int, *, reason: str | None = None, 
         s.add(row)
         s.commit()
     return {"ok": True, "message": "사유를 기록했어요" if reason else "메모를 저장했어요"}
+
+
+MERGE_QUIET_DAYS = 30
+
+
+def merge_weights(today: date | None = None, user_ids: list[int] | None = None) -> dict:
+    """주간 기억 합치기 (계획안 5장 기억 설계 표, 부록 C 5, W4 월요일). user_ids가 없으면 모든 사용자 (검수는 검수용 사용자만).
+
+    - -5~+5 정규화는 쓰기 때 자르기와 DB 제약(ck_weights_range)으로 이미 지켜진다
+    - 주제마다 마지막으로 누른 때(이상함 포함)가 30일보다 오래됐고 피드백이 바꿔 둔 값(weight_delta 합)이 남아 있으면 그만큼 되돌린다.
+      설정을 고친 적 없으면 직군 프리셋 값으로 돌아간다 (2026-09-15 사용자 결정). 되돌린 피드백은 기록을 남기고 weight_delta만 0으로
+    - 여러 번 돌려도 같다 (두 번째에는 되돌릴 값이 없다)
+    반환: {users, topics, reverted: [{user_id, topic, before, after}]}
+    """
+    today = today or date.today()
+    cutoff = datetime.combine(today - timedelta(days=MERGE_QUIET_DAYS), time.min)
+    reverted = []
+    with db.get_engine().begin() as conn:
+        rows = conn.execute(select(db.Feedback.user_id, db.Item.topic, func.max(db.Feedback.created_at), func.sum(db.Feedback.weight_delta))
+                            .join(db.Item, db.Item.id == db.Feedback.item_id).where(db.Item.topic.is_not(None))
+                            .where(db.Feedback.user_id.in_(user_ids) if user_ids is not None else True)
+                            .group_by(db.Feedback.user_id, db.Item.topic)).all()
+        for user_id, topic, last_at, pending in rows:
+            if not pending or _naive(last_at) >= cutoff:
+                continue
+            current = conn.execute(select(db.Weight.weight).where(db.Weight.user_id == user_id, db.Weight.topic == topic)).scalar()
+            if current is None:
+                continue
+            after = max(WEIGHT_MIN, min(WEIGHT_MAX, current - pending))
+            conn.execute(update(db.Weight).where(db.Weight.user_id == user_id, db.Weight.topic == topic)
+                         .values(weight=after, updated_at=db.utcnow()))
+            conn.execute(update(db.Feedback).where(db.Feedback.user_id == user_id,
+                                                   db.Feedback.item_id.in_(select(db.Item.id).where(db.Item.topic == topic)))
+                         .values(weight_delta=0))
+            reverted.append({"user_id": user_id, "topic": topic, "before": current, "after": after})
+    return {"users": len({r[0] for r in rows}), "topics": len(rows), "reverted": reverted}
 
 
 def forget(user_id: int) -> dict:

@@ -7,6 +7,7 @@
 - 발송 실패 사용자는 10분 간격으로 2번 더, 끝내 실패하면 실패 알림 한 통(같은 시각 두 번째는 알림 안 함), 메일 설정이 없으면 재시도·알림 안 함
 - 하루 실행 실패는 30분 간격으로 2번 더 → 그래도 실패면 실패 알림 한 통, 그날 더 시도 안 함
 - 일부 사용자만 빠지면 그 사용자만 다시 / DB 연결 실패도 30분 뒤 다시(1분마다 반복 안 함) / "지금 만들기"가 돌고 있으면 끝난 뒤 다시(시도 횟수에 안 셈)
+- 월요일은 예열 뒤·하루 실행 전에 주간 기억 합치기 한 번, 늦게 켜져도 실행 전에, 합치기가 실패해도 실행은 돈다. 다른 요일은 안 함
 DB·모델·메일을 쓰지 않는다.
 """
 import asyncio
@@ -17,12 +18,13 @@ from datetime import date, datetime, timedelta
 from pipeline import run_daily
 from pipeline.scheduler import RETRY_WAIT_SECONDS, RUN_RETRY_WAIT_SECONDS, Scheduler
 
-DAY = date(2026, 9, 16)
+DAY = date(2026, 9, 16)  # 수요일
+MONDAY = date(2026, 9, 21)
 
 
 class Clock:
-    def __init__(self, hour: int, minute: int = 0):
-        self.value = datetime(DAY.year, DAY.month, DAY.day, hour, minute, tzinfo=run_daily.KST)
+    def __init__(self, hour: int, minute: int = 0, day: date = DAY):
+        self.value = datetime(day.year, day.month, day.day, hour, minute, tzinfo=run_daily.KST)
         self.naps: list[float] = []
 
     def now(self) -> datetime:
@@ -35,7 +37,7 @@ class Clock:
 
 
 def make(clock: Clock, *, needs: bool = True, gate: asyncio.Event | None = None, send_results: list[dict] | None = None,
-         run_outcomes: list[dict] | None = None, db_errors: int = 0):
+         run_outcomes: list[dict] | None = None, db_errors: int = 0, merge_fails: bool = False):
     """run_outcomes: 실행마다 {"raise": True} 또는 {"leave": [끝나고도 브리핑 없는 사용자]}. 기본은 전원 성공."""
     log: list[str] = []
     results = list(send_results or [])
@@ -72,12 +74,18 @@ def make(clock: Clock, *, needs: bool = True, gate: asyncio.Event | None = None,
     def wake_db():
         log.append(f"wake@{clock.now():%H:%M}")
 
+    def merge(day):
+        log.append(f"merge@{clock.now():%H:%M}")
+        if merge_fails:
+            raise RuntimeError("검수용 합치기 실패")
+        return {"users": 1, "topics": 2, "reverted": [{"user_id": 1, "topic": "pricing", "before": -2, "after": 1}]}
+
     def alert(title, lines):
         log.append(f"alert@{clock.now():%H:%M}")
         fake["alerts"].append({"title": title, "lines": lines})
         return "sent"
 
-    sched = Scheduler(run=run, send=send, warm=warm, wake_db=wake_db, missing_users=missing_users, alert=alert,
+    sched = Scheduler(run=run, send=send, warm=warm, wake_db=wake_db, missing_users=missing_users, alert=alert, merge=merge,
                       now=clock.now, sleep=clock.sleep)
     return sched, log, fake
 
@@ -170,6 +178,19 @@ async def main_async() -> dict:
     s_manual._run_lock.release()
     await drive(s_manual, manual_clock, at(7, 5))
 
+    monday_clock = Clock(6, 50, MONDAY)
+    s_monday, log_monday, _ = make(monday_clock)
+    await drive(s_monday, monday_clock, datetime(2026, 9, 21, 7, 1, tzinfo=run_daily.KST))
+
+    monday_late = Clock(8, 30, MONDAY)
+    s_monday_late, log_monday_late, _ = make(monday_late)
+    await s_monday_late.tick()
+    await s_monday_late.tick()
+
+    merge_fail_clock = Clock(7, 0, MONDAY)
+    s_merge_fail, log_merge_fail, _ = make(merge_fail_clock, merge_fails=True)
+    await s_merge_fail.tick()
+
     run_entries = lambda log: [x for x in log if x.startswith(("run@", "alert@", "db_error@"))]  # noqa: E731
     checks = {
         "06:50엔_다음예정_06:55": day["before"] == at(6, 55),
@@ -197,6 +218,13 @@ async def main_async() -> dict:
         "DB연결실패도_30분뒤_다시(1분마다_반복안함)": run_entries(log_db) == ["db_error@07:00", "run@07:30"],
         "지금만들기_중이면_끝난뒤_다시·횟수안셈": retry_after_manual == at(7, 1) and log_manual == ["run@07:01"]
         and s_manual.state["run_attempts"][DAY] == 1,
+        "월요일_예열뒤·실행전_합치기": log_monday == ["warm@06:55", "wake@06:55", "merge@06:55", "run@07:00"]
+        and s_monday.status()["last_merge"]["reverted"] == 1,
+        "월요일_늦게_켜져도_실행전_합치기_한번": log_monday_late[:2] == ["merge@08:30", "run@08:30"]
+        and log_monday_late.count("merge@08:30") == 1,
+        "합치기_실패해도_실행은_돔": log_merge_fail == ["merge@07:00", "run@07:00"]
+        and s_merge_fail.state["last_merge"]["error"] == "RuntimeError",
+        "다른_요일은_합치기_안함": not any(x.startswith("merge") for x in day["log"] + log_late + log_fail),
         "알림에_설정값·오류원문_없음": all("검수용" not in line for alert in fake_fail["alerts"] + fake_retry["alerts"]
                                      for line in alert["lines"]),
     }
