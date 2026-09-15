@@ -15,7 +15,7 @@
 - `pipeline/check_deliver.py`: 메일 렌더링(trace_id·이스케이프·빈 행) + sent_at 멱등 + 가짜 SMTP 발송·실패 알림 + DB 깨우기 + API 키
 - `pipeline/check_scheduler.py`: 가짜 시계로 예열·실행·발송·따라잡기, 실행 실패 30분 재시도·빠진 사용자만·DB 실패·실패 알림 한 번
 - `feedback/check_appendix_c.py`: 부록 C 기준 3개(관심없음 3회 순위·트레이스 -3, 써봤음 → F3-b 후보 노션 계열 맨 위, 만료 링크 기록 0) / `check_merge.py`: 주간 합치기(30일 무반응 주제만 피드백만큼 되돌림·설정 값 유지·멱등)
-- `mcp/list_tools.py`: 도구 6개·키 검문 / `e2b/smoke.py`: E2B 생성·폐기·차단 / `verify/`: check_probe(실제 E2B 4단계·가드), check_skill_read(정규식·원문·허용 호스트), fixtures/ 우리가 만든 가짜 스킬
+- `mcp/list_tools.py`: 도구 6개·키 검문 / `e2b/smoke.py`: E2B 생성·폐기·차단 / `verify/`: check_probe(실제 E2B), check_skill_read(정규식·원문), check_verifier(가짜 모델로 판단·판독·상태·카드 칸), fixtures/ 가짜 스킬
 - `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)
 - `web/`: check_auth·check_settings·check_briefings·check_feedback·check_ask(`--live-gate`)·check_rules(API 세션·남의 데이터·디자인 기준 CSS)·check_design(run_stats·item_meta, 보충 CSS 토큰만·공통 마스트헤드·금지 사항, PWA)
 - `agent/run_loop.py`: 가짜 모델로 루프 동작 9항목 + 현재 모델표 해설가로 실제 "안녕"·도구 1개(통과 조건)

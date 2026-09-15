@@ -145,3 +145,26 @@ class AnswerOutput(BaseModel):
     found: bool
     answer: str = Field(min_length=1, max_length=MAX_ANSWER_DRAFT)
     sources: list[AnswerSource] = Field(default_factory=list, max_length=5)
+
+
+# 검증관 (세션 8) --------------------------------------------------------------
+
+
+class McpProbePlan(BaseModel):
+    """검증관이 MCP 항목마다 정하는 다음 행동. probe면 설치 명령·종류, stop이면 이유("설치법 미확인", "실측 불가(명령 형식)")."""
+    action: Literal["probe", "stop"]
+    kind: Literal["npm", "pypi", "remote"] | None = None
+    command: str | None = Field(default=None, max_length=300)
+    url: str | None = Field(default=None, max_length=300)
+    reason: str = Field(min_length=2, max_length=160)
+
+
+class SkillJudgment(BaseModel):
+    """검증관의 SKILL.md 판독. risk_signal은 모델 판정이고, 정규식과 다르면 최종은 확인 필요(unverified)."""
+    purpose: str = Field(min_length=2, max_length=200)
+    trigger: str = Field(min_length=2, max_length=200)
+    steps_summary: str = Field(min_length=2, max_length=400)
+    tools_needed: str = Field(default="", max_length=200)
+    completeness: Literal["높음", "보통", "낮음"]
+    risk_signal: Literal["ok", "caution"]
+    risk_quote: str | None = Field(default=None, max_length=300)

@@ -4,12 +4,12 @@
 
 ## 파일
 - `normalize.py`: HTML·엔티티 제거, 공백 정리, URL 정규화 / `dedupe.py`: 링크(MCP는 이름) 중복 제거, 뉴스 제목 유사도 0.85 묶기
+- `verification.py`: 검증 요청 큐 verify_requests(저장·전날 대기+미완료 재시도·상태), skill_reviews 저장, 카드 칸(verification 칩·risk_signal)
 - `validate.py`: 검증 노드 두 단계. 1) 요약 120자 초과는 문장 끝에서 자름 2) 빈 값·규격·근거 링크·한글 비율(어절 60%)·관련도 문제는 이유를 돌려 1회 자가 수정, 또 실패면 제외·트레이스
 - `persist.py`: 통과 카드를 items·briefings(trace_id, sent_at null)·seen에 저장. 카드 0건이면 empty_reason 행. 발송한 사용자는 건너뜀, 사용자별 run_stats·items.published_at도 저장. `save_catalog` 선별 통과 MCP·스킬 쌓기, `related_pool` 관련 카드 후보 100건(태그·써봤음 이름 일치 > 가중치 > 별 수), `wake_db`
 - `run_daily.py`: 수집 → 정리 → 중복 제거 → 큐레이터(월요일은 관련 카드도) → 도구 목록 쌓기 → 해설가 → 검증 노드 → 저장. 개발 모드는 is_test만, 실행 전체가 트레이스 하나
-  - `--users N`·`--limit N`(디버깅 `--users 1 --limit 40`). 모델 장애는 사용자·카드 단위로 건너뛰고 전원 실패면 종료 코드 2
-  - 개발 모드 형식 실패 예시는 `tests/pipeline/format_failures.json`에 쌓는다
-- `briefing_mail.py`: 메일 본문(HTML·텍스트). 카드 전체·trace_id·피드백 버튼 서명 링크(뉴스 2·도구 3), 뉴스/도구/이번 주 관련 칸, 빈 행 문구
+  - `--users N`·`--limit N`(디버깅 `--users 1 --limit 40`). 모델 장애는 사용자·카드 단위로 건너뛰고 전원 실패면 종료 코드 2. 형식 실패 예시는 `tests/pipeline/format_failures.json`
+- `briefing_mail.py`: 메일 본문(HTML·텍스트). 카드 전체·trace_id·피드백 버튼 서명 링크, 뉴스/도구/관련 칸, 빈 행, 검증 결과 줄과 고정 문구(동작 범위 밖·안전 보증 아님)
 - `deliver.py`: 미발송 briefings를 사용자별 메일로 Gmail SMTP 발송, 한 통마다 sent_at. 개발 모드는 받는 사람을 ADMIN_EMAILS로 바꾸고
   제목에 [개발 모드], ADMIN_EMAILS가 없으면 콘솔·DB만. 메일 설정이 없으면 기록하지 않는다. `send_alert`: ADMIN_EMAILS 실패 알림(오류 종류만)
 - `scheduler.py`: 앱이 떠 있는 동안 06:55 예열·DB 깨우기, 07:00 하루 실행, 알림 시각(08·09·12·18시)마다 발송 (KST). 놓친 실행은 22:00 전에 따라잡음

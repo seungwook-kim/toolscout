@@ -1,5 +1,6 @@
 # sources/ CHANGELOG
 
+- 2026-09-15 · mcp_registry 항목에 install(레지스트리 packages·remotes 요약), anthropic_skills 항목에 skill_url(커밋이 바꾼 SKILL.md 폴더) · 세션 8 검증관이 설치 명령·원문 주소를 정하게 · check_fallbacks 통과
 - 2026-09-15 · collect: MCP 레지스트리 제한 시간 60초·실패 시 2번 더 시도·마지막 성공 결과 저장과 재사용("수집 실패, 전날 기준"), rss: 긱뉴스 항목 안 외부 링크를 source_url로·없으면 skip_fetch, common.http_client 제한 시간 인자 · 세션 7 결정 4·5, 레지스트리 ReadTimeout 2회·HTTP 500 1회 실측, 긱뉴스 RSS에는 외부 링크가 없음 확인 · check_fallbacks 7항목 통과
 
 - 2026-09-14 · README 할 일 갱신(레지스트리 ReadTimeout 관찰 추가, 저장소 공유 MCP는 persist가 앞 순위만 저장해 해결) · 첫 실제 하루 실행 결과 반영 · 코드 변경 없음

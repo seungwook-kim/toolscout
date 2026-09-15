@@ -59,9 +59,21 @@ def fetch(since: datetime, client: httpx.Client, *, per_publisher: int = MAX_PER
     for entry, repo, _ in new + updates:
         server = entry["server"]
         title = f"{server.get('title') or server.get('name', '')} {server.get('version', '')}".strip()
-        result.items.append(make_item(title=title, url=github_stars.repo_url(repo), published=_published(entry),
-                                      summary=server.get("description", ""), source="mcp_registry", type="mcp"))
+        item = make_item(title=title, url=github_stars.repo_url(repo), published=_published(entry),
+                         summary=server.get("description", ""), source="mcp_registry", type="mcp")
+        if install := install_info(server):
+            item["install"] = install  # 검증관이 설치 명령·원격 주소를 정할 때 쓴다 (세션 8)
+        result.items.append(item)
     return result
+
+
+def install_info(server: dict) -> dict | None:
+    """레지스트리 server.json에서 설치 정보만: packages(registryType·identifier·version·transport) 3개, remotes(type·url) 3개."""
+    packages = [{"registryType": p.get("registryType") or p.get("registry_type"), "identifier": p.get("identifier") or p.get("name"),
+                 "version": p.get("version"), "transport": (p.get("transport") or {}).get("type")}
+                for p in (server.get("packages") or [])[:3]]
+    remotes = [{"type": r.get("type") or r.get("transport_type"), "url": r.get("url")} for r in (server.get("remotes") or [])[:3] if r.get("url")]
+    return {k: v for k, v in (("packages", packages), ("remotes", remotes)) if v} or None
 
 
 class _Stars:

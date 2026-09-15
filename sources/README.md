@@ -6,9 +6,9 @@
 - `common.py`: 정규화 항목 모양, 정직한 User-Agent HTTP 클라이언트, 날짜 해석, SourceResult(stats 포함)
 - `rss.py`: RSS 6곳 (오픈AI, 구글 AI, AI타임스, 긱뉴스, 테크크런치 AI, 레딧). 긱뉴스는 항목 안 외부 링크를 source_url로, 없으면 skip_fetch(요약만)
 - `hackernews.py`: Algolia, AI 또는 LLM (optionalWords), points 20 이상
-- `mcp_registry.py`: 7일 창, GitHub 저장소 있는 서버, 게시자당 3건, 버전 업 별 50 이상, 별 수 상위 신규 20·버전 업 10
+- `mcp_registry.py`: 7일 창, GitHub 저장소 있는 서버, 게시자당 3건, 버전 업 별 50 이상, 별 수 상위 신규 20·버전 업 10, 항목에 install(packages·remotes)
 - `github_stars.py`: 별 수 조회와 items.stars·stars_checked_at 24시간 캐시 (DB 없으면 메모리만)
-- `anthropic_skills.py`: anthropics/skills 커밋
+- `anthropic_skills.py`: anthropics/skills 커밋, 바뀐 skills/<이름>/SKILL.md 폴더를 skill_url로 (검증관 read_skill용)
 - `collect.py`: 전체 수집. 실패 소스는 기록하고 계속. MCP 레지스트리는 제한 시간 60초·2번 더 시도, 그래도 실패면 마지막 성공 결과(`%LOCALAPPDATA%\toolscout`)를 "수집 실패, 전날 기준"으로 재사용
 
 ## 들어오고 나가는 데이터
