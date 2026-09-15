@@ -45,17 +45,17 @@ const Cards = {
       ${why}${Cards.buttons(card)}</article>`;
   },
 
-  mount(container, briefing) {
+  mount(container, briefing, day = "오늘") {
     if (!briefing.cards.length) {
       container.innerHTML = `<div class="empty">${briefing.exists
-        ? `오늘 볼 만한 게 없었어요.<br><span class="small">${TS.esc(briefing.empty_reason || "")}</span>`
+        ? `${day} 볼 만한 게 없었어요.<br><span class="small">${TS.esc(briefing.empty_reason || "")}</span>`
         : "아직 브리핑이 없어요. 설정에서 「지금 만들기」를 누르거나 내일 아침을 기다려 주세요."}</div>`;
       return;
     }
     const news = briefing.cards.filter((c) => !Cards.TOOL_TYPES.includes(c.type));
     const tools = briefing.cards.filter((c) => Cards.TOOL_TYPES.includes(c.type));
-    container.innerHTML = `<h2>뉴스</h2><div class="cards">${news.map(Cards.render).join("") || '<div class="empty">오늘 뉴스 카드 없음</div>'}</div>
-      <h2>새 MCP·스킬</h2><div class="cards">${tools.map(Cards.render).join("") || '<div class="empty">오늘 새 도구 없음</div>'}</div>`;
+    container.innerHTML = `<h2>뉴스</h2><div class="cards">${news.map(Cards.render).join("") || `<div class="empty">${day} 뉴스 카드 없음</div>`}</div>
+      <h2>새 MCP·스킬</h2><div class="cards">${tools.map(Cards.render).join("") || `<div class="empty">${day} 새 도구 없음</div>`}</div>`;
     container.querySelectorAll(".copy").forEach((b) => {
       b.onclick = async () => { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = "복사됨"; };
     });

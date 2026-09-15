@@ -74,6 +74,7 @@ def main() -> int:
             search_b = cb.get("/api/search?q=노션").json()
             short = ca.get("/api/search?q=a")
             page = ca.get("/")
+            history_page = ca.get("/history")
     finally:
         cleanup()
     cards = {c["title"]: c for c in today_a["cards"]}
@@ -92,6 +93,8 @@ def main() -> int:
         and {r["title"] for r in search_b["results"]} == {"검수 카드 3"},
         "검색어_짧으면_400": short.status_code == 400,
         "오늘_화면_열림": page.status_code == 200 and "cards.js" in page.text,
+        "지난_브리핑_화면_열림": history_page.status_code == 200 and "/api/briefings/dates" in history_page.text
+        and "/api/search" in history_page.text,
     }
     report = {"checks": checks, "pass": all(checks.values())}
     print(json.dumps(report, ensure_ascii=False, indent=2))
