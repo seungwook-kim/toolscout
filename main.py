@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 
 import mcp_server
 from agent import tracing
+from routes import w1
 
 WEB = Path(__file__).parent / "web"
 
@@ -35,6 +36,9 @@ def index() -> FileResponse:
 @app.get("/api/health")
 def health() -> dict:
     return {"status": "ok", "service": "toolscout"}
+
+
+app.include_router(w1.router)  # n8n W1: 하루 실행 시작·상태·발송함·발송 기록
 
 
 app.mount("/mcp", mcp_app)

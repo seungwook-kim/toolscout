@@ -19,7 +19,7 @@ import yaml  # langchain-core 의존으로 설치되어 있다
 import config  # noqa: F401  .env를 os.environ에 채운다
 
 ROOT = Path(__file__).resolve().parents[2]
-CI_STEPS = ["compose 파일 검사", "app 이미지 빌드", "app 기동", "/api/health 200 확인"]
+CI_STEPS = ["compose 파일 검사", "app 이미지 빌드", "app 기동", "/api/health 200 확인", "n8n 기동", "n8n 워크플로우 가져오기"]
 
 
 def git(*args: str) -> str:
@@ -77,7 +77,8 @@ def ci_result(wait_seconds: int = 0) -> dict:
     finally:
         client.close()
     steps = {s["name"]: s["conclusion"] for job in jobs for s in job.get("steps", []) if s["name"] in CI_STEPS}
-    return {"ok": run["conclusion"] == "success", "token_source": token_source, "sha": sha[:7], "status": run["status"],
+    ok = run["conclusion"] == "success" and all(steps.get(s) == "success" for s in CI_STEPS)
+    return {"ok": ok, "token_source": token_source, "sha": sha[:7], "status": run["status"],
             "conclusion": run["conclusion"], "url": run["html_url"], "steps": steps}
 
 
@@ -99,7 +100,7 @@ def static_checks() -> dict:
         "n8n_tool_usage_변수_없음": "N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE" not in compose_text,
         "langfuse_프로필": services.get("langfuse-web", {}).get("profiles") == ["langfuse"],
         "dockerfile_python_3_12_slim": "FROM python:3.12-slim" in dockerfile,
-        "ci_4단계_정의": all(step in ci_text for step in CI_STEPS) and "on:\n  push:" in ci_text,
+        "ci_단계_정의(app·n8n)": all(step in ci_text for step in CI_STEPS) and "on:\n  push:" in ci_text,
     }
 
 

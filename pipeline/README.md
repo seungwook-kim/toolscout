@@ -11,6 +11,8 @@
   - `--users N`·`--limit N`(큐레이터 입력 상위 N, 뉴스·도구 비율 유지). 디버깅은 `--users 1 --limit 40`, 전량은 하루 1회
   - 모델 장애는 사용자·카드 단위로 건너뛰고, 대상 사용자가 모두 실패하면 종료 코드 2. 보고에 사용한 제공자·전환 사유
   - 개발 모드 형식 실패 예시는 `tests/pipeline/format_failures.json`에 쌓는다
+- `briefing_mail.py`: 메일 본문(HTML·텍스트). 카드 전체·카드마다 trace_id, 뉴스/도구 칸, "오늘 새 도구 없음"·빈 행 문구, 이스케이프
+- `deliver.py`: 미발송 briefings → 사용자별 메일(발송함), 발송 뒤 sent_at 기록(멱등). 실제 발송은 n8n W1, 개발 모드는 콘솔·DB만
 
 ## 들어오고 나가는 데이터
 - 들어옴: `sources/` 항목 `{title, url, published_at, summary, source, type}`, 루트 `memory.py` 기억, `agent/` 카드
@@ -21,6 +23,6 @@
 - `tests/pipeline/run_dedupe.py`: 전후 건수 / `tests/pipeline/run_daily.py`: 검증 노드·저장·멱등, 실제 한 번 실행
 
 ## 할 일
-- [ ] 이메일 발송과 sent_at 기록 (다음 세션), n8n W1이 run_daily를 부르게 연결. empty_reason 행은 "오늘 볼 만한 게 없었음"으로 발송
+- [ ] 실제 메일 도착 확인 (개발 모드는 발송 금지, GMAIL_USER 비어 있음). 피드백 버튼 서명 링크는 W3에서
 - [ ] 전량 실행(사용자 2명·입력 전체) 하루 1회. 첫 실행(사용자 1·입력 40)은 486초. 구간별 시간은 아직 안 나눠 봤다
 - [ ] 한국어·영어 같은 소식 묶기 (제목 유사도로는 안 잡힘, 큐레이터 단계에서 판단할지 결정)
