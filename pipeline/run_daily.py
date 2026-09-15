@@ -9,6 +9,7 @@
 - 카드가 0건이면(비움·전부 반려·제외) briefings에 empty_reason 행을 남긴다. 모델 장애로 0건이면 남기지 않는다(재실행 대상)
 - 개발 모드에서는 형식 실패 예시를 tests/pipeline/format_failures.json에 쌓는다 (프롬프트를 고치기 전에 예시부터 모은다)
 - 선별을 통과한 MCP·스킬은 카드가 아니어도 items에 쌓는다(관련 카드 후보). 저장이 실패해도 실행은 계속한다
+- 월요일(KST)에는 사용자마다 관련 카드(F3-b)를 최대 3장 더 만든다. --related로 요일과 상관없이 켤 수 있다
 실행: uv run python -m pipeline.run_daily [--users N] [--limit N] [--mcp-url URL]
   디버깅은 --users 1 --limit 40, 전량은 하루 1회
 """
@@ -102,9 +103,11 @@ def empty_reason(plan: dict, checked: dict) -> str:
 
 
 async def run(today: date | None = None, *, items: list[dict] | None = None, mcp_url: str = loop.DEFAULT_MCP_URL,
-              model_call=None, users: int | None = None, limit: int | None = None, user_ids: list[int] | None = None) -> dict:
-    """반환: 사용자별 저장 결과와 합계. items·model_call은 검수용 주입 (없으면 실제 수집·실제 모델)."""
+              model_call=None, users: int | None = None, limit: int | None = None, user_ids: list[int] | None = None,
+              related: bool | None = None) -> dict:
+    """반환: 사용자별 저장 결과와 합계. items·model_call은 검수용 주입 (없으면 실제 수집·실제 모델). related가 None이면 월요일에만."""
     today = today or today_kst()
+    with_related = related if related is not None else today.weekday() == 0
     started = time.perf_counter()
     calls_before = models.PROVIDER_CALLS.copy()
     failovers_before = models.FAILOVERS.copy()
@@ -126,17 +129,19 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
             pending = persist.pending_urls(uid, today)
             memories.append(mem | {"seen_urls": [url for url in mem["seen_urls"] if url not in pending]})
 
-        curated = await curator.run(curator_input, memories, model_call=model_call) if memories else None
+        pools = {m["user_id"]: await asyncio.to_thread(persist.related_pool, m) for m in memories} if with_related else None
+        curated = await curator.run(curator_input, memories, model_call=model_call, related_pools=pools) if memories else None
         catalog_saved = await asyncio.to_thread(save_catalog, today, curated["selected"]) if curated else 0
         stats, results = Stats(), []
         by_user = {m["user_id"]: m for m in memories}
         for plan in curated["plans"] if curated else []:
             mem = by_user[plan["user_id"]]
-            entry = {"user_id": plan["user_id"], "role": mem["profile"]["role"], "planned": len(plan["news"]) + len(plan["tools"])}
+            entry = {"user_id": plan["user_id"], "role": mem["profile"]["role"], "planned": len(plan["news"]) + len(plan["tools"]),
+                     "related_planned": len(plan.get("related", []))}
             if plan.get("failed"):
                 results.append(entry | {"status": "model_failed", "reason": plan["failure_reason"], "cards": 0})
                 continue
-            items_by_url = {item["url"]: item for item in plan["news"] + plan["tools"]}
+            items_by_url = {item["url"]: item for item in plan["news"] + plan["tools"] + plan.get("related", [])}
             checked = {"cards": [], "rejected": [], "excluded": [], "fixed": [], "retried": 0, "format_failed": [], "model_failed": []}
             if items_by_url:
                 async with AsyncExitStack() as stack:
@@ -149,7 +154,8 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
                     checked = await validate.run_user(explained, items_by_url, redo)
             entry |= {"rejected": checked["rejected"], "excluded": checked["excluded"], "retried": checked["retried"], "fixed": checked.get("fixed", []),
                       "format_failed": checked["format_failed"], "model_failed": checked["model_failed"],
-                      "titles": [c["title"] for c in checked["cards"]]}
+                      "titles": [c["title"] for c in checked["cards"]],
+                      "related_titles": [c["title"] for c in checked["cards"] if c.get("related")]}
             if not checked["cards"] and checked["model_failed"]:
                 results.append(entry | {"status": "model_failed", "reason": "카드 해설 모델 장애", "cards": 0})
                 continue
@@ -201,6 +207,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--limit", type=int, default=None, help="큐레이터 입력 상위 N건 (디버깅 40)")
     parser.add_argument("--date", type=date.fromisoformat, default=None, help="브리핑 날짜 (기본 오늘 KST). 검수용 날짜로 돌릴 때")
     parser.add_argument("--mcp-url", default=loop.DEFAULT_MCP_URL)
+    parser.add_argument("--related", action="store_true", default=None, help="요일과 상관없이 관련 카드(F3-b)도 만든다")
     return parser.parse_args(argv)
 
 

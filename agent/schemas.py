@@ -23,6 +23,7 @@ TopicId = Literal["model_release", "agent_framework", "mcp_tools", "coding_tools
                   "open_local", "data_rag", "safety_policy", "automation", "industry"]
 
 MAX_NEWS, MAX_TOOLS, MAX_VERIFY = 5, 3, 5
+MAX_RELATED = 3  # 관련 카드(F3-b) 월요일 최대 장수 (2026-09-15 사용자 결정)
 
 
 class Judgment(BaseModel):
@@ -48,6 +49,11 @@ class UserPicks(BaseModel):
     news: list[Pick] = Field(default_factory=list, max_length=MAX_NEWS)
     tools: list[Pick] = Field(default_factory=list, max_length=MAX_TOOLS)
     empty_reason: str | None = None  # 뉴스·도구가 모두 0건일 때 "오늘 비움" 이유
+
+
+class RelatedPicks(BaseModel):
+    """관련 카드(F3-b) 선택. 날짜 무관 도구 목록에서 고른다."""
+    tools: list[Pick] = Field(default_factory=list, max_length=MAX_RELATED)
 
 
 class VerifyRequest(BaseModel):
@@ -114,6 +120,7 @@ class Card(BaseModel):
     relevance: int = Field(ge=MIN_RELEVANCE, le=5)  # 해설가가 매긴 이 사용자와의 관련도
     source_checked: bool
     notice: str | None = None  # "원문 확인 필요", "수집 실패, 전날 기준"을 " · "로 잇는다
+    related: bool = False  # 관련 카드(F3-b, 월요일). 메일·화면에서 칸을 따로 둔다
     trace_id: str = Field(min_length=1)  # trace_id 없는 카드는 만들지 않는다 (작업 규칙 10)
 
 

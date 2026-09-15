@@ -4,6 +4,7 @@
 - 사용자별: 기억(프로필·가중치·본 항목)을 읽어 뉴스 최대 5 + 도구 최대 3. 본 항목과 가중치 -5 주제는 뺀다
   성립하지 않으면 줄이고, 0건이면 "오늘 비움"과 이유를 남긴다
 - 검증 요청: MCP·스킬 후보 중 하루 최대 5건. 이번 단계에서는 목록만 만들고 검증관은 부르지 않는다
+- 관련 카드(F3-b, 월요일): 쌓인 도구 목록에서 미리 좁힌 후보(pipeline/persist.related_pool) 중 최대 3개. 오늘 후보와 겹치면 뺀다
 모델 출력은 agent/schemas.py 규격으로 검사하고, 형식이 틀리면 1회 다시 부른다 (agent/structured.py).
 모델 장애(제공자 전부 실패)는 선별 묶음·사용자·검증 요청 단위로 건너뛰고 이유를 stats.model_failures에 남긴다.
 """
@@ -40,6 +41,13 @@ PICK_PROMPT = f"""너는 toolscout 큐레이터다. 한 사용자의 기억(프�
 - why: 이 사용자에게 왜 이 카드인지 한국어 한 줄 (80자 이내). 프로필의 무엇과 이어지는지 드러낸다
 - 뉴스와 도구가 모두 0건이면 empty_reason에 이유를 한 줄로 쓴다
 {JSON_ONLY} 형식: {{"news": [{{"id": 1, "why": "..."}}], "tools": [{{"id": 1, "why": "..."}}], "empty_reason": null}}"""
+
+RELATED_PICK_INPUT, RELATED_DESCRIPTION_CHARS = 30, 100  # 로컬 모델 문맥 8192토큰 안에 들게 후보 단계와 비슷한 크기로
+RELATED_PROMPT = f"""너는 toolscout 큐레이터다. 주 1회 관련 카드로, 날짜와 상관없이 이 사용자에게 맞는 MCP·스킬을 최대 {schemas.MAX_RELATED}개 고른다.
+- 후보는 사용자의 쓰는 도구 태그·써봤음 도구·주제 가중치로 미리 좁혀 둔 순서다. match는 후보 이름·설명에 들어간 사용자 도구 이름이다
+- 쓰는 도구·직군·자유 한 줄과 실제로 이어지는 것만 고른다. 연결이 약하면 적게 고르고 0개도 된다
+- why: 이 사용자에게 왜 이 도구인지 한국어 한 줄 (80자 이내). 무엇과 이어지는지 드러낸다
+{JSON_ONLY} 형식: {{"tools": [{{"id": 1, "why": "..."}}]}}"""
 
 VERIFY_PROMPT = f"""너는 toolscout 큐레이터다. 오늘 도구 후보 중 검증관에게 실제 확인을 맡길 항목을 하루 최대 {schemas.MAX_VERIFY}건 고른다.
 - 개발자에게 쓸모가 커 보이고 설치·동작 확인 가치가 있는 것을 고른다. 확인 가치가 낮으면 적게 고른다
@@ -143,6 +151,34 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
     return plan
 
 
+async def pick_related(pool: list[dict], memory: dict, exclude_urls: set[str], stats: Stats, model_call=None) -> list[dict]:
+    """관련 카드 후보 최대 3개. 모델이 고른 것을 이름이 겹치는 수 > 주제 가중치 순으로 한 번 더 정렬한다 (부록 C "노션 계열 도구가 상위").
+    반환 항목에는 related=True, why, summary(원문 설명)가 붙는다. 모델 장애·형식 실패면 빈 목록."""
+    weights = memory.get("weights", {})
+    candidates = [item for item in pool if item["url"] not in exclude_urls][:RELATED_PICK_INPUT]
+    if not candidates:
+        return []
+    payload = {"profile": memory["profile"], "weights": {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS},
+               "tools": [{"id": n, "title": i["title"], "topic": schemas.TOPICS.get(i["topic"], i["topic"]),
+                          "description": (i.get("description") or "")[:RELATED_DESCRIPTION_CHARS], "match": i.get("match", [])}
+                         for n, i in enumerate(candidates, 1)]}
+
+    def ids_valid(parsed: schemas.RelatedPicks):
+        ids = [p.id for p in parsed.tools]
+        if len(set(ids)) != len(ids) or any(not 1 <= i <= len(candidates) for i in ids):
+            raise ValueError("tools id가 후보 범위 밖이거나 중복")
+
+    label = f"사용자 {memory['user_id']} 관련 카드"
+    try:
+        parsed = await _ask(RELATED_PROMPT, payload, schemas.RelatedPicks, stats, ids_valid, label, model_call)
+    except models.ModelUnavailable as exc:
+        stats.model_failed(label, exc)
+        return []
+    picks = [{**candidates[p.id - 1], "why": p.why} for p in (parsed.tools if parsed else [])]
+    picks.sort(key=lambda i: (-len(i.get("match", [])), -weights.get(i["topic"], 0)))
+    return [i | {"related": True, "summary": i.get("description") or "", "rank": n} for n, i in enumerate(picks, 1)]
+
+
 async def verification_requests(selected: list[dict], stats: Stats, model_call=None) -> list[dict]:
     tools = [item for item in selected if item["type"] in TOOL_TYPES]
     if not tools:
@@ -162,8 +198,11 @@ async def verification_requests(selected: list[dict], stats: Stats, model_call=N
     return [{**tools[r.id - 1], "depth": r.depth, "verify_reason": r.reason} for r in (parsed.requests if parsed else [])]
 
 
-async def run(items: list[dict], memories: list[dict], seed: int | None = None, model_call=None) -> dict:
+async def run(items: list[dict], memories: list[dict], seed: int | None = None, model_call=None,
+              related_pools: dict[int, list[dict]] | None = None) -> dict:
     """큐레이터 전체. 반환: {selected, plans, verify, stats, seed, format_failed, select_failed}. model_call은 검수용 가짜 모델 주입.
+
+    related_pools(사용자별 관련 카드 후보)가 있으면 그 사용자 plan에 related를 붙인다 (월요일).
 
     select_failed: 선별 묶음이 모두 모델 장애였다. 이때 사용자별 후보는 만들지 않고 모두 failed로 둔다.
     """
@@ -178,11 +217,20 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
                       "failure_reason": "선별 묶음 전부 모델 장애", "excluded": {}} for m in memories]
             verify = []
         else:
-            plans = [await pick_for_user(selected, memory, stats, model_call) for memory in memories]
+            plans = []
+            for memory in memories:
+                plan = await pick_for_user(selected, memory, stats, model_call)
+                if related_pools is not None and not plan["failed"] and memory["user_id"] in related_pools:
+                    today_urls = {i["url"] for i in plan["news"] + plan["tools"]}
+                    plan["related"] = await pick_related(related_pools[memory["user_id"]], memory, today_urls, stats, model_call)
+                    if plan["related"]:
+                        plan["empty"], plan["empty_reason"] = False, None
+                plans.append(plan)
             verify = await verification_requests(selected, stats, model_call)
         result = {"selected": selected, "plans": plans, "verify": verify, "stats": asdict(stats), "seed": seed,
                   "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id}
-        span.update(output={"selected": len(selected), "plans": [(p["user_id"], len(p["news"]), len(p["tools"])) for p in plans],
+        span.update(output={"selected": len(selected),
+                            "plans": [(p["user_id"], len(p["news"]), len(p["tools"]), len(p.get("related", []))) for p in plans],
                             "weights": {p["user_id"]: p.get("weights", {}) for p in plans},
                             "verify": len(verify), "stats": asdict(stats) | {"failure_examples": len(stats.failure_examples)}})
     return result
