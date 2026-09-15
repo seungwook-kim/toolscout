@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-FOLDERS = ["agent", "sources", "pipeline", "routes", "mcp", "n8n", "web", "tests", "docs"]
+FOLDERS = ["agent", "sources", "pipeline", "routes", "mcp", "web", "tests", "docs"]
 ENTRY = re.compile(r"^- \d{4}-\d{2}-\d{2} · .+ · .+ · .+$")
 EM_DASH = "—"
 
