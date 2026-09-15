@@ -1,19 +1,19 @@
 """FastAPI 앱 진입점: / 화면, /api/ 기능, /mcp MCP 서버 (계획안 9.3).
 
 실행: uv run uvicorn main:app --port 8000
-앱이 떠 있는 동안 07:00 하루 실행·08:00 발송 예약이 돈다 (pipeline/scheduler.py). SCHEDULER_ENABLED=0이면 끈다.
+앱이 떠 있는 동안 06:55 예열·07:00 하루 실행·08:00 발송 예약이 돈다 (pipeline/scheduler.py). SCHEDULER_ENABLED=0이면 끈다.
 해설가가 원문을 읽는 MCP 서버가 이 앱의 /mcp라서 포트는 8000으로 띄운다.
 """
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 import mcp_server
 from agent import tracing
 from pipeline import scheduler
-from routes import w1
+from routes import auth, pages, w1
 
 WEB = Path(__file__).parent / "web"
 
@@ -34,17 +34,13 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="toolscout", lifespan=lifespan)
 
 
-@app.get("/", include_in_schema=False)
-def index() -> FileResponse:
-    return FileResponse(WEB / "index.html")
-
-
 @app.get("/api/health")
 def health() -> dict:
     return {"status": "ok", "service": "toolscout"}
 
 
+app.include_router(auth.router)  # 로그인·세션
+app.include_router(pages.router)  # 화면 (/, /login, /settings, /history, /f)
 app.include_router(w1.router)  # 아침 브리핑 작업을 직접 부르는 API (실행·발송·상태)
-
-
+app.mount("/static", StaticFiles(directory=WEB), name="static")
 app.mount("/mcp", mcp_app)

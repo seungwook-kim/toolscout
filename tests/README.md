@@ -8,8 +8,7 @@
 - `env/check_env_example.py`: `.env.example` 키 23개(DEV_MODE·OPENROUTER·GROQ·SCHEDULER_ENABLED 포함), `.env` git 무시
 - `env/check_docker.py`: 로컬 docker 없으면 GitHub Actions `ci` 4단계 결과로 판정, compose(app 1개)·Dockerfile 정적 검사
 - `models/check_models.py`: 모델표, 제공자 순서 전환(429·503·529·연결·타임아웃·키 없음), 모델 장애, 옵션 전달, 호출 간격 + 개발 4역할 실제 호출
-- `models/check_local_models.py`: 로컬 Ollama 모델별 VRAM·도구 호출·한글 요약 3건·선별 20건 시간 → `models/local_models.json`
-- `models/check_groq.py`: Groq 목록 API에 모델표 모델이 있는지, 실제 도구 호출·JSON·한글 한 줄, 한도 헤더 → `models/groq_models.json`
+- `models/check_local_models.py`·`check_groq.py`: 로컬 Ollama VRAM·도구 호출·한글 실측, Groq 목록 API·도구 호출·한도 → `models/local_models.json`·`groq_models.json`
 - `db/check_tables.py`: 표 9개·연결 문자열 변환·is_test·briefings 빈 행 구조 + Supabase 실제 생성·가짜 프로필 2개(통과 조건)
 - `sources/check_fallbacks.py`: MCP 레지스트리 60초·재시도·전날 결과 재사용 표시, 긱뉴스 외부 링크/요약만 (네트워크 없이)
 - `sources/run_today.py`: 9곳 실제 수집, 300건 ±20% 넘으면 필터 강화 재측정 → `today_counts.json`, `report.md`
@@ -19,6 +18,7 @@
 - `pipeline/check_scheduler.py`: 가짜 시계로 07:00 실행·08:00 발송·따라잡기·22시 이후 안 함·실행 끝난 뒤 발송·재시도
 - `mcp/list_tools.py`: 실제 HTTP로 도구 6개·키 검문·거부 규칙 → `mcp/list_tools_result.json`
 - `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)
+- `web/check_auth.py`: 매직링크 발급·만료·재사용·위조 거부, 세션 없으면 401, 첫 로그인은 설정, 개발 모드 is_test (앱 프로세스 안, 메일은 폴더)
 - `agent/run_loop.py`: 가짜 모델로 루프 동작 9항목 + 현재 모델표 해설가로 실제 "안녕"·도구 1개(통과 조건)
 - `agent/run_curator.py`: 오늘 수집 + 가짜 프로필 2개로 큐레이터 실행 → `agent/curator_report.json`
 - `agent/run_explainer.py`: `--fake`는 가짜 모델로 카드·반려·재시도·원문 확인 필요 8항목, 없으면 실제 카드 + for_me 3쌍 → `agent/explainer_report.json`

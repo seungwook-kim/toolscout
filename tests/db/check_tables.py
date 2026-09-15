@@ -29,6 +29,7 @@ PLAN_COLUMNS = {
     "briefings": "user_id date item_id rank card_json trace_id sent_at",
     "feedback": "user_id item_id action reason memo created_at",
     "questions": "user_id session_date turn_no question gate answer sources_json trace_id created_at",
+    "used_tokens": "token_hash purpose used_at expires_at",
 }
 CHECKS = {"ck_weights_range", "ck_items_type", "ck_skill_reviews_risk", "ck_questions_gate"}
 
@@ -124,7 +125,7 @@ def main() -> int:
     ddl = ddl_compiles()
     json_cols = [f"{t}.{c.name}" for t in db.TABLES for c in tables[t].columns if isinstance(c.type, postgresql.JSONB)]
     checks = {
-        "표_9개": set(tables) == set(db.TABLES),
+        "표_10개(used_tokens_포함)": set(tables) == set(db.TABLES) and len(db.TABLES) == 10,
         "계획안_칸_모두_있음": not any(missing.values()),
         "postgres_DDL_컴파일": all(v is True for v in ddl.values()),
         "JSON_칸_5개는_JSONB": len(json_cols) == 5,

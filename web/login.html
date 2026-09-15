@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>toolscout 로그인</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <main class="center">
+    <div class="panel">
+      <h1>toolscout</h1>
+      <p class="muted">매일 아침 AI 소식과 새 MCP·스킬을 내 기준으로 골라 한글로 해설합니다.</p>
+      <form id="login" class="field">
+        <label for="email">이메일</label>
+        <input id="email" type="email" autocomplete="email" placeholder="me@example.com" required>
+        <button class="btn primary" type="submit">로그인 링크 받기</button>
+      </form>
+      <div id="msg" class="msg"></div>
+      <button class="btn" type="button" disabled title="준비 중">카카오로 로그인 (준비 중)</button>
+      <p class="muted small">링크는 15분 동안 한 번만 쓸 수 있어요.</p>
+    </div>
+  </main>
+  <script src="/static/app.js"></script>
+  <script>
+    const msg = document.getElementById("msg");
+    const errors = { expired: "링크가 만료됐어요. 다시 요청해 주세요", used: "이미 쓴 링크예요. 다시 요청해 주세요", invalid: "링크가 올바르지 않아요. 다시 요청해 주세요" };
+    const error = new URLSearchParams(location.search).get("error");
+    if (error) TS.message(msg, errors[error] || errors.invalid, true);
+    document.getElementById("login").onsubmit = async (event) => {
+      event.preventDefault();
+      TS.message(msg, "보내는 중이에요");
+      try {
+        const data = await TS.api("/api/auth/request", { method: "POST", body: { email: document.getElementById("email").value }, allow401: true });
+        TS.message(msg, data.message);
+      } catch (e) {
+        TS.message(msg, e.message, true);
+      }
+    };
+  </script>
+</body>
+</html>
