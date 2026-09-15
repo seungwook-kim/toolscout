@@ -121,6 +121,7 @@ class Card(BaseModel):
     source_checked: bool
     notice: str | None = None  # "원문 확인 필요", "수집 실패, 전날 기준"을 " · "로 잇는다
     related: bool = False  # 관련 카드(F3-b, 월요일). 메일·화면에서 칸을 따로 둔다
+    verification_note: str | None = None  # 검증 결과 대신 메모 ("설치법 미확인", "설치 실패" 등, 세션 8)
     trace_id: str = Field(min_length=1)  # trace_id 없는 카드는 만들지 않는다 (작업 규칙 10)
 
 
@@ -168,3 +169,10 @@ class SkillJudgment(BaseModel):
     completeness: Literal["높음", "보통", "낮음"]
     risk_signal: Literal["ok", "caution"]
     risk_quote: str | None = Field(default=None, max_length=300)
+
+
+class ReplanDecision(BaseModel):
+    """되돌림 1: 검증에 실패한 도구 대신 큐레이터가 고른 대체(replace, 후보 id) 또는 비움(empty)."""
+    action: Literal["replace", "empty"]
+    id: int | None = None
+    why: str = Field(min_length=2, max_length=120)

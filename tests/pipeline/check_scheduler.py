@@ -1,7 +1,8 @@
 """앱 안 예약 검수 (계획안 9.2 W1·W4, 2026-09-15 n8n 제외 결정). 가짜 시계·가짜 실행·가짜 발송·가짜 알림으로 확인한다.
 
 실행: uv run python -m tests.pipeline.check_scheduler
-- 06:50 → 다음 예정 06:55 / 06:55 예열·DB 깨우기 → 07:00 하루 실행 → 08·09·12·18시 발송 → 다음 날 06:55
+- 06:50 → 다음 예정 06:55 / 06:55 예열·DB 깨우기 → 07:00 하루 실행 → 08·09·12·18시 발송 → 다음 날 06:00
+- 05:50 → 06:00 검증(W1-a) → 06:55 예열 → 07:00 실행. 07:30에 켜지면 실행 먼저·검증은 뒤에 한 번, 검증 실패해도 실행은 돎, 22:00 뒤 검증 안 함
 - 07:30에 켜지면 브리핑 없는 사용자가 있을 때만 바로 따라잡고, 08:05에 켜지면 바로 발송, 22:00 뒤에는 따라잡지 않음
 - 08:00에 실행이 돌고 있으면 끝난 뒤 발송, 실행 중 중복 실행은 막음
 - 발송 실패 사용자는 10분 간격으로 2번 더, 끝내 실패하면 실패 알림 한 통(같은 시각 두 번째는 알림 안 함), 메일 설정이 없으면 재시도·알림 안 함
@@ -32,17 +33,17 @@ class Clock:
 
     async def sleep(self, seconds: float) -> None:
         self.naps.append(seconds)
+        await asyncio.sleep(0)  # 잠들기 전에 따로 도는 작업(검증)이 먼저 시작하게
         self.value += timedelta(seconds=seconds)
-        await asyncio.sleep(0)
 
 
 def make(clock: Clock, *, needs: bool = True, gate: asyncio.Event | None = None, send_results: list[dict] | None = None,
-         run_outcomes: list[dict] | None = None, db_errors: int = 0, merge_fails: bool = False):
+         run_outcomes: list[dict] | None = None, db_errors: int = 0, merge_fails: bool = False, verify_fails: bool = False):
     """run_outcomes: 실행마다 {"raise": True} 또는 {"leave": [끝나고도 브리핑 없는 사용자]}. 기본은 전원 성공."""
     log: list[str] = []
     results = list(send_results or [])
     outcomes = list(run_outcomes or [])
-    fake = {"missing": [1, 2] if needs else [], "db_errors": db_errors, "run_users": [], "alerts": []}
+    fake = {"missing": [1, 2] if needs else [], "db_errors": db_errors, "run_users": [], "alerts": [], "verify": []}
 
     async def run(users=None, limit=None, user_ids=None):
         log.append(f"run@{clock.now():%H:%M}")
@@ -80,12 +81,18 @@ def make(clock: Clock, *, needs: bool = True, gate: asyncio.Event | None = None,
             raise RuntimeError("검수용 합치기 실패")
         return {"users": 1, "topics": 2, "reverted": [{"user_id": 1, "topic": "pricing", "before": -2, "after": 1}]}
 
+    async def verify(day):  # 검증 기록은 fake["verify"]에 따로 (기존 log 비교를 건드리지 않게)
+        fake["verify"].append(f"verify@{clock.now():%H:%M}")
+        if verify_fails:
+            raise RuntimeError("검수용 검증 실패")
+        return {"items": [{"status": "done"}, {"status": "failed"}], "counts": {"done": 1, "failed": 1}, "trace_id": None}
+
     def alert(title, lines):
         log.append(f"alert@{clock.now():%H:%M}")
         fake["alerts"].append({"title": title, "lines": lines})
         return "sent"
 
-    sched = Scheduler(run=run, send=send, warm=warm, wake_db=wake_db, missing_users=missing_users, alert=alert, merge=merge,
+    sched = Scheduler(run=run, send=send, verify=verify, warm=warm, wake_db=wake_db, missing_users=missing_users, alert=alert, merge=merge,
                       now=clock.now, sleep=clock.sleep)
     return sched, log, fake
 
@@ -114,8 +121,34 @@ async def normal_day() -> dict:
     return {"before": before, "after": after, "log": log, "warm": sched.state["last_warm"]}
 
 
+async def verify_cases() -> dict:
+    early = Clock(5, 50)
+    s_early, log_early, fake_early = make(early)
+    before = s_early.next_event()
+    await drive(s_early, early, at(7, 1))
+
+    late = Clock(7, 30)
+    s_late, _, fake_late = make(late, needs=True)
+    await s_late.tick()
+    first_tick = list(fake_late["verify"])
+    await s_late.tick()
+    await s_late._verify_task
+
+    failing = Clock(5, 59)
+    s_fail, log_fail, fake_fail = make(failing, verify_fails=True)
+    await drive(s_fail, failing, at(7, 1))
+
+    night = Clock(22, 30)
+    s_night, _, fake_night = make(night)
+    await s_night.tick()
+    return {"before": before, "early_log": log_early, "early_verify": fake_early["verify"], "early_status": s_early.status()["last_verify"],
+            "late_first": first_tick, "late_verify": fake_late["verify"], "fail_log": log_fail, "fail_verify": fake_fail["verify"],
+            "fail_status": s_fail.state["last_verify"], "night_verify": fake_night["verify"]}
+
+
 async def main_async() -> dict:
     day = await normal_day()
+    verify = await verify_cases()
 
     late = Clock(7, 30)
     s_late, log_late, _ = make(late, needs=True)
@@ -197,7 +230,15 @@ async def main_async() -> dict:
         "06:55_예열·DB깨우기_07:00_실행_알림시각마다_발송": day["log"] == ["warm@06:55", "wake@06:55", "run@07:00", "send@08:00",
                                                                "send@09:00", "send@12:00", "send@18:00"]
         and day["warm"]["db"] == "ok",
-        "발송뒤_다음예정_다음날_06:55": day["after"] == datetime(2026, 9, 17, 6, 55, tzinfo=run_daily.KST),
+        "발송뒤_다음예정_다음날_06:00": day["after"] == datetime(2026, 9, 17, 6, 0, tzinfo=run_daily.KST),
+        "05:50엔_다음예정_06:00_검증": verify["before"] == at(6, 0),
+        "06:00_검증_뒤_06:55_예열_07:00_실행": verify["early_verify"] == ["verify@06:00"]
+        and verify["early_log"] == ["warm@06:55", "wake@06:55", "run@07:00"]
+        and verify["early_status"]["status"] == "done" and verify["early_status"]["counts"] == {"done": 1, "failed": 1},
+        "07:30_켜지면_실행먼저_검증은_뒤에_한번": verify["late_first"] == [] and verify["late_verify"] == ["verify@07:30"],
+        "검증_실패해도_실행은_돎·다시_안돎": verify["fail_verify"] == ["verify@06:00"] and verify["fail_status"]["status"] == "error"
+        and "run@07:00" in verify["fail_log"],
+        "22시_뒤엔_검증_안함": verify["night_verify"] == [],
         "07시_뒤에_켜지면_예열_안함": not any(x.startswith(("warm", "wake")) for x in log_late + log_after),
         "07:30_켜지면_따라잡기": log_late == ["run@07:30"],
         "이미_브리핑있으면_실행안함": log_done == [],
@@ -228,7 +269,7 @@ async def main_async() -> dict:
         "알림에_설정값·오류원문_없음": all("검수용" not in line for alert in fake_fail["alerts"] + fake_retry["alerts"]
                                      for line in alert["lines"]),
     }
-    return {"normal_day": {"log": day["log"]}, "busy": log_busy, "retry": log_retry, "run_fail": run_entries(log_fail),
+    return {"normal_day": {"log": day["log"]}, "verify": {k: v for k, v in verify.items() if k != "before"}, "busy": log_busy, "retry": log_retry, "run_fail": run_entries(log_fail),
             "partial": fake_partial["run_users"], "db": log_db, "checks": checks}
 
 

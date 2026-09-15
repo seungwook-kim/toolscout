@@ -146,7 +146,7 @@ const Cards = {
     const explained = stats.rejected != null ? `반려 ${stats.rejected} · 원문 재조회 ${refetched}` : `원문 재조회 ${refetched}`;
     return `<div class="pipe" aria-label="오늘 새벽 에이전트 작업">
       <div><div class="who"><i></i>큐레이터</div><div class="what">${curator}</div><div class="sub">${hasStats ? "수집 · 선별 · 내 기준 정렬" : "수집 · 내 기준 정렬"}</div></div>
-      <div><div class="who"><i></i>검증관</div><div class="what">0 <span>/ 0 검증</span></div><div class="sub">샌드박스 검증은 아직 붙지 않았어요</div></div>
+      <div><div class="who"><i></i>검증관</div><div class="what">${stats.verified ?? 0} <span>/ ${stats.verify_requested ?? 0} 검증</span></div><div class="sub">${stats.rollbacks ? `샌드박스 설치 · 도구 목록 · 되돌림 ${stats.rollbacks}` : "샌드박스 설치 · 도구 목록"}</div></div>
       <div><div class="who"><i></i>해설가</div><div class="what">${briefing.count} <span>장 작성</span></div><div class="sub">${explained}</div></div>
     </div>`;
   },

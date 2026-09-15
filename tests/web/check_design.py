@@ -135,7 +135,7 @@ def check_b() -> dict:
 
     cards_js_text = read(WEB / "cards.js")
     cards_js_needles = ["item", "tool", "mark", "forme", 'details class="why"', "acts", "aria-pressed", "muted",
-                         "kind", "meta", "verify", "step na", "검증 예정", "cmd", "pipe", "0 검증", "empty"]
+                         "kind", "meta", "verify", "step na", "검증 예정", "cmd", "pipe", "검증</span>", "empty"]
     cards_js_ok = bool(cards_js_text) and all(n in cards_js_text for n in cards_js_needles)
 
     js_files = [WEB / "app.js", WEB / "cards.js"]

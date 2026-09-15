@@ -172,6 +172,6 @@ async def reverify(item: dict, *, today: date, model_call=None, mcp_url: str = l
     request = {"item_id": item_id, "kind": "skill" if item.get("type") == "skill" else "mcp", "title": item["title"], "url": item["url"],
                "type": item.get("type"), "description": item.get("summary") or item.get("description"),
                "install": verification.install_info(item) or {}}
-    with tracing.span("rollback:evidence_short", kind="chain", input={"url": item["url"], "item_id": item_id}):
+    with tracing.span("verify:reverify", kind="chain", input={"url": item["url"], "item_id": item_id}):
         result = await run([request], model_call=model_call, mcp_url=mcp_url, call_tool=call_tool)
     return result["items"][0]

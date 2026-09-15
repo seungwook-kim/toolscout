@@ -63,6 +63,7 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
             "item": {"type": item["type"], "title": item["title"], "url": item["url"], "source": item["source"],
                      "summary": item.get("summary", "")[:SUMMARY_ONLY_CHARS if item.get("skip_fetch") else SUMMARY_CHARS]},
             "article": source.get("text") if checked else None,
+            "verification": item.get("verification"), "risk_signal": item.get("risk_signal"),  # 검증관 결과가 있으면 (세션 8)
             "article_status": "ok" if checked else f"못 읽음 ({source.get('reason') or source.get('status')})",
         }
 

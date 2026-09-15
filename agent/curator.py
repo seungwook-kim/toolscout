@@ -5,6 +5,7 @@
   성립하지 않으면 줄이고, 0건이면 "오늘 비움"과 이유를 남긴다
 - 검증 요청: MCP·스킬 후보 중 하루 최대 5건. 이번 단계에서는 목록만 만들고 검증관은 부르지 않는다
 - 관련 카드(F3-b, 월요일): 쌓인 도구 목록에서 미리 좁힌 후보(pipeline/persist.related_pool) 중 최대 3개. 오늘 후보와 겹치면 뺀다
+- 되돌림 1(replan_failed): 검증관이 실패로 낸 도구 대신 "대체 항목 선택" 또는 "비움"을 판단한다. 고정 규칙이 아니다 (pipeline/rollback.py가 부른다)
 모델 출력은 agent/schemas.py 규격으로 검사하고, 형식이 틀리면 1회 다시 부른다 (agent/structured.py).
 모델 장애(제공자 전부 실패)는 선별 묶음·사용자·검증 요청 단위로 건너뛰고 이유를 stats.model_failures에 남긴다.
 """
@@ -48,6 +49,13 @@ RELATED_PROMPT = f"""너는 toolscout 큐레이터다. 주 1회 관련 카드로
 - 쓰는 도구·직군·자유 한 줄과 실제로 이어지는 것만 고른다. 연결이 약하면 적게 고르고 0개도 된다
 - why: 이 사용자에게 왜 이 도구인지 한국어 한 줄 (80자 이내). 무엇과 이어지는지 드러낸다
 {JSON_ONLY} 형식: {{"tools": [{{"id": 1, "why": "..."}}]}}"""
+
+REPLAN_PROMPT = f"""너는 toolscout 큐레이터다. 이 사용자에게 고른 도구 하나가 검증관 검증에서 실패했다(설치 실패 또는 원문 접근 불가).
+아직 고르지 않은 후보 중 이 사용자에게 맞는 것을 하나 고르거나(replace), 억지로 채우지 않고 비운다(empty).
+- 입력: failed(실패한 도구·실패 이유), candidates(대체 후보, id·이름·주제·설명), profile, weights
+- 후보가 없거나 쓰는 도구·직군과 이어지는 게 없으면 empty. replace면 id에 후보 번호
+- why: 고른 이유나 비운 이유를 한국어 한 줄 (80자 이내)
+{JSON_ONLY} 형식: {{"action": "replace", "id": 1, "why": "..."}} 또는 {{"action": "empty", "id": null, "why": "..."}}"""
 
 VERIFY_PROMPT = f"""너는 toolscout 큐레이터다. 오늘 도구 후보 중 검증관에게 실제 확인을 맡길 항목을 하루 최대 {schemas.MAX_VERIFY}건 고른다.
 - 개발자에게 쓸모가 커 보이고 설치·동작 확인 가치가 있는 것을 고른다. 확인 가치가 낮으면 적게 고른다
@@ -177,6 +185,32 @@ async def pick_related(pool: list[dict], memory: dict, exclude_urls: set[str], s
     picks = [{**candidates[p.id - 1], "why": p.why} for p in (parsed.tools if parsed else [])]
     picks.sort(key=lambda i: (-len(i.get("match", [])), -weights.get(i["topic"], 0)))
     return [i | {"related": True, "summary": i.get("description") or "", "rank": n} for n, i in enumerate(picks, 1)]
+
+
+async def replan_failed(failed: dict, candidates: list[dict], memory: dict, stats: Stats, model_call=None) -> dict:
+    """되돌림 1 판단. 반환: {action: replace|empty|failed, item?, why}. 모델 장애·형식 실패면 failed(그 도구만 빠진다)."""
+    candidates = candidates[:PICK_MAX_TOOLS]
+    weights = memory.get("weights", {})
+    payload = {"failed": {"title": failed["title"], "topic": schemas.TOPICS.get(failed.get("topic"), failed.get("topic")),
+                          "reason": failed.get("verify_failure") or "검증 실패"},
+               "candidates": [{"id": n, "title": c["title"], "topic": schemas.TOPICS.get(c.get("topic"), c.get("topic")),
+                               "summary": (c.get("summary") or "")[:PICK_SUMMARY_CHARS]} for n, c in enumerate(candidates, 1)],
+               "profile": memory["profile"], "weights": {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS}}
+
+    def id_valid(parsed: schemas.ReplanDecision):
+        if parsed.action == "replace" and not (parsed.id and 1 <= parsed.id <= len(candidates)):
+            raise ValueError("replace인데 id가 후보 범위 밖")
+
+    label = f"사용자 {memory['user_id']} 되돌림 1"
+    try:
+        parsed = await _ask(REPLAN_PROMPT, payload, schemas.ReplanDecision, stats, id_valid, label, model_call)
+    except models.ModelUnavailable as exc:
+        return {"action": "failed", "why": stats.model_failed(label, exc)}
+    if parsed is None:
+        return {"action": "failed", "why": "되돌림 판단 형식 실패"}
+    if parsed.action == "replace":
+        return {"action": "replace", "item": candidates[parsed.id - 1], "why": parsed.why}
+    return {"action": "empty", "why": parsed.why}
 
 
 async def verification_requests(selected: list[dict], stats: Stats, model_call=None) -> list[dict]:
