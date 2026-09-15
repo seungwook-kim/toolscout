@@ -24,6 +24,13 @@ def sent_user_ids(today: date) -> set[int]:
         return {row[0] for row in rows}
 
 
+def users_with_briefings(today: date) -> set[int]:
+    """그날 briefings 행(카드 또는 빈 행)이 있는 사용자. 예약 작업이 놓친 하루 실행을 따라잡을지 볼 때 쓴다."""
+    with db.get_engine().connect() as connection:
+        rows = connection.execute(select(db.Briefing.user_id).where(db.Briefing.date == today).distinct())
+        return {row[0] for row in rows}
+
+
 def pending_urls(user_id: int, today: date) -> set[str]:
     """오늘 저장했지만 아직 발송하지 않은 카드의 링크. 재실행 때 큐레이터가 '본 항목'으로 빼지 않게 한다."""
     with db.get_engine().connect() as connection:

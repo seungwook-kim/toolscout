@@ -12,9 +12,9 @@ SECTIONS = [
     "무엇을 하나", "왜 만들었나", "어떻게 동작하나", "에이전트 3개", "기술 스택", "빠른 시작",
     "내 브리핑을 Claude Code에서 쓰기", "프로젝트 구조", "품질 지표", "스크린샷",
 ]
-BADGES = ["Python-3.12", "FastAPI", "MCP", "n8n", "Langfuse"]
+BADGES = ["Python-3.12", "FastAPI", "MCP", "Supabase", "Langfuse"]
 EMOJI = re.compile("[\U0001F000-\U0001FAFF☀-➿⬀-⯿]")
-FLOW_WORDS = ["n8n", "큐레이터", "검증관", "해설가", "발송", "되돌림", "기억", "Claude Code", "공개 MCP"]
+FLOW_WORDS = ["예약", "큐레이터", "검증관", "해설가", "발송", "되돌림", "기억", "Claude Code", "공개 MCP"]
 
 
 def tree_block(text: str, marker: str) -> str | None:

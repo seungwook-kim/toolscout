@@ -32,7 +32,7 @@ def free_port() -> int:
 
 def start(port: int) -> subprocess.Popen:
     """서버 출력은 임시 폴더 로그 파일로 보낸다. 읽지 않는 PIPE는 버퍼가 차면 서버가 멈춘다 (도구 호출 20~40회에서 확인)."""
-    env = os.environ | {"MCP_SERVICE_KEY": KEY, "PYTHONDONTWRITEBYTECODE": "1"}
+    env = os.environ | {"MCP_SERVICE_KEY": KEY, "PYTHONDONTWRITEBYTECODE": "1", "SCHEDULER_ENABLED": "0"}  # 검수 서버는 예약을 끈다
     cmd = [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", str(port), "--log-level", "warning"]
     with SERVER_LOG.open("w", encoding="utf-8") as log_file:
         proc = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=log_file, stderr=subprocess.STDOUT)

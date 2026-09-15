@@ -19,7 +19,7 @@ import yaml  # langchain-core 의존으로 설치되어 있다
 import config  # noqa: F401  .env를 os.environ에 채운다
 
 ROOT = Path(__file__).resolve().parents[2]
-CI_STEPS = ["compose 파일 검사", "app 이미지 빌드", "app 기동", "/api/health 200 확인", "n8n 기동", "n8n 워크플로우 가져오기"]
+CI_STEPS = ["compose 파일 검사", "app 이미지 빌드", "app 기동", "/api/health 200 확인"]
 
 
 def git(*args: str) -> str:
@@ -86,21 +86,18 @@ def static_checks() -> dict:
     compose_text = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
     compose = yaml.safe_load(compose_text)
     services = compose.get("services", {})
-    app, n8n = services.get("app", {}), services.get("n8n", {})
+    app = services.get("app", {})
     default_services = sorted(name for name, svc in services.items() if not svc.get("profiles"))
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     ci_path = ROOT / ".github" / "workflows" / "ci.yml"
     ci_text = ci_path.read_text(encoding="utf-8") if ci_path.exists() else ""
     return {
-        "기본_서비스_app_n8n_2개": default_services == ["app", "n8n"],
+        "기본_서비스_app_1개(n8n_없음)": default_services == ["app"] and "n8n" not in services,
         "app_빌드_8000": "build" in app and any("8000" in str(p) for p in app.get("ports", [])),
         "app_sqlite_기본값_없음": "sqlite" not in compose_text.lower(),
-        "n8n_공식이미지_5678": str(n8n.get("image", "")).startswith("docker.n8n.io/n8nio/n8n")
-        and any("5678" in str(p) for p in n8n.get("ports", [])),
-        "n8n_tool_usage_변수_없음": "N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE" not in compose_text,
         "langfuse_프로필": services.get("langfuse-web", {}).get("profiles") == ["langfuse"],
         "dockerfile_python_3_12_slim": "FROM python:3.12-slim" in dockerfile,
-        "ci_단계_정의(app·n8n)": all(step in ci_text for step in CI_STEPS) and "on:\n  push:" in ci_text,
+        "ci_단계_정의": all(step in ci_text for step in CI_STEPS) and "on:\n  push:" in ci_text,
     }
 
 

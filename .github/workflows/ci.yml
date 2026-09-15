@@ -1,5 +1,5 @@
 # push마다 Docker 구성을 검사한다. 로컬에 Docker가 없어서 GitHub 러너에서 확인한다.
-# compose 파일 검사 → app 이미지 빌드 → app 기동 → /api/health 200 → n8n 기동 → 워크플로우 가져오기
+# compose 파일 검사 → app 이미지 빌드 → app 기동 → /api/health 200
 name: ci
 
 on:
@@ -34,40 +34,6 @@ jobs:
           echo "health 확인 실패"
           docker compose logs app
           exit 1
-
-      - name: n8n 기동
-        run: |
-          docker compose up -d n8n
-          for i in $(seq 1 60); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5678/healthz || true)
-            if [ "$code" = "200" ]; then
-              echo "n8n healthz 200"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "n8n 기동 실패"
-          docker compose logs n8n
-          exit 1
-
-      - name: n8n 워크플로우 가져오기
-        run: |
-          for file in n8n/workflows/*.json; do
-            docker compose cp "$file" n8n:/tmp/workflow.json
-            docker compose exec -T n8n n8n import:workflow --input=/tmp/workflow.json
-          done
-          docker compose exec -T n8n n8n export:workflow --all --output=/tmp/exported.json
-          docker compose exec -T n8n cat /tmp/exported.json > exported.json
-          python3 - <<'EOF'
-          import json, pathlib
-          exported = {w["name"]: w for w in json.loads(pathlib.Path("exported.json").read_text(encoding="utf-8"))}
-          for path in pathlib.Path("n8n/workflows").glob("*.json"):
-              source = json.loads(path.read_text(encoding="utf-8"))
-              got = exported.get(source["name"])
-              assert got, f"가져오기 실패: {source['name']}"
-              assert len(got["nodes"]) == len(source["nodes"]), f"노드 수 다름: {source['name']}"
-              print("가져오기 확인", source["name"], len(got["nodes"]), "노드")
-          EOF
 
       - name: 정리
         if: always()

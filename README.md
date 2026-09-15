@@ -7,7 +7,7 @@ A personal agent that picks AI news and new MCP servers and skills for you every
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.141-009688?logo=fastapi&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-SDK%202.x-6E56CF)
-![n8n](https://img.shields.io/badge/n8n-workflows-EA4B71?logo=n8n&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?logo=supabase&logoColor=white)
 ![Langfuse](https://img.shields.io/badge/Langfuse-tracing-0A0A0A)
 
 > 현재 상태: 0단계 준비와 1단계 뼈대 앞부분 진행 중. 진행 이력은 [CHANGELOG.md](CHANGELOG.md)를 본다.
@@ -54,12 +54,12 @@ A personal agent that picks AI news and new MCP servers and skills for you every
 
 ```mermaid
 flowchart TD
-    N1[n8n W1 07:00<br/>수집 · 정규화 · 중복 제거] --> C[큐레이터<br/>선별 · 사용자별 정렬 · 검증 요청]
+    N1[예약 07:00<br/>수집 · 정규화 · 중복 제거] --> C[큐레이터<br/>선별 · 사용자별 정렬 · 검증 요청]
     C -->|MCP·스킬 항목| V[검증관<br/>E2B 4단계 · SKILL.md 판독]
     C -->|사용자별 후보| E[해설가<br/>원문 재조회 · 카드 작성]
     V --> E
-    E --> N2[n8n 검증 노드<br/>JSON · 글자 수 · 근거 링크]
-    N2 --> N3[n8n 08:00 발송<br/>이메일 · 저장]
+    E --> N2[검증 노드<br/>JSON · 글자 수 · 근거 링크]
+    N2 --> N3[예약 08:00 발송<br/>이메일 · 저장]
     N3 --> U[사용자<br/>웹앱 카드 · 버튼 · 질문]
     U -->|피드백| M[(기억<br/>weights · seen)]
     M --> C
@@ -69,7 +69,7 @@ flowchart TD
     S --> E
 ```
 
-- 자동화(n8n): 07:00 수집, 정규화, 중복 제거, 검증 노드, 08:00 발송. 정해진 시간에 무조건 돈다.
+- 자동화(앱 안 예약): 07:00 수집, 정규화, 중복 제거, 검증 노드, 08:00 발송. 정해진 시간에 무조건 돈다.
 - 자율(에이전트): 오늘 몇 건 낼지, 비울지, 어디까지 검증할지, 카드를 반려할지. 결정마다 이유가 트레이스에 남는다.
 
 ## 🤖 에이전트 3개
@@ -87,16 +87,16 @@ flowchart TD
 | 구성 | 선택 | 이유 |
 |---|---|---|
 | 서버 | Python 3.12, FastAPI | 에이전트 서버, MCP 서버, 웹앱을 한 앱에 올린다 |
-| MCP | `mcp` SDK 2.x (`MCPServer`, streamable HTTP) | 에이전트, n8n, 사용자의 Claude Code가 같은 도구를 프로토콜로 공유한다 |
+| MCP | `mcp` SDK 2.x (`MCPServer`, streamable HTTP) | 에이전트와 사용자의 Claude Code가 같은 도구를 프로토콜로 공유한다 |
 | LLM | Anthropic, Gemini 유료, OpenAI(대체) | 선별·검증·해설은 비용과 실패 비용이 달라 역할마다 모델을 나눈다. 전부 학습 미사용 요금제 |
 | 루프 | `agent/loop.py` 직접 구현 + `langchain-core` | 판단 루프는 직접 짜고, core에서는 도구 스키마와 메시지 형식만 빌린다 |
-| 자동화 | n8n | 시간, 순서, 재시도, 발송만 맡긴다 |
+| 자동화 | 앱 안 예약 (`pipeline/scheduler.py`) | 07:00 실행, 08:00 발송, 재시도. 워크플로 도구를 따로 띄우지 않는다 |
 | DB | SQLModel, Supabase(Postgres) | 개발과 운영 모두 Supabase 하나, 연결은 `DATABASE_URL` |
 | 동작 검증 | E2B | 관리형 호스팅에서 도커 안 도커가 안 되므로 외부 마이크로 VM을 쓴다 |
 | 트레이싱 | Langfuse | 브리핑 1회가 트레이스 1개, 카드마다 `trace_id` |
 | 수집 | httpx, feedparser | RSS와 공개 API, 전부 무료 |
 | 화면 | 정적 HTML·JS | 프레임워크 없이 FastAPI가 서빙한다 |
-| 배포 | Docker Compose(로컬), Railway(운영) | 컨테이너 2개(n8n, app) |
+| 배포 | Docker Compose(로컬), Railway(운영) | 컨테이너 1개(app) |
 
 쓰지 않는 것:
 
@@ -110,7 +110,7 @@ flowchart TD
 
 1. 환경 파일 복사: `cp .env.example .env`
 2. `.env`에 키 채우기: `DATABASE_URL`(Supabase), `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `MCP_SERVICE_KEY` 등
-3. 실행: `docker compose up -d` (로컬 Langfuse까지 띄우려면 `docker compose --profile langfuse up -d`)
+3. 실행: `uv run uvicorn main:app --port 8000` 또는 `docker compose up -d`. 앱이 떠 있는 동안 07:00·08:00 예약이 돈다
 4. 첫 브리핑 확인: `http://localhost:8000` 접속, 받은 메일의 카드마다 `trace_id`가 있는지 확인
 
 ## 🔌 내 브리핑을 Claude Code에서 쓰기
@@ -150,7 +150,6 @@ toolscout/
 ├── routes/              웹앱 화면·API 라우터
 ├── web/                 정적 HTML·JS
 ├── mcp/                 공개 MCP 설정 예시, E2B 안 tools/list 스크립트
-├── n8n/workflows/       W0~W4 워크플로우 JSON
 ├── tests/               기능별 검수 스크립트
 ├── docs/                계획안.md, local-model.md, img/
 ├── .github/workflows/   CI (Docker 구성 검사)

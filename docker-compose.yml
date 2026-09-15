@@ -1,5 +1,5 @@
 # toolscout 로컬 실행.
-# - 기본: app, n8n 두 컨테이너 (운영 Railway와 같은 구성)
+# - 기본: app 한 컨테이너 (운영 Railway와 같은 구성). 07:00 실행·08:00 발송 예약은 app 안에서 돈다
 # - 로컬 Langfuse까지: docker compose --profile langfuse up -d
 #   공식 compose(github.com/langfuse/langfuse, docker-compose.yml)를 줄여 옮겼다.
 #   Langfuse 쪽 값은 로컬 개발 전용 기본값이다. 우리 .env의 DATABASE_URL과 섞이지 않게 변수 치환을 쓰지 않는다.
@@ -15,17 +15,6 @@ services:
         required: false
     ports:
       - "8000:8000"
-    restart: unless-stopped
-
-  n8n:
-    image: docker.n8n.io/n8nio/n8n:2.38.7
-    environment:
-      GENERIC_TIMEZONE: Asia/Seoul
-      TZ: Asia/Seoul
-    ports:
-      - "5678:5678"
-    volumes:
-      - n8n_data:/home/node/.n8n
     restart: unless-stopped
 
   langfuse-worker:
@@ -155,7 +144,6 @@ services:
       retries: 10
 
 volumes:
-  n8n_data:
   langfuse_postgres_data:
   langfuse_clickhouse_data:
   langfuse_clickhouse_logs:
