@@ -46,5 +46,53 @@
     "raw_head": "```json\n{\n  \"reject\": false,\n  \"reject_reason\": null,\n  \"summary_ko\": \"업스테이지가 최신 모델 '솔라 프로 4' 성능에 근접하면서 크기는 7분의 1로 줄인 '솔라 미니 4'의 무료 프리뷰를 공개했다. 22일 정식 API 오픈 예정으로, 빠른 응답 속도와 한국어 이해, 정보 추출 성능을 갖췄다.\",\n  \"for_me\": \"n8n으로 사내 AI 브리핑 봇을 만들 때 빠른 응답과 저렴한 비용으로 한국어 정보 추출 및 요약 기능을 연동하는 경량 모델 API로 활용할 수 있습니다.\",\n",
     "raw_tail": "사전 안내 없이 일시 중단되거나 종료될 수 있음\",\n      \"evidence_url\": \"https://www.aitimes.com/news/articleView.html?idxno=215245\"\n    }\n  ],\n  \"install_cmd\": null\n}\n```",
     "trace_id": "74fd811dfd31cc41164570abf9b27ed9"
+  },
+  {
+    "at": "2026-09-15T13:20:14+09:00",
+    "date": "2026-09-15",
+    "label": "카드 2:삼성전자, 네덜란드 AI칩 스타트업 유클리드 3200억",
+    "attempt": 1,
+    "error": "summary_ko: String should have at most 120 characters",
+    "provider": "groq",
+    "model": "qwen/qwen3.8-27b",
+    "raw_head": "{\n  \"reject\": false,\n  \"reject_reason\": null,\n  \"summary_ko\": \"삼성전자가 네덜란드 AI 반도체 스타트업 유클리드의 2억유로(약 3200억원) 규모 시리즈A 투자에 공동 참여했다. 유클리드는 엔비디아 GPU와 다른 아키텍처의 추론용 AI 칩을 개발 중이며, 2028년 상용화를 목표로 하고 있다.\",\n  \"for_me\": \"노션에서 관리하는 캠페인 기록과 콘텐츠 일정에 AI 반도체 산업 동향을 반영해, 기술 기반 마케팅 전략이나 관련 콘텐츠 기획 시 시장 분석 자료로 활용할 수 있습니다",
+    "raw_tail": " 없어 기술적 성과와 시장 성공에 불확실성이 존재한다.\",\n      \"evidence_url\": \"https://www.aitimes.com/news/articleView.html?idxno=215270\"\n    }\n  ],\n  \"install_cmd\": null\n}",
+    "trace_id": "d8fcb03eac94c16b76e4636b0423debf"
+  },
+  {
+    "at": "2026-09-15T13:20:14+09:00",
+    "date": "2026-09-15",
+    "label": "카드 2:Actual Budget MCP Server 1.14.",
+    "attempt": 1,
+    "error": "summary_ko: Input should be a valid string; for_me: Input should be a valid string",
+    "provider": "groq",
+    "model": "qwen/qwen3.8-27b",
+    "raw_head": "{\"reject\": true, \"reject_reason\": \"Actual Budget MCP는 개인 가계부 관리 도구로, 노션으로 캠페인 기록을 관리하는 마케터의 업무와 직접적인 관련이 없습니다.\", \"summary_ko\": null, \"for_me\": null, \"pros\": [], \"cons\": [], \"install_cmd\": null}",
+    "raw_tail": "udget MCP는 개인 가계부 관리 도구로, 노션으로 캠페인 기록을 관리하는 마케터의 업무와 직접적인 관련이 없습니다.\", \"summary_ko\": null, \"for_me\": null, \"pros\": [], \"cons\": [], \"install_cmd\": null}",
+    "trace_id": "d8fcb03eac94c16b76e4636b0423debf"
+  },
+  {
+    "at": "2026-09-15T13:20:14+09:00",
+    "date": "2026-09-15",
+    "label": "카드 2:Actual Budget MCP Server 1.14.",
+    "attempt": 2,
+    "error": "summary_ko: Input should be a valid string; for_me: Input should be a valid string",
+    "provider": "groq",
+    "model": "qwen/qwen3.8-27b",
+    "raw_head": "{\"reject\": true, \"reject_reason\": \"Actual Budget MCP는 개인 가계부 관리 도구로, 노션 기반 캠페인 기록 및 콘텐츠 일정 관리를 하는 마케터의 업무와 직접적인 관련이 없습니다.\", \"summary_ko\": null, \"for_me\": null, \"pros\": [], \"cons\": [], \"install_cmd\": null}",
+    "raw_tail": "개인 가계부 관리 도구로, 노션 기반 캠페인 기록 및 콘텐츠 일정 관리를 하는 마케터의 업무와 직접적인 관련이 없습니다.\", \"summary_ko\": null, \"for_me\": null, \"pros\": [], \"cons\": [], \"install_cmd\": null}",
+    "trace_id": "d8fcb03eac94c16b76e4636b0423debf"
+  },
+  {
+    "at": "2026-09-15T13:20:14+09:00",
+    "date": "2026-09-15",
+    "label": "카드 3:Unity MCP 4.4.1",
+    "attempt": 1,
+    "error": "summary_ko: String should have at most 120 characters",
+    "provider": "groq",
+    "model": "qwen/qwen3.8-27b",
+    "raw_head": "{\n  \"reject\": false,\n  \"reject_reason\": null,\n  \"summary_ko\": \"Unity Editor를 AI 에이전트나 터미널에서 제어하는 MCP 프레임워크입니다. 별도 프로세스 없이 Editor가 HTTP로 MCP를 제공하며, C# 메서드에 [McpTool]만 붙이면 도구를 정의할 수 있습니다.\",\n  \"for_me\": \"Claude Code와 MCP를 다루는 개발자로서, Unity 환경에서 에이전트가 에디터를 직접 조작하는 워크플로를 구축하거나 학습하는 데 활용할 수 있습니다.\",\n  \"pros",
+    "raw_tail": "com/isuzu-shiranui/UnityMCP\"\n    }\n  ],\n  \"install_cmd\": \"curl -fsSL https://raw.githubusercontent.com/isuzu-shiranui/UnityMCP/main/install.sh | sh\"\n}",
+    "trace_id": "d8fcb03eac94c16b76e4636b0423debf"
   }
 ]
