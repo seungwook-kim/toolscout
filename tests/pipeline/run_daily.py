@@ -15,13 +15,13 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from langchain_core.messages import AIMessage
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, insert, select, update
 
 import db
 import memory
 import models
 from agent import schemas, tracing
-from pipeline import run_daily, validate
+from pipeline import persist, run_daily, validate
 from tests.app.check_main import KEY, free_port, start
 
 HERE = Path(__file__).parent
@@ -178,12 +178,35 @@ async def regression_checks() -> dict:
     }
 
 
+def catalog_checks() -> dict:
+    """선별 통과 도구 쌓기 (F3-b 후보). 첫 실행 뒤 호출. 반려된 LOW 도구도 주제·설명과 함께 남고, 별 수 캐시 행은 별 수·카드 요약을 지킨다."""
+    cache_url = f"{FAKE_HOST}cache"
+    with db.get_engine().begin() as c:
+        c.execute(insert(db.Item).values(date=date(1999, 12, 31), type="mcp", title="별 수 캐시", url=cache_url, source="mcp_registry",
+                                         stars=77, summary_ko="카드 요약"))
+    saved = persist.save_catalog(FAKE_DAY, [{"type": "mcp", "url": cache_url, "title": "별 수 캐시 1.2", "topic": "mcp_tools",
+                                             "summary": "Reads Notion pages", "source": "mcp_registry", "version": "1.2"},
+                                            {"type": "news", "url": f"{FAKE_HOST}news-not-catalog", "title": "뉴스", "source": "aitimes"}])
+    with db.get_engine().connect() as c:
+        low = c.execute(select(db.Item.type, db.Item.topic, db.Item.description, db.Item.summary_ko).where(db.Item.url == f"{FAKE_HOST}low")).first()
+        cache = c.execute(select(db.Item.stars, db.Item.topic, db.Item.description, db.Item.summary_ko, db.Item.date, db.Item.version)
+                          .where(db.Item.url == cache_url)).first()
+        news = c.execute(select(func.count()).select_from(db.Item).where(db.Item.url == f"{FAKE_HOST}news-not-catalog")).scalar()
+    return {
+        "선별통과_도구는_카드아니어도_items에_주제·설명": low is not None and tuple(low) == ("mcp", "agent_framework", "검수용 항목", None),
+        "기존_별수행은_별수·카드요약·날짜_유지하고_주제·설명·버전만_채움": saved == 1 and cache is not None
+        and tuple(cache) == (77, "mcp_tools", "Reads Notion pages", "카드 요약", date(1999, 12, 31), "1.2"),
+        "뉴스는_도구목록에_안쌓음": news == 0,
+    }
+
+
 async def fake_run(mcp_url: str) -> dict:
     user_ids = memory.test_user_ids()
     backend, marketer = user_ids[0], user_ids[1]
     run = lambda mode="normal", **kw: run_daily.run(FAKE_DAY, items=fake_items(), mcp_url=mcp_url, model_call=fake_model(mode), **kw)
     first = await run()
     after_first = rows_for(user_ids)
+    catalog = catalog_checks()
     second = await run()
     after_second = rows_for(user_ids)
     outage = await run("outage_backend")
@@ -203,7 +226,8 @@ async def fake_run(mcp_url: str) -> dict:
             {k: u.get(k) for k in ("user_id", "status", "cards", "rejected", "excluded", "retried")} for u in first["users"]]},
         "outage": {k: outage[k] for k in ("totals", "all_users_failed", "model_failures")},
         "dead": {k: dead[k] for k in ("totals", "all_users_failed")} | {"exit_code": run_daily.exit_code(dead)},
-        "checks": unit_checks() | await regression_checks() | {
+        "checks": unit_checks() | await regression_checks() | catalog | {
+            "도구목록_저장수_보고": first["catalog_saved"] == 2,
             "is_test_사용자_전부": sorted(users) == sorted(user_ids) and len(user_ids) >= 2,
             "영어_첫응답_재시도후_살아남음": all("ENGLISH 첫 응답만 영어" in u["titles"] for u in users.values()),
             "계속_영어면_제외_이유기록": all(any(e["title"] == "ALWAYS_ENGLISH 계속 영어" and "한글 비율" in " ".join(e["reasons"])

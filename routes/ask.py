@@ -84,17 +84,19 @@ def keywords(question: str) -> list[str]:
 
 
 def find_candidates(user_id: int, question: str, turns: list) -> list[dict]:
-    """앞선 턴의 출처 항목 + 키워드가 든 항목. 점수는 제목 일치 2·요약 일치 1, 같으면 내 브리핑에 나온 것·최신 순."""
+    """앞선 턴의 출처 항목 + 키워드가 든 항목. 점수는 제목 일치 2·요약이나 원문 설명 일치 1, 같으면 내 브리핑에 나온 것·최신 순."""
     words = keywords(question)
     context_urls = [s["url"] for t in turns[-RECENT_TURNS:] if t.gate != "out" for s in (t.sources_json or [])]
-    columns = (db.Item.id, db.Item.title, db.Item.url, db.Item.type, db.Item.source, db.Item.date, db.Item.summary_ko)
+    columns = (db.Item.id, db.Item.title, db.Item.url, db.Item.type, db.Item.source, db.Item.date, db.Item.summary_ko,
+               db.Item.description)
     with db.get_engine().connect() as conn:
         rows = list(conn.execute(select(*columns).where(db.Item.url.in_(context_urls)))) if context_urls else []
         if words:
             # "MCP"처럼 흔한 단어는 수백 건이 걸리므로 최신순이 아니라 일치 점수순으로 자르고, 내 브리핑 항목은 따로 가져온다
-            matched = or_(*[or_(db.Item.title.ilike(f"%{w}%"), db.Item.summary_ko.ilike(f"%{w}%")) for w in words])
-            points = sum((case((db.Item.title.ilike(f"%{w}%"), 2), (db.Item.summary_ko.ilike(f"%{w}%"), 1), else_=0) for w in words),
-                         literal(0))
+            matched = or_(*[or_(db.Item.title.ilike(f"%{w}%"), db.Item.summary_ko.ilike(f"%{w}%"), db.Item.description.ilike(f"%{w}%"))
+                            for w in words])
+            points = sum((case((db.Item.title.ilike(f"%{w}%"), 2), (db.Item.summary_ko.ilike(f"%{w}%"), 1),
+                               (db.Item.description.ilike(f"%{w}%"), 1), else_=0) for w in words), literal(0))
             ordered = select(*columns).where(matched).order_by(points.desc(), db.Item.date.desc()).limit(SEARCH_POOL)
             rows += conn.execute(ordered).all()
             rows += conn.execute(ordered.join(db.Briefing, db.Briefing.item_id == db.Item.id)
@@ -105,7 +107,7 @@ def find_candidates(user_id: int, question: str, turns: list) -> list[dict]:
                                                    .order_by(db.Briefing.date))} if ids else {}
 
     def score(row) -> tuple:
-        text = (row.title or "").lower(), (row.summary_ko or "").lower()
+        text = (row.title or "").lower(), f"{row.summary_ko or ''} {row.description or ''}".lower()
         hits = sum(2 if w.lower() in text[0] else 1 if w.lower() in text[1] else 0 for w in words)
         return (row.url in context_urls, hits, row.id in mine, row.date)
 
@@ -114,7 +116,7 @@ def find_candidates(user_id: int, question: str, turns: list) -> list[dict]:
     candidates = []
     for row in ranked:
         entry = {"title": row.title, "url": row.url, "type": row.type, "source": row.source, "date": str(row.date),
-                 "summary_ko": (row.summary_ko or "")[:300]}
+                 "summary_ko": (row.summary_ko or "")[:300], "description": (row.description or "")[:300]}
         if row.id in mine and mine[row.id].card_json:
             card = mine[row.id].card_json
             entry["my_briefing_date"] = str(mine[row.id].date)

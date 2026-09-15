@@ -8,12 +8,14 @@
 - 모델 장애(제공자 전부 실패)는 사용자·카드 단위로 건너뛴다. 대상 사용자가 모두 실패하면 종료 코드 2
 - 카드가 0건이면(비움·전부 반려·제외) briefings에 empty_reason 행을 남긴다. 모델 장애로 0건이면 남기지 않는다(재실행 대상)
 - 개발 모드에서는 형식 실패 예시를 tests/pipeline/format_failures.json에 쌓는다 (프롬프트를 고치기 전에 예시부터 모은다)
+- 선별을 통과한 MCP·스킬은 카드가 아니어도 items에 쌓는다(관련 카드 후보). 저장이 실패해도 실행은 계속한다
 실행: uv run python -m pipeline.run_daily [--users N] [--limit N] [--mcp-url URL]
   디버깅은 --users 1 --limit 40, 전량은 하루 1회
 """
 import argparse
 import asyncio
 import json
+import logging
 import sys
 import time
 from contextlib import AsyncExitStack
@@ -32,6 +34,7 @@ from pipeline import persist, validate
 from pipeline.dedupe import SOURCE_TIER, dedupe
 from pipeline.normalize import normalize
 
+log = logging.getLogger("toolscout.run_daily")
 KST = timezone(timedelta(hours=9))
 TOKEN_KEYS = ("calls", "input_tokens", "output_tokens", "format_failures", "unrecovered")
 FORMAT_FAILURES = Path(__file__).resolve().parents[1] / "tests" / "pipeline" / "format_failures.json"
@@ -48,6 +51,14 @@ def target_user_ids() -> list[int]:
         return memory.test_user_ids()
     with db.session() as s:
         return list(s.exec(select(db.User.id).where(db.User.is_test == False).order_by(db.User.id)))  # noqa: E712
+
+
+def save_catalog(today: date, selected: list[dict]) -> int:
+    try:
+        return persist.save_catalog(today, selected)
+    except Exception as exc:  # 도구 목록 쌓기는 부가 작업이라 브리핑을 막지 않는다
+        log.warning("도구 목록 저장 건너뜀 (%s)", type(exc).__name__)
+        return 0
 
 
 def collect_items() -> tuple[list[dict], list[dict]]:
@@ -116,6 +127,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
             memories.append(mem | {"seen_urls": [url for url in mem["seen_urls"] if url not in pending]})
 
         curated = await curator.run(curator_input, memories, model_call=model_call) if memories else None
+        catalog_saved = await asyncio.to_thread(save_catalog, today, curated["selected"]) if curated else 0
         stats, results = Stats(), []
         by_user = {m["user_id"]: m for m in memories}
         for plan in curated["plans"] if curated else []:
@@ -154,7 +166,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
         report = {
             "date": str(today), "dev_mode": models.dev_mode(), "options": {"users": users, "limit": limit},
             "collected": len(items), "prepared": len(prepared), "curator_input": len(curator_input),
-            "source_failures": failures, "skipped_sent_users": sorted(sent),
+            "source_failures": failures, "skipped_sent_users": sorted(sent), "catalog_saved": catalog_saved,
             "selected": len(curated["selected"]) if curated else 0, "verify_requests": len(curated["verify"]) if curated else 0,
             "users": results,
             "totals": {"users": len(results), "briefings": sum(1 for r in results if r["status"] in ("saved", "empty")),
