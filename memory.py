@@ -101,6 +101,88 @@ def save_profile(user_id: int, *, role: str, tools_tags: list[str], free_text: s
         s.commit()
 
 
+ACTIONS = ("관심없음", "써봤음", "이상함")
+WEIRD_REASONS = ("번역 어색", "사실 틀림", "나랑 상관없음")
+ACTION_DELTA = {"관심없음": -1, "써봤음": 1, "이상함": 0}
+
+
+class FeedbackError(ValueError):
+    def __init__(self, message: str, status: int = 400):
+        super().__init__(message)
+        self.status = status
+
+
+def apply_feedback(user_id: int, item_id: int, action: str) -> dict:
+    """피드백 버튼 (부록 C). 같은 버튼을 다시 누르면 취소하고 가중치를 되돌린다.
+
+    관심없음: 그 항목 주제 -1, 써봤음: 그 항목 주제(도구 종류) +1, 이상함: 기록만(사유는 note로). 가중치는 -5~+5에서 멈춘다.
+    반환: {status: recorded|cancelled, feedback_id, topic, topic_label, weight, message}
+    """
+    if action not in ACTIONS:
+        raise FeedbackError("버튼 값이 올바르지 않아요")
+    with db.session() as s:
+        in_my_briefing = s.exec(select(db.Briefing.id).where(db.Briefing.user_id == user_id, db.Briefing.item_id == item_id)).first()
+        if in_my_briefing is None:
+            raise FeedbackError("내 브리핑에 없는 항목이에요", status=403)
+        item = s.get(db.Item, item_id)
+        topic = item.topic if item and item.topic in TOPICS else None
+        label = TOPICS.get(topic or "", "")
+        existing = s.exec(select(db.Feedback).where(db.Feedback.user_id == user_id, db.Feedback.item_id == item_id,
+                                                    db.Feedback.action == action).order_by(db.Feedback.id.desc())).first()
+        weight_row = s.get(db.Weight, (user_id, topic)) if topic else None
+        current = weight_row.weight if weight_row else 0
+        if existing is not None:
+            new_weight = max(WEIGHT_MIN, min(WEIGHT_MAX, current - existing.weight_delta))
+            s.delete(existing)
+            status, feedback_id = "cancelled", existing.id
+            message = f"취소했어요. {label} 가중치를 되돌렸어요" if existing.weight_delta else "취소했어요"
+        else:
+            new_weight = max(WEIGHT_MIN, min(WEIGHT_MAX, current + ACTION_DELTA[action])) if topic else current
+            row = db.Feedback(user_id=user_id, item_id=item_id, action=action, weight_delta=new_weight - current)
+            s.add(row)
+            s.flush()
+            status, feedback_id = "recorded", row.id
+            message = _feedback_message(action, label, new_weight)
+        if topic and new_weight != current:
+            weight_row = weight_row or db.Weight(user_id=user_id, topic=topic)
+            weight_row.weight, weight_row.updated_at = new_weight, db.utcnow()
+            s.add(weight_row)
+        if status == "recorded" and s.get(db.Seen, (user_id, item_id)) is None:
+            s.add(db.Seen(user_id=user_id, item_id=item_id))
+        s.commit()
+    return {"status": status, "feedback_id": feedback_id, "topic": topic, "topic_label": label, "weight": new_weight,
+            "message": message}
+
+
+def _feedback_message(action: str, label: str, weight: int) -> str:
+    if action == "관심없음":
+        if not label:
+            return "관심없음으로 기록했어요"
+        return f"{label} 주제는 이제 카드로 보여 드리지 않을게요" if weight <= WEIGHT_MIN else f"내일부터 {label} 주제는 뒤로 뺄게요"
+    if action == "써봤음":
+        return f"써봤음으로 기록했어요. {label} 주제 도구를 더 챙길게요" if label else "써봤음으로 기록했어요"
+    return "알려 주셔서 고마워요. 어떤 점이 이상했는지 골라 주세요"
+
+
+def note_feedback(user_id: int, feedback_id: int, *, reason: str | None = None, memo: str | None = None) -> dict:
+    """이상함 사유(3택)나 써봤음 메모를 붙인다. 본인 피드백만."""
+    with db.session() as s:
+        row = s.get(db.Feedback, feedback_id)
+        if row is None or row.user_id != user_id:
+            raise FeedbackError("내 피드백이 아니에요", status=403)
+        if reason is not None:
+            if row.action != "이상함" or reason not in WEIRD_REASONS:
+                raise FeedbackError("사유 값이 올바르지 않아요")
+            row.reason = reason
+        if memo is not None:
+            if row.action != "써봤음":
+                raise FeedbackError("메모는 써봤음에만 남길 수 있어요")
+            row.memo = memo.strip()[:200] or None
+        s.add(row)
+        s.commit()
+    return {"ok": True, "message": "사유를 기록했어요" if reason else "메모를 저장했어요"}
+
+
 def forget(user_id: int) -> dict:
     """「내 기억 지우기」: weights·seen·feedback 삭제 (부록 C). 다음 날은 프로필만으로."""
     with db.get_engine().begin() as conn:

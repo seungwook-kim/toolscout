@@ -1,4 +1,4 @@
-"""SQLModel 데이터 표 9개 (계획안 9.5).
+"""SQLModel 데이터 표 10개 (계획안 9.5, used_tokens는 2026-09-15 추가).
 
 DB는 Supabase(Postgres) 하나로 간다. 연결 문자열은 .env의 DATABASE_URL에만 둔다.
 드라이버는 psycopg 3. Supabase에서 복사한 postgresql:// 문자열을 그대로 넣으면 여기서 변환한다.
@@ -149,6 +149,7 @@ class Feedback(SQLModel, table=True):
     action: str  # 관심없음 / 써봤음 / 이상함
     reason: str | None = None
     memo: str | None = None
+    weight_delta: int = 0  # 이 피드백으로 실제로 바뀐 주제 가중치 (-5~+5 끝에 막히면 0). 같은 버튼 재클릭 취소 때 되돌린다
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -223,7 +224,8 @@ def get_engine(url: URL | None = None) -> Engine:
 
 # 표를 만든 뒤에 추가한 칸. create_all은 이미 있는 표에 칸을 더하지 않으므로 없을 때만 추가한다
 ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE"), ("briefings", "empty_reason", "VARCHAR"),
-                 ("users", "notify_time", "VARCHAR NOT NULL DEFAULT '08:00'"), ("briefings", "pool_size", "INTEGER")]
+                 ("users", "notify_time", "VARCHAR NOT NULL DEFAULT '08:00'"), ("briefings", "pool_size", "INTEGER"),
+                 ("feedback", "weight_delta", "INTEGER NOT NULL DEFAULT 0")]
 
 # 이미 만든 briefings 표를 카드 0건 행을 담을 수 있게 바꾼다 (2026-09-14). 데이터는 지우지 않고, 여러 번 돌려도 같다
 # (user_id, date, item_id) 복합 기본키 → id 기본키 + 같은 조합 유일(NULL도 같은 값으로 봄)

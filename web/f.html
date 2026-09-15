@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>toolscout 피드백</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <main class="center">
+    <div class="panel">
+      <h1>toolscout</h1>
+      <p id="status">기록하는 중이에요</p>
+      <div id="reasons" class="row" hidden></div>
+      <p class="msg" id="msg"></p>
+      <p class="small"><a href="/">오늘 브리핑 열기</a></p>
+    </div>
+  </main>
+  <script src="/static/app.js"></script>
+  <script>
+    const REASONS = ["번역 어색", "사실 틀림", "나랑 상관없음"];
+    const token = new URLSearchParams(location.search).get("t") || "";
+    (async () => {
+      const status = document.getElementById("status");
+      try {
+        const data = await TS.api("/api/feedback/link", { method: "POST", body: { token }, allow401: true });
+        status.textContent = data.status === "recorded" ? `기록됐어요. ${data.message}` : data.message;
+        if (data.note_token) {
+          const box = document.getElementById("reasons");
+          box.hidden = false;
+          box.innerHTML = REASONS.map((r) => `<button class="btn" data-reason="${r}">${r}</button>`).join("");
+          box.querySelectorAll("button").forEach((b) => {
+            b.onclick = async () => {
+              try {
+                const note = await TS.api("/api/feedback/link/note", { method: "POST", body: { token: data.note_token, reason: b.dataset.reason }, allow401: true });
+                TS.message(document.getElementById("msg"), note.message);
+                box.hidden = true;
+              } catch (e) { TS.message(document.getElementById("msg"), e.message, true); }
+            };
+          });
+        }
+      } catch (e) {
+        status.textContent = e.message;
+      }
+    })();
+  </script>
+</body>
+</html>

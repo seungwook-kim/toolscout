@@ -93,6 +93,13 @@ def _pick_pool(news: list[dict], tools: list[dict], weights: dict) -> tuple[list
     return news[:PICK_MAX_NEWS], tools[:PICK_MAX_TOOLS]
 
 
+def _rank_by_weight(picks: list[dict], weights: dict) -> list[dict]:
+    """모델이 고른 순서를 주제 가중치로 한 번 더 정렬한다 (피드백 루프, 부록 C "다음 날 큐레이터가 가중치를 읽어 정렬").
+    가중치가 같으면 모델 순서를 그대로 둔다 (안정 정렬)."""
+    ordered = sorted(picks, key=lambda item: -weights.get(item["topic"], 0))
+    return [item | {"rank": rank} for rank, item in enumerate(ordered, 1)]
+
+
 async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_call=None) -> dict:
     """사용자 한 명의 후보. 반환: {user_id, news, tools, empty, empty_reason, failed, failure_reason, excluded}."""
     if models.dev_mode() and not memory.get("is_test"):
@@ -128,8 +135,9 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
         return plan | {"failed": True, "failure_reason": stats.model_failed(label, exc)}
     if parsed is None:
         return plan | {"empty": True, "empty_reason": "후보 선정 응답 형식 실패"}
-    plan["news"] = [{**news[p.id - 1], "rank": r, "why": p.why} for r, p in enumerate(parsed.news, 1)]
-    plan["tools"] = [{**tools[p.id - 1], "rank": r, "why": p.why} for r, p in enumerate(parsed.tools, 1)]
+    plan["news"] = _rank_by_weight([{**news[p.id - 1], "why": p.why} for p in parsed.news], weights)
+    plan["tools"] = _rank_by_weight([{**tools[p.id - 1], "why": p.why} for p in parsed.tools], weights)
+    plan["weights"] = {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS}  # 트레이스에 가중치가 보이게
     if not plan["news"] and not plan["tools"]:
         plan |= {"empty": True, "empty_reason": parsed.empty_reason or "프로필과 이어지는 항목이 없다"}
     return plan
@@ -175,5 +183,6 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
         result = {"selected": selected, "plans": plans, "verify": verify, "stats": asdict(stats), "seed": seed,
                   "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id}
         span.update(output={"selected": len(selected), "plans": [(p["user_id"], len(p["news"]), len(p["tools"])) for p in plans],
+                            "weights": {p["user_id"]: p.get("weights", {}) for p in plans},
                             "verify": len(verify), "stats": asdict(stats) | {"failure_examples": len(stats.failure_examples)}})
     return result

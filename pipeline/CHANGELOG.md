@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-15 · 메일 카드에 피드백 버튼 서명 링크(뉴스 관심없음·이상함, 도구는 써봤음까지) · 웹앱 본체 4단계 W3 · check_feedback·check_deliver 통과
 - 2026-09-15 · run_daily user_ids(설정 화면 지금 만들기는 본인만)·pool_size 저장, deliver 알림 시각 필터, scheduler 알림 시각마다 발송 · 웹앱 2단계 알림 시간 설정 · check_scheduler·run_daily --fake·check_deliver 통과
 
 - 2026-09-15 · deliver.send_single(메일 한 통), MAIL_FAKE_DIR이면 폴더로 쓰는 검수용 발송기 · 로그인 링크 메일과 웹 검수 · check_auth 통과

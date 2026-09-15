@@ -1,5 +1,6 @@
 # web/ CHANGELOG
 
+- 2026-09-15 · f.html 추가, cards.js 버튼 동작(재클릭 취소·사유·메모) · 웹앱 본체 4단계 W3 · check_feedback 통과
 - 2026-09-15 · index.html 오늘 브리핑으로 교체, cards.js 추가 · 웹앱 본체 3단계 · check_briefings 통과
 
 - 2026-09-15 · settings.html 추가 · 웹앱 본체 2단계 프로필·설정 · check_settings 통과

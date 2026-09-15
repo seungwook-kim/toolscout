@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · web/check_feedback.py, feedback/check_appendix_c.py 추가 · 웹앱 본체 4단계 W3, 부록 C 검수 기준 · 14항목·6항목 통과 (F3-b 관련 카드는 없어서 기준 2는 도구 후보 정렬로 확인)
 - 2026-09-15 · web/check_briefings.py 추가, web/common second_client(두 번째 사용자, lifespan 없이) · 웹앱 3단계 · 11항목 통과
 
 - 2026-09-15 · web/check_settings.py 추가, check_scheduler 알림 시각마다 발송 · 웹앱 2단계 · check_settings 10항목·check_scheduler 통과
