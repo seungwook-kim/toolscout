@@ -189,6 +189,10 @@ toolscout/
 | Langfuse 트레이스 | `docs/img/langfuse_trace.png` |
 | Claude Code에서 `ask_briefing` 호출 | `docs/img/claude_code_mcp.png` |
 
+웹앱 카드 화면 (2026-09-15, 개발 모드, 개발자 본인 프로필 C 기준 실제 브리핑과 질문 1개). 폰 폭: `docs/img/web_today_phone.png`, 지난 브리핑: `docs/img/web_history_phone.png`
+
+![웹앱 카드 화면](docs/img/web_cards.png)
+
 ## 📄 라이선스와 문서
 
 - 라이선스: MIT

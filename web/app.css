@@ -47,7 +47,7 @@ ul.points { margin: 4px 0 0; padding-left: 18px; }
 .btn:disabled { opacity: .5; cursor: default; }
 .msg { font-size: 13px; color: var(--ok); min-height: 18px; }
 .msg.err { color: var(--bad); }
-.trace { position: absolute; top: 10px; right: 12px; font-size: 11px; }
+.trace { align-self: flex-end; font-size: 11px; margin: -6px 0 -4px; } /* 제목과 겹치지 않게 흐름 안에 둔다 */
 .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .field label { font-weight: 600; font-size: 14px; }
