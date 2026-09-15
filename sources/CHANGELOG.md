@@ -1,5 +1,7 @@
 # sources/ CHANGELOG
 
+- 2026-09-15 · collect: MCP 레지스트리 제한 시간 60초·실패 시 2번 더 시도·마지막 성공 결과 저장과 재사용("수집 실패, 전날 기준"), rss: 긱뉴스 항목 안 외부 링크를 source_url로·없으면 skip_fetch, common.http_client 제한 시간 인자 · 세션 7 결정 4·5, 레지스트리 ReadTimeout 2회·HTTP 500 1회 실측, 긱뉴스 RSS에는 외부 링크가 없음 확인 · check_fallbacks 7항목 통과
+
 - 2026-09-14 · README 할 일 갱신(레지스트리 ReadTimeout 관찰 추가, 저장소 공유 MCP는 persist가 앞 순위만 저장해 해결) · 첫 실제 하루 실행 결과 반영 · 코드 변경 없음
 
 - 2026-09-14 · MCP 별 수 상위 신규 20·버전 업 10, github_stars.py(items에 별 수 24시간 캐시) 추가 · 수집량 결정(MCP 상위 30건, 첫날만 전량 조회) · run_today 통과, 161건(중복 제거 후 161, 선별 호출 9회), 2회차 별 수 캐시 1,821건·새 조회 17건

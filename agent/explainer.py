@@ -20,6 +20,7 @@ from agent.structured import Stats
 
 ROLE = "explainer"
 SUMMARY_CHARS = 500
+SUMMARY_ONLY_CHARS = 1500  # 원문 링크가 없어 요약만 쓰는 항목(예: 긱뉴스)은 요약을 더 길게 넘긴다
 TOOL_TYPES = ("mcp", "skill")
 GLOSSARY = Path(__file__).with_name("glossary.md").read_text(encoding="utf-8")
 
@@ -58,7 +59,7 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
         payload = {
             "profile": memory["profile"], "why_this_card": item["why"],
             "item": {"type": item["type"], "title": item["title"], "url": item["url"], "source": item["source"],
-                     "summary": item.get("summary", "")[:SUMMARY_CHARS]},
+                     "summary": item.get("summary", "")[:SUMMARY_ONLY_CHARS if item.get("skip_fetch") else SUMMARY_CHARS]},
             "article": source.get("text") if checked else None,
             "article_status": "ok" if checked else f"못 읽음 ({source.get('reason') or source.get('status')})",
         }
