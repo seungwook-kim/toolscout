@@ -39,18 +39,22 @@
       const examples = answer.examples ? `<div class="small muted">이렇게 물어볼 수 있어요: ${answer.examples.map(TS.esc).join(" / ")}</div>` : "";
       $("log").insertAdjacentHTML("beforeend", `<div class="q">${TS.esc(question)}</div>
         <div class="a">${TS.esc(answer.answer)}${sources ? `<div class="small">확인한 곳: ${sources}</div>` : ""}${retry}${examples}</div>`);
-      const button = $("log").querySelector(".retry:last-of-type");
-      if (button && answer.gate === "out") button.onclick = () => ask(question, true);
+      const button = $("log").lastElementChild.querySelector(".retry");
+      if (button) button.onclick = () => { button.disabled = true; ask(question, true); };
     }
 
     async function ask(question, forceUnclear = false) {
-      $("ask-meta").textContent = "답을 찾는 중이에요";
+      const submit = $("ask-form").querySelector("button");
+      submit.disabled = true;
+      $("ask-meta").textContent = "답을 찾는 중이에요. 원문을 다시 읽으면 1~2분 걸릴 수 있어요";
       try {
         const data = await TS.api("/api/ask", { method: "POST", body: { question, force_unclear: forceUnclear } });
         addTurn(question, data);
         $("ask-meta").textContent = `오늘 남은 질문 ${data.remaining}회`;
       } catch (e) {
         $("ask-meta").textContent = e.message;
+      } finally {
+        submit.disabled = false;
       }
     }
 

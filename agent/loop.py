@@ -34,8 +34,11 @@ _notice = {"shown": False}
 async def run(role: str, system_prompt: str, user_input: str, allowed_tools: list[str], max_steps: int = 5, *,
               mcp_url: str = DEFAULT_MCP_URL, briefing_user: int | None = None,
               on_event: Callable[[Event], None] | None = None,
-              model_call: Callable[..., AIMessage] = models.call) -> dict:
-    """루프를 한 번 돌린다. 반환: {status, output, steps, trace_id, tool_calls, usage, raw}. raw는 마지막 모델 답 원문."""
+              model_call: Callable[..., AIMessage] = models.call, max_tool_calls: int | None = None) -> dict:
+    """루프를 한 번 돌린다. 반환: {status, output, steps, trace_id, tool_calls, usage, raw}. raw는 마지막 모델 답 원문.
+
+    max_tool_calls를 넘는 도구 요청은 실행하지 않고 거부 결과를 돌려준다 (질문 답변은 도구 최대 3회, 부록 E).
+    """
     if models.dev_mode() and not _notice["shown"]:
         log.warning(DEV_MODE_NOTICE)  # 프로세스당 한 번
         _notice["shown"] = True
@@ -62,9 +65,12 @@ async def run(role: str, system_prompt: str, user_input: str, allowed_tools: lis
                     root.update(output=result)
                     return result
                 for call in ai.tool_calls:
-                    tool_calls += 1
                     emit("tool_call", step=step, tool=call["name"], args=call["args"])
-                    outcome = await _call_tool(client, call, allowed_tools)
+                    if max_tool_calls is not None and tool_calls >= max_tool_calls:
+                        outcome = {"status": "rejected", "reason": f"도구 호출 한도 {max_tool_calls}회를 다 썼다. 지금까지 받은 결과로 답한다"}
+                    else:
+                        tool_calls += 1
+                        outcome = await _call_tool(client, call, allowed_tools)
                     emit("tool_result", step=step, tool=call["name"], status=outcome.get("status"))
                     messages.append(ToolMessage(json.dumps(outcome, ensure_ascii=False),
                                                 tool_call_id=call["id"], name=call["name"]))

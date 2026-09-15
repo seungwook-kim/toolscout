@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · web/check_ask.py 추가 · 부록 E 검수 기준(범위 밖 5개 out·호출 0·한도 그대로, 한도 초과, 1턴→2턴 설치 명령) · 가짜 모델 20항목 통과, --live-gate 로컬 gemma3 예시 5/5
 - 2026-09-15 · web/check_feedback.py, feedback/check_appendix_c.py 추가 · 웹앱 본체 4단계 W3, 부록 C 검수 기준 · 14항목·6항목 통과 (F3-b 관련 카드는 없어서 기준 2는 도구 후보 정렬로 확인)
 - 2026-09-15 · web/check_briefings.py 추가, web/common second_client(두 번째 사용자, lifespan 없이) · 웹앱 3단계 · 11항목 통과
 

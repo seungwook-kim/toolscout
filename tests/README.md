@@ -17,7 +17,7 @@
 - `feedback/check_appendix_c.py`: 부록 C 기준 3개(관심없음 3회 → 다음 날 순위·트레이스 -3, 써봤음 → 같은 주제 도구 앞, 만료 링크 기록 0)
 - `mcp/list_tools.py`: 실제 HTTP로 도구 6개·키 검문·거부 규칙 → `mcp/list_tools_result.json`
 - `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)
-- `web/`: check_auth(매직링크), check_settings(프로필·기억 지우기·계정 삭제), check_briefings(본인 카드·검색), check_feedback(버튼 3종·재클릭 취소·-5·남의 항목·메일 링크 1회용·만료). 앱 프로세스 안, 메일은 폴더
+- `web/`: check_auth(매직링크), check_settings(프로필·기억·계정), check_briefings(본인 카드·검색), check_feedback(버튼 3종·취소·링크), check_ask(게이트 out·한도·맥락·도구 3회, `--live-gate`는 실제 게이트). 앱 프로세스 안, 메일은 폴더
 - `agent/run_loop.py`: 가짜 모델로 루프 동작 9항목 + 현재 모델표 해설가로 실제 "안녕"·도구 1개(통과 조건)
 - `agent/run_curator.py`: 오늘 수집 + 가짜 프로필 2개로 큐레이터 실행 → `agent/curator_report.json`
 - `agent/run_explainer.py`: `--fake`는 가짜 모델로 카드·반려·재시도·원문 확인 필요 8항목, 없으면 실제 카드 + for_me 3쌍 → `agent/explainer_report.json`
