@@ -4,8 +4,9 @@
 
 ## 파일
 - `계획안.md`: 전체 설계의 유일한 기준 (v3.2). 작업 규칙과 충돌하면 이 문서가 이긴다. 폴더 구조는 부록 F
+- `design-reference.html`: 웹앱 디자인의 유일한 기준(토큰·마크업 구조). `web/app.css` 앞부분이 이 파일 style 그대로
 - `local-model.md`: 개발용 로컬 모델(Ollama) VRAM·도구 호출·한글 실측표와 선택 근거. 모델 배정 자체는 루트 `models.py`
-- `img/`: 루트 README 스크린샷. `web_cards.png`(PC 오늘 브리핑), `web_today_phone.png`·`web_history_phone.png`(폰 412폭)
+- `img/`: 스크린샷. `today-desktop.png`·`today-mobile.png`(디자인 기준 적용), `pwa-standalone.png`, 예전 `web_cards.png` 등
 
 ## 들어오고 나가는 데이터
 - 들어옴: 설계 변경 결정

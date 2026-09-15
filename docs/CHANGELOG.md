@@ -1,5 +1,7 @@
 # docs/ CHANGELOG
 
+- 2026-09-15 · design-reference.html(웹앱 디자인 기준) 추가, img에 today-desktop·today-mobile·pwa-standalone · 사용자 디자인 지시 · check_readme 통과
+
 - 2026-09-15 · 계획안 9.3 카드 JSON에 related(월요일 관련 카드) · W4-d F3-b 구현과 규격 일치 · check_readme 통과
 
 - 2026-09-15 · 계획안 5장 합치기 행: 피드백으로 바뀐 만큼 되돌려 직군 프리셋(설정에서 고친 값) 기준으로 · W4-c 구현과 문구 일치 · check_readme 통과
