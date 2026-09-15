@@ -46,7 +46,7 @@ def _item_row(item: dict, card: dict, today: date) -> dict:
 
 
 def save_user(user_id: int, today: date, cards: list[dict], items_by_url: dict[str, dict], *,
-              trace_id: str | None = None, empty_reason: str | None = None) -> dict:
+              trace_id: str | None = None, empty_reason: str | None = None, pool_size: int | None = None) -> dict:
     """한 사용자의 오늘 카드를 한 트랜잭션으로 저장한다. 반환: {status, saved, duplicates}.
 
     cards가 비었으면 empty_reason·trace_id로 빈 행 하나를 남긴다 (status "empty").
@@ -67,7 +67,8 @@ def save_user(user_id: int, today: date, cards: list[dict], items_by_url: dict[s
         connection.execute(delete(db.Briefing).where(db.Briefing.user_id == user_id, db.Briefing.date == today))
         if not cards:
             connection.execute(insert(db.Briefing).values(user_id=user_id, date=today, item_id=None, rank=0, card_json=None,
-                                                          empty_reason=empty_reason, trace_id=trace_id, sent_at=None))
+                                                          empty_reason=empty_reason, trace_id=trace_id, sent_at=None,
+                                                          pool_size=pool_size))
             return {"status": "empty", "saved": 0, "duplicates": []}
 
         saved, duplicates, used = 0, [], set()
@@ -85,6 +86,7 @@ def save_user(user_id: int, today: date, cards: list[dict], items_by_url: dict[s
             saved += 1
             connection.execute(insert(db.Briefing).values(
                 user_id=user_id, date=today, item_id=item_id, rank=saved, card_json=card | {"item_id": item_id, "rank": saved},
+                pool_size=pool_size,
                 trace_id=card["trace_id"], sent_at=None))
             connection.execute(insert(db.Seen).values(user_id=user_id, item_id=item_id, shown_at=db.utcnow())
                                .on_conflict_do_nothing(index_elements=["user_id", "item_id"]))

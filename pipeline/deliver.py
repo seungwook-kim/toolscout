@@ -31,16 +31,69 @@ log = logging.getLogger("toolscout.deliver")
 SMTP_HOST, SMTP_PORT, SMTP_TIMEOUT = "smtp.gmail.com", 465, 30
 
 
+class MailError(Exception):
+    pass
+
+
+class DirMailer:
+    """검수용. MAIL_FAKE_DIR 환경변수가 있으면 SMTP 대신 그 폴더에 메일을 JSON 파일로 쓴다 (실제로 보내지 않음)."""
+
+    def __init__(self, host=None, port=None, timeout=None):
+        self.folder = Path(os.environ["MAIL_FAKE_DIR"])
+
+    def __enter__(self):
+        self.folder.mkdir(parents=True, exist_ok=True)
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def login(self, user, password):
+        return None
+
+    def send_message(self, message: EmailMessage):
+        body = {"to": message["To"], "subject": message["Subject"],
+                "text": message.get_body(("plain",)).get_content() if message.is_multipart() else message.get_content()}
+        name = f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%f')}.json"
+        (self.folder / name).write_text(json.dumps(body, ensure_ascii=False), encoding="utf-8")
+
+
+def default_smtp_factory():
+    return DirMailer if os.environ.get("MAIL_FAKE_DIR") else smtplib.SMTP_SSL
+
+
+def send_single(recipients: list[str], subject: str, text: str, html: str | None = None, smtp_factory=None) -> None:
+    """메일 한 통 (로그인 링크 등). 실패하면 MailError. 설정 값은 오류 문구에 넣지 않는다."""
+    sender, password = os.environ.get("GMAIL_USER", "").strip(), os.environ.get("GMAIL_APP_PASSWORD", "").strip()
+    factory = smtp_factory or default_smtp_factory()
+    if factory is not DirMailer and not (sender and password):
+        raise MailError("GMAIL_USER 또는 GMAIL_APP_PASSWORD 비어있음")
+    email = EmailMessage()
+    email["From"] = f"toolscout <{sender or 'toolscout@example.test'}>"
+    email["To"] = ", ".join(recipients)
+    email["Subject"] = subject
+    email.set_content(text)
+    if html:
+        email.add_alternative(html, subtype="html")
+    try:
+        with factory(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT) as smtp:
+            smtp.login(sender, password)
+            smtp.send_message(email)
+    except (smtplib.SMTPException, OSError) as exc:
+        raise MailError(f"{type(exc).__name__}: {str(exc)[:160]}") from exc
+
+
 def admin_emails() -> list[str]:
     return [e.strip() for e in os.environ.get("ADMIN_EMAILS", "").split(",") if e.strip()]
 
 
-def outbox(day: date) -> list[dict]:
+def outbox(day: date, notify_until: str | None = None) -> list[dict]:
     """반환: [{user_id, to, role, subject, html, text, cards, empty_reason, trace_ids}] (user_id 순)."""
     query = (select(db.Briefing.user_id, db.Briefing.card_json, db.Briefing.empty_reason, db.Briefing.trace_id,
                     db.User.email, db.User.role)
              .join(db.User, db.User.id == db.Briefing.user_id)
              .where(db.Briefing.date == day, db.Briefing.sent_at.is_(None))
+             .where(db.User.notify_time <= notify_until if notify_until else True)
              .order_by(db.Briefing.user_id, db.Briefing.rank))
     if models.dev_mode():
         query = query.where(db.User.is_test == True)  # noqa: E712
@@ -60,7 +113,10 @@ def outbox(day: date) -> list[dict]:
         if not entry["to"]:
             log.warning("사용자 %s 이메일 없음, 발송 대상에서 뺌", user_id)
             continue
-        mail = briefing_mail.render(day, entry["role"], entry["cards"], entry["empty_reason"])
+        from routes.feedback import feedback_link  # 메일 버튼은 웹앱 /f 서명 링크
+
+        links = lambda card, action, uid=user_id: feedback_link(uid, card["item_id"], action)  # noqa: E731
+        mail = briefing_mail.render(day, entry["role"], entry["cards"], entry["empty_reason"], links)
         messages.append({"user_id": user_id, "to": entry["to"], "role": entry["role"], **mail,
                          "cards": len(entry["cards"]), "empty_reason": entry["empty_reason"],
                          "trace_ids": sorted(entry["trace_ids"])})
@@ -88,16 +144,20 @@ def build_email(message: dict, sender: str, recipients: list[str], dev: bool) ->
     return email
 
 
-def send_day(day: date, *, console: bool = False, preview_dir: Path | None = None, smtp_factory=smtplib.SMTP_SSL) -> dict:
+def send_day(day: date, notify_until: str | None = None, *, console: bool = False, preview_dir: Path | None = None,
+             smtp_factory=None) -> dict:
     """그날 미발송 메일을 보낸다. 반환: {date, dev_mode, mode, sent[], failed[], rows_marked}.
 
     mode: smtp(실제 발송) / console(보내지 않고 콘솔·DB만) / config_missing(메일 설정 없음, 기록 안 함)
     """
     dev = models.dev_mode()
     admins = admin_emails()
+    smtp_factory = smtp_factory or default_smtp_factory()
     sender, password = os.environ.get("GMAIL_USER", "").strip(), os.environ.get("GMAIL_APP_PASSWORD", "").strip()
+    if smtp_factory is DirMailer:
+        sender, password = sender or "toolscout@example.test", password or "fake"
     with tracing.span("W1:send", kind="chain", input={"date": str(day), "dev_mode": dev}) as span:
-        messages = outbox(day)
+        messages = outbox(day, notify_until)
         for message in messages:
             if preview_dir:
                 preview_dir.mkdir(parents=True, exist_ok=True)

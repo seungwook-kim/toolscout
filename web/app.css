@@ -1,0 +1,72 @@
+/* toolscout 웹앱 공통 스타일. 프레임워크 없음. 폰 폭은 카드 한 줄, PC(900px 이상)는 두 칸 */
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --text: #16181d; --muted: #5f6673; --line: #e3e6eb;
+  --accent: #2f5bea; --accent-soft: #e9eefd; --warn: #b45309; --ok: #15803d; --bad: #b91c1c;
+  --radius: 12px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text); line-height: 1.55;
+  font-family: -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; font-size: 15px;
+}
+a { color: var(--accent); }
+button, input, select, textarea { font: inherit; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 16px; }
+header.top { background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+header.top .wrap { display: flex; align-items: center; gap: 12px; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
+.brand { font-weight: 700; text-decoration: none; color: var(--text); margin-right: auto; }
+nav a { text-decoration: none; color: var(--muted); padding: 6px 8px; border-radius: 8px; }
+nav a.on { color: var(--accent); background: var(--accent-soft); }
+.dev { font-size: 12px; color: var(--warn); border: 1px solid #f3d3a6; background: #fff7ed; border-radius: 999px; padding: 2px 8px; }
+h1 { font-size: 20px; margin: 8px 0 4px; }
+h2 { font-size: 17px; margin: 20px 0 10px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.cards { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 900px) { .cards { grid-template-columns: 1fr 1fr; } }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+.card h3 { margin: 0; font-size: 16px; line-height: 1.4; }
+.card h3 a { color: var(--text); text-decoration: none; }
+.card h3 a:hover { text-decoration: underline; }
+.badge { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); margin-right: 6px; vertical-align: 2px; }
+.notice { font-size: 12px; color: var(--warn); }
+.forme { background: #f3f5f8; border-radius: 8px; padding: 8px 10px; }
+.forme b { margin-right: 6px; }
+details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+ul.points { margin: 4px 0 0; padding-left: 18px; }
+.probe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; font-size: 12px; }
+.probe span { background: #f3f5f8; border-radius: 6px; padding: 4px; text-align: center; color: var(--muted); }
+.install { display: flex; gap: 6px; align-items: center; }
+.install code { flex: 1; background: #0f172a; color: #e2e8f0; border-radius: 6px; padding: 6px 8px; font-size: 12px; overflow-x: auto; white-space: nowrap; }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+.btn { border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { border-color: #c7ccd4; }
+.btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.danger { color: var(--bad); }
+.btn:disabled { opacity: .5; cursor: default; }
+.msg { font-size: 13px; color: var(--ok); min-height: 18px; }
+.msg.err { color: var(--bad); }
+.trace { align-self: flex-end; font-size: 11px; margin: -6px 0 -4px; } /* 제목과 겹치지 않게 흐름 안에 둔다 */
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { font-weight: 600; font-size: 14px; }
+input[type=text], input[type=email], select, textarea { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #fff; width: 100%; }
+textarea { min-height: 70px; resize: vertical; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.roles label { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.roles input { display: none; }
+.roles input:checked + span { color: var(--accent); font-weight: 600; }
+.topics { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
+@media (min-width: 700px) { .topics { grid-template-columns: 1fr 1fr; } }
+.topics .t { display: flex; align-items: center; gap: 8px; }
+.topics .t span.name { flex: 1; font-size: 14px; }
+.topics .t output { width: 28px; text-align: right; font-variant-numeric: tabular-nums; }
+.ask .log { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.ask .q { align-self: flex-end; background: var(--accent-soft); border-radius: 12px; padding: 8px 12px; max-width: 85%; }
+.ask .a { background: #f3f5f8; border-radius: 12px; padding: 8px 12px; max-width: 95%; white-space: pre-wrap; }
+.ask form { display: flex; gap: 8px; }
+.ask input { flex: 1; }
+.center { max-width: 420px; margin: 48px auto; }
+.dates { display: flex; gap: 6px; flex-wrap: wrap; }
+.empty { background: var(--card); border: 1px dashed var(--line); border-radius: var(--radius); padding: 24px; text-align: center; color: var(--muted); }

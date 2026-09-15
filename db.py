@@ -1,4 +1,4 @@
-"""SQLModel 데이터 표 9개 (계획안 9.5).
+"""SQLModel 데이터 표 10개 (계획안 9.5, used_tokens는 2026-09-15 추가).
 
 DB는 Supabase(Postgres) 하나로 간다. 연결 문자열은 .env의 DATABASE_URL에만 둔다.
 드라이버는 psycopg 3. Supabase에서 복사한 postgresql:// 문자열을 그대로 넣으면 여기서 변환한다.
@@ -49,6 +49,7 @@ class User(SQLModel, table=True):
     is_admin: bool = False
     is_test: bool = Field(default=False, index=True)  # 개발 모드 가짜 프로필. 무료 모델에는 이 사용자만 보낸다
     mcp_key_hash: str | None = Field(default=None, unique=True)
+    notify_time: str = "08:00"  # 메일 받을 시각 (08:00·09:00·12:00·18:00)
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -133,6 +134,7 @@ class Briefing(SQLModel, table=True):
     rank: int
     card_json: dict[str, Any] | None = Field(default=None, sa_column=_jsonb(nullable=True))
     empty_reason: str | None = None
+    pool_size: int | None = None  # 그날 큐레이터 입력 건수 ("N건 중 M건"의 N)
     # trace_id 없는 카드는 만들지 않는다 (작업 규칙 10). 빈 행도 그날 실행의 trace_id를 남긴다
     trace_id: str = Field(sa_column=Column(String, nullable=False))
     sent_at: datetime | None = None
@@ -147,6 +149,7 @@ class Feedback(SQLModel, table=True):
     action: str  # 관심없음 / 써봤음 / 이상함
     reason: str | None = None
     memo: str | None = None
+    weight_delta: int = 0  # 이 피드백으로 실제로 바뀐 주제 가중치 (-5~+5 끝에 막히면 0). 같은 버튼 재클릭 취소 때 되돌린다
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -169,7 +172,17 @@ class Question(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow)
 
 
-TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions"]
+class UsedToken(SQLModel, table=True):
+    """쓴 1회용 토큰(로그인 링크·메일 피드백 링크). 원문 대신 해시만 둔다. 만료가 지나면 지워도 된다 (2026-09-15 추가)."""
+    __tablename__ = "used_tokens"
+
+    token_hash: str = Field(primary_key=True)
+    purpose: str
+    used_at: datetime = Field(default_factory=utcnow)
+    expires_at: datetime
+
+
+TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions", "used_tokens"]
 
 
 def database_url() -> URL:
@@ -210,7 +223,9 @@ def get_engine(url: URL | None = None) -> Engine:
 
 
 # 표를 만든 뒤에 추가한 칸. create_all은 이미 있는 표에 칸을 더하지 않으므로 없을 때만 추가한다
-ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE"), ("briefings", "empty_reason", "VARCHAR")]
+ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE"), ("briefings", "empty_reason", "VARCHAR"),
+                 ("users", "notify_time", "VARCHAR NOT NULL DEFAULT '08:00'"), ("briefings", "pool_size", "INTEGER"),
+                 ("feedback", "weight_delta", "INTEGER NOT NULL DEFAULT 0")]
 
 # 이미 만든 briefings 표를 카드 0건 행을 담을 수 있게 바꾼다 (2026-09-14). 데이터는 지우지 않고, 여러 번 돌려도 같다
 # (user_id, date, item_id) 복합 기본키 → id 기본키 + 같은 조합 유일(NULL도 같은 값으로 봄)

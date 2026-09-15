@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>toolscout 지난 브리핑</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="top" id="top"></header>
+  <main class="wrap">
+    <h1>지난 브리핑</h1>
+    <form class="row" id="search-form">
+      <input id="q" type="text" maxlength="60" placeholder="도구·소식 이름으로 찾기 (예: 노션, n8n)" autocomplete="off" style="flex: 1">
+      <button class="btn primary" type="submit">찾기</button>
+    </form>
+    <div id="results"></div>
+
+    <h2>날짜</h2>
+    <div class="dates" id="dates"><span class="muted small">불러오는 중이에요</span></div>
+
+    <section id="day-head">
+      <h2 id="day-title"></h2>
+      <div class="muted small" id="day-summary"></div>
+    </section>
+    <section id="briefing"></section>
+  </main>
+  <script src="/static/app.js"></script>
+  <script src="/static/cards.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const label = (value) => {
+      const d = new Date(value + "T00:00:00");
+      return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+    };
+
+    async function openDay(day) {
+      document.querySelectorAll("#dates button").forEach((b) => b.classList.toggle("on", b.dataset.date === day));
+      $("day-title").textContent = `${label(day)} 브리핑`;
+      $("briefing").innerHTML = '<div class="empty">불러오는 중이에요</div>';
+      try {
+        const briefing = await TS.api(`/api/briefings?date=${encodeURIComponent(day)}`);
+        const counts = briefing.pool_size ? `${briefing.pool_size}건 중 ${briefing.count}건` : `${briefing.count}건`;
+        $("day-summary").textContent = `${counts} · 기준: ${briefing.profile_line}`;
+        Cards.mount($("briefing"), briefing, "이날");
+        history.replaceState(null, "", `#${day}`);
+      } catch (e) {
+        $("briefing").innerHTML = `<div class="empty">${TS.esc(e.message)}</div>`;
+      }
+    }
+
+    async function search(q) {
+      try {
+        const data = await TS.api(`/api/search?q=${encodeURIComponent(q)}`);
+        if (!data.results.length) {
+          $("results").innerHTML = '<div class="panel muted small">내 지난 브리핑에서 찾지 못했어요</div>';
+          return;
+        }
+        $("results").innerHTML = `<div class="panel"><div class="small muted">${data.results.length}건</div><ul class="points">${data.results.map((r) => {
+          const url = TS.safeUrl(r.url);
+          const title = url ? `<a href="${TS.esc(url)}" target="_blank" rel="noopener">${TS.esc(r.title)}</a>` : TS.esc(r.title);
+          return `<li>${title} <button class="btn small" type="button" data-open="${TS.esc(r.date)}">${label(r.date)} 브리핑 보기</button></li>`;
+        }).join("")}</ul></div>`;
+        $("results").querySelectorAll("button[data-open]").forEach((b) => { b.onclick = () => openDay(b.dataset.open); });
+      } catch (e) {
+        $("results").innerHTML = `<div class="panel small msg err">${TS.esc(e.message)}</div>`;
+      }
+    }
+
+    async function load() {
+      await TS.header("/history");
+      const data = await TS.api("/api/briefings/dates");
+      if (!data.dates.length) {
+        $("dates").innerHTML = '<span class="muted small">아직 지난 브리핑이 없어요</span>';
+        return;
+      }
+      $("dates").innerHTML = data.dates.map((d) =>
+        `<button class="btn" type="button" data-date="${TS.esc(d.date)}">${label(d.date)} <span class="small muted">${d.cards}건</span></button>`).join("");
+      $("dates").querySelectorAll("button").forEach((b) => { b.onclick = () => openDay(b.dataset.date); });
+      const wanted = location.hash.slice(1);
+      openDay(data.dates.some((d) => d.date === wanted) ? wanted : data.dates[0].date);
+    }
+
+    $("search-form").onsubmit = (event) => {
+      event.preventDefault();
+      const q = $("q").value.trim();
+      if (q) search(q);
+    };
+
+    load();
+  </script>
+</body>
+</html>

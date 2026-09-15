@@ -3,13 +3,14 @@
 에이전트 3개와 공통 판단 루프. 상태: 검증관 빼고 구현 (계획안 5장, 9.3).
 
 ## 파일
-- `loop.py`: `run(role, system_prompt, user_input, allowed_tools, max_steps)`. 모델 → 도구 요청 → MCP 실행 → 재호출. 토큰 합계·원문 반환
+- `loop.py`: `run(role, system_prompt, user_input, allowed_tools, max_steps, max_tool_calls)`. 모델 → 도구 요청 → MCP 실행 → 재호출. 상한 넘는 도구 요청은 거부 결과
 - `tracing.py`: Langfuse 스팬 래퍼. 키 없음·인증 실패면 로컬 JSONL 로그로 대체, trace_id는 항상 발급, `trace_url()`
 - `structured.py`: JSON 규격 응답 받기. 온도 0, pydantic 검사, 형식 실패면 1회 재시도, 실패 예시(제공자·모델 포함)와 모델 장애 기록
-- `curator.py`: 큐레이터. 20건 무작위 묶음 선별 → 사용자별 뉴스 5·도구 3(본 항목·가중치 -5 제외, 비움 이유) → 검증 요청 5. 모델 장애는 묶음·사용자 단위로 건너뜀
-- `explainer.py`: 해설가. 항목마다 fetch_article 1회 + 모델 1회로 초안 카드. 관련도(relevance) 3 미만·프로필과 안 이어지면 반려, 못 읽으면 "원문 확인 필요"
+- `curator.py`: 큐레이터. 20건 무작위 묶음 선별 → 사용자별 뉴스 5·도구 3(본 항목·가중치 -5 제외, 고른 뒤 가중치로 한 번 더 정렬) → 검증 요청 5
+- `explainer.py`: 해설가. 항목마다 fetch_article 1회 + 모델 1회로 초안 카드. 관련도 3 미만·프로필과 안 이어지면 반려, 못 읽으면 "원문 확인 필요"
+  `answer()`: 질문 답(후보·맥락 입력, fetch_article 3회, 600자, 후보 링크만 출처, 형식 틀리면 1회 재시도)
 - `glossary.md`: 해설가 용어집 30개와 표기 원칙. 프롬프트에 그대로 붙는다
-- `schemas.py`: 주제 10개(확정), 선별·후보·검증 요청·해설가 출력·카드 규격(pydantic). 검증 노드도 같은 규격을 쓴다
+- `schemas.py`: 주제 10개(확정), 선별·후보·검증 요청·해설가 출력·카드·질문 답 규격(pydantic). 검증 노드도 같은 규격을 쓴다
 - `verifier.py`: 검증관. E2B 4단계, SKILL.md 판독 (예정)
 
 ## 들어오고 나가는 데이터

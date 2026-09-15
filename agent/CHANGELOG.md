@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-15 · explainer.answer·AnswerOutput 추가, loop.run에 max_tool_calls · 질문창 W2(부록 E 도구 최대 3회·600자·확인한 곳) · check_ask 20항목, run_loop·run_explainer --fake 회귀 통과
+- 2026-09-15 · curator: 모델이 고른 후보를 주제 가중치로 안정 정렬, 결과·트레이스에 사용자별 weights · 부록 C "다음 날 큐레이터가 가중치를 읽어 정렬" · check_appendix_c 6항목·run_daily --fake 통과
 - 2026-09-15 · 해설가 출력에 relevance(1~5) 추가·3 미만 반려, 초안 카드(DraftCard)로 긴 요약·빈 값을 검증 노드에 넘김, 프롬프트에 두 문장·120자·빈 값 금지·관련도 기준, 원문은 source_url 우선·skip_fetch면 요약만, 알림 문구 합치기 · 세션 7 결정 1·5·6, format_failures.json 예시 4건 · run_explainer --fake 통과
 
 - 2026-09-15 · structured: JSON이 아닌 답은 형식 실패로 처리, curator: 후보 단계 입력 상한(뉴스 60·도구 20, 이유 60자·요약 120자, 가중치·출처·최신·별 수 순) · 실제 실행에서 후보 140건이 로컬 문맥 8192토큰을 채워 답이 잘렸고 빈 후보로 통과해 B·C 메일이 "오늘 볼 만한 게 없었음"으로 나감 · run_daily --fake 회귀 3항목 통과

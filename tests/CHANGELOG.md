@@ -1,5 +1,15 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · web/check_rules.py 추가 · 웹앱 본체 7단계 규칙(세션·남의 데이터 거부·반응형·긴 줄표·SSE와 공개 MCP 제외) · 11항목 통과, 세션 없이 열리는 API는 5개(상태·로그인 요청·로그아웃·메일 서명 링크 2)
+- 2026-09-15 · check_briefings에 지난 브리핑 화면 항목 추가 · 웹앱 본체 6단계 · 12항목 통과
+- 2026-09-15 · web/check_ask.py 추가 · 부록 E 검수 기준(범위 밖 5개 out·호출 0·한도 그대로, 한도 초과, 1턴→2턴 설치 명령) · 가짜 모델 20항목 통과, --live-gate 로컬 gemma3 예시 5/5
+- 2026-09-15 · web/check_feedback.py, feedback/check_appendix_c.py 추가 · 웹앱 본체 4단계 W3, 부록 C 검수 기준 · 14항목·6항목 통과 (F3-b 관련 카드는 없어서 기준 2는 도구 후보 정렬로 확인)
+- 2026-09-15 · web/check_briefings.py 추가, web/common second_client(두 번째 사용자, lifespan 없이) · 웹앱 3단계 · 11항목 통과
+
+- 2026-09-15 · web/check_settings.py 추가, check_scheduler 알림 시각마다 발송 · 웹앱 2단계 · check_settings 10항목·check_scheduler 통과
+
+- 2026-09-15 · web/common.py·web/check_auth.py 추가, check_main 루트 기대값(로그인으로 이동), check_tables 표 10개, check_env_example APP_BASE_URL · 웹앱 본체 1단계 로그인 · check_auth 15항목·check_main·check_tables·check_env_example 통과
+
 - 2026-09-15 · sources/check_fallbacks.py 추가 · 세션 7 결정 4·5 (MCP 재시도·전날 결과, 긱뉴스 외부 링크) · 7항목 통과
 
 - 2026-09-15 · check_models: 429 60초 뒤 같은 제공자 재시도·해설가 groq→gemma3 대체·도구 필요하면 gemma3 건너뜀·로컬 첫 호출 90초·이후 30초, check_scheduler: 06:55 예열 · 세션 7 결정 2·3 · check_models·check_scheduler 통과

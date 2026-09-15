@@ -4,16 +4,22 @@
 - 카드: 제목(원문 링크), 요약, 나한테는, 이 카드인 이유, 장점·단점(근거 링크), 설치 명령(도구), 원문 확인 필요, trace_id
 - 외부 텍스트(기사 제목, 모델 출력)는 모두 HTML 이스케이프한다. 링크는 http(s)만 쓴다
 - HTML과 같은 내용의 텍스트 본문을 함께 만든다
-피드백 버튼(서명 토큰 링크)은 W3 단계에서 붙인다.
+- 피드백 버튼(W3, 부록 C): links(card, 버튼)가 있으면 카드마다 서명 링크 버튼. 뉴스는 관심없음·이상함, 도구는 써봤음까지 셋
 """
 import html
 import re
 from datetime import date
+from typing import Callable
 
 TOOL_TYPES = ("mcp", "skill")
 SAFE_URL = re.compile(r"^https?://[^\s\"'<>]+$")
 NO_TOOLS = "오늘 새 도구 없음"
 EMPTY_TITLE = "오늘 볼 만한 게 없었음"
+Links = Callable[[dict, str], str]
+
+
+def actions_for(card: dict) -> list[str]:
+    return ["써봤음", "관심없음", "이상함"] if card.get("type") in TOOL_TYPES else ["관심없음", "이상함"]
 
 
 def _url(value: str | None) -> str | None:
@@ -39,7 +45,7 @@ def _points_html(label: str, points: list[dict]) -> str:
     return f'<p style="margin:8px 0 2px;font-weight:600">{label}</p><ul style="margin:0;padding-left:18px">{rows}</ul>'
 
 
-def _card_html(card: dict) -> str:
+def _card_html(card: dict, links: Links | None = None) -> str:
     link = _url(card.get("url"))
     title = f'<a href="{_e(link)}" style="color:#111;text-decoration:none">{_e(card.get("title"))}</a>' if link else _e(card.get("title"))
     parts = [f'<h3 style="margin:0 0 6px;font-size:16px">{title}</h3>']
@@ -52,11 +58,16 @@ def _card_html(card: dict) -> str:
     parts.append(_points_html("단점", card.get("cons") or []))
     if card.get("install_cmd") and card.get("type") in TOOL_TYPES:
         parts.append(f'<p style="margin:8px 0 0;font-size:13px">설치: <code>{_e(card["install_cmd"])}</code></p>')
+    if links and card.get("item_id"):
+        buttons = "".join(f'<a href="{_e(links(card, action))}" style="display:inline-block;margin:8px 6px 0 0;padding:4px 10px;'
+                          f'border:1px solid #d1d5db;border-radius:6px;color:#111;text-decoration:none;font-size:13px">{action}</a>'
+                          for action in actions_for(card))
+        parts.append(f"<div>{buttons}</div>")
     parts.append(f'<p style="margin:8px 0 0;color:#999;font-size:11px">trace_id {_e(card.get("trace_id"))}</p>')
     return f'<div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin:0 0 12px">{"".join(parts)}</div>'
 
 
-def _card_text(card: dict) -> str:
+def _card_text(card: dict, links: Links | None = None) -> str:
     lines = [f"■ {card.get('title', '')}", f"  {card.get('url', '')}"]
     if card.get("notice"):
         lines.append(f"  ({card['notice']})")
@@ -66,11 +77,13 @@ def _card_text(card: dict) -> str:
             lines.append(f"  {label}: {point.get('text', '')} ({point.get('evidence_url', '')})")
     if card.get("install_cmd") and card.get("type") in TOOL_TYPES:
         lines.append(f"  설치: {card['install_cmd']}")
+    if links and card.get("item_id"):
+        lines += [f"  [{action}] {links(card, action)}" for action in actions_for(card)]
     lines.append(f"  trace_id {card.get('trace_id', '')}")
     return "\n".join(lines)
 
 
-def render(day: date, role: str, cards: list[dict], empty_reason: str | None = None) -> dict:
+def render(day: date, role: str, cards: list[dict], empty_reason: str | None = None, links: Links | None = None) -> dict:
     """반환: {subject, html, text}. cards는 순위 순서의 card_json."""
     news = [c for c in cards if c.get("type") not in TOOL_TYPES]
     tools = [c for c in cards if c.get("type") in TOOL_TYPES]
@@ -80,11 +93,11 @@ def render(day: date, role: str, cards: list[dict], empty_reason: str | None = N
                      f'<p style="color:#555">{_e(empty_reason or "오늘 보여줄 항목이 없다")}</p>')
         body_text = f"{EMPTY_TITLE}\n{empty_reason or '오늘 보여줄 항목이 없다'}"
     else:
-        body_html = ('<h2 style="font-size:18px;margin:16px 0 8px">뉴스</h2>' + ("".join(map(_card_html, news)) or "<p>오늘 뉴스 카드 없음</p>")
+        body_html = ('<h2 style="font-size:18px;margin:16px 0 8px">뉴스</h2>' + ("".join(_card_html(c, links) for c in news) or "<p>오늘 뉴스 카드 없음</p>")
                      + '<h2 style="font-size:18px;margin:16px 0 8px">새 MCP·스킬</h2>'
-                     + ("".join(map(_card_html, tools)) or f'<p style="color:#555">{NO_TOOLS}</p>'))
-        body_text = ("[뉴스]\n" + ("\n\n".join(map(_card_text, news)) or "오늘 뉴스 카드 없음")
-                     + "\n\n[새 MCP·스킬]\n" + ("\n\n".join(map(_card_text, tools)) or NO_TOOLS))
+                     + ("".join(_card_html(c, links) for c in tools) or f'<p style="color:#555">{NO_TOOLS}</p>'))
+        body_text = ("[뉴스]\n" + ("\n\n".join(_card_text(c, links) for c in news) or "오늘 뉴스 카드 없음")
+                     + "\n\n[새 MCP·스킬]\n" + ("\n\n".join(_card_text(c, links) for c in tools) or NO_TOOLS))
     page = (f'<div style="font-family:-apple-system,\'Segoe UI\',\'Malgun Gothic\',sans-serif;max-width:640px;margin:0 auto;'
             f'color:#111;line-height:1.55"><p style="color:#555;margin:0 0 4px">toolscout 아침 브리핑</p>'
             f'<p style="color:#999;font-size:13px;margin:0 0 12px">{_e(head)}</p>{body_html}'

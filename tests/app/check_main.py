@@ -57,6 +57,7 @@ def main() -> int:
     proc = start(port)
     try:
         index = httpx.get(f"{base}/", timeout=5)
+        login_page = httpx.get(f"{base}/login", timeout=5)
         health = httpx.get(f"{base}/api/health", timeout=5)
         no_key = httpx.post(f"{base}/mcp/", json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"}, timeout=5)
         tools = asyncio.run(mcp_tools(base))
@@ -65,7 +66,8 @@ def main() -> int:
         proc.wait(timeout=10)
     checks = {
         "uvicorn_기동": health.status_code == 200,
-        "루트_준비중_페이지": index.status_code == 200 and "toolscout 준비 중" in index.text,
+        "루트는_로그인으로·로그인_화면": index.status_code == 303 and index.headers.get("location") == "/login"
+        and login_page.status_code == 200 and "로그인 링크 받기" in login_page.text,
         "api_health": health.json() == {"status": "ok", "service": "toolscout"},
         "mcp_mount_키없으면_401": no_key.status_code == 401,
         "mcp_mount_도구_6개": len(tools) == 6,

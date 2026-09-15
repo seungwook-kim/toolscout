@@ -122,3 +122,19 @@ class DraftCard(Card):
     summary_ko: str = Field(default="", max_length=MAX_DRAFT_SUMMARY)
     for_me: str = Field(default="", max_length=MAX_DRAFT_SUMMARY)
     relevance: int | None = Field(default=None, ge=1, le=5)
+
+
+MAX_ANSWER = 600  # 질문 답 (부록 E). 초안은 넉넉히 받고 문장 끝에서 자른다
+MAX_ANSWER_DRAFT = 1200
+
+
+class AnswerSource(BaseModel):
+    title: str = Field(default="", max_length=200)
+    url: str = Field(pattern=r"^https?://\S+$")
+
+
+class AnswerOutput(BaseModel):
+    """질문 답변. found가 true면 sources에 입력 후보의 링크가 한 개 이상 있어야 한다 (호출부가 후보 링크만 남긴다)."""
+    found: bool
+    answer: str = Field(min_length=1, max_length=MAX_ANSWER_DRAFT)
+    sources: list[AnswerSource] = Field(default_factory=list, max_length=5)

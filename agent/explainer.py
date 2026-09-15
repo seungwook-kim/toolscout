@@ -1,4 +1,4 @@
-"""해설가 (계획안 5장 해설가, 부록 B 4, 카드 규격 9.3). 사용자별 후보 항목마다 카드 JSON 하나.
+"""해설가 (계획안 5장 해설가, 부록 B 4, 카드 규격 9.3). 사용자별 후보 항목마다 카드 JSON 하나. 질문창 답변(부록 E)도 맡는다.
 
 - 항목마다 fetch_article(MCP)로 원문을 한 번 재조회한다. 항목에 외부 출처 링크(source_url)가 있으면 그 링크로 읽고,
   읽을 링크가 없다고 표시된 항목(skip_fetch, 예: 외부 링크 없는 긱뉴스)은 요약만 쓴다. 못 읽으면 "원문 확인 필요"
@@ -10,8 +10,10 @@
 - 모델 장애(제공자 전부 실패)면 그 카드만 건너뛰고 model_failed에 이유를 남긴다
 프롬프트의 길이·빈 값 규칙은 tests/pipeline/format_failures.json 예시 4건(요약 120자 초과 2, 요약·for_me null 2)을 보고 넣었다.
 """
+import json
 from contextlib import AsyncExitStack
 from dataclasses import asdict
+from functools import partial
 from pathlib import Path
 
 import models
@@ -132,3 +134,79 @@ async def run(plans: list[dict], memories: list[dict], mcp_url: str = loop.DEFAU
         span.update(output={"cards": [(u["user_id"], len(u["cards"]), len(u["rejected"])) for u in users], "stats": asdict(stats)
                             | {"failure_examples": len(stats.failure_examples)}})
     return result
+
+
+ANSWER_TOOL_CALLS = 3  # 질문 답변의 도구 호출 상한 (부록 E)
+ANSWER_MAX_STEPS = ANSWER_TOOL_CALLS + 2
+ANSWER_PROMPT = f"""너는 toolscout 해설가다. 사용자가 AI 브리핑 서비스 질문창에 한 질문에 한국어로 답한다.
+입력: question(질문), gate(게이트 판정), candidates(우리 소스에서 찾은 항목. 내 브리핑에 나왔으면 card에 요약·나한테는·설치 명령),
+previous_turns(같은 날 앞선 대화. 최근 3턴은 원문, 그 이전은 summary 한 줄), profile(직군·쓰는 도구).
+- candidates와 fetch_article로 읽은 원문에 있는 내용만 쓴다. 없는 도구·기능·설치 명령을 지어내지 않는다
+- 원문을 더 봐야 할 때만 fetch_article(url)을 부른다. candidates의 url만, 모두 합쳐 {ANSWER_TOOL_CALLS}회까지
+- "그거", "설치 명령"처럼 대상이 빠진 질문은 previous_turns에서 이야기한 항목을 대상으로 본다.
+  대상을 정할 수 없으면 found false, answer는 "어느 도구 말씀이세요?"로 시작한다
+- 답을 찾지 못하면 found false, answer에 "우리 소스에서 못 찾았어요"라고 쓴다
+- gate가 unclear면 범위 밖 질문일 수 있다. AI 소식·AI 도구와 관련 없으면 답하지 말고 found false,
+  answer에 이 질문창은 AI 소식과 AI 도구 질문만 받는다고 안내한다
+- answer는 공백 포함 {schemas.MAX_ANSWER}자 이내. 설치 명령은 원문이나 card에 있는 그대로 옮긴다
+- sources는 답에 쓴 항목의 title과 url. found가 true면 한 개 이상 반드시 쓰고, candidates에 있는 url만 쓴다
+출력은 JSON 객체 하나만 쓴다. 설명 문장이나 코드 블록을 붙이지 않는다. 형식:
+{{"found": true, "answer": "...", "sources": [{{"title": "...", "url": "https://..."}}]}}"""
+
+
+def _fit_answer(text: str) -> str:
+    """600자를 넘으면 600자 안의 마지막 문장 끝에서 자르고, 문장 끝이 없으면 글자 수로 자른다. 긴 줄표는 쉼표로."""
+    from pipeline.validate import fit_summary
+
+    text = text.replace(" \u2014 ", ", ").replace("\u2014", ", ").strip()
+    text, _ = fit_summary(text, schemas.MAX_ANSWER)
+    return text if len(text) <= schemas.MAX_ANSWER else text[:schemas.MAX_ANSWER - 1] + "…"
+
+
+def _answer_problem(result: dict, by_url: dict[str, dict]) -> tuple[dict | None, str | None]:
+    """루프 결과를 규격으로 읽는다. 반환: (답, 문제). 출처는 후보 링크만 남기고 제목은 후보 제목으로 바꾼다."""
+    if result["status"] != "ok":
+        return None, "도구만 부르고 답을 내지 않았다. 받은 결과로 바로 답한다"
+    output = result["output"]
+    if not isinstance(output, dict) or set(output) == {"text"}:
+        return None, "JSON 객체가 아니다"
+    try:
+        parsed = schemas.AnswerOutput.model_validate(output)
+    except ValueError as exc:
+        return None, structured._error_text(exc)
+    sources = [{"title": by_url[s.url]["title"], "url": s.url} for s in parsed.sources if s.url in by_url]
+    sources = list({s["url"]: s for s in sources}.values())
+    if parsed.found and not sources:
+        return None, "found가 true인데 sources에 candidates의 url이 없다"
+    return {"found": parsed.found, "answer": _fit_answer(parsed.answer), "sources": sources}, None
+
+
+async def answer(question: str, gate: str, candidates: list[dict], previous_turns: list[dict], profile: dict, *,
+                 user_id: int | None = None, mcp_url: str = loop.DEFAULT_MCP_URL, model_call=None) -> dict:
+    """질문 답변 (부록 E 2·4). 형식이 틀리면 이유를 알려 1회 다시 부른다. 도구 호출은 두 번 합쳐 3회까지.
+
+    반환: {status: ok|format_failed, found, answer, sources, calls, tool_calls, problem?}. 모델 장애는 ModelUnavailable로 올린다.
+    """
+    call = model_call or partial(models.call, temperature=0)
+    by_url = {c["url"]: c for c in candidates}
+    payload = json.dumps({"question": question, "gate": gate, "candidates": candidates, "previous_turns": previous_turns,
+                          "profile": profile}, ensure_ascii=False)
+    calls = tool_calls = 0
+    problem = None
+    with tracing.span("answer", kind="chain", input={"gate": gate, "candidates": list(by_url),
+                                                     "previous_turns": [t.get("turn_no") for t in previous_turns]}) as span:
+        for _ in (1, 2):
+            system = ANSWER_PROMPT if problem is None else f"{ANSWER_PROMPT}\n\n직전 출력이 규격에 맞지 않았다 ({problem}). 규격대로 다시 출력한다."
+            result = await loop.run(ROLE, system, payload, ["fetch_article"], ANSWER_MAX_STEPS, mcp_url=mcp_url,
+                                    briefing_user=user_id, model_call=call, max_tool_calls=ANSWER_TOOL_CALLS - tool_calls)
+            calls += result["steps"]
+            tool_calls += result["tool_calls"]
+            parsed, problem = _answer_problem(result, by_url)
+            if parsed:
+                outcome = {"status": "ok", **parsed, "calls": calls, "tool_calls": tool_calls}
+                break
+        else:
+            outcome = {"status": "format_failed", "found": False, "answer": "", "sources": [], "calls": calls,
+                       "tool_calls": tool_calls, "problem": problem}
+        span.update(output=outcome)
+    return outcome
