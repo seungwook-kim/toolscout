@@ -1,4 +1,4 @@
-"""큐레이터 검수 (계획안 5장 큐레이터, 부록 B 1~3). 오늘 실제 수집 데이터 + 가짜 프로필 2개(is_test).
+"""큐레이터 검수 (계획안 5장 큐레이터, 부록 B 1~3). 오늘 실제 수집 데이터 + 개발 프로필(is_test). A·B 두 브리핑을 비교한다.
 
 실행: uv run python -m tests.agent.run_curator
 결과: tests/agent/curator_report.json (제목·근거·숫자만)
@@ -63,7 +63,7 @@ def main() -> int:
     }
     checks = {
         "형식_재시도_후_실패_없음": stats["unrecovered"] == 0,
-        "is_test_사용자_2명": len(memories) == 2 and all(m["is_test"] for m in memories),
+        "is_test_사용자_2명_이상": len(memories) >= 2 and all(m["is_test"] for m in memories),
         "사용자별_뉴스5·도구3_이하": all(len(p["news"]) <= schemas.MAX_NEWS and len(p["tools"]) <= schemas.MAX_TOOLS for p in plans),
         "도구는_본_항목_제외": all(i["url"] not in set(m["seen_urls"]) for p, m in zip(plans, memories) for i in p["tools"]),
         "비움이면_이유_있음": all(p["empty_reason"] for p in plans if p["empty"]),

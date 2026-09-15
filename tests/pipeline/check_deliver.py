@@ -147,7 +147,7 @@ def send_checks(user_ids: list[int]) -> dict:
     return {
         "개발모드_받는사람은_ADMIN_EMAILS": all(m["to"] == "me@example.test, other-admin@example.test" for m in FakeSMTP.sent)
         and len(FakeSMTP.sent) == 2,
-        "개발모드_제목에_표시": first_mail.get("subject", "").startswith("[개발 모드 · 가짜 프로필 자바 백엔드 개발자]"),
+        "개발모드_제목에_표시": first_mail.get("subject", "").startswith("[개발 모드 · 프로필 자바 백엔드 개발자]"),
         "텍스트·HTML_둘다": first_mail.get("parts") == ["text/plain", "text/html"],
         "실패한_사용자만_미발송_남음": partial["mode"] == "smtp" and partial["sent"] == [user_ids[0]]
         and [f["user_id"] for f in partial["failed"]] == [user_ids[1]] and [m["user_id"] for m in remaining] == [user_ids[1]],
@@ -177,7 +177,7 @@ def api_checks() -> dict:
 
 
 def main() -> int:
-    user_ids = memory.test_user_ids()
+    user_ids = memory.test_user_ids()[:2]  # 프로필 A·B만 쓴다
     try:
         checks = {"개발_모드": models.dev_mode(), **render_checks(), **db_checks(user_ids), **send_checks(user_ids), **api_checks()}
     finally:

@@ -82,7 +82,7 @@ def build_email(message: dict, sender: str, recipients: list[str], dev: bool) ->
     email = EmailMessage()
     email["From"] = f"toolscout <{sender}>"
     email["To"] = ", ".join(recipients)
-    email["Subject"] = f"[개발 모드 · 가짜 프로필 {message['role']}] {message['subject']}" if dev else message["subject"]
+    email["Subject"] = f"[개발 모드 · 프로필 {message['role']}] {message['subject']}" if dev else message["subject"]
     email.set_content(message["text"])
     email.add_alternative(message["html"], subtype="html")
     return email
