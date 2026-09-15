@@ -9,6 +9,7 @@
 import argparse
 import json
 import logging
+import os
 import sys
 from collections import defaultdict
 from datetime import date, datetime, timezone
@@ -25,8 +26,14 @@ from pipeline.run_daily import today_kst
 log = logging.getLogger("toolscout.deliver")
 
 
+def sender() -> str:
+    """보내는 사람. n8n 2.x는 식에서 환경변수를 막으므로 앱이 발송함에 담아 준다 (값은 로그에 쓰지 않는다)."""
+    user = os.environ.get("GMAIL_USER", "").strip()
+    return f"toolscout <{user}>" if user else ""
+
+
 def outbox(day: date) -> list[dict]:
-    """반환: [{user_id, to, role, subject, html, text, cards, empty_reason, trace_ids}] (user_id 순)."""
+    """반환: [{user_id, from, to, role, subject, html, text, cards, empty_reason, trace_ids}] (user_id 순)."""
     query = (select(db.Briefing.user_id, db.Briefing.rank, db.Briefing.card_json, db.Briefing.empty_reason, db.Briefing.trace_id,
                     db.User.email, db.User.role, db.User.is_test)
              .join(db.User, db.User.id == db.Briefing.user_id)
@@ -51,7 +58,7 @@ def outbox(day: date) -> list[dict]:
             log.warning("사용자 %s 이메일 없음, 발송 대상에서 뺌", user_id)
             continue
         mail = briefing_mail.render(day, entry["role"], entry["cards"], entry["empty_reason"])
-        messages.append({"user_id": user_id, "to": entry["to"], "role": entry["role"], **mail,
+        messages.append({"user_id": user_id, "from": sender(), "to": entry["to"], "role": entry["role"], **mail,
                          "cards": len(entry["cards"]), "empty_reason": entry["empty_reason"],
                          "trace_ids": sorted(entry["trace_ids"])})
     return messages

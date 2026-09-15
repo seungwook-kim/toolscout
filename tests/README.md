@@ -3,12 +3,12 @@
 기능별 검수 스크립트. 실행은 루트에서 `uv run python -m tests.<폴더>.<파일>`.
 
 ## 파일
-- `docs/check_folder_docs.py`: 폴더 README 30줄·할 일 절·CHANGELOG 형식·긴 줄표
-- `docs/check_readme.py`: 루트 README 사양(절, 배지, mermaid, 이모지 규칙)
+- `docs/check_folder_docs.py`: 폴더 README 30줄·할 일·CHANGELOG 형식·긴 줄표 / `docs/check_readme.py`: 루트 README 사양·부록 F 트리
 - `env/check_env.py`: pip check, langgraph·langchain 미설치, 필수 import → `env/check_env.json`
 - `env/check_env_example.py`: `.env.example` 키 22개(DEV_MODE·OPENROUTER·GROQ 포함), `.env` git 무시
 - `env/check_config.py`: .env 로더 해석·깨진 줄 경고·값 비출력, 키는 설정됨/비어있음만
-- `env/check_docker.py`: 로컬 docker 없으면 GitHub Actions `ci` 결과(4단계)로 판정, compose·Dockerfile 정적 검사
+- `env/check_docker.py`: 로컬 docker 없으면 GitHub Actions `ci` 결과로 판정(CI는 n8n 워크플로우 가져오기도 함), compose·Dockerfile 정적 검사
+- `n8n/check_workflows.py`: W1 JSON 노드 종류·버전(n8n 2.38)·크론·시간대·연결·부르는 API·메일 필드·개발 모드 분기·비밀값 없음
 - `models/check_models.py`: 모델표, 제공자 순서 전환(429·503·529·연결·타임아웃·키 없음), 모델 장애, 옵션 전달, 호출 간격 + 개발 4역할 실제 호출
 - `models/check_local_models.py`: 로컬 Ollama 모델별 VRAM·도구 호출·한글 요약 3건·선별 20건 시간 → `models/local_models.json`
 - `models/check_groq.py`: Groq 목록 API에 모델표 모델이 있는지, 실제 도구 호출·JSON·한글 한 줄, 한도 헤더 → `models/groq_models.json`

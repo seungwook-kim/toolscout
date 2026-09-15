@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · n8n/check_workflows.py 추가, CI에 n8n 기동·워크플로우 가져오기 단계 · W1 워크플로우 검수(로컬 Node 20이라 n8n 2.38 실행 불가, CI 컨테이너로 가져오기) · check_workflows 13항목 통과
+
 - 2026-09-15 · pipeline/check_deliver.py 추가, daily_report.json 전량 실행 결과로 갱신 · 08:00 발송 검수 · check_deliver 19항목 통과, 전량 run_daily 실제 통과(4항목)
 
 - 2026-09-14 · pipeline/daily_report.json·format_failures.json 첫 기록, run_daily --fake에 수집 결과 꺼내기 검사 · 첫 실제 하루 실행 · run_daily 실제 통과(4항목), --fake 30항목 통과
