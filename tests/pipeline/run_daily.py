@@ -134,6 +134,26 @@ def unit_checks() -> dict:
     }
 
 
+async def regression_checks() -> dict:
+    """2026-09-15 실제 실행에서 나온 문제: 후보 단계 답이 문맥 한도에서 잘렸는데 빈 후보로 통과했다."""
+    from agent import curator, schemas as agent_schemas, structured
+
+    cut = lambda role, messages, tools=None: AIMessage('```json\n{"news": [{"id": 1, "why": "AI 개발 속도')
+    stats = structured.Stats()
+    parsed = await structured.ask_json("curator", curator.PICK_PROMPT, {"news": []}, agent_schemas.UserPicks, stats, model_call=cut)
+    news = [{"type": "news", "source": s, "topic": "industry" if n % 2 else "agent_framework", "published_at": f"2000-01-{n % 28 + 1:02d}",
+             "title": f"n{n}", "url": f"{FAKE_HOST}cap/{n}"} for n, s in enumerate(["aitimes", "openai", "hackernews"] * 25)]
+    tools = [{"type": "mcp", "source": "mcp_registry", "topic": "mcp_tools", "stars": n, "title": f"t{n}", "url": f"{FAKE_HOST}t/{n}"}
+             for n in range(25)]
+    pool_news, pool_tools = curator._pick_pool(news, tools, {"agent_framework": 3})
+    return {
+        "잘린_JSON은_형식실패(빈_후보로_통과_안함)": parsed is None and stats.format_failures == 2 and stats.unrecovered == 1,
+        "후보단계_상한_뉴스60·도구20": len(pool_news) == curator.PICK_MAX_NEWS and len(pool_tools) == curator.PICK_MAX_TOOLS,
+        "후보단계_가중치_높은_주제_먼저·별많은_도구_먼저": all(i["topic"] == "agent_framework" for i in pool_news[:30])
+        and pool_tools[0]["stars"] == 24,
+    }
+
+
 async def fake_run(mcp_url: str) -> dict:
     user_ids = memory.test_user_ids()
     backend, marketer = user_ids[0], user_ids[1]
@@ -159,7 +179,7 @@ async def fake_run(mcp_url: str) -> dict:
             {k: u.get(k) for k in ("user_id", "status", "cards", "rejected", "excluded", "retried")} for u in first["users"]]},
         "outage": {k: outage[k] for k in ("totals", "all_users_failed", "model_failures")},
         "dead": {k: dead[k] for k in ("totals", "all_users_failed")} | {"exit_code": run_daily.exit_code(dead)},
-        "checks": unit_checks() | {
+        "checks": unit_checks() | await regression_checks() | {
             "is_test_사용자_전부": sorted(users) == sorted(user_ids) and len(user_ids) >= 2,
             "영어_첫응답_재시도후_살아남음": all("ENGLISH 첫 응답만 영어" in u["titles"] for u in users.values()),
             "계속_영어면_제외_이유기록": all(any(e["title"] == "ALWAYS_ENGLISH 계속 영어" and "한글 비율" in " ".join(e["reasons"])

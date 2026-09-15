@@ -17,6 +17,8 @@ from agent.structured import Stats
 ROLE = "curator"
 BATCH = 20
 SUMMARY_CHARS = 200
+# 사용자별 후보 단계 입력 상한. 로컬 모델 문맥 8192토큰에서 후보 140건(약 7.7K토큰)을 넣자 답이 잘려 빈 후보가 됐다 (2026-09-15)
+PICK_MAX_NEWS, PICK_MAX_TOOLS, PICK_REASON_CHARS, PICK_SUMMARY_CHARS = 60, 20, 60, 120
 TOOL_TYPES = ("mcp", "skill")
 TOPIC_LINES = "\n".join(f"  - {key}: {label}" for key, label in schemas.TOPICS.items())
 JSON_ONLY = "출력은 JSON 객체 하나만 쓴다. 설명 문장이나 코드 블록을 붙이지 않는다."
@@ -81,25 +83,37 @@ async def select(items: list[dict], stats: Stats, rng: random.Random, model_call
     return selected
 
 
+def _pick_pool(news: list[dict], tools: list[dict], weights: dict) -> tuple[list[dict], list[dict]]:
+    """후보 단계에 넣을 항목. 상한을 넘으면 뉴스는 주제 가중치 > 공식·매체·커뮤니티 > 최신, 도구는 가중치 > 별 수 순으로 자른다."""
+    from pipeline.dedupe import SOURCE_TIER
+
+    news = sorted(news, key=lambda i: str(i.get("published_at") or ""), reverse=True)
+    news.sort(key=lambda i: (-weights.get(i["topic"], 0), SOURCE_TIER.get(i["source"], 9)))
+    tools = sorted(tools, key=lambda i: (-weights.get(i["topic"], 0), -(i.get("stars") or 0)))
+    return news[:PICK_MAX_NEWS], tools[:PICK_MAX_TOOLS]
+
+
 async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_call=None) -> dict:
     """사용자 한 명의 후보. 반환: {user_id, news, tools, empty, empty_reason, failed, failure_reason, excluded}."""
     if models.dev_mode() and not memory.get("is_test"):
         raise PermissionError("개발 모드에서는 is_test 사용자만 무료 모델에 보낸다 (작업 규칙 7)")
     seen, weights = set(memory.get("seen_urls", [])), memory.get("weights", {})
     fresh = [item for item in selected if item["url"] not in seen and weights.get(item["topic"], 0) > -5]
-    news = [item for item in fresh if item["type"] == "news"]
-    tools = [item for item in fresh if item["type"] in TOOL_TYPES]
+    news_all = [item for item in fresh if item["type"] == "news"]
+    tools_all = [item for item in fresh if item["type"] in TOOL_TYPES]
+    news, tools = _pick_pool(news_all, tools_all, weights)
     plan = {"user_id": memory["user_id"], "news": [], "tools": [], "empty": False, "empty_reason": None,
             "failed": False, "failure_reason": None,
             "excluded": {"seen": sum(item["url"] in seen for item in selected), "weight_minus5": len(selected) - len(fresh)
-                         - sum(item["url"] in seen for item in selected)}}
+                         - sum(item["url"] in seen for item in selected),
+                         "over_pick_cap": len(news_all) + len(tools_all) - len(news) - len(tools)}}
     if not news and not tools:
         return plan | {"empty": True, "empty_reason": "오늘 선별된 새 항목이 없거나 모두 이미 봤다"}
     payload = {"profile": memory["profile"], "weights": {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS},
-               "news": [{"id": n, "title": i["title"], "source": i["source"], "topic": schemas.TOPICS[i["topic"]],
-                         "reason": i["reason"]} for n, i in enumerate(news, 1)],
-               "tools": [{"id": n, "title": i["title"], "topic": schemas.TOPICS[i["topic"]], "summary": i.get("summary", "")[:SUMMARY_CHARS]}
-                         for n, i in enumerate(tools, 1)]}
+               "news": [{"id": n, "title": i["title"], "topic": schemas.TOPICS[i["topic"]],
+                         "reason": i["reason"][:PICK_REASON_CHARS]} for n, i in enumerate(news, 1)],
+               "tools": [{"id": n, "title": i["title"], "topic": schemas.TOPICS[i["topic"]],
+                          "summary": i.get("summary", "")[:PICK_SUMMARY_CHARS]} for n, i in enumerate(tools, 1)]}
 
     def ids_valid(parsed: schemas.UserPicks):
         for name, pool in (("news", news), ("tools", tools)):
