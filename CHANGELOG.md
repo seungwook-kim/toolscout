@@ -6,9 +6,11 @@
   - 결정(사용자): n8n 구조 제외, 07:00 실행·08:00 발송은 FastAPI 앱 안에서 예약, 개발 모드도 ADMIN_EMAILS(본인)에게만 실제 발송 허용
   - 끝난 것: `pipeline/scheduler.py`(07:00·08:00, 놓친 실행 22:00 전 따라잡기, 실행 끝난 뒤 발송, 발송 실패 10분 간격 2번 더), `pipeline/deliver.py` Gmail SMTP 발송(보낸 사용자만 sent_at), `routes/w1.py` 수동 실행·발송·상태, n8n 폴더·compose 서비스·CI 단계·문서 제거
   - 검수: check_scheduler 11항목, check_deliver 24항목(가짜 SMTP), check_main·check_readme·check_folder_docs·check_env_example 통과, CI 4단계 success(b1e72f1)
-  - 미완: 실제 메일 도착(GMAIL_APP_PASSWORD 공백 때문에 로더가 읽지 않음), 앱 상시 실행(예약은 앱이 떠 있어야 돈다)
-  - 결정 필요: PC 켤 때 앱 자동 시작 여부, MCP 레지스트리 ReadTimeout 2회 연속, gemma3 첫 로드 24.5초. 계획안 위험 목록의 "강사 기준: n8n 필수/가산점" 확인
-  - 다음 시작점: GMAIL_APP_PASSWORD 공백 제거 → 오늘 브리핑 1명 실행 → 본인 메일 도착·카드마다 trace_id 확인 → 앱을 켜 두고 다음 날 07:00·08:00 자동 실행 확인 (뼈대 완성)
+  - 실제 메일: 9/15 브리핑(사용자 1·카드 5·반려 1·호출 11·416초)을 개발 모드로 ADMIN_EMAILS에 Gmail SMTP 발송, 받은편지함 도착 확인(카드마다 trace_id). 트레이스 https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/74fd811dfd31cc41164570abf9b27ed9
+  - 관찰: gemma3 첫 로드 30초 초과로 선별 1묶음 groq 전환, groq 429 2회·gemini 429 1회로 카드 1장 openrouter. MCP 레지스트리는 이번엔 성공
+  - 미완: 앱 상시 실행(예약은 앱이 떠 있어야 돈다)과 다음 날 07:00·08:00 자동 실행 확인
+  - 결정 필요: PC 켤 때 앱 자동 시작 여부, gemma3 첫 로드 타임아웃, groq 429. 계획안 위험 목록의 "강사 기준: n8n 필수/가산점" 확인
+  - 다음 시작점: 앱을 켜 두고 다음 날 07:00 실행·08:00 메일 자동 도착 확인 (뼈대 완성)
 
 - 세션 5 · 2026-09-15 · 전량 하루 실행, 08:00 발송 준비·기록, n8n W1 (main 머지 완료)
   - 끝난 것: 전량 실행(사용자 2명·카드 7·반려 5·호출 23·토큰 입력 56,604·출력 10,610·650초·전환 없음), 메일 본문(`pipeline/briefing_mail.py`, 카드 전체·카드마다 trace_id), 발송함·sent_at 기록(`pipeline/deliver.py`), n8n용 API(`routes/w1.py`), W1 워크플로우(`n8n/workflows/W1_daily.json`), CI에 n8n 가져오기

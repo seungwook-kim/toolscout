@@ -1,22 +1,17 @@
 {
-  "date": "2026-09-14",
+  "date": "2026-09-15",
   "dev_mode": true,
   "options": {
-    "users": null,
-    "limit": null
+    "users": 1,
+    "limit": 40
   },
-  "collected": 140,
-  "prepared": 140,
-  "curator_input": 140,
-  "source_failures": [
-    {
-      "source": "mcp_registry",
-      "error": "ReadTimeout: The read operation timed out"
-    }
-  ],
+  "collected": 183,
+  "prepared": 183,
+  "curator_input": 40,
+  "source_failures": [],
   "skipped_sent_users": [],
-  "selected": 78,
-  "verify_requests": 0,
+  "selected": 31,
+  "verify_requests": 4,
   "users": [
     {
       "user_id": 1,
@@ -24,14 +19,9 @@
       "planned": 6,
       "rejected": [
         {
-          "title": "앤트로픽·오픈AI·구글, 7월부터 'AI 안전 표준기구' 설립 물밑 논의",
-          "url": "https://www.aitimes.com/news/articleView.html?idxno=215212",
-          "reason": "사용자가 n8n으로 사내 AI 브리핑 봇을 만드는 실무 개발자이고, 이 기사는 거시적인 AI 산업 규제 및 표준기구 설립 논의에 관한 것으로, 사용자의 현재 개발 작업이나 도구 선택에 직접적인 영향을 주지 않습니다."
-        },
-        {
-          "title": "업스테이지, 엔비디아 본사 방문…GPU 지원 등 5개 안건 논의",
-          "url": "https://www.aitimes.com/news/articleView.html?idxno=215244",
-          "reason": "자바 백엔드 개발자의 n8n 기반 AI 브리핑 봇 개발 업무와 직접적인 연관성이 없는 기업 간 GPU 지원 및 투자 논의 뉴스입니다."
+          "title": "뉴엔AI, 산업 AI 데이터 분석 기술로 북미 진출…뉴저지주에 법인 설립",
+          "url": "https://www.aitimes.com/news/articleView.html?idxno=215267",
+          "reason": "해당 기사는 뷰티 산업 특화 AI 플랫폼의 북미 법인 설립 및 비즈니스 확장 소식이며, 사용자가 개발 중인 n8n 기반 사내 AI 브리핑 봇의 기술 구현이나 RAG 아키텍처 설계에 직접적으로 활용할 수 있는 정보가 부족합니다."
         }
       ],
       "excluded": [],
@@ -39,89 +29,62 @@
       "format_failed": [],
       "model_failed": [],
       "titles": [
-        "Decided to build a game, and test the ceiling of Qwen3.8 27b",
-        "에이전트형 AI를 위한 데이터 준비하기",
-        "What a time to be alive – rouge AI agents attack RubyGems.org",
-        "Update claude-api skill: Managed Agents `auto` permission policy and `ant beta:sessions connect` (#1750)"
+        "How Fyxer built an AI executive assistant people trust",
+        "업스테이지, ‘솔라 미니 4’ 무료 프리뷰 공개…“프로급 성능 구현”",
+        "삼성SDS, 클로드로 ‘원스톱 AI 도입 체계’ 강화…앤트로픽 셀렉트 티어 파트너 등재",
+        "Desktop Commander 0.2.50",
+        "GitHub 1.12.1"
       ],
       "status": "saved",
-      "cards": 4,
-      "empty_reason": null,
-      "duplicates": []
-    },
-    {
-      "user_id": 2,
-      "role": "마케터",
-      "planned": 6,
-      "rejected": [
-        {
-          "title": "오바마 \"AI 대처 못하면 위험\"...미 민주당에 적극 대응 촉구",
-          "url": "https://www.aitimes.com/news/articleView.html?idxno=215224",
-          "reason": "사용자가 노션으로 캠페인 기록과 콘텐츠 일정을 관리하는 실무 마케터인 반면, 해당 기사는 미국 정치권의 AI 규제 입법과 정책 논의를 다루고 있어 사용자의 업무 도구나 일상적 업무 맥락과 직접적인 연결고리가 없습니다."
-        },
-        {
-          "title": "[AI리더의 서가] AI 편집 디자인",
-          "url": "https://www.aitimes.com/news/articleView.html?idxno=215168",
-          "reason": "노션 기반 캠페인 관리 마케터에게 인디자인·포토샵 중심의 편집 디자인 실무 서적은 업무 도구와 직접적인 관련이 없어 연결점이 부족합니다."
-        },
-        {
-          "title": "Update claude-api skill: Managed Agents `auto` permission policy and `ant beta:sessions connect` (#1750)",
-          "url": "https://github.com/anthropics/skills/commit/34040c9c568585f6929bedeaad110ad08f079624",
-          "reason": "사용자가 노션으로 캠페인 기록을 관리하는 마케터인데, 이 카드는 Anthropic Managed Agents의 개발용 권한 정책 업데이트로 직군 및 사용 도구와 관련이 없습니다."
-        }
-      ],
-      "excluded": [],
-      "retried": 0,
-      "format_failed": [],
-      "model_failed": [],
-      "titles": [
-        "Show GN: 네오프레스 - Next.js 기반 AI 웹사이트 빌더에 CMS·SEO·전환 분석을 묶었습니다",
-        "에이전트형 AI를 위한 데이터 준비하기",
-        "Garry Tan, 미국 오픈웨이트 AI 연구소에도 프런티어 모델 증류를 허용해야"
-      ],
-      "status": "saved",
-      "cards": 3,
+      "cards": 5,
       "empty_reason": null,
       "duplicates": []
     }
   ],
   "totals": {
-    "users": 2,
-    "briefings": 2,
+    "users": 1,
+    "briefings": 1,
     "empty_users": 0,
     "failed_users": 0,
-    "cards": 7,
-    "rejected": 5,
+    "cards": 5,
+    "rejected": 1,
     "excluded": 0,
-    "calls": 23,
-    "input_tokens": 56604,
-    "output_tokens": 10610,
+    "calls": 11,
+    "input_tokens": 25435,
+    "output_tokens": 4579,
     "format_failures": 1,
     "unrecovered": 0
   },
   "all_users_failed": false,
   "providers": {
-    "ollama:gemma3:12b": 10,
-    "groq:qwen/qwen3.8-27b": 13
+    "groq:openai/gpt-oss-20b": 1,
+    "ollama:gemma3:12b": 3,
+    "groq:qwen/qwen3.8-27b": 5,
+    "gemini:gemini-3.6-flash": 1,
+    "openrouter:nex-agi/nex-n2.5-pro:free": 1
   },
-  "failovers": {},
+  "failovers": {
+    "ollama:타임아웃": 1,
+    "groq:429": 2,
+    "gemini:429": 1
+  },
   "model_failures": [],
   "failure_examples": [
     {
-      "label": "카드 2:Garry Tan, 미국 오픈웨이트 AI 연구소에도 프",
+      "label": "카드 1:업스테이지, ‘솔라 미니 4’ 무료 프리뷰 공개…“프로",
       "attempt": 1,
-      "error": "summary_ko: Input should be a valid string; for_me: Input should be a valid string",
-      "provider": "groq",
-      "model": "qwen/qwen3.8-27b",
-      "raw_head": "{\"reject\": true, \"reject_reason\": \"원문을 읽지 못했고, 항목 요약만으로는 마케터의 노션 기반 업무와 연결할 수 있는 구체적인 근거가 부족합니다.\", \"summary_ko\": null, \"for_me\": null, \"pros\": [], \"cons\": [], \"install_cmd\": null}",
-      "raw_tail": "on\": \"원문을 읽지 못했고, 항목 요약만으로는 마케터의 노션 기반 업무와 연결할 수 있는 구체적인 근거가 부족합니다.\", \"summary_ko\": null, \"for_me\": null, \"pros\": [], \"cons\": [], \"install_cmd\": null}",
-      "trace_id": "d287a315a5b58469db94fc919b3940a9"
+      "error": "summary_ko: String should have at most 120 characters",
+      "provider": "gemini",
+      "model": "gemini-3.6-flash",
+      "raw_head": "```json\n{\n  \"reject\": false,\n  \"reject_reason\": null,\n  \"summary_ko\": \"업스테이지가 최신 모델 '솔라 프로 4' 성능에 근접하면서 크기는 7분의 1로 줄인 '솔라 미니 4'의 무료 프리뷰를 공개했다. 22일 정식 API 오픈 예정으로, 빠른 응답 속도와 한국어 이해, 정보 추출 성능을 갖췄다.\",\n  \"for_me\": \"n8n으로 사내 AI 브리핑 봇을 만들 때 빠른 응답과 저렴한 비용으로 한국어 정보 추출 및 요약 기능을 연동하는 경량 모델 API로 활용할 수 있습니다.\",\n",
+      "raw_tail": "사전 안내 없이 일시 중단되거나 종료될 수 있음\",\n      \"evidence_url\": \"https://www.aitimes.com/news/articleView.html?idxno=215245\"\n    }\n  ],\n  \"install_cmd\": null\n}\n```",
+      "trace_id": "74fd811dfd31cc41164570abf9b27ed9"
     }
   ],
   "format_failures_recorded": 1,
-  "trace_id": "d287a315a5b58469db94fc919b3940a9",
-  "seconds": 650.5,
-  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/d287a315a5b58469db94fc919b3940a9",
+  "trace_id": "74fd811dfd31cc41164570abf9b27ed9",
+  "seconds": 416.1,
+  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/74fd811dfd31cc41164570abf9b27ed9",
   "checks": {
     "대상_사용자_모두_브리핑_저장": true,
     "모델장애_사용자_없음": true,
