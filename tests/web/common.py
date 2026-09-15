@@ -28,6 +28,14 @@ def admin_emails(*emails: str) -> None:
 
 
 def client() -> TestClient:
+    """with로 쓰면 앱 lifespan(MCP 세션 관리자)이 돈다. 프로세스에서 한 번만 with로 연다."""
+    import main
+
+    return TestClient(main.app)
+
+
+def second_client() -> TestClient:
+    """두 번째 사용자용. lifespan 없이 쿠키 저장소만 따로 쓴다 (MCP 세션 관리자는 한 번만 돌릴 수 있다)."""
     import main
 
     return TestClient(main.app)

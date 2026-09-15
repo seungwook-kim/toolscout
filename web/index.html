@@ -3,19 +3,83 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>toolscout</title>
-  <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-           font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f6f7f9; color: #1d2330; }
-    main { text-align: center; padding: 24px; }
-    h1 { font-size: 2rem; margin: 0 0 8px; }
-    p { margin: 0; color: #5a6272; }
-  </style>
+  <title>toolscout 오늘 브리핑</title>
+  <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
-  <main>
-    <h1>toolscout 준비 중</h1>
-    <p>매일 아침 AI 소식과 새 MCP·스킬을 내 기준으로 골라 한글로 해설합니다.</p>
+  <header class="top" id="top"></header>
+  <main class="wrap">
+    <section id="head">
+      <h1 id="title">오늘 브리핑</h1>
+      <div class="muted small" id="summary"></div>
+    </section>
+    <section id="briefing"><div class="empty">불러오는 중이에요</div></section>
+
+    <section class="panel ask" id="ask">
+      <h2>이 브리핑에 대해 물어보기</h2>
+      <div class="log" id="log"></div>
+      <form id="ask-form">
+        <input id="question" type="text" maxlength="300" placeholder="예: 오늘 나온 MCP 중에 노션이랑 붙는 거 있어?" autocomplete="off">
+        <button class="btn primary" type="submit">묻기</button>
+      </form>
+      <div class="muted small" id="ask-meta"></div>
+    </section>
   </main>
+  <script src="/static/app.js"></script>
+  <script src="/static/cards.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function addTurn(question, answer) {
+      const sources = (answer.sources || []).map((s) => {
+        const url = TS.safeUrl(s.url);
+        return url ? `<a href="${TS.esc(url)}" target="_blank" rel="noopener">${TS.esc(s.title || url)}</a>` : "";
+      }).filter(Boolean).join(" · ");
+      const retry = answer.gate === "out" ? ' <button class="btn small retry" type="button">AI 질문이었어요</button>' : "";
+      const examples = answer.examples ? `<div class="small muted">이렇게 물어볼 수 있어요: ${answer.examples.map(TS.esc).join(" / ")}</div>` : "";
+      $("log").insertAdjacentHTML("beforeend", `<div class="q">${TS.esc(question)}</div>
+        <div class="a">${TS.esc(answer.answer)}${sources ? `<div class="small">확인한 곳: ${sources}</div>` : ""}${retry}${examples}</div>`);
+      const button = $("log").querySelector(".retry:last-of-type");
+      if (button && answer.gate === "out") button.onclick = () => ask(question, true);
+    }
+
+    async function ask(question, forceUnclear = false) {
+      $("ask-meta").textContent = "답을 찾는 중이에요";
+      try {
+        const data = await TS.api("/api/ask", { method: "POST", body: { question, force_unclear: forceUnclear } });
+        addTurn(question, data);
+        $("ask-meta").textContent = `오늘 남은 질문 ${data.remaining}회`;
+      } catch (e) {
+        $("ask-meta").textContent = e.message;
+      }
+    }
+
+    async function load() {
+      const me = await TS.header("/");
+      const briefing = await TS.api("/api/briefings/today");
+      const d = new Date(briefing.date + "T00:00:00");
+      $("title").textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 브리핑`;
+      const counts = briefing.pool_size ? `${briefing.pool_size}건 중 ${briefing.count}건` : `${briefing.count}건`;
+      $("summary").innerHTML = `${counts} · 기준: ${TS.esc(briefing.profile_line)}${me.dev_mode ? " · 개발 모드: 질문은 무료 모델로 전송돼요" : ""}`;
+      Cards.mount($("briefing"), briefing);
+      try {
+        const history = await TS.api("/api/ask");
+        history.turns.forEach((t) => addTurn(t.question, t));
+        $("ask-meta").textContent = `오늘 남은 질문 ${history.remaining}회`;
+      } catch (e) {
+        $("ask-meta").textContent = e.message;
+      }
+    }
+
+    $("ask-form").onsubmit = (event) => {
+      event.preventDefault();
+      const question = $("question").value.trim();
+      if (!question) return;
+      $("question").value = "";
+      ask(question);
+    };
+
+    load();
+  </script>
 </body>
 </html>

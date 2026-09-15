@@ -1,5 +1,7 @@
 # web/ CHANGELOG
 
+- 2026-09-15 · index.html 오늘 브리핑으로 교체, cards.js 추가 · 웹앱 본체 3단계 · check_briefings 통과
+
 - 2026-09-15 · settings.html 추가 · 웹앱 본체 2단계 프로필·설정 · check_settings 통과
 
 - 2026-09-15 · app.css·app.js·login.html 추가 · 웹앱 본체 1단계 로그인, 반응형 공통 스타일 · check_auth·check_main 통과

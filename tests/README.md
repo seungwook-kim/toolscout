@@ -18,7 +18,7 @@
 - `pipeline/check_scheduler.py`: 가짜 시계로 07:00 실행·08:00 발송·따라잡기·22시 이후 안 함·실행 끝난 뒤 발송·재시도
 - `mcp/list_tools.py`: 실제 HTTP로 도구 6개·키 검문·거부 규칙 → `mcp/list_tools_result.json`
 - `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)
-- `web/`: check_auth(매직링크 발급·만료·재사용·위조, 401, 첫 로그인), check_settings(프로필·가중치 범위·기억 지우기·계정 삭제·지금 만들기). 앱 프로세스 안, 메일은 폴더
+- `web/`: check_auth(매직링크 발급·만료·재사용·위조, 401, 첫 로그인), check_settings(프로필·가중치·기억 지우기·계정 삭제·지금 만들기), check_briefings(본인 카드만·N건 중 M건·관리자 트레이스·검색). 앱 프로세스 안
 - `agent/run_loop.py`: 가짜 모델로 루프 동작 9항목 + 현재 모델표 해설가로 실제 "안녕"·도구 1개(통과 조건)
 - `agent/run_curator.py`: 오늘 수집 + 가짜 프로필 2개로 큐레이터 실행 → `agent/curator_report.json`
 - `agent/run_explainer.py`: `--fake`는 가짜 모델로 카드·반려·재시도·원문 확인 필요 8항목, 없으면 실제 카드 + for_me 3쌍 → `agent/explainer_report.json`
