@@ -74,6 +74,7 @@ class Item(SQLModel, table=True):
     title: str
     url: str = Field(unique=True, index=True)
     summary_ko: str | None = None
+    description: str | None = None  # 수집한 원문 설명(레지스트리 description 등) 300자. 관련 카드(F3-b) 후보용 메타데이터, 기사 본문 아님
     source: str
     source_tier: int | None = None
     version: str | None = None
@@ -225,7 +226,7 @@ def get_engine(url: URL | None = None) -> Engine:
 # 표를 만든 뒤에 추가한 칸. create_all은 이미 있는 표에 칸을 더하지 않으므로 없을 때만 추가한다
 ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE"), ("briefings", "empty_reason", "VARCHAR"),
                  ("users", "notify_time", "VARCHAR NOT NULL DEFAULT '08:00'"), ("briefings", "pool_size", "INTEGER"),
-                 ("feedback", "weight_delta", "INTEGER NOT NULL DEFAULT 0")]
+                 ("feedback", "weight_delta", "INTEGER NOT NULL DEFAULT 0"), ("items", "description", "VARCHAR")]
 
 # 이미 만든 briefings 표를 카드 0건 행을 담을 수 있게 바꾼다 (2026-09-14). 데이터는 지우지 않고, 여러 번 돌려도 같다
 # (user_id, date, item_id) 복합 기본키 → id 기본키 + 같은 조합 유일(NULL도 같은 값으로 봄)

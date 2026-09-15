@@ -23,7 +23,7 @@ PLAN_COLUMNS = {
     "users": "id kakao_id email role profile_tools_tags profile_free_text channel class_code is_admin mcp_key_hash created_at",
     "weights": "user_id topic weight updated_at",
     "seen": "user_id item_id shown_at",
-    "items": "id date type topic title url summary_ko source source_tier version stars deadline_at",
+    "items": "id date type topic title url summary_ko description source source_tier version stars deadline_at",
     "probes": "item_id install run tools_list auth_required duration_ms requirements log probed_at",
     "skill_reviews": "item_id purpose trigger steps_summary risk_signal risk_quote regex_hits completeness",
     "briefings": "user_id date item_id rank card_json trace_id sent_at",

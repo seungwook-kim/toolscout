@@ -5,6 +5,7 @@
 - 재실행 멱등: 오늘 발송한(sent_at 있는) 사용자는 건드리지 않는다. 미발송이면 오늘 브리핑과 그 seen을 지우고 다시 쓴다
 - 레지스트리 MCP 여러 개가 같은 저장소 링크를 쓰면 items 한 줄로 합쳐진다. 한 사용자 카드에서 겹치면 앞 순위만 남긴다
 - 카드가 0건이면 item_id 없이 empty_reason과 그날 trace_id만 있는 행 하나를 남긴다 (발송 단계가 "오늘 비움"을 알린다)
+- 도구 목록: 큐레이터 선별을 통과한 MCP·스킬은 카드가 아니어도 items에 주제·원문 설명과 함께 쌓는다 (관련 카드 F3-b 후보, 2026-09-15 사용자 결정)
 """
 from datetime import date
 
@@ -45,9 +46,37 @@ def pending_urls(user_id: int, today: date) -> set[str]:
         return {row[0] for row in rows}
 
 
+CATALOG_TYPES = ("mcp", "skill")
+DESCRIPTION_CHARS = 300
+
+
+def save_catalog(today: date, selected: list[dict]) -> int:
+    """선별 통과 도구를 items에 upsert한다. 반환: 저장한 도구 수.
+
+    처음 보면 오늘 날짜로 넣고, 이미 있으면(별 수 캐시·지난 카드) 주제·설명·버전·별 수만 새 값으로 채운다. 카드 요약(summary_ko)은 건드리지 않는다.
+    """
+    unique = {item["url"]: item for item in selected if item.get("type") in CATALOG_TYPES and item.get("url")}
+    if not unique:
+        return 0
+    values = [{"date": today, "type": item["type"], "topic": item.get("topic"), "title": item["title"][:300], "url": url,
+               "description": (item.get("summary") or "").strip()[:DESCRIPTION_CHARS] or None, "source": item.get("source", "unknown"),
+               "source_tier": SOURCE_TIER.get(item.get("source", "")), "version": item.get("version"), "stars": item.get("stars")}
+              for url, item in unique.items()]
+    statement = insert(db.Item).values(values)
+    statement = statement.on_conflict_do_update(index_elements=["url"], set_={
+        "topic": func.coalesce(statement.excluded.topic, db.Item.topic),
+        "description": func.coalesce(statement.excluded.description, db.Item.description),
+        "version": func.coalesce(statement.excluded.version, db.Item.version),
+        "stars": func.coalesce(statement.excluded.stars, db.Item.stars)})
+    with db.get_engine().begin() as connection:
+        connection.execute(statement)
+    return len(values)
+
+
 def _item_row(item: dict, card: dict, today: date) -> dict:
     return {"date": today, "type": card["type"], "topic": item.get("topic"), "title": card["title"], "url": card["url"],
-            "summary_ko": card["summary_ko"], "source": item.get("source", "unknown"),
+            "summary_ko": card["summary_ko"], "description": (item.get("summary") or "").strip()[:DESCRIPTION_CHARS] or None,
+            "source": item.get("source", "unknown"),
             "source_tier": SOURCE_TIER.get(item.get("source", "")), "version": item.get("version"), "stars": item.get("stars")}
 
 

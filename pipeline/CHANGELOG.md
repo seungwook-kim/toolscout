@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-15 · persist.save_catalog, run_daily가 큐레이터 뒤 선별 통과 도구를 items에 쌓음(catalog_saved), items.description · 관련 카드(F3-b) 후보 목록, 사용자 결정 · run_daily --fake 도구 목록 4항목 추가 통과, check_tables(Supabase 열 추가) 통과
 - 2026-09-15 · scheduler: 하루 실행 실패·빠진 사용자 30분 뒤 그 사용자만 2번 더, 끝내 실패하면 ADMIN_EMAILS 실패 알림, 발송 끝내 실패도 알림, 06:55 DB 깨우기 / deliver.send_alert, persist.wake_db · 계획안 "W1이 죽고 재실행"·W4 실패 알림·Supabase 깨우기, 내일 07:00 뼈대 확인 전에 한 번 실패로 하루가 비지 않게 · check_scheduler 19항목·check_deliver 통과
 - 2026-09-15 · 메일 카드에 피드백 버튼 서명 링크(뉴스 관심없음·이상함, 도구는 써봤음까지) · 웹앱 본체 4단계 W3 · check_feedback·check_deliver 통과
 - 2026-09-15 · run_daily user_ids(설정 화면 지금 만들기는 본인만)·pool_size 저장, deliver 알림 시각 필터, scheduler 알림 시각마다 발송 · 웹앱 2단계 알림 시간 설정 · check_scheduler·run_daily --fake·check_deliver 통과
