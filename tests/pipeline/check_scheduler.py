@@ -1,7 +1,7 @@
 """앱 안 예약 검수 (계획안 9.2 W1, 2026-09-15 n8n 제외 결정). 가짜 시계·가짜 실행·가짜 발송으로 확인한다.
 
 실행: uv run python -m tests.pipeline.check_scheduler
-- 06:59 → 다음 예정 07:00 / 07:00 하루 실행 → 08:00 발송 → 다음 날 07:00
+- 06:50 → 다음 예정 06:55 / 06:55 예열 → 07:00 하루 실행 → 08:00 발송 → 다음 날 06:55
 - 07:30에 켜지면 브리핑 없는 사용자가 있을 때만 바로 따라잡고, 08:05에 켜지면 바로 발송, 22:00 뒤에는 따라잡지 않음
 - 08:00에 실행이 돌고 있으면 끝난 뒤 발송, 실행 중 중복 실행은 막음
 - 발송 실패 사용자는 10분 간격으로 2번 더, 메일 설정이 없으면 다시 시도하지 않음
@@ -50,14 +50,18 @@ def make(clock: Clock, *, needs: bool = True, gate: asyncio.Event | None = None,
     async def needs_run(day):
         return needs
 
-    return Scheduler(run=run, send=send, needs_run=needs_run, now=clock.now, sleep=clock.sleep), log
+    def warm():
+        log.append(f"warm@{clock.now():%H:%M}")
+        return [{"model": "local", "ok": True}]
+
+    return Scheduler(run=run, send=send, warm=warm, needs_run=needs_run, now=clock.now, sleep=clock.sleep), log
 
 
 async def normal_day() -> dict:
-    clock = Clock(6, 59)
+    clock = Clock(6, 50)
     sched, log = make(clock)
     before = sched.next_event()
-    for _ in range(4):  # 루프 몇 바퀴: 06:59 → 07:00 실행 → 08:00 발송 → 다음 날 대기
+    for _ in range(6):  # 루프 몇 바퀴: 06:50 → 06:55 예열 → 07:00 실행 → 08:00 발송 → 다음 날 대기
         await sched.tick()
         await clock.sleep(max(1.0, min((sched.next_event() - clock.now()).total_seconds(), 60)))
     while clock.now().hour < 8 or clock.now().date() == DAY and sched.state["send_done"] != DAY:
@@ -109,9 +113,10 @@ async def main_async() -> dict:
     await s_missing.send_now(DAY)
 
     checks = {
-        "06:59엔_다음예정_07:00": day["before"] == datetime(2026, 9, 16, 7, 0, tzinfo=run_daily.KST),
-        "07:00_실행_08:00_발송_순서": day["log"] == ["run@07:00", "send@08:00"],
-        "발송뒤_다음예정_다음날_07:00": day["after"] == datetime(2026, 9, 17, 7, 0, tzinfo=run_daily.KST),
+        "06:50엔_다음예정_06:55": day["before"] == datetime(2026, 9, 16, 6, 55, tzinfo=run_daily.KST),
+        "06:55_예열_07:00_실행_08:00_발송_순서": day["log"] == ["warm@06:55", "run@07:00", "send@08:00"],
+        "발송뒤_다음예정_다음날_06:55": day["after"] == datetime(2026, 9, 17, 6, 55, tzinfo=run_daily.KST),
+        "07시_뒤에_켜지면_예열_안함": not any(x.startswith("warm") for x in log_late + log_after),
         "07:30_켜지면_따라잡기": log_late == ["run@07:30"],
         "이미_브리핑있으면_실행안함": log_done == [],
         "08:05_켜지면_바로_발송": log_after == ["send@08:05"],

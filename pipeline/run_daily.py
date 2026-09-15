@@ -97,6 +97,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
     started = time.perf_counter()
     calls_before = models.PROVIDER_CALLS.copy()
     failovers_before = models.FAILOVERS.copy()
+    rate_limits_before = models.RATE_LIMITS.copy()
     with tracing.span("W1:daily", kind="chain", input={"date": str(today), "dev_mode": models.dev_mode(),
                                                        "users": users, "limit": limit}) as root:
         failures = []
@@ -163,6 +164,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
             "all_users_failed": bool(results) and len(failed_users) == len(results),
             "providers": dict(models.PROVIDER_CALLS - calls_before),
             "failovers": dict(models.FAILOVERS - failovers_before),
+            "rate_limits_429": dict(models.RATE_LIMITS - rate_limits_before),
             "model_failures": curator_stats["model_failures"] + explainer_stats["model_failures"],
             "failure_examples": examples[:MAX_EXAMPLES],
             "format_failures_recorded": record_format_failures(examples, today),

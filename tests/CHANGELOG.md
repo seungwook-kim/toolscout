@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · check_models: 429 60초 뒤 같은 제공자 재시도·해설가 groq→gemma3 대체·도구 필요하면 gemma3 건너뜀·로컬 첫 호출 90초·이후 30초, check_scheduler: 06:55 예열 · 세션 7 결정 2·3 · check_models·check_scheduler 통과
+
 - 2026-09-15 · run_daily --fake에 긴 요약 자르기·빈 요약 자가 수정·관련도 2 반려 검사, 가짜 해설가 답에 relevance · 세션 7 결정 1·6 · run_daily --fake·run_explainer --fake 통과
 
 - 2026-09-15 · run_daily --fake에 회귀 검사 3항목(잘린 JSON 형식 실패, 후보 단계 상한·순서) · 빈 후보 메일 버그 · 통과

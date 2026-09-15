@@ -103,16 +103,18 @@ def fallback_case(primary_status: int | None, fallback_status: int | None) -> di
     return {"calls": len(calls), **outcome}
 
 
-def dev_chain_case(errors: dict[str, Exception | None]) -> dict:
-    """개발 모델표 큐레이터 제공자 순서(ollama→groq→gemini→openrouter). errors: 제공자 → 낼 예외(None이면 성공)."""
+def dev_chain_case(errors: dict, role: str = "curator", tools: list | None = None) -> dict:
+    """개발 모델표 제공자 순서. errors: 제공자 → 낼 예외(None이면 성공). 목록이면 호출마다 차례로 쓴다."""
     calls: list[str] = []
     original = dict(models.PROVIDERS)
+    queues = {name: list(value) if isinstance(value, list) else None for name, value in errors.items()}
 
     def fake(name: str):
         def adapter(model, messages, tools, **_options):
             calls.append(name)
-            if errors.get(name) is not None:
-                raise errors[name]
+            error = queues[name].pop(0) if queues.get(name) else errors.get(name)
+            if isinstance(error, Exception):
+                raise error
             return AIMessage(content=f"ok:{name}")
         return adapter
 
@@ -120,7 +122,7 @@ def dev_chain_case(errors: dict[str, Exception | None]) -> dict:
         models.PROVIDERS[name] = fake(name)
     try:
         with dev_mode("1"):
-            result = models.call("curator", [HumanMessage("안녕")])
+            result = models.call(role, [HumanMessage("안녕")], tools)
         outcome = {"slot": result.response_metadata.get("slot"), "provider": result.response_metadata.get("provider")}
     except models.ModelUnavailable as exc:
         outcome = {"unavailable": len(exc.attempts)}
@@ -198,7 +200,7 @@ def dev_table_rules() -> bool:
     order = {role: [s["provider"] for s in chain] for role, chain in models.DEV_MODELS.items()}
     return (set(models.DEV_MODELS) == set(EXPECTED_PROD)
             and order["curator"] == order["gate"] == DEV_ORDER
-            and order["explainer"] == order["verifier"] == DEV_ORDER[1:]
+            and order["explainer"] == ["groq", "ollama", "gemini", "openrouter"] and order["verifier"] == DEV_ORDER[1:]
             and all(s["model"].endswith(":free") for s in specs if s["provider"] == "openrouter"))
 
 
@@ -284,9 +286,13 @@ def _openai_compatible_cases(captured: list, timeouts: list, headers: list) -> d
         body_error = None
     except providers.ProviderError as exc:
         body_error = exc.status_code
+    providers._local_last_ok.clear()
     local = providers._ollama("local", [HumanMessage("요약")], None, temperature=0, reasoning="none")
-    local_ok = (captured[-1][0] == providers.OLLAMA_URL and captured[-1][1].get("reasoning_effort") == "none"
-                and "authorization" not in headers[-1] and timeouts[-1] == providers.LOCAL_TIMEOUT
+    first_timeout = timeouts[-1]
+    providers._ollama("local", [HumanMessage("요약")], None)
+    local_ok = (captured[-2][0] == providers.OLLAMA_URL and captured[-2][1].get("reasoning_effort") == "none"
+                and "authorization" not in headers[-2] and first_timeout == providers.LOCAL_FIRST_TIMEOUT == 90
+                and timeouts[-1] == providers.LOCAL_TIMEOUT == 30
                 and local.response_metadata["provider"] == "ollama")
     saved_groq = os.environ.pop("GROQ_API_KEY", None)
     before = len(captured)
@@ -299,7 +305,7 @@ def _openai_compatible_cases(captured: list, timeouts: list, headers: list) -> d
         if saved_groq is not None:
             os.environ["GROQ_API_KEY"] = saved_groq
     return {
-        "변환_ollama_주소·키없음·30초·사고끔": local_ok,
+        "변환_ollama_주소·키없음·첫호출90초·이후30초·사고끔": local_ok,
         "groq_키없으면_요청없이_MissingKey": missing,
         "변환_openai_httpx": first.tool_calls[0]["id"] == "c1" and roles == ["system", "user", "assistant", "tool"]
         and captured[0][1]["tools"][0]["function"]["name"] == "fetch_article" and "max_completion_tokens" in captured[0][1],
@@ -338,6 +344,8 @@ def live_calls(table: dict, required: bool) -> dict:
 def main() -> int:
     text = (ROOT / "models.py").read_text(encoding="utf-8")
     hardcoded = no_hardcoding()
+    waits: list[float] = []
+    models._sleep = waits.append  # 429 대기 60초를 실제로 기다리지 않고 기록만 한다
     cases = {code: fallback_case(int(code), None) for code in ("503", "429", "529")}
     cases |= {"400": fallback_case(400, None), "503_후_대체도_503": fallback_case(503, 503)}
     chain_all = dev_chain_case({"ollama": httpx.ReadTimeout("느림"), "groq": providers.MissingKey("GROQ_API_KEY 비어있음"),
@@ -345,20 +353,28 @@ def main() -> int:
     chain_connect = dev_chain_case({"ollama": httpx.ConnectError("꺼짐"), "groq": None})
     chain_400 = dev_chain_case({"ollama": FakeStatus(400)})
     chain_dead = dev_chain_case({name: FakeStatus(429) for name in DEV_ORDER})
+    chain_429_once = dev_chain_case({"groq": [FakeStatus(429), None]}, role="explainer")
+    explainer_no_tools = dev_chain_case({"groq": FakeStatus(503)}, role="explainer")
+    explainer_tools = dev_chain_case({"groq": FakeStatus(503)}, role="explainer", tools=[TOOL])
     originals = (providers._anthropic_client, providers._gemini_client, providers._http_client)
     ok = {"calls": 2, "slot": "fallback", "trace_id": True}
     checks = {
         "운영_모델표_CLAUDE_일치": {r: (t[0]["model"], t[1]["model"]) for r, t in models.PROD_MODELS.items()} == EXPECTED_PROD,
         "개발_모델표_순서_ollama→groq→gemini→openrouter": dev_table_rules(),
-        "개발_타임아웃·키없음·429_차례로_전환": chain_all == {"calls": DEV_ORDER, "slot": "fallback3", "provider": "openrouter"},
+        "개발_타임아웃·키없음·429(재시도후)_차례로_전환": chain_all == {"calls": ["ollama", "groq", "gemini", "gemini", "openrouter"],
+                                                         "slot": "fallback3", "provider": "openrouter"},
+        "429는_60초_뒤_같은_제공자_1회_재시도": chain_429_once == {"calls": ["groq", "groq"], "slot": "primary", "provider": "groq"}
+        and 60 in waits,
+        "해설가_대체_groq→gemma3(도구없는_호출)": explainer_no_tools == {"calls": ["groq", "ollama"], "slot": "fallback", "provider": "ollama"},
+        "해설가_도구필요하면_gemma3_건너뜀": explainer_tools == {"calls": ["groq", "gemini"], "slot": "fallback2", "provider": "gemini"},
         "개발_연결실패_다음으로": chain_connect == {"calls": ["ollama", "groq"], "slot": "fallback", "provider": "groq"},
         "개발_400은_전환없이_모델장애": chain_400 == {"calls": ["ollama"], "unavailable": 1},
-        "개발_전부_429면_모델장애": chain_dead == {"calls": DEV_ORDER, "unavailable": 4},
+        "개발_전부_429면_모델장애(제공자마다_2번)": chain_dead == {"calls": [n for n in DEV_ORDER for _ in (1, 2)], "unavailable": 4},
         "DEV_MODE_전환_기본1": mode_switch(),
         "출처_URL_주석": all(s in text for s in SOURCES),
         "다른_파일_모델명_하드코딩_없음": not hardcoded,
         "503_대체_1회": cases["503"] == ok,
-        "429_대체_1회": cases["429"] == ok,
+        "429_재시도후_대체": cases["429"] == ok | {"calls": 3},
         "529_대체_1회": cases["529"] == ok,
         "400_전환_안함": cases["400"] == {"calls": 1, "raised": 400},
         "대체_실패시_추가_전환_없음": cases["503_후_대체도_503"] == {"calls": 2, "raised": 503},
