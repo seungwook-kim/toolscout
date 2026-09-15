@@ -5,7 +5,7 @@
 ## 파일
 - `loop.py`: `run(role, system_prompt, user_input, allowed_tools, max_steps, max_tool_calls)`. 모델 → 도구 요청 → MCP 실행 → 재호출(MCP 읽기 240초)
 - `skill_check.py`: read_skill 구현. GitHub·SkillsMP 원문 10,000자·<data>, 정규식 5종(외부 전송·자격증명·권한 상승·숨은 명령·판독 지시)과 인용
-- `probe.py`: probe_mcp 구현. E2B에서 ① 설치 90초(네트워크) ② 실행 30초 ③ 도구 목록(차단, mcp/sandbox_probe.py) ④ 인증 요구, 가드·하루 30건, probes 저장
+- `probe.py`: probe_mcp 구현. E2B에서 ① 설치 90초(네트워크) ② 실행 30초 ③ 도구 목록(차단, mcp/sandbox_probe.py) ④ 인증 요구, npm은 Node 22 준비, 가드·하루 30건, probes 저장
 - `tracing.py`: Langfuse 스팬 래퍼(키 없으면 로컬 JSONL, trace_id 항상, `trace_url()`) / `structured.py`: JSON 규격 응답(온도 0, 검사, 1회 재시도, 실패 예시·모델 장애 기록)
 - `curator.py`: 큐레이터. 20건 무작위 묶음 선별 → 사용자별 뉴스 5·도구 3(본 항목·가중치 -5 제외, 고른 뒤 가중치로 한 번 더 정렬) → 검증 요청 5
   월요일은 관련 카드(F3-b): 도구 목록 30건에서 최대 3개, 이름 일치 > 가중치 (`pick_related`). `replan_failed`: 되돌림 1 대체·비움 판단
@@ -13,7 +13,7 @@
   `answer()`: 질문 답(후보·맥락 입력, fetch_article 3회, 600자, 후보 링크만 출처, 형식 틀리면 1회 재시도)
 - `glossary.md`: 해설가 용어집 30개와 표기 원칙. 프롬프트에 그대로 붙는다
 - `schemas.py`: 주제 10개(확정), 선별·후보·검증 요청·해설가 출력·카드·질문 답 규격(pydantic). 검증 노드도 같은 규격을 쓴다
-- `verifier.py`: 검증관. MCP는 설치 명령 판단(McpProbePlan) → probe_mcp, 스킬은 read_skill → 판독(SkillJudgment)과 정규식 비교
+- `verifier.py`: 검증관. MCP는 레지스트리 설치 정보로 바로(`registry_plan`), 없을 때만 모델이 README로 판단 → probe_mcp, 스킬은 read_skill → 판독과 정규식 비교
   (다르면 확인 필요, 공식은 생략). 항목당 도구 4회, 요청 상태 기록, `reverify`는 되돌림 2용
 
 ## 들어오고 나가는 데이터

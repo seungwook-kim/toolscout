@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-16 · verification.save_requests 저장 수를 returning으로 셈 · 실제 실행에서 rowcount -1이 나와 저장 수가 -5로 보고됨 · check_verifier(저장 10·중복 저장 0) 통과
 - 2026-09-16 · rollback.py(되돌림 1·2, attach), run_daily에 검증 요청 저장·되돌림 두 개·검증 칸·run_stats verified·rollbacks, scheduler 06:00 검증(W1-a, 따로 도는 작업·늦게 켜지면 실행 뒤) · 세션 8 5단계, 계획안 조정 "검증관 크론은 W1과 분리" · check_rollback·check_scheduler(검증 5항목 추가)·run_daily --fake·check_deliver 통과
 - 2026-09-15 · verification.py 추가(verify_requests 큐·skill_reviews·카드 칸), briefing_mail 검증 결과 줄과 고정 문구 두 개 · 세션 8 검증관 4단계 · check_verifier 17항목·check_deliver 통과
 - 2026-09-15 · run_daily가 사용자마다 run_stats(선별·반려·제외·검증 요청·검증 0)를 briefings에, persist가 items.published_at(원문 공개 시각) 저장 · 화면 파이프라인 칸과 도구 공개 시점 (사용자 승인) · run_daily --fake·check_design 통과

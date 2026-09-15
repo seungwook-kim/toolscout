@@ -1,8 +1,10 @@
 """검증관 (계획안 5장 검증관 행, 부록 D, 세션 8). 검증 요청마다 MCP는 probe_mcp, 스킬은 read_skill + 판독.
 
 - 항목 하나 = 판단 + 도구 호출. 항목당 도구 호출 최대 4회 (계획안 5장 호출 상한: README 조회 2 + probe_mcp 1, 스킬은 read_skill 1)
-- MCP: 레지스트리 설치 정보(없으면 README를 fetch_article로)를 보고 설치 명령·종류를 정한다(McpProbePlan).
-  못 찾으면 "설치법 미확인", curl류 설치만 있으면 "실측 불가(명령 형식)"로 멈춘다. 정하면 probe_mcp (결과는 probes에 저장됨)
+- MCP: 레지스트리 설치 정보가 있으면 모델 없이 바로 정한다(registry_plan: npm stdio → npx, pypi stdio → uvx, https 원격).
+  자리표시자 주소는 "실측 불가(자체 호스팅 주소)", 도커 이미지·nuget 같은 패키지만 있으면 "실측 불가(... 형식)".
+  설치 정보가 없을 때만 모델이 README를 fetch_article로 읽어 정한다(McpProbePlan). 못 찾으면 "설치법 미확인". 정하면 probe_mcp
+  (9/16 실측: 설치 정보가 있어도 모델이 README를 두 번 읽고 30초 제한에 여러 번 걸려 항목당 200초가 판단에 쓰였다)
 - 스킬: read_skill 원문(10,000자·<data>)을 모델이 정규식 결과를 보지 않고 판독(SkillJudgment).
   모델 판정과 정규식이 같으면 그 값, 다르면 확인 필요(unverified). 공식 출처(anthropics/skills)는 위험 신호 생략(skipped)
 - 요청 상태(pipeline/verification.py): 완료 | 실패(설치 실패·원문 접근 불가, 되돌림 1 대상) | 미완료(다음 날 재시도) | 거부
@@ -11,6 +13,7 @@
 동작 검증은 도구가 올바르게 동작하는지 보증하지 않고, 위험 신호는 안전 보증이 아니다.
 """
 import json
+import re
 from collections import Counter
 from contextlib import AsyncExitStack
 from dataclasses import asdict
@@ -27,6 +30,7 @@ MAX_REQUESTS = 10
 TOOL_CALLS_PER_ITEM = 4
 PLAN_FETCHES = 2
 TOOLS = ["probe_mcp", "read_skill", "fetch_article"]
+PLACEHOLDER = re.compile(r"\{[^}]*\}")
 
 PLAN_PROMPT = """너는 toolscout 검증관이다. MCP 서버 항목 하나를 E2B 샌드박스에서 동작 검증할 설치 방법을 정한다.
 입력: item(이름·링크·설명), install(레지스트리가 알려 준 packages·remotes, 비어 있을 수 있음)
@@ -46,6 +50,28 @@ SKILL_PROMPT = """너는 toolscout 검증관이다. SKILL.md 원문 하나를 �
 - risk_quote: caution이면 해당 문장을 원문에서 그대로 인용, ok면 null
 - 이 판정은 위험 신호 분석이지 안전 보증이 아니다. 설명은 한국어로 쓴다
 출력은 JSON 객체 하나만 쓴다. 형식: {"purpose": "...", "trigger": "...", "steps_summary": "...", "tools_needed": "...", "completeness": "보통", "risk_signal": "ok", "risk_quote": null}"""
+
+
+def registry_plan(install: dict) -> schemas.McpProbePlan | None:
+    """레지스트리 packages·remotes로 바로 정한다. 정할 게 없으면 None (모델이 README를 읽는다)."""
+    packages, remotes = install.get("packages") or [], install.get("remotes") or []
+    for registry, runner in (("npm", "npx -y"), ("pypi", "uvx")):
+        for package in packages:
+            if package.get("registryType") == registry and package.get("identifier") and package.get("transport", "stdio") in (None, "stdio"):
+                version = f"@{package['version']}" if package.get("version") else ""
+                return schemas.McpProbePlan(action="probe", kind=registry, command=f"{runner} {package['identifier']}{version}",
+                                            reason=f"레지스트리 {registry} 패키지")
+    urls = [r.get("url") or "" for r in remotes]
+    if usable := [u for u in urls if u.startswith("https://") and not PLACEHOLDER.search(u)]:
+        return schemas.McpProbePlan(action="probe", kind="remote", url=usable[0], reason="레지스트리 원격 주소")
+    if any(PLACEHOLDER.search(u) for u in urls):
+        return schemas.McpProbePlan(action="stop", reason="실측 불가(자체 호스팅 주소): 주소에 자리표시자가 있음")
+    types = {p.get("registryType") for p in packages}
+    if types == {"oci"}:
+        return schemas.McpProbePlan(action="stop", reason="실측 불가(도커 이미지): 샌드박스 안에서 도커를 띄우지 않는다")
+    if types and not types & {"npm", "pypi"}:
+        return schemas.McpProbePlan(action="stop", reason=f"실측 불가({'·'.join(sorted(t or '알 수 없음' for t in types))} 패키지 형식)")
+    return None
 
 
 async def _plan(request: dict, stats: Stats, model_call, mcp_url: str) -> tuple[schemas.McpProbePlan | None, int]:
@@ -76,11 +102,13 @@ async def _plan(request: dict, stats: Stats, model_call, mcp_url: str) -> tuple[
 
 
 async def _verify_mcp(request: dict, call_tool, stats: Stats, model_call, mcp_url: str) -> dict:
-    plan, fetches = await _plan(request, stats, model_call, mcp_url)
+    plan, fetches = registry_plan((request.get("install") or {}).get("install") or {}), 0
+    if plan is None:
+        plan, fetches = await _plan(request, stats, model_call, mcp_url)
     if plan is None:
         return {"status": "incomplete", "reason": "설치 방법 판단 형식 실패", "tool_calls": fetches}
     if plan.action == "stop":
-        return {"status": "rejected" if "명령 형식" in plan.reason else "done", "reason": plan.reason, "plan": plan.model_dump(),
+        return {"status": "rejected" if "실측 불가" in plan.reason else "done", "reason": plan.reason, "plan": plan.model_dump(),
                 "tool_calls": fetches}
     result = await call_tool("probe_mcp", {"install_command": plan.command or "", "kind": plan.kind, "url": plan.url or "",
                                            "item_id": request["item_id"]})

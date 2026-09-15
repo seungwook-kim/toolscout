@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-09-16 · verify/run_real.py 추가(도구 목록에서 큐레이터가 실제 모델로 요청 → 06:00과 같은 verifier.run, 단계별 성공률·시간·위험 신호), check_verifier에 설치 정보 있으면 모델 안 부름·자리표시자·도커·저장 수 · 세션 8 7단계 · check_verifier 21항목 통과
 - 2026-09-16 · verify/check_rollback.py 추가(되돌림 1 대체·비움·장애, 되돌림 2 회복·확인 필요·공유·상한, 스팬), check_scheduler 06:00 검증 5항목(가짜 시계가 잠들기 전에 따로 도는 작업을 먼저 돌림), check_design 검증관 칸 문구 · 세션 8 5단계 · 전부 통과
 - 2026-09-15 · verify/check_verifier.py 추가 · 세션 8 검증관 4단계 · 17항목 통과, check_tables(skill_reviews skipped 제약)
 - 2026-09-15 · verify/check_skill_read.py와 fixtures(가짜 스킬 3: 외부 전송·판독 지시 삽입·깨끗함) 추가 · 세션 8 검증관 3단계 · 13항목 통과

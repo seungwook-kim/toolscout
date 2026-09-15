@@ -21,6 +21,7 @@ from sqlalchemy.dialects.postgresql import insert
 import db
 
 INSTALL_TIMEOUT, RUN_TIMEOUT, TOOLS_TIMEOUT = 90, 30, 30
+NODE_MAJOR, NODE_SETUP_TIMEOUT = "22", 40  # 샌드박스 기본 Node 20.9는 require(esm)을 못 해 멀쩡한 서버가 실행 실패로 나온다 (9/16 실측, n으로 약 6초)
 ALIVE_SECONDS = 6  # 실행 단계: 이만큼 살아 있으면 기동 성공으로 본다 (stdio 서버는 입력을 기다리며 대기)
 SANDBOX_LIFETIME = 300
 DAILY_AUTO_LIMIT = 30
@@ -46,6 +47,8 @@ def parse_command(command: str, kind: str, url: str = "") -> dict:
     """설치 명령을 확인하고 나눈다. 반환: {kind, spec, args, url}. 가드에 걸리면 ProbeRejected."""
     kind = (kind or "").strip().lower()
     if kind == "remote":
+        if "{" in (url or ""):
+            raise ProbeRejected("실측 불가(자체 호스팅 주소): 주소에 자리표시자가 있음")
         if not re.match(r"^https://[\w.-]+(:\d+)?(/[\w./%~:@!,+=-]*)?(\?[\w./%~:@!,+=&-]*)?$", url or ""):
             raise ProbeRejected("원격 URL은 https 주소만 받는다")
         return {"kind": "remote", "spec": "", "args": [], "url": url}
@@ -117,10 +120,12 @@ def _run(sandbox, command: str, timeout: int) -> tuple[int, str, str]:
 
 def _install_npm(sandbox, spec: str) -> tuple[dict, list[str] | None]:
     started = time.perf_counter()
+    node_code, _, _ = _run(sandbox, f"sudo npm install -g n --loglevel=error >/dev/null && sudo n {NODE_MAJOR} >/dev/null 2>&1", NODE_SETUP_TIMEOUT)
+    runtime = f"node {NODE_MAJOR}" if node_code == 0 else "node 20(기본, 22 준비 실패)"
     code, out, err = _run(sandbox, "mkdir -p /tmp/probe && cd /tmp/probe && npm init -y >/dev/null && "
                                    f"npm install --no-audit --no-fund --loglevel=error {shlex.quote(spec)}", INSTALL_TIMEOUT)
     stage = {"status": OK if code == 0 else FAIL, "ms": int((time.perf_counter() - started) * 1000),
-             "note": "" if code == 0 else _tail(err or out)}
+             "note": "" if code == 0 else _tail(err or out), "runtime": runtime}
     if code != 0:
         return stage, None
     name = re.sub(r"(?<!^)@[^/]*$", "", spec)  # 버전 떼기 (@scope는 남김)

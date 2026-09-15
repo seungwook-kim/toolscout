@@ -152,7 +152,7 @@ class AnswerOutput(BaseModel):
 
 
 class McpProbePlan(BaseModel):
-    """검증관이 MCP 항목마다 정하는 다음 행동. probe면 설치 명령·종류, stop이면 이유("설치법 미확인", "실측 불가(명령 형식)")."""
+    """검증관이 MCP 항목마다 정하는 다음 행동. probe면 설치 명령·종류, stop이면 이유("설치법 미확인", "실측 불가(명령 형식·자체 호스팅 주소·도커 이미지)")."""
     action: Literal["probe", "stop"]
     kind: Literal["npm", "pypi", "remote"] | None = None
     command: str | None = Field(default=None, max_length=300)

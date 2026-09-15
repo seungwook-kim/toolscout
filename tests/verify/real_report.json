@@ -1,0 +1,162 @@
+{
+  "date": "2026-09-16",
+  "dev_mode": true,
+  "pool": 8,
+  "pool_with_install_info": 8,
+  "curator_picked": 4,
+  "filled": 1,
+  "saved_new": 0,
+  "ran": 5,
+  "curator_stats": {
+    "calls": 1,
+    "input_tokens": 776,
+    "output_tokens": 170,
+    "format_failures": 0,
+    "unrecovered": 0,
+    "model_failures": []
+  },
+  "verifier_providers": {
+    "groq:qwen/qwen3.8-27b": 5
+  },
+  "failovers": {},
+  "rate_limits_429": {},
+  "summary": {
+    "requests": 5,
+    "status": {
+      "done": 4,
+      "rejected": 1
+    },
+    "mcp_stage_success": {
+      "install": {
+        "성공": 0,
+        "대상": 0,
+        "해당없음": 2
+      },
+      "run": {
+        "성공": 0,
+        "대상": 0,
+        "해당없음": 2
+      },
+      "tools_list": {
+        "성공": 0,
+        "대상": 2,
+        "해당없음": 0
+      }
+    },
+    "mcp_auth": {
+      "필요": 2,
+      "미실행": 2
+    },
+    "mcp_probe_seconds": [
+      5.1,
+      0.0,
+      2.4,
+      0.0
+    ],
+    "skill_read": {
+      "ok": 1
+    },
+    "risk_signal": {
+      "skipped": 1
+    },
+    "seconds_total": 129.1,
+    "seconds_avg": 25.8,
+    "seconds_max": 91.2
+  },
+  "items": [
+    {
+      "title": "com.apify/apify-mcp-server",
+      "kind": "mcp",
+      "status": "done",
+      "reason": null,
+      "seconds": 6.9,
+      "by_curator": true,
+      "had_install_info": true,
+      "trace_id": "9b982220c1cc2d94fbbd63e689ccbb11",
+      "stages": {
+        "install": "해당없음",
+        "run": "해당없음",
+        "tools_list": "실패",
+        "auth": "필요"
+      },
+      "requirements": [
+        "Authorization 헤더(토큰)"
+      ],
+      "plan": "remote",
+      "risk": null,
+      "risk_quote": null,
+      "completeness": null
+    },
+    {
+      "title": "dev.shiranui-isuzu/unity-mcp",
+      "kind": "mcp",
+      "status": "done",
+      "reason": "설치법 미확인 (nuget 패키지만 존재, npm/pypi/원격 https 설치 경로 없음)",
+      "seconds": 91.2,
+      "by_curator": true,
+      "had_install_info": true,
+      "trace_id": "058221e13e37c9a5f3ce8475f03641e7",
+      "stages": {},
+      "requirements": null,
+      "plan": null,
+      "risk": null,
+      "risk_quote": null,
+      "completeness": null
+    },
+    {
+      "title": "io.github.github/github-mcp-server",
+      "kind": "mcp",
+      "status": "done",
+      "reason": null,
+      "seconds": 3.5,
+      "by_curator": true,
+      "had_install_info": true,
+      "trace_id": "1ec3ca9c7a21c98caf53725a19bc94bd",
+      "stages": {
+        "install": "해당없음",
+        "run": "해당없음",
+        "tools_list": "실패",
+        "auth": "필요"
+      },
+      "requirements": [
+        "Authorization 헤더(토큰)"
+      ],
+      "plan": "remote",
+      "risk": null,
+      "risk_quote": null,
+      "completeness": null
+    },
+    {
+      "title": "io.github.open-metadata/openmetadata-mcp",
+      "kind": "mcp",
+      "status": "rejected",
+      "reason": "실측 불가(자체 호스팅 주소): 주소에 자리표시자가 있음",
+      "seconds": 0.5,
+      "by_curator": true,
+      "had_install_info": true,
+      "trace_id": "e28cce63c5af2b0f2d9f0d20b10efece",
+      "stages": {},
+      "requirements": null,
+      "plan": null,
+      "risk": null,
+      "risk_quote": null,
+      "completeness": null
+    },
+    {
+      "title": "Update claude-api skill: Managed Agents `auto` permission policy and `ant beta:sessions connect` (#1750)",
+      "kind": "skill",
+      "status": "done",
+      "reason": null,
+      "seconds": 27.0,
+      "by_curator": false,
+      "had_install_info": true,
+      "trace_id": "bbd9b7293bc21b61299e4ee5a2fc4128",
+      "stages": {},
+      "requirements": null,
+      "plan": null,
+      "risk": "skipped",
+      "risk_quote": null,
+      "completeness": "높음"
+    }
+  ]
+}

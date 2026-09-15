@@ -41,7 +41,7 @@ def save_requests(day: date, requests: list[dict]) -> int:
                 item_id=item_id, kind=kind, depth=request.get("depth") or ("read" if kind == "skill" else "full"),
                 reason=(request.get("verify_reason") or "")[:200], install=install_info(request), requested_on=day,
                 status="pending", attempts=0, updated_at=db.utcnow()).on_conflict_do_nothing(index_elements=["item_id"])
-            added += conn.execute(statement).rowcount
+            added += len(conn.execute(statement.returning(db.VerifyRequest.item_id)).all())  # rowcount는 -1이 나온다 (9/16 실측)
     return added
 
 
