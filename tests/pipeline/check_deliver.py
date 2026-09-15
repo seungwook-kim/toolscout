@@ -3,11 +3,13 @@
 실행: uv run python -m tests.pipeline.check_deliver
 - 렌더링: 카드 전체·trace_id·뉴스/도구 칸·"오늘 새 도구 없음"·빈 행·이스케이프·위험 링크 차단
 - DB(날짜 2000-01-02로 넣고 끝나면 지움): 발송함 → sent_at 기록 → 다시 불러도 0통(멱등), 개발 모드는 is_test만
-- API(uvicorn 실제 기동): 서비스 키 없으면 401, 발송함·발송 기록·상태
-실제 메일은 보내지 않는다 (개발 모드).
+- 발송(가짜 SMTP): 개발 모드는 ADMIN_EMAILS로 받는 사람을 바꾸고 제목에 [개발 모드], 보낸 사용자만 sent_at, 설정 없으면 기록 안 함
+- API(uvicorn 실제 기동, 예약 꺼짐): 서비스 키 없으면 401, 상태
+실제 메일은 보내지 않는다.
 """
 import json
 import os
+import smtplib
 import sys
 from datetime import date
 
@@ -19,6 +21,31 @@ import memory
 import models
 from pipeline import briefing_mail, deliver
 from tests.app.check_main import KEY, free_port, start
+
+
+class FakeSMTP:
+    """smtplib.SMTP_SSL 대신. 제목에 fail_subject가 들어 있으면 발송 실패를 낸다."""
+    sent: list = []
+    logins: list = []
+    fail_subject: str | None = None
+
+    def __init__(self, host, port, timeout=None):
+        self.host, self.port = host, port
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def login(self, user, password):
+        FakeSMTP.logins.append(bool(user and password))
+
+    def send_message(self, message):
+        if FakeSMTP.fail_subject and FakeSMTP.fail_subject in message["Subject"]:
+            raise smtplib.SMTPRecipientsRefused({message["To"]: (550, b"refused")})
+        FakeSMTP.sent.append({"to": message["To"], "subject": message["Subject"], "from": message["From"],
+                              "parts": [p.get_content_type() for p in message.iter_parts()]})
 
 DAY = date(2000, 1, 2)
 HOST = "https://example.test/deliver/"
@@ -90,35 +117,69 @@ def db_checks(user_ids: list[int]) -> dict:
     }
 
 
-def api_checks(user_ids: list[int]) -> dict:
-    seed(user_ids)
+def send_checks(user_ids: list[int]) -> dict:
+    """가짜 SMTP로 send_day. 환경변수는 이 함수 안에서만 바꾸고 되돌린다 (값은 가짜)."""
+    keys = ("GMAIL_USER", "GMAIL_APP_PASSWORD", "ADMIN_EMAILS")
+    saved = {k: os.environ.get(k) for k in keys}
+    try:
+        os.environ.update({"GMAIL_USER": "sender@example.test", "GMAIL_APP_PASSWORD": "fakepassword0000",
+                           "ADMIN_EMAILS": "me@example.test, other-admin@example.test"})
+        seed(user_ids)
+        FakeSMTP.sent, FakeSMTP.logins, FakeSMTP.fail_subject = [], [], "마케터"
+        partial = deliver.send_day(DAY, smtp_factory=FakeSMTP)
+        remaining = deliver.outbox(DAY)
+        FakeSMTP.fail_subject = None
+        retry = deliver.send_day(DAY, smtp_factory=FakeSMTP)
+        after_all = deliver.send_day(DAY, smtp_factory=FakeSMTP)
+        seed(user_ids)
+        os.environ["GMAIL_APP_PASSWORD"] = ""
+        missing = deliver.send_day(DAY, smtp_factory=FakeSMTP)
+        missing_left = len(deliver.outbox(DAY))
+        os.environ["ADMIN_EMAILS"] = ""
+        console = deliver.send_day(DAY, smtp_factory=FakeSMTP)
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    first_mail = FakeSMTP.sent[0] if FakeSMTP.sent else {}
+    return {
+        "개발모드_받는사람은_ADMIN_EMAILS": all(m["to"] == "me@example.test, other-admin@example.test" for m in FakeSMTP.sent)
+        and len(FakeSMTP.sent) == 2,
+        "개발모드_제목에_표시": first_mail.get("subject", "").startswith("[개발 모드 · 가짜 프로필 자바 백엔드 개발자]"),
+        "텍스트·HTML_둘다": first_mail.get("parts") == ["text/plain", "text/html"],
+        "실패한_사용자만_미발송_남음": partial["mode"] == "smtp" and partial["sent"] == [user_ids[0]]
+        and [f["user_id"] for f in partial["failed"]] == [user_ids[1]] and [m["user_id"] for m in remaining] == [user_ids[1]],
+        "다시_보내면_남은_사용자만": retry["sent"] == [user_ids[1]] and after_all["messages"] == 0,
+        "메일설정_없으면_기록안함": missing["mode"] == "config_missing" and missing_left == 2 and not missing["sent"],
+        "ADMIN_EMAILS_없으면_콘솔·DB만": console["mode"] == "console" and console["rows_marked"] == 3,
+    }
+
+
+def api_checks() -> dict:
     port = free_port()
     os.environ["MCP_SERVICE_KEY"] = KEY
     proc = start(port)
     base = f"http://127.0.0.1:{port}/api/w1"
     headers = {"X-Service-Key": KEY}
     try:
-        no_key = httpx.get(f"{base}/outbox", params={"date": str(DAY)}, timeout=10)
+        no_key = httpx.post(f"{base}/send", params={"date": str(DAY)}, timeout=10)
         wrong_key = httpx.get(f"{base}/status", headers={"X-Service-Key": "wrong-key"}, timeout=10)
-        box = httpx.get(f"{base}/outbox", params={"date": str(DAY)}, headers=headers, timeout=30).json()
-        sent = httpx.post(f"{base}/sent", json={"date": str(DAY), "user_ids": user_ids}, headers=headers, timeout=30).json()
-        box_again = httpx.get(f"{base}/outbox", params={"date": str(DAY)}, headers=headers, timeout=30).json()
         state = httpx.get(f"{base}/status", headers=headers, timeout=10).json()
     finally:
         proc.terminate()
         proc.wait(timeout=10)
     return {
         "API_키없으면_401": no_key.status_code == 401 and wrong_key.status_code == 401,
-        "API_발송함_dev_mode·2통·HTML": box["dev_mode"] is True and box["count"] == 2 and all(m["html"] and m["text"] for m in box["messages"]),
-        "API_발송기록·다시_0통": sent["rows_marked"] == 3 and box_again["count"] == 0,
-        "API_상태_실행중_아님": state == {"running": False, "last": None},
+        "API_상태_예약꺼짐·실행중아님": state["enabled"] is False and state["running"] is False and state["last_run"] is None,
     }
 
 
 def main() -> int:
     user_ids = memory.test_user_ids()
     try:
-        checks = {"개발_모드": models.dev_mode(), **render_checks(), **db_checks(user_ids), **api_checks(user_ids)}
+        checks = {"개발_모드": models.dev_mode(), **render_checks(), **db_checks(user_ids), **send_checks(user_ids), **api_checks()}
     finally:
         cleanup()
     report = {"checks": checks, "pass": all(checks.values())}
