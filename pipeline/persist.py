@@ -24,6 +24,12 @@ def sent_user_ids(today: date) -> set[int]:
         return {row[0] for row in rows}
 
 
+def wake_db() -> None:
+    """Supabase 깨우기 (계획안 W4, 무료 프로젝트는 오래 안 쓰면 멈춘다). 06:55 예열 때 한 번 접속한다."""
+    with db.get_engine().connect() as connection:
+        connection.execute(select(1))
+
+
 def users_with_briefings(today: date) -> set[int]:
     """그날 briefings 행(카드 또는 빈 행)이 있는 사용자. 예약 작업이 놓친 하루 실행을 따라잡을지 볼 때 쓴다."""
     with db.get_engine().connect() as connection:
