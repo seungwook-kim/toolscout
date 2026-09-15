@@ -97,6 +97,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
     started = time.perf_counter()
     calls_before = models.PROVIDER_CALLS.copy()
     failovers_before = models.FAILOVERS.copy()
+    rate_limits_before = models.RATE_LIMITS.copy()
     with tracing.span("W1:daily", kind="chain", input={"date": str(today), "dev_mode": models.dev_mode(),
                                                        "users": users, "limit": limit}) as root:
         failures = []
@@ -122,7 +123,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
                 results.append(entry | {"status": "model_failed", "reason": plan["failure_reason"], "cards": 0})
                 continue
             items_by_url = {item["url"]: item for item in plan["news"] + plan["tools"]}
-            checked = {"cards": [], "rejected": [], "excluded": [], "retried": 0, "format_failed": [], "model_failed": []}
+            checked = {"cards": [], "rejected": [], "excluded": [], "fixed": [], "retried": 0, "format_failed": [], "model_failed": []}
             if items_by_url:
                 async with AsyncExitStack() as stack:
                     client, _ = await loop._connect(stack, ["fetch_article"], mcp_url, plan["user_id"])
@@ -132,7 +133,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
                         return await explainer.explain_item(item, mem, client, stats, model_call, feedback=feedback)
 
                     checked = await validate.run_user(explained, items_by_url, redo)
-            entry |= {"rejected": checked["rejected"], "excluded": checked["excluded"], "retried": checked["retried"],
+            entry |= {"rejected": checked["rejected"], "excluded": checked["excluded"], "retried": checked["retried"], "fixed": checked.get("fixed", []),
                       "format_failed": checked["format_failed"], "model_failed": checked["model_failed"],
                       "titles": [c["title"] for c in checked["cards"]]}
             if not checked["cards"] and checked["model_failed"]:
@@ -163,6 +164,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
             "all_users_failed": bool(results) and len(failed_users) == len(results),
             "providers": dict(models.PROVIDER_CALLS - calls_before),
             "failovers": dict(models.FAILOVERS - failovers_before),
+            "rate_limits_429": dict(models.RATE_LIMITS - rate_limits_before),
             "model_failures": curator_stats["model_failures"] + explainer_stats["model_failures"],
             "failure_examples": examples[:MAX_EXAMPLES],
             "format_failures_recorded": record_format_failures(examples, today),
@@ -183,6 +185,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="toolscout 하루 실행 (발송 전까지)")
     parser.add_argument("--users", type=int, default=None, help="처리할 사용자 수 (디버깅 1)")
     parser.add_argument("--limit", type=int, default=None, help="큐레이터 입력 상위 N건 (디버깅 40)")
+    parser.add_argument("--date", type=date.fromisoformat, default=None, help="브리핑 날짜 (기본 오늘 KST). 검수용 날짜로 돌릴 때")
     parser.add_argument("--mcp-url", default=loop.DEFAULT_MCP_URL)
     return parser.parse_args(argv)
 
@@ -190,7 +193,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     try:
-        report = asyncio.run(run(mcp_url=args.mcp_url, users=args.users, limit=args.limit))
+        report = asyncio.run(run(args.date, mcp_url=args.mcp_url, users=args.users, limit=args.limit))
     finally:
         tracing.flush()
     print(json.dumps(report, ensure_ascii=False, indent=2))

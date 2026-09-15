@@ -1,5 +1,9 @@
 # docs/ CHANGELOG
 
+- 2026-09-15 · 계획안: 부록 B 4에 관련도 3 미만 반려, 부록 B 5에 검증 노드 두 단계, 예외 표에 MCP 레지스트리 수집 실패·모델 429, 9.2와 자동화 표에 "개발 중 앱 내 스케줄러, 배포 시 n8n 크론이 /api/w1/run 호출", 9.3 카드 규격에 relevance · 세션 7 결정 1·3·4·6·9 · check_readme 통과
+
+- 2026-09-15 · local-model.md 선택표(해설가 groq → gemma3 대체)와 주의(06:55 예열, 로컬 첫 호출 90초) · 세션 7 결정 2·3 · check_models 통과
+
 - 2026-09-15 · 계획안에서 n8n 제거(자동화 표·흐름도·9.2 예약 작업·알림 SMTP·배포 1컨테이너·부록 F), 개발 모드 본인 발송 예외 기록 · 사용자 결정(n8n 제외, 앱 안 예약) · check_readme 부록F 동일 확인
 
 - 2026-09-15 · 부록 F pipeline 줄에 deliver.py·briefing_mail.py 추가 · 08:00 발송 파일 반영 · check_readme 부록F 동일 확인

@@ -6,6 +6,7 @@ reasoning(OpenRouter reasoning.effort, Groq·Ollama reasoning_effort).
 """
 import json
 import os
+import time
 from typing import Any, Callable
 
 import httpx
@@ -21,6 +22,15 @@ GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 OLLAMA_URL = "http://localhost:11434/v1/chat/completions"  # 로컬 Ollama OpenAI 호환, 키 불필요
 REMOTE_TIMEOUT = 120
 LOCAL_TIMEOUT = 30  # 로컬 모델이 30초 안에 답하지 않으면 타임아웃으로 다음 제공자
+# 모델이 VRAM에 없을 때(프로세스 첫 호출, 또는 OLLAMA_KEEP_ALIVE 30분보다 오래 쉼)는 올리는 시간이 들어 90초 (2026-09-15 사용자 결정)
+LOCAL_FIRST_TIMEOUT = 90
+LOCAL_KEEP_ALIVE_SECONDS = 30 * 60
+_local_last_ok: dict[str, float] = {}
+
+
+def local_timeout(model: str) -> float:
+    last = _local_last_ok.get(model)
+    return LOCAL_TIMEOUT if last is not None and time.time() - last < LOCAL_KEEP_ALIVE_SECONDS else LOCAL_FIRST_TIMEOUT
 
 
 class ProviderError(Exception):
@@ -195,7 +205,9 @@ def _ollama(model: str, messages: list[BaseMessage], tools, temperature: float |
         extra["temperature"] = temperature
     if reasoning:
         extra["reasoning_effort"] = reasoning
-    return _openai_compatible("ollama", OLLAMA_URL, None, extra, model, messages, tools, timeout=LOCAL_TIMEOUT)
+    result = _openai_compatible("ollama", OLLAMA_URL, None, extra, model, messages, tools, timeout=local_timeout(model))
+    _local_last_ok[model] = time.time()
+    return result
 
 
 def _openai_compatible(provider: str, url: str, key_env: str | None, extra: dict, model: str,

@@ -32,9 +32,9 @@ class SourceResult:
     stats: dict = field(default_factory=dict)  # 필터 단계별 건수 (리포트용)
 
 
-def http_client() -> httpx.Client:
+def http_client(timeout: float = 20) -> httpx.Client:
     # 레딧은 User-Agent가 없으면 막는다. 모든 소스에 같은 정직한 UA를 보낸다.
-    return httpx.Client(timeout=20, follow_redirects=True, headers={"User-Agent": USER_AGENT})
+    return httpx.Client(timeout=timeout, follow_redirects=True, headers={"User-Agent": USER_AGENT})
 
 
 def parse_date(value: str | None, naive_tz: timezone = timezone.utc) -> datetime | None:

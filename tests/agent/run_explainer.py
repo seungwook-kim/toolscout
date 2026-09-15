@@ -42,7 +42,7 @@ def fake_model():
         if "BROKEN" in item["title"] and item["title"] not in seen:
             seen.add(item["title"])
             return AIMessage('{"summary_ko": "끊긴 응답')
-        body = {"summary_ko": "테스트 요약입니다.", "for_me": "사내 브리핑 봇에 붙여 볼 수 있다.",
+        body = {"summary_ko": "테스트 요약입니다.", "for_me": "사내 브리핑 봇에 붙여 볼 수 있다.", "relevance": 4,
                 "pros": [{"text": "설치가 쉽다", "evidence_url": item["url"]}], "cons": [], "install_cmd": "npx -y example"}
         return AIMessage(json.dumps(body, ensure_ascii=False))
     return call

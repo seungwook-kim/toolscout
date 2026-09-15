@@ -12,8 +12,9 @@ DEV_MODE(기본 1)면 개발 모델표(로컬·무료), 0이면 운영 모델표
 - Ollama 로컬: https://ollama.com/library, VRAM·도구 호출·한글 실측은 docs/local-model.md (2026-09-14)
 
 메시지는 langchain_core.messages 형식을 쓰고, 반환도 AIMessage(tool_calls 포함)로 통일한다.
-표의 각 역할은 제공자 순서 목록이다. 429·503·529(Anthropic 과부하)·연결 실패·타임아웃·키 없음이면 다음 제공자로
-넘어가고 제공자마다 한 번만 부른다. 끝까지 실패하거나 전환 대상이 아닌 오류면 ModelUnavailable을 낸다.
+표의 각 역할은 제공자 순서 목록이다. 503·529(Anthropic 과부하)·연결 실패·타임아웃·키 없음이면 다음 제공자로 넘어간다.
+429는 60초 기다렸다가 같은 제공자에 1회 더 보내고, 그래도 429면 다음으로 넘어간다. 도구가 필요한 호출은 도구를 못 쓰는
+모델(tools False)을 건너뛴다. 끝까지 실패하거나 전환 대상이 아닌 오류면 ModelUnavailable을 낸다.
 사고·추론 토큰도 출력 한도를 쓰므로 표에서 thinking(Gemini)·reasoning(OpenRouter·Groq·Ollama)을 낮춰 둔다.
 사고 수준 출처: https://ai.google.dev/gemini-api/docs/thinking, https://openrouter.ai/docs/guides/best-practices/reasoning-tokens
 """
@@ -57,13 +58,14 @@ PROD_MODELS: ModelTable = {
 
 # 개발 모드 제공자 순서: ollama(로컬) → groq(무료) → gemini(무료) → openrouter(무료) (2026-09-14 사용자 결정)
 # - 로컬 모델은 VRAM 8~9GB 안에서 가장 큰 모델을 실측으로 골랐다: gemma3:12b Q4_K_M, num_ctx 8192에서 8.96GiB (docs/local-model.md)
-#   gemma3:12b는 도구 호출을 지원하지 않아 JSON만 내는 큐레이터·게이트에만 쓰고, 해설가·검증관은 groq부터 시작한다 (사용자 결정)
+#   gemma3:12b는 도구 호출을 지원하지 않아(tools False) 큐레이터·게이트는 첫 제공자, 해설가는 groq 다음 대체로 둔다.
+#   해설가는 모델에 도구를 주지 않으므로 대체로 쓸 수 있고, 도구가 필요한 호출이면 건너뛴다 (2026-09-15 사용자 결정)
 #   num_ctx 8192는 서버 환경변수 OLLAMA_CONTEXT_LENGTH, 온도 0은 호출에서. 사고 모델이 아니라 reasoning을 넘기지 않는다
 # - Groq는 도구 호출 지원 목록에서 한국어가 되는 qwen3를 해설가·검증관에, 가벼운 gpt-oss-20b를 선별·게이트에 둔다.
 #   분당 토큰 8K가 모델별이라 역할을 두 모델로 나눴다. 2026-09-14 목록 API·실제 도구 호출·JSON 응답으로 확정
 #   (tests/models/check_groq.py, 하루 1,000회·분당 8,000토큰. llama-3.3-70b-versatile은 이 계정에서 404)
 # - gemma-4-31b·26b는 무료 공급자(Google AI Studio) 429가 반복돼 뺐다 / OpenRouter 무료는 크레딧이 없으면 하루 50회
-LOCAL_JSON_MODEL = {"provider": "ollama", "model": "gemma3:12b"}
+LOCAL_JSON_MODEL = {"provider": "ollama", "model": "gemma3:12b", "tools": False}
 GROQ_FAST = {"provider": "groq", "model": "openai/gpt-oss-20b", "reasoning": "low"}
 GROQ_KOREAN = {"provider": "groq", "model": "qwen/qwen3.8-27b", "reasoning": "none"}
 DEV_MODELS: ModelTable = {
@@ -73,7 +75,7 @@ DEV_MODELS: ModelTable = {
     "verifier": [GROQ_KOREAN,
                  {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "low"},
                  {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free", "reasoning": "none"}],
-    "explainer": [GROQ_KOREAN,
+    "explainer": [GROQ_KOREAN, LOCAL_JSON_MODEL,
                   {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "low"},
                   {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free", "reasoning": "none"}],
     "gate": [LOCAL_JSON_MODEL, GROQ_FAST,
@@ -83,14 +85,18 @@ DEV_MODELS: ModelTable = {
 
 FALLBACK_STATUS = {429, 503, 529}  # 529는 Anthropic 과부하
 SLOT_NAMES = ["primary", "fallback", "fallback2", "fallback3"]
+# 429는 60초 기다렸다가 같은 제공자에 1회 더 보내고, 그래도 429면 다음 제공자로 (2026-09-15 사용자 결정)
+RATE_LIMIT_WAIT_SECONDS = 60
+_sleep = time.sleep  # 검수에서 기다리지 않게 바꿔 끼운다
 # 개발 모드 무료 등급 호출 간격(초). OpenRouter 무료는 분당 20회.
 # Groq 무료는 분당 30회지만 분당 토큰 8,000이 먼저 막힌다. 해설가 1회가 용어집·원문 포함 약 3~4K 토큰이라 분당 2회로 둔다
 FREE_TIER_MIN_INTERVAL = {"gemini": 4.0, "openrouter": 3.5, "groq": 30.0}
 _last_call: dict[str, float] = {}
 _throttle_lock = threading.Lock()
-# 이 프로세스에서 성공한 호출 수 (제공자:모델) 와 전환 사유. 하루 실행 보고의 "사용한 제공자"
+# 이 프로세스에서 성공한 호출 수 (제공자:모델), 전환 사유, 429 받은 횟수(제공자별). 하루 실행 보고에 쓴다
 PROVIDER_CALLS: Counter = Counter()
 FAILOVERS: Counter = Counter()
+RATE_LIMITS: Counter = Counter()
 
 
 class ModelUnavailable(Exception):
@@ -114,27 +120,62 @@ def call(role: str, messages: list[BaseMessage], tools: list[Any] | None = None,
          temperature: float | None = None) -> AIMessage:
     """역할에 맞는 모델을 순서대로 부른다. 전환 대상 오류면 다음 제공자로 한 번씩 넘어간다.
 
+    - 429는 60초 기다렸다가 같은 제공자에 1회 더 보내고, 그래도 429면 다음 제공자로
+    - 도구가 필요한 호출에서 도구 호출을 못 하는 모델(tools False)은 건너뛴다
     temperature는 받는 공급자에만 넘긴다. Anthropic SDK 1.5 create에는 인자가 없다.
     """
     chain = active_models()[role]
     openai_tools = [convert_to_openai_tool(t) for t in tools] if tools else None
     attempts: list[str] = []
+    last_exc: Exception | None = None
     for index, spec in enumerate(chain):
-        try:
-            result = _call_one(role, SLOT_NAMES[index], spec, messages, openai_tools, temperature)
-            PROVIDER_CALLS[f"{spec['provider']}:{spec['model']}"] += 1
-            return result
-        except Exception as exc:
-            reason = failover_reason(exc)
-            attempts.append(f"{spec['provider']} {reason or type(exc).__name__}")
-            if reason is None:
-                raise ModelUnavailable(role, attempts) from exc
-            FAILOVERS[f"{spec['provider']}:{reason}"] += 1
-            if index + 1 < len(chain):
-                log.warning("%s %s %s, 다음 제공자 %s로 전환", role, spec["provider"], reason, chain[index + 1]["provider"])
-            else:
-                raise ModelUnavailable(role, attempts) from exc
-    raise ModelUnavailable(role, attempts)
+        if openai_tools and spec.get("tools") is False:
+            attempts.append(f"{spec['provider']} 도구 호출 미지원이라 건너뜀")
+            continue
+        for attempt in (1, 2):
+            try:
+                result = _call_one(role, SLOT_NAMES[index], spec, messages, openai_tools, temperature)
+                PROVIDER_CALLS[f"{spec['provider']}:{spec['model']}"] += 1
+                return result
+            except Exception as exc:
+                last_exc = exc
+                reason = failover_reason(exc)
+                if reason == "429":
+                    RATE_LIMITS[spec["provider"]] += 1
+                    if attempt == 1:
+                        log.warning("%s %s 429, %d초 뒤 같은 제공자에 한 번 더", role, spec["provider"], RATE_LIMIT_WAIT_SECONDS)
+                        _sleep(RATE_LIMIT_WAIT_SECONDS)
+                        continue
+                attempts.append(f"{spec['provider']} {reason or type(exc).__name__}")
+                if reason is None:
+                    raise ModelUnavailable(role, attempts) from exc
+                FAILOVERS[f"{spec['provider']}:{reason}"] += 1
+                log.warning("%s %s %s, 다음 제공자로 전환", role, spec["provider"], reason)
+                break
+    raise ModelUnavailable(role, attempts) from last_exc
+
+
+def warm_local() -> list[dict]:
+    """06:55 예열. 현재 모델표의 로컬(ollama) 모델마다 짧은 프롬프트를 1회 보내 VRAM에 올려 둔다 (2026-09-15 사용자 결정).
+
+    반환: [{model, ok, seconds, error?}]. 첫 호출이라 제한 시간은 providers의 로컬 첫 호출 값(90초)을 따른다.
+    """
+    from langchain_core.messages import HumanMessage
+
+    results, seen = [], set()
+    for role, chain in active_models().items():
+        for index, spec in enumerate(chain):
+            if spec["provider"] != "ollama" or spec["model"] in seen:
+                continue
+            seen.add(spec["model"])
+            started = time.perf_counter()
+            try:
+                _call_one("warmup", SLOT_NAMES[index], spec, [HumanMessage("OK라고만 답해")], None, 0)
+                results.append({"model": spec["model"], "ok": True, "seconds": round(time.perf_counter() - started, 1)})
+            except Exception as exc:  # 예열 실패는 실행을 막지 않는다. 첫 호출이 90초 제한으로 다시 올린다
+                results.append({"model": spec["model"], "ok": False, "seconds": round(time.perf_counter() - started, 1),
+                                "error": f"{type(exc).__name__}"})
+    return results
 
 
 def failover_reason(exc: Exception) -> str | None:
@@ -164,7 +205,7 @@ def status_code(exc: Exception) -> int | None:
 
 def _options(spec: dict[str, Any], temperature: float | None) -> dict[str, Any]:
     """표의 thinking·reasoning과 호출의 temperature 중 그 공급자가 받는 것만 고른다."""
-    wanted: dict[str, Any] = {k: v for k, v in spec.items() if k not in ("provider", "model")}
+    wanted: dict[str, Any] = {k: v for k, v in spec.items() if k not in ("provider", "model", "tools")}
     if temperature is not None:
         wanted["temperature"] = temperature
     return {k: v for k, v in wanted.items() if k in OPTIONS.get(spec["provider"], ())}

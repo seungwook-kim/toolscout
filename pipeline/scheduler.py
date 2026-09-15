@@ -1,6 +1,6 @@
-"""앱 안 예약 작업 (계획안 9.2 W1). n8n 대신 FastAPI 앱이 떠 있는 동안 돈다 (2026-09-15 사용자 결정).
+"""앱 안 예약 작업 (계획안 9.2 W1). 개발 중에는 FastAPI 앱이 떠 있는 동안 여기서 돌고, 배포 단계에서 n8n 크론이 /api/w1/run을 부르는 형태로 바꾼다 (2026-09-15 사용자 결정).
 
-- 매일 07:00 KST 하루 실행(run_daily.run), 08:00 KST 발송(deliver.send_day)
+- 매일 06:55 KST 로컬 모델 예열(models.warm_local), 07:00 하루 실행(run_daily.run), 08:00 발송(deliver.send_day)
 - 07:00에 앱이 꺼져 있었으면 그날 22:00 전에 켜질 때 바로 따라잡는다. 대상 사용자 중 그날 briefings가 없는 사람이 있을 때만
 - 08:00에 하루 실행이 돌고 있으면 끝날 때까지 기다렸다 보낸다. 발송은 sent_at 기준 멱등이라 다시 불러도 안전하다
 - 발송 실패 사용자가 있으면 10분 간격으로 2번 더 보낸다
@@ -14,11 +14,12 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from typing import Any, Awaitable, Callable
 
+import models
 from pipeline import deliver, persist, run_daily
 
 log = logging.getLogger("toolscout.scheduler")
 
-RUN_AT, SEND_AT, CATCH_UP_UNTIL = time(7, 0), time(8, 0), time(22, 0)
+WARM_AT, RUN_AT, SEND_AT, CATCH_UP_UNTIL = time(6, 55), time(7, 0), time(8, 0), time(22, 0)
 SEND_RETRIES, RETRY_WAIT_SECONDS, MAX_NAP_SECONDS = 2, 600, 60
 
 
@@ -36,10 +37,12 @@ async def _needs_run(day: date) -> bool:
 class Scheduler:
     run: Callable[..., Awaitable[dict]] = run_daily.run
     send: Callable[[date], Any] = deliver.send_day
+    warm: Callable[[], Any] = models.warm_local
     needs_run: Callable[[date], Awaitable[bool]] = _needs_run
     now: Callable[[], datetime] = lambda: datetime.now(run_daily.KST)
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep
-    state: dict = field(default_factory=lambda: {"last_run": None, "last_send": None, "run_checked": None, "send_done": None})
+    state: dict = field(default_factory=lambda: {"last_run": None, "last_send": None, "last_warm": None,
+                                                 "warm_done": None, "run_checked": None, "send_done": None})
     _run_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _task: asyncio.Task | None = None
 
@@ -84,6 +87,9 @@ class Scheduler:
         """지금 시각에 할 일을 한다. 루프가 매번 부른다."""
         now = self.now()
         today = now.date()
+        if WARM_AT <= now.time() < RUN_AT and self.state["warm_done"] != today:
+            self.state["last_warm"] = {"results": await asyncio.to_thread(self.warm), "at": self.now().isoformat()}
+            self.state["warm_done"] = today
         if RUN_AT <= now.time() < CATCH_UP_UNTIL and self.state["run_checked"] != today:
             if await self.needs_run(today):
                 await self.run_now()
@@ -96,11 +102,13 @@ class Scheduler:
         now = self.now()
         today = now.date()
         candidates = []
+        if self.state["warm_done"] != today:
+            candidates.append(datetime.combine(today, WARM_AT, now.tzinfo))
         if self.state["run_checked"] != today:
             candidates.append(datetime.combine(today, RUN_AT, now.tzinfo))
         if self.state["send_done"] != today:
             candidates.append(datetime.combine(today, SEND_AT, now.tzinfo))
-        candidates = [c for c in candidates if c > now] or [datetime.combine(today + timedelta(days=1), RUN_AT, now.tzinfo)]
+        candidates = [c for c in candidates if c > now] or [datetime.combine(today + timedelta(days=1), WARM_AT, now.tzinfo)]
         return min(candidates)
 
     async def loop(self) -> None:
@@ -115,7 +123,8 @@ class Scheduler:
     def start(self) -> None:
         if self._task is None or self._task.done():
             self._task = asyncio.create_task(self.loop())
-            log.warning("예약 작업 시작: 매일 %s 하루 실행, %s 발송 (KST)", RUN_AT.strftime("%H:%M"), SEND_AT.strftime("%H:%M"))
+            log.warning("예약 작업 시작: 매일 %s 예열, %s 하루 실행, %s 발송 (KST)", WARM_AT.strftime("%H:%M"), RUN_AT.strftime("%H:%M"),
+                        SEND_AT.strftime("%H:%M"))
 
     async def stop(self) -> None:
         if self._task is not None:
@@ -127,7 +136,7 @@ class Scheduler:
 
     def status(self) -> dict:
         return {"enabled": self._task is not None and not self._task.done(), "running": self.running(),
-                "next_event": self.next_event().isoformat(), **{k: self.state[k] for k in ("last_run", "last_send")}}
+                "next_event": self.next_event().isoformat(), **{k: self.state[k] for k in ("last_warm", "last_run", "last_send")}}
 
 
 scheduler = Scheduler()
