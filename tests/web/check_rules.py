@@ -3,7 +3,7 @@
 실행: uv run python -m tests.web.check_rules
 - 모든 /api/ 경로는 세션이 없으면 401 (예외: 상태 확인, 로그인 요청, 로그아웃, 메일 피드백 서명 링크, 서비스 키 API)
 - 남의 데이터 접근 거부: 남의 항목 피드백, 남의 피드백 메모, 남의 날짜 브리핑은 빈 결과
-- 화면 파일: 뷰포트 메타, 폰 한 줄·PC 두 칸 규칙, 긴 줄표 없음, 외부 스크립트 없음
+- 화면 파일: 뷰포트 메타, app.css가 docs/design-reference.html의 style 그대로(640px 이하 한 줄), 긴 줄표 없음, 외부 스크립트 없음
 - 이번 단계 제외 확인: SSE(text/event-stream) 없음, 공개 MCP 도구(get_briefing·ask_briefing) 없음
 """
 import asyncio
@@ -91,6 +91,8 @@ def main() -> int:
     pages = sorted((ROOT / "web").glob("*.html"))
     web_files = pages + sorted((ROOT / "web").glob("*.js")) + sorted((ROOT / "web").glob("*.css"))
     css = (ROOT / "web" / "app.css").read_text(encoding="utf-8")
+    reference = (ROOT / "docs" / "design-reference.html").read_text(encoding="utf-8")
+    reference_style = re.search(r"<style>\s*\n(.*?)</style>", reference, re.S).group(1)
     code = "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "routes").glob("*.py"))
     tool_names = {t.name for t in asyncio.run(mcp.list_tools())}
     checks = {
@@ -99,8 +101,7 @@ def main() -> int:
         "남의_피드백_메모_거부": other_note.status_code == 403,
         "남의_날짜_브리핑은_빈결과": other_day["count"] == 0 and not other_day["exists"] and own_day["count"] == 1,
         "모든_화면_뷰포트_메타": all('name="viewport"' in p.read_text(encoding="utf-8") for p in pages),
-        "폰_한줄·PC_두칸": ".cards { display: grid; grid-template-columns: 1fr;" in css
-        and "@media (min-width: 900px) { .cards { grid-template-columns: 1fr 1fr; } }" in css,
+        "디자인_참고파일_style_그대로·640px_이하_한줄": css.startswith(reference_style) and "@media (max-width:640px)" in css,
         "화면_긴줄표_없음": not [p.name for p in web_files if chr(0x2014) in p.read_text(encoding="utf-8")],
         "외부_스크립트·프레임워크_없음": not [p.name for p in pages if re.search(r'<script[^>]+src="https?://', p.read_text(encoding="utf-8"))],
         "SSE_없음": "text/event-stream" not in code and "EventSource" not in "".join(p.read_text(encoding="utf-8") for p in web_files),

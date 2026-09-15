@@ -4,79 +4,110 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>toolscout 지난 브리핑</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
   <link rel="stylesheet" href="/static/app.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#15181E">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
 </head>
 <body>
-  <header class="top" id="top"></header>
-  <main class="wrap">
-    <h1>지난 브리핑</h1>
-    <form class="row" id="search-form">
-      <input id="q" type="text" maxlength="60" placeholder="도구·소식 이름으로 찾기 (예: 노션, n8n)" autocomplete="off" style="flex: 1">
-      <button class="btn primary" type="submit">찾기</button>
-    </form>
-    <div id="results"></div>
-
-    <h2>날짜</h2>
-    <div class="dates" id="dates"><span class="muted small">불러오는 중이에요</span></div>
-
-    <section id="day-head">
-      <h2 id="day-title"></h2>
-      <div class="muted small" id="day-summary"></div>
+  <header class="mast" id="mast"></header>
+  <main>
+    <section class="sec">
+      <div class="sec-h"><h2>찾기</h2><span class="hint">지난 브리핑에 나온 도구와 소식 이름으로 찾아요</span></div>
+      <form class="acts" id="search-form">
+        <input id="q" type="text" maxlength="60" placeholder="예: 노션, n8n" aria-label="검색어" autocomplete="off">
+        <button class="go" type="submit">찾기</button>
+        <span class="fb" id="search-msg"></span>
+      </form>
+      <div id="results"></div>
     </section>
-    <section id="briefing"></section>
+
+    <div id="days"><section class="sec"><div class="empty">불러오는 중이에요</div></section></div>
   </main>
   <script src="/static/app.js"></script>
   <script src="/static/cards.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
-    const label = (value) => {
-      const d = new Date(value + "T00:00:00");
-      return `${d.getMonth() + 1}월 ${d.getDate()}일`;
-    };
+    const dayName = (value) => new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "long" })
+      .format(new Date(`${value}T00:00:00`));
+    const shortName = (value) => new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(new Date(`${value}T00:00:00`));
 
-    async function openDay(day) {
-      document.querySelectorAll("#dates button").forEach((b) => b.classList.toggle("on", b.dataset.date === day));
-      $("day-title").textContent = `${label(day)} 브리핑`;
-      $("briefing").innerHTML = '<div class="empty">불러오는 중이에요</div>';
+    // 날짜 칸을 처음 펼칠 때 그날 브리핑을 불러와 그린다 (GET /api/briefings?date=)
+    async function loadDay(box) {
+      if (box.dataset.loaded) return;
+      box.dataset.loaded = "1";
+      const body = box.querySelector(":scope > div");
+      body.innerHTML = '<div class="empty">불러오는 중이에요</div>';
       try {
-        const briefing = await TS.api(`/api/briefings?date=${encodeURIComponent(day)}`);
-        const counts = briefing.pool_size ? `${briefing.pool_size}건 중 ${briefing.count}건` : `${briefing.count}건`;
-        $("day-summary").textContent = `${counts} · 기준: ${briefing.profile_line}`;
-        Cards.mount($("briefing"), briefing, "이날");
-        history.replaceState(null, "", `#${day}`);
+        const briefing = await TS.api(`/api/briefings?date=${encodeURIComponent(box.dataset.date)}`);
+        box.querySelector(".hint").textContent = briefing.pool_size ? `${briefing.pool_size}건 중 ${briefing.count}건` : "";
+        Cards.mount(body, briefing, "이날");
       } catch (e) {
-        $("briefing").innerHTML = `<div class="empty">${TS.esc(e.message)}</div>`;
+        body.innerHTML = `<div class="empty">${TS.esc(e.message)}</div>`;
+        delete box.dataset.loaded;
       }
     }
 
+    function openDay(day, scroll = false) {
+      const box = document.querySelector(`details.day[data-date="${CSS.escape(day)}"]`);
+      if (!box) return;
+      box.open = true;
+      loadDay(box);
+      if (scroll) box.scrollIntoView({ block: "start" });
+    }
+
     async function search(q) {
+      $("results").innerHTML = "";
+      $("search-msg").classList.remove("on", "bad");
       try {
         const data = await TS.api(`/api/search?q=${encodeURIComponent(q)}`);
         if (!data.results.length) {
-          $("results").innerHTML = '<div class="panel muted small">내 지난 브리핑에서 찾지 못했어요</div>';
+          $("results").innerHTML = '<div class="empty">지난 브리핑에서 찾지 못했어요.</div>';
           return;
         }
-        $("results").innerHTML = `<div class="panel"><div class="small muted">${data.results.length}건</div><ul class="points">${data.results.map((r) => {
+        TS.message($("search-msg"), `${data.results.length}건 찾았어요`);
+        $("results").innerHTML = data.results.map((r) => {
           const url = TS.safeUrl(r.url);
           const title = url ? `<a href="${TS.esc(url)}" target="_blank" rel="noopener">${TS.esc(r.title)}</a>` : TS.esc(r.title);
-          return `<li>${title} <button class="btn small" type="button" data-open="${TS.esc(r.date)}">${label(r.date)} 브리핑 보기</button></li>`;
-        }).join("")}</ul></div>`;
-        $("results").querySelectorAll("button[data-open]").forEach((b) => { b.onclick = () => openDay(b.dataset.open); });
+          return `<article class="item">
+            <div class="mark"></div>
+            <div>
+              <h3>${title}</h3>
+              <div class="src">${shortName(r.date)} 브리핑</div>
+              ${r.summary_ko ? `<p class="sum">${TS.esc(r.summary_ko)}</p>` : ""}
+              <div class="acts"><button class="act" type="button" data-open="${TS.esc(r.date)}">그날 브리핑 보기</button></div>
+            </div>
+          </article>`;
+        }).join("");
+        $("results").querySelectorAll("button[data-open]").forEach((b) => { b.onclick = () => openDay(b.dataset.open, true); });
       } catch (e) {
-        $("results").innerHTML = `<div class="panel small msg err">${TS.esc(e.message)}</div>`;
+        TS.message($("search-msg"), e.message, true);
       }
     }
 
     async function load() {
-      await TS.header("/history");
+      const profile = await TS.api("/api/profile");
+      await TS.mast({ active: "/history", title: "지난 브리핑", basis: TS.basis(profile) });
       const data = await TS.api("/api/briefings/dates");
       if (!data.dates.length) {
-        $("dates").innerHTML = '<span class="muted small">아직 지난 브리핑이 없어요</span>';
+        $("days").innerHTML = '<section class="sec"><div class="empty">아직 지난 브리핑이 없어요</div></section>';
         return;
       }
-      $("dates").innerHTML = data.dates.map((d) =>
-        `<button class="btn" type="button" data-date="${TS.esc(d.date)}">${label(d.date)} <span class="small muted">${d.cards}건</span></button>`).join("");
-      $("dates").querySelectorAll("button").forEach((b) => { b.onclick = () => openDay(b.dataset.date); });
+      // 날짜마다 접었다 펴는 칸. 머리는 .sec-h(날짜, 카드 수, 펼치면 "N건 중 M건")
+      $("days").innerHTML = data.dates.map((d) => `<details class="sec day" data-date="${TS.esc(d.date)}">
+          <summary class="sec-h"><h2>${dayName(d.date)}</h2><span class="n">${d.cards}</span><span class="hint"></span></summary>
+          <div></div>
+        </details>`).join("");
+      $("days").querySelectorAll("details.day").forEach((box) => {
+        box.addEventListener("toggle", () => {
+          if (!box.open) return;
+          loadDay(box);
+          history.replaceState(null, "", `#${box.dataset.date}`);
+        });
+      });
       const wanted = location.hash.slice(1);
       openDay(data.dates.some((d) => d.date === wanted) ? wanted : data.dates[0].date);
     }

@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>toolscout · 9월 15일 브리핑</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+<style>
+:root{
+  --paper:#F7F7F4; --card:#FFFFFF; --ink:#15181E; --ink-2:#3F434B; --mute:#7A7E86; --line:#E1E2DD; --line-2:#CBCDC6;
+  --mast:#15181E; --mast-2:#1F232B; --mast-line:rgba(255,255,255,.08); --mast-text:#E9EAE6; --mast-mute:#9DA2AC;
+  --accent:#12766A; --accent-ink:#0C5B51; --accent-wash:#E3F0ED;
+  --ok:#1E7B4E; --ok-wash:#E4F2EA; --warn:#A85E08; --warn-wash:#FBEFDF; --bad:#B4261F; --bad-wash:#FBE8E6;
+  --t-model:#4C5FD5; --t-price:#B07A17; --t-mcp:#12766A; --t-skill:#7B4BC7; --t-agent:#C24A6E; --t-research:#3A8AA8; --t-biz:#8A6A3E; --t-oss:#4E8B3C;
+  --sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --w:760px;
+}
+*{box-sizing:border-box}
+html{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;word-break:keep-all}
+body{margin:0;padding-bottom:96px}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ===== 마스트헤드 ===== */
+.mast{background:var(--mast);color:var(--mast-text);position:relative;overflow:hidden}
+.mast::before{content:"";position:absolute;inset:0;background-image:
+  linear-gradient(var(--mast-line) 1px,transparent 1px),linear-gradient(90deg,var(--mast-line) 1px,transparent 1px);
+  background-size:28px 28px;mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.15));pointer-events:none}
+.mast > *{position:relative}
+.mast .in{max-width:var(--w);margin:0 auto;padding:22px 24px 30px}
+.bar{display:flex;align-items:center;gap:16px}
+.brand{font-weight:800;font-size:18px;letter-spacing:-.02em}
+.brand em{font-style:normal;color:var(--accent);}
+.mode{font-family:var(--mono);font-size:11px;color:var(--mast-mute);border:1px solid var(--mast-line);padding:2px 7px;border-radius:3px}
+.nav{margin-left:auto;display:flex;gap:18px;font-size:14px;color:var(--mast-mute)}
+.nav a[aria-current]{color:var(--mast-text);position:relative}
+.nav a[aria-current]::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:2px;background:var(--accent)}
+
+.date{margin-top:38px;display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap}
+.date h1{margin:0;font-size:52px;line-height:1;font-weight:800;letter-spacing:-.035em}
+.date h1 small{display:block;font-size:14px;font-weight:500;letter-spacing:0;color:var(--mast-mute);margin-bottom:10px}
+.date .basis{color:var(--mast-mute);font-size:14px;line-height:1.5;padding-bottom:6px}
+.date .basis b{color:var(--mast-text);font-weight:600}
+
+/* 에이전트 파이프라인 */
+.pipe{margin-top:30px;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--mast-line);border-radius:10px;background:var(--mast-2)}
+.pipe > div{padding:14px 18px;position:relative}
+.pipe > div + div{border-left:1px solid var(--mast-line)}
+.pipe > div + div::before{content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;border-top:1px solid var(--mast-line);border-right:1px solid var(--mast-line);transform:translateY(-50%) rotate(45deg);background:var(--mast-2)}
+.pipe .who{font-size:12px;color:var(--mast-mute);display:flex;align-items:center;gap:7px}
+.pipe .who i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(18,118,106,.25)}
+.pipe .what{margin-top:6px;font-family:var(--mono);font-size:15px;color:var(--mast-text);letter-spacing:-.01em}
+.pipe .what span{color:var(--mast-mute)}
+.pipe .sub{margin-top:2px;font-size:12px;color:var(--mast-mute)}
+@media (max-width:640px){.pipe{grid-template-columns:1fr}.pipe > div + div{border-left:0;border-top:1px solid var(--mast-line)}.pipe > div + div::before{display:none}}
+
+/* ===== 본문 ===== */
+main{max-width:var(--w);margin:0 auto;padding:8px 24px 0}
+.sec{margin-top:40px}
+.sec-h{display:flex;align-items:baseline;gap:12px;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+.sec-h h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.sec-h .n{font-family:var(--mono);font-size:13px;color:var(--mute)}
+.sec-h .hint{margin-left:auto;font-size:13px;color:var(--mute)}
+
+/* 뉴스 항목 */
+.item{display:grid;grid-template-columns:22px 1fr;gap:14px;padding:24px 0;border-bottom:1px solid var(--line);transition:opacity .2s,transform .2s}
+.item .mark{padding-top:9px}
+.item .mark i{display:block;width:10px;height:10px;border-radius:50%;background:var(--t);box-shadow:0 0 0 3px color-mix(in srgb,var(--t) 18%,transparent)}
+.item .topic{font-size:12px;color:var(--t);font-weight:600;margin-bottom:6px}
+.item h3{margin:0;font-size:20px;line-height:1.3;font-weight:750;letter-spacing:-.015em}
+.item h3 a:hover{text-decoration:underline;text-underline-offset:4px}
+.item .src{font-size:13px;color:var(--mute);margin-top:5px}
+.item .sum{margin:12px 0 0;color:var(--ink-2);font-size:15.5px}
+.forme{margin:14px 0 0;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.forme b{font-size:12px;font-weight:700;color:var(--accent-ink);background:var(--accent-wash);padding:3px 8px;border-radius:4px;margin-top:2px;white-space:nowrap}
+.forme p{margin:0;color:var(--ink);font-size:15.5px}
+details.why{margin-top:10px;font-size:13.5px;color:var(--mute)}
+details.why summary{cursor:pointer;list-style:none;display:inline-flex;gap:6px;align-items:center}
+details.why summary::-webkit-details-marker{display:none}
+details.why summary::before{content:"";border:4px solid transparent;border-left:6px solid var(--mute);transition:transform .15s}
+details.why[open] summary::before{transform:rotate(90deg)}
+details.why p{margin:8px 0 0;padding-left:12px;border-left:2px solid var(--line);color:var(--ink-2)}
+.acts{display:flex;gap:8px;margin-top:16px;align-items:center}
+.act{font-size:13px;padding:6px 12px;border:1px solid var(--line-2);border-radius:6px;color:var(--ink-2);background:var(--card);transition:background .12s,border-color .12s}
+.act:hover{border-color:var(--ink);color:var(--ink)}
+.act[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.act.p{border-color:var(--accent);color:var(--accent-ink)}
+.act.p[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.acts .fb{font-size:13px;color:var(--accent-ink);margin-left:6px;opacity:0;transition:opacity .2s}
+.item.muted{opacity:.45}
+.item.muted .acts .fb{opacity:1}
+
+/* 도구 블록 */
+.tool{margin-top:18px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--t);border-radius:10px;padding:22px 26px 22px 24px}
+.tool .kind{font-family:var(--mono);font-size:11.5px;color:var(--t);font-weight:600}
+.tool h3{margin:6px 0 0;font-size:22px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tool h3 .ver{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--mute)}
+.tool .meta{font-size:13px;color:var(--mute);margin-top:4px;display:flex;gap:14px}
+.tool .desc{margin:12px 0 0;color:var(--ink-2);font-size:15.5px}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.pc > div{padding:12px 14px;border-radius:8px;font-size:14.5px}
+.pc .pros{background:var(--ok-wash)}.pc .cons{background:var(--warn-wash)}
+.pc h4{margin:0 0 6px;font-size:13px;font-weight:700}
+.pc .pros h4{color:var(--ok)}.pc .cons h4{color:var(--warn)}
+.pc ul{margin:0;padding-left:16px}.pc li{margin:4px 0;color:var(--ink-2)}
+.pc li a{font-size:12px;color:var(--mute);margin-left:4px;text-decoration:underline;text-underline-offset:2px}
+@media (max-width:640px){.pc{grid-template-columns:1fr}}
+
+.verify{margin-top:18px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.verify .t{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--paper);border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-2);font-weight:600}
+.verify .t small{font-weight:400;color:var(--mute);margin-left:auto}
+.steps{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px;font-family:var(--mono);font-size:12.5px}
+.step{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:5px;background:#F1F2EE;color:var(--ink-2)}
+.step i{width:14px;height:14px;border-radius:50%;border:1.5px solid currentColor;position:relative;flex:none}
+.step.ok{background:var(--ok-wash);color:var(--ok)}
+.step.ok i{border:0;background:var(--ok)}
+.step.ok i::after{content:"";position:absolute;left:4.5px;top:2px;width:3.5px;height:7px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.step.warn{background:var(--warn-wash);color:var(--warn)}
+.step.warn i{border:0;background:var(--warn)}
+.step.warn i::after{content:"!";position:absolute;inset:0;color:#fff;font-size:10px;font-weight:800;text-align:center;line-height:14px}
+.step.bad{background:var(--bad-wash);color:var(--bad)}
+.step.na{background:transparent;border:1px dashed var(--line-2);color:var(--mute)}
+.step.na i{border-style:dashed}
+.verify .note{padding:0 14px 12px;font-size:12.5px;color:var(--mute)}
+
+.cmd{margin-top:14px;display:flex;align-items:center;gap:10px;background:var(--mast);color:#E9EAE6;border-radius:8px;padding:11px 14px;font-family:var(--mono);font-size:13px}
+.cmd .ps{color:#6B7078;user-select:none}
+.cmd code{flex:1;overflow:auto;white-space:nowrap}
+.cmd button{color:#B9BEC7;font-size:12px;padding:3px 8px;border:1px solid #363B45;border-radius:4px}
+.cmd button:hover{color:#fff;border-color:#8A909A}
+
+/* 질문 스레드 + 고정 입력바 */
+.ask{margin-top:48px}
+.thread{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.q{align-self:flex-end;max-width:85%;background:var(--accent);color:#fff;padding:10px 14px;border-radius:14px 14px 3px 14px;font-size:15px}
+.a{align-self:flex-start;max-width:92%;background:var(--card);border:1px solid var(--line);padding:14px 16px;border-radius:14px 14px 14px 3px;font-size:15px;color:var(--ink-2)}
+.a .refs{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.a .refs a{font-size:12px;color:var(--accent-ink);background:var(--accent-wash);padding:3px 9px;border-radius:999px}
+.askbar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(247,247,244,0),var(--paper) 30%);padding:18px 0 16px}
+.askbar form{max-width:var(--w);margin:0 auto;padding:0 24px;display:flex;gap:8px;align-items:center}
+.askbar input{flex:1;font:inherit;font-size:15px;padding:13px 16px;border:1px solid var(--line-2);border-radius:10px;background:var(--card);box-shadow:0 6px 24px rgba(21,24,30,.08)}
+.askbar button{background:var(--ink);color:#fff;padding:13px 18px;border-radius:10px;font-weight:600}
+.askbar .quota{font-family:var(--mono);font-size:11.5px;color:var(--mute);white-space:nowrap}
+
+@media (max-width:640px){
+  .mast .in{padding:16px 18px 24px}.bar{flex-wrap:wrap}.nav{margin-left:0;width:100%;gap:14px}
+  .date h1{font-size:40px}.date{margin-top:26px}
+  main{padding:0 18px}.tool{padding:18px 18px 18px 16px}
+  .askbar form{padding:0 14px}.askbar .quota{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="in">
+    <div class="bar">
+      <div class="brand">tool<em>scout</em></div>
+      <span class="mode">DEV</span>
+      <nav class="nav" aria-label="주 메뉴"><a href="/" aria-current="page">오늘</a><a href="/history">지난 브리핑</a><a href="/settings">설정</a><a href="/logout">로그아웃</a></nav>
+    </div>
+    <div class="date">
+      <h1><small>2026년 9월 15일 화요일</small>오늘의 도구</h1>
+      <div class="basis">기준 <b>개발자</b> · 쓰는 도구 <b>python, claude code, mcp</b><br>08:00 발송, 이메일</div>
+    </div>
+    <div class="pipe" aria-label="오늘 새벽 에이전트 작업">
+      <div><div class="who"><i></i>큐레이터</div><div class="what">178 <span>→</span> 50 <span>→</span> 6</div><div class="sub">수집 · 선별 · 내 기준 정렬</div></div>
+      <div><div class="who"><i></i>검증관</div><div class="what">2 <span>/ 2 검증</span></div><div class="sub">샌드박스 설치 · 도구 목록</div></div>
+      <div><div class="who"><i></i>해설가</div><div class="what">6 <span>장 작성</span></div><div class="sub">반려 1 · 원문 재조회 5</div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="sec">
+    <div class="sec-h"><h2>뉴스</h2><span class="n">4</span><span class="hint">주제 색은 내 관심도 순</span></div>
+
+    <article class="item" style="--t:var(--t-agent)">
+      <div class="mark"><i></i></div>
+      <div>
+        <div class="topic">에이전트 프레임워크</div>
+        <h3><a href="#">How Fyxer built an AI executive assistant people trust</a></h3>
+        <div class="src">openai.com</div>
+        <p class="sum">Fyxer는 OpenAI 모델을 30~50개의 작은 모델로 분업시켜 이메일 워크플로를 처리합니다. 사용자 피드백과 파인튜닝으로 신뢰도를 높인 사례입니다.</p>
+        <div class="forme"><b>나한테는</b><p>단일 모델 대신 작업 단위로 세분화하는 아키텍처와 파인튜닝 활용 사례를 참고할 수 있습니다.</p></div>
+        <details class="why"><summary>왜 이 카드?</summary><p>프로필의 "에이전트 개발"과 직접 연결되고, 오늘 항목 중 실무 설계 사례가 가장 구체적입니다.</p></details>
+        <div class="acts"><button class="act" aria-pressed="false">관심없음</button><button class="act" aria-pressed="false">이상함</button><span class="fb">내일부터 이 주제는 뒤로 뺄게요</span></div>
+      </div>
+    </article>
+
+    <article class="item muted" style="--t:var(--t-biz)">
+      <div class="mark"><i></i></div>
+      <div>
+        <div class="topic">기업 동향</div>
+        <h3><a href="#">Superhuman acquires YC-backed notetaker Fathom as productivity platforms push for agentic work</a></h3>
+        <div class="src">techcrunch.com</div>
+        <p class="sum">Superhuman이 회의 기록 도구 Fathom을 인수하며 AI 생산성 플랫폼의 에이전트 업무 처리 경쟁이 강화되고 있습니다.</p>
+        <div class="forme"><b>나한테는</b><p>회의 데이터가 에이전트의 능동적 업무 처리에 어떻게 쓰이는지 참고할 수 있습니다.</p></div>
+        <div class="acts"><button class="act" aria-pressed="true">관심없음</button><button class="act" aria-pressed="false">이상함</button><span class="fb">내일부터 기업 동향은 뒤로 뺄게요</span></div>
+      </div>
+    </article>
+
+    <article class="item" style="--t:var(--t-research)">
+      <div class="mark"><i></i></div>
+      <div>
+        <div class="topic">연구</div>
+        <h3><a href="#">Pion, AI에 실제 사업 운영을 맡기는 실험 플랫폼</a></h3>
+        <div class="src">news.hada.io · 원문 확인 필요</div>
+        <p class="sum">Andon Labs가 실제 사업 운영에 AI를 적용하는 실험 플랫폼 Pion을 연구 프리뷰로 공개했습니다.</p>
+        <div class="forme"><b>나한테는</b><p>벤치마크를 넘어 실제 비즈니스 환경에서 에이전트가 어떻게 작동하고 실패하는지 관찰하는 사례입니다.</p></div>
+        <details class="why"><summary>왜 이 카드?</summary><p>긱뉴스 원문은 못 읽어 요약만으로 썼습니다.</p></details>
+        <div class="acts"><button class="act" aria-pressed="false">관심없음</button><button class="act" aria-pressed="false">이상함</button><span class="fb"></span></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="sec">
+    <div class="sec-h"><h2>새 MCP·스킬</h2><span class="n">2</span><span class="hint">7일 안에 등록된 것 중 아직 안 본 것</span></div>
+
+    <article class="tool" style="--t:var(--t-mcp)">
+      <span class="kind">MCP · 공식</span>
+      <h3>OpenMetadata <span class="ver">1.1.1</span></h3>
+      <div class="meta"><span>GitHub ★ 1,240</span><span>등록 2일 전</span><span>npm</span></div>
+      <p class="desc">검색, 리네이지, 데이터 품질, 거버넌스 기능을 제공하는 21개의 읽기·쓰기 도구를 갖춘 공식 MCP 서버입니다.</p>
+      <div class="forme"><b>나한테는</b><p>데이터 메타데이터와 AI 에이전트를 연결하는 실제 MCP 서버 구현 사례를 참고할 수 있습니다.</p></div>
+      <div class="pc">
+        <div class="pros"><h4>좋은 점</h4><ul><li>검색·리네이지·품질·거버넌스 21개 도구<a href="#">근거</a></li><li>AI 에이전트와 데이터 컨텍스트 연결에 오픈 표준<a href="#">근거</a></li></ul></div>
+        <div class="cons"><h4>아쉬운 점</h4><ul><li>OpenMetadata 서버가 먼저 떠 있어야 함<a href="#">근거</a></li><li>도구 21개라 컨텍스트 소비가 큼<a href="#">근거</a></li></ul></div>
+      </div>
+      <div class="verify">
+        <div class="t">직접 깔아봤더니 <small>06:00 샌드박스</small></div>
+        <div class="steps"><span class="step ok"><i></i>설치 9.2s</span><span class="step ok"><i></i>실행</span><span class="step ok"><i></i>도구 21개</span><span class="step warn"><i></i>OPENMETADATA_TOKEN 필요</span></div>
+        <div class="note">설치·기동·도구 노출까지 확인한 결과입니다. 도구가 올바르게 동작하는지는 범위 밖입니다.</div>
+      </div>
+      <div class="cmd"><span class="ps">$</span><code>npx @openmetadata/mcp-server</code><button type="button">복사</button></div>
+      <details class="why"><summary>왜 이 카드?</summary><p>쓰는 도구에 mcp가 있고, 이번 주 신규 중 GitHub 별이 가장 많습니다.</p></details>
+      <div class="acts"><button class="act p" aria-pressed="false">써봤음</button><button class="act" aria-pressed="false">관심없음</button><button class="act" aria-pressed="false">이상함</button><span class="fb"></span></div>
+    </article>
+
+    <article class="tool" style="--t:var(--t-mcp)">
+      <span class="kind">MCP · 커뮤니티</span>
+      <h3>apify-mcp-server <span class="ver">0.15.7</span></h3>
+      <div class="meta"><span>GitHub ★ 380</span><span>버전 업 1일 전</span><span>원격 전용</span></div>
+      <p class="desc">Apify Store의 스크래핑·자동화 도구를 AI 에이전트에 연결해 웹 데이터를 추출합니다. Claude Code와 호환되며 URL만 연결하면 됩니다.</p>
+      <div class="forme"><b>나한테는</b><p>에이전트에 웹 데이터 수집을 붙일 때 설치 없이 바로 시험해 볼 수 있는 후보입니다.</p></div>
+      <div class="pc">
+        <div class="pros"><h4>좋은 점</h4><ul><li>Claude Code와 호환, 원격 MCP로 바로 연결<a href="#">근거</a></li><li>Apify Store의 수천 개 도구<a href="#">근거</a></li></ul></div>
+        <div class="cons"><h4>아쉬운 점</h4><ul><li>레거시 SSE 제거, Streamable HTTP로 마이그레이션 필요<a href="#">근거</a></li></ul></div>
+      </div>
+      <div class="verify">
+        <div class="t">직접 깔아봤더니 <small>06:00 샌드박스</small></div>
+        <div class="steps"><span class="step na"><i></i>설치 해당없음</span><span class="step na"><i></i>실행 해당없음</span><span class="step ok"><i></i>엔드포인트 200</span><span class="step warn"><i></i>APIFY_TOKEN 필요</span></div>
+        <div class="note">원격 전용 서버라 설치·실행 단계는 해당 없음. 엔드포인트 응답만 확인했습니다.</div>
+      </div>
+      <div class="cmd"><span class="ps">url</span><code>https://mcp.apify.com</code><button type="button">복사</button></div>
+      <div class="acts"><button class="act p" aria-pressed="false">써봤음</button><button class="act" aria-pressed="false">관심없음</button><button class="act" aria-pressed="false">이상함</button><span class="fb"></span></div>
+    </article>
+  </section>
+
+  <section class="sec ask">
+    <div class="sec-h"><h2>이 브리핑에 대해 물어보기</h2><span class="hint">오늘 안에서 이어 물을 수 있어요</span></div>
+    <div class="thread">
+      <div class="q">오늘 브리핑에 나온 MCP 중 바로 설치해 볼 만한 거 있어?</div>
+      <div class="a">Apify MCP 서버가 바로 써볼 만합니다. Claude Code와 호환되고 원격 MCP라 설치 없이 URL만 연결하면 됩니다. 단 APIFY_TOKEN이 필요하고, 레거시 SSE는 제거돼 Streamable HTTP 주소를 써야 합니다.
+        <div class="refs"><a href="#">확인한 곳 · apify-mcp-server</a><a href="#">레지스트리</a></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="askbar">
+  <form onsubmit="return false">
+    <input type="text" placeholder="이어서 물어보세요" aria-label="질문">
+    <span class="quota">9 / 10</span>
+    <button type="submit">묻기</button>
+  </form>
+</div>
+
+</body>
+</html>

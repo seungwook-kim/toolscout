@@ -5,23 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <title>toolscout 피드백</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
   <link rel="stylesheet" href="/static/app.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#15181E">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
 </head>
 <body>
-  <main class="center">
-    <div class="panel">
-      <h1>toolscout</h1>
-      <p id="status">기록하는 중이에요</p>
-      <div id="reasons" class="row" hidden></div>
-      <p class="msg" id="msg"></p>
-      <p class="small"><a href="/">오늘 브리핑 열기</a></p>
-    </div>
+  <header class="mast" id="mast"></header>
+  <main>
+    <section class="sec">
+      <div class="sec-h"><h2>메일 버튼 기록</h2><span class="hint">메일 카드의 버튼을 누른 결과예요</span></div>
+      <div class="item">
+        <div class="mark"></div>
+        <div>
+          <p class="sum" id="status">기록하는 중이에요</p>
+          <div class="acts" id="reasons" hidden></div>
+          <div class="acts"><span class="fb" id="msg"></span></div>
+          <div class="acts"><a class="act" href="/">오늘 브리핑 열기</a></div>
+        </div>
+      </div>
+    </section>
   </main>
   <script src="/static/app.js"></script>
   <script>
-    const REASONS = ["번역 어색", "사실 틀림", "나랑 상관없음"];
-    const token = new URLSearchParams(location.search).get("t") || "";
     (async () => {
+      await TS.mast({ session: false, title: "피드백" });
+      const REASONS = ["번역 어색", "사실 틀림", "나랑 상관없음"];
+      const token = new URLSearchParams(location.search).get("t") || "";
       const status = document.getElementById("status");
       try {
         const data = await TS.api("/api/feedback/link", { method: "POST", body: { token }, allow401: true });
@@ -29,7 +42,7 @@
         if (data.note_token) {
           const box = document.getElementById("reasons");
           box.hidden = false;
-          box.innerHTML = REASONS.map((r) => `<button class="btn" data-reason="${r}">${r}</button>`).join("");
+          box.innerHTML = REASONS.map((r) => `<button class="act" type="button" data-reason="${r}">${r}</button>`).join("");
           box.querySelectorAll("button").forEach((b) => {
             b.onclick = async () => {
               try {
