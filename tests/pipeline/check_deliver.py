@@ -66,6 +66,7 @@ def render_checks() -> dict:
     mixed = briefing_mail.render(DAY, "자바 백엔드 개발자", [hostile, tool])
     news_only = briefing_mail.render(DAY, "마케터", [card(3, "news")])
     empty = briefing_mail.render(DAY, "마케터", [], "후보 3건 모두 빠짐 (반려 3, 검증 제외 0, 형식 실패 0)")
+    monday = briefing_mail.render(DAY, "마케터", [card(3, "news"), tool, card(4, "mcp") | {"related": True, "title": "관련 도구 카드"}])
     return {
         "제목_날짜·카드수": mixed["subject"] == "[toolscout] 1월 2일 AI 브리핑 · 카드 2장",
         "카드마다_trace_id(HTML·텍스트)": all(t in mixed["html"] and t in mixed["text"] for t in ("trace-1", "trace-2")),
@@ -74,6 +75,9 @@ def render_checks() -> dict:
         "javascript_링크_차단": "javascript:" not in mixed["html"],
         "뉴스·도구_칸": "뉴스</h2>" in mixed["html"] and "새 MCP·스킬</h2>" in mixed["html"],
         "도구_없으면_오늘_새_도구_없음": briefing_mail.NO_TOOLS in news_only["html"] and briefing_mail.NO_TOOLS in news_only["text"],
+        "관련카드는_따로_칸(없으면_칸없음)": f"{briefing_mail.RELATED_TITLE}</h2>" in monday["html"]
+        and f"[{briefing_mail.RELATED_TITLE}]" in monday["text"] and briefing_mail.RELATED_TITLE not in mixed["html"]
+        and monday["html"].index("관련 도구 카드") > monday["html"].index(briefing_mail.RELATED_TITLE),
         "빈_행이면_오늘_볼_만한_게_없었음": briefing_mail.EMPTY_TITLE in empty["subject"] and "반려 3" in empty["html"] and "반려 3" in empty["text"],
     }
 

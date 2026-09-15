@@ -95,7 +95,7 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
                 type=item["type"], title=item["title"], url=item["url"], summary_ko=parsed.summary_ko or "",
                 for_me=parsed.for_me or "", why_this_card=item["why"], pros=parsed.pros, cons=parsed.cons,
                 install_cmd=parsed.install_cmd if item["type"] in TOOL_TYPES else None, relevance=parsed.relevance,
-                source_checked=checked, notice=" · ".join(notices) or None, trace_id=span.trace_id)
+                source_checked=checked, notice=" · ".join(notices) or None, related=bool(item.get("related")), trace_id=span.trace_id)
             outcome = {"status": "card", "card": card.model_dump(), "item": item}
         span.update(output={"status": outcome["status"], "source_checked": checked, "reason": outcome.get("reason"),
                             "relevance": parsed.relevance if parsed else None},
@@ -107,7 +107,7 @@ async def explain_user(plan: dict, memory: dict, client, stats: Stats, model_cal
     if models.dev_mode() and not memory.get("is_test"):
         raise PermissionError("개발 모드에서는 is_test 사용자만 무료 모델에 보낸다 (작업 규칙 7)")
     result = {"user_id": plan["user_id"], "cards": [], "rejected": [], "format_failed": [], "model_failed": []}
-    for item in plan["news"] + plan["tools"]:
+    for item in plan["news"] + plan["tools"] + plan.get("related", []):
         outcome = await explain_item(item, memory, client, stats, model_call)
         if outcome["status"] == "card":
             result["cards"].append(outcome["card"] | {"rank": len(result["cards"]) + 1})

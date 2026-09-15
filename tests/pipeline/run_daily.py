@@ -54,6 +54,8 @@ def fake_model(mode: str = "normal"):
         elif '"empty_reason"' in system:
             body = {"news": [{"id": i["id"], "why": "검수용 선택 이유"} for i in data["news"][:5]],
                     "tools": [{"id": i["id"], "why": "검수용 선택 이유"} for i in data["tools"][:3]], "empty_reason": None}
+        elif "관련 카드로" in system:  # 관련 카드(F3-b): 검수용 도구만, 순서는 거꾸로 골라 정렬이 이름 일치로 되는지 본다
+            body = {"tools": [{"id": i["id"], "why": "검수용 관련 이유"} for i in data["tools"] if i["title"].startswith("검수 관련")][::-1][:3]}
         elif '"requests"' in system:
             body = {"requests": []}
         else:
@@ -154,7 +156,8 @@ def unit_checks() -> dict:
         "trace_id_없으면_실패": bool(validate.problems(card | {"trace_id": ""})),
         "limit_상위N_비율유지·공식최신·별순": [i["title"] for i in top] == ["n4", "n2", "n3", "t500"],
         "옵션_users·limit·date_해석": vars(run_daily.parse_args(["--users", "1", "--limit", "40", "--date", "2000-01-05"]))
-        | {"mcp_url": None} == {"users": 1, "limit": 40, "date": date(2000, 1, 5), "mcp_url": None},
+        | {"mcp_url": None} == {"users": 1, "limit": 40, "date": date(2000, 1, 5), "mcp_url": None, "related": None}
+        and run_daily.parse_args(["--related"]).related is True,
     }
 
 
@@ -200,6 +203,32 @@ def catalog_checks() -> dict:
     }
 
 
+async def related_checks(run, backend: int, marketer: int) -> dict:
+    """관련 카드(F3-b). 검수용 도구 3개를 도구 목록에 넣고 --related로 돌린다. 백엔드(java·spring·n8n)와 마케터(notion)는 다른 도구가 맨 위."""
+    with db.get_engine().begin() as c:
+        c.execute(update(db.Briefing).where(db.Briefing.date == FAKE_DAY).values(sent_at=None))
+        for slug, desc, topic in (("spring-boot-mcp", "Spring Boot actuator tools", "coding_tools"),
+                                  ("notion-mcp-server", "Read and write Notion pages", "mcp_tools"),
+                                  ("weather-mcp", "Weather forecast data", "automation")):
+            c.execute(insert(db.Item).values(date=date(1999, 12, 30), type="mcp", topic=topic, title=f"검수 관련 {slug}",
+                                             url=f"{FAKE_HOST}rel/{slug}", description=desc, source="mcp_registry"))
+    report = await run(related=True)
+    by_user = {u["user_id"]: u for u in report["users"]}
+    with db.get_engine().connect() as c:
+        rows = c.execute(select(db.Briefing.user_id, db.Briefing.card_json).where(db.Briefing.date == FAKE_DAY,
+                                                                                  db.Briefing.user_id.in_([backend, marketer]))).all()
+    related_cards = {uid: [card["title"] for u, card in rows if u == uid and card and card.get("related")] for uid in (backend, marketer)}
+    pool_after = persist.related_pool(memory.read(backend, FAKE_DAY))
+    return {
+        "관련카드_프로필두개에_다른추천": (by_user[backend]["related_titles"] or [""])[0] == "검수 관련 spring-boot-mcp"
+        and (by_user[marketer]["related_titles"] or [""])[0] == "검수 관련 notion-mcp-server",
+        "관련카드_이름일치가_모델순서보다_위": by_user[backend]["related_titles"][:1] == ["검수 관련 spring-boot-mcp"]
+        and len(by_user[backend]["related_titles"]) == 3,
+        "관련카드_card_json에_related로_저장": len(related_cards[backend]) == 3 and len(related_cards[marketer]) >= 1,
+        "관련카드_본_도구는_다음후보에서_빠짐(재노출0)": not any(i["url"].startswith(f"{FAKE_HOST}rel/") for i in pool_after),
+    }
+
+
 async def fake_run(mcp_url: str) -> dict:
     user_ids = memory.test_user_ids()
     backend, marketer = user_ids[0], user_ids[1]
@@ -217,6 +246,7 @@ async def fake_run(mcp_url: str) -> dict:
         c.execute(update(db.Briefing).where(db.Briefing.date == FAKE_DAY, db.Briefing.user_id == backend)
                   .values(sent_at=datetime.now(timezone.utc)))
     one_user = await run(users=1)
+    related = await related_checks(run, backend, marketer)
     users = {u["user_id"]: u for u in first["users"]}
     card_rows = lambda rows, uid: [b for b in rows["briefings"] if b[0] == uid and b[1] is not None]
     empty_rows = lambda rows, uid: [b for b in rows["briefings"] if b[0] == uid and b[1] is None]
@@ -226,7 +256,8 @@ async def fake_run(mcp_url: str) -> dict:
             {k: u.get(k) for k in ("user_id", "status", "cards", "rejected", "excluded", "retried")} for u in first["users"]]},
         "outage": {k: outage[k] for k in ("totals", "all_users_failed", "model_failures")},
         "dead": {k: dead[k] for k in ("totals", "all_users_failed")} | {"exit_code": run_daily.exit_code(dead)},
-        "checks": unit_checks() | await regression_checks() | catalog | {
+        "checks": unit_checks() | await regression_checks() | catalog | related | {
+            "관련카드_월요일아니면_기본은_안만듦": all(u["related_planned"] == 0 for u in first["users"]),
             "도구목록_저장수_보고": first["catalog_saved"] == 2,
             "is_test_사용자_전부": sorted(users) == sorted(user_ids) and len(user_ids) >= 2,
             "영어_첫응답_재시도후_살아남음": all("ENGLISH 첫 응답만 영어" in u["titles"] for u in users.values()),

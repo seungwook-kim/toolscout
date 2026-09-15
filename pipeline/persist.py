@@ -6,10 +6,12 @@
 - 레지스트리 MCP 여러 개가 같은 저장소 링크를 쓰면 items 한 줄로 합쳐진다. 한 사용자 카드에서 겹치면 앞 순위만 남긴다
 - 카드가 0건이면 item_id 없이 empty_reason과 그날 trace_id만 있는 행 하나를 남긴다 (발송 단계가 "오늘 비움"을 알린다)
 - 도구 목록: 큐레이터 선별을 통과한 MCP·스킬은 카드가 아니어도 items에 주제·원문 설명과 함께 쌓는다 (관련 카드 F3-b 후보, 2026-09-15 사용자 결정)
+- 관련 카드 후보(related_pool): 도구 목록에서 안 본 것을 프로필 도구 태그·써봤음 도구 이름 일치 > 주제 가중치 > 별 수로 100건 이내 (계획안 5장)
 """
+import re
 from datetime import date
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import case, delete, func, literal, or_, select
 from sqlalchemy.dialects.postgresql import insert
 
 import db
@@ -71,6 +73,51 @@ def save_catalog(today: date, selected: list[dict]) -> int:
     with db.get_engine().begin() as connection:
         connection.execute(statement)
     return len(values)
+
+
+RELATED_POOL, RELATED_SCAN = 100, 400
+# 거의 모든 도구 이름에 들어가 구별이 안 되는 말. 태그 "mcp"는 모든 MCP와 겹친다
+GENERIC_TERMS = {"mcp", "server", "servers", "skill", "skills", "ai", "llm", "agent", "agents", "api", "sdk", "tool", "tools", "app",
+                 "com", "io", "github", "official", "the", "and", "for", "plugin", "cli"}
+
+
+def _terms(text: str) -> list[str]:
+    words = re.findall(r"[0-9A-Za-z가-힣+#]+", text.lower())
+    return [w for w in words if not w.isdigit() and w not in GENERIC_TERMS and (len(w) >= 3 or re.search(r"[가-힣]{2}", w))]
+
+
+def related_pool(memory: dict, limit: int = RELATED_POOL) -> list[dict]:
+    """관련 카드(F3-b) 후보. 날짜 무관, 주제가 판정된 MCP·스킬 중 안 본 것.
+
+    일치할 말: 프로필 도구 태그(여러 단어면 통째로도) + 써봤음 도구 이름의 단어. 제목·설명에 들어간 말 수 > 주제 가중치 > 별 수 순.
+    가중치 -5 주제는 뺀다. 반환 항목에 match(겹친 말 목록)를 붙인다.
+    """
+    weights, seen = memory.get("weights", {}), set(memory.get("seen_urls", []))
+    tags = [t.strip().lower() for t in (memory.get("profile", {}).get("tools_tags") or []) if t and t.strip()]
+    terms = [t for t in tags if t not in GENERIC_TERMS] + [w for t in tags for w in _terms(t)]
+    with db.get_engine().connect() as connection:
+        used = [row[0] for row in connection.execute(select(db.Item.title).where(db.Item.url.in_(memory.get("used_urls") or [])))]
+        terms = list(dict.fromkeys(terms + [w for title in used for w in _terms(title)]))[:20]
+        columns = (db.Item.title, db.Item.url, db.Item.type, db.Item.source, db.Item.topic, db.Item.description, db.Item.stars,
+                   db.Item.version)
+        query = select(*columns).where(db.Item.type.in_(CATALOG_TYPES), db.Item.topic.is_not(None))
+        if terms:
+            points = sum((case((or_(db.Item.title.ilike(f"%{t}%"), db.Item.description.ilike(f"%{t}%")), 1), else_=0) for t in terms),
+                         literal(0))
+            query = query.order_by(points.desc(), db.Item.stars.desc().nulls_last())
+        else:
+            query = query.order_by(db.Item.stars.desc().nulls_last())
+        rows = connection.execute(query.limit(RELATED_SCAN)).all()
+    pool = []
+    for row in rows:
+        if row.url in seen or weights.get(row.topic, 0) <= -5:
+            continue
+        text = f"{row.title} {row.description or ''}".lower()
+        pool.append({"title": row.title, "url": row.url, "type": row.type, "source": row.source, "topic": row.topic,
+                     "description": row.description, "stars": row.stars, "version": row.version,
+                     "match": [t for t in terms if t in text]})
+    pool.sort(key=lambda i: (-len(i["match"]), -weights.get(i["topic"], 0), -(i["stars"] or 0)))
+    return pool[:limit]
 
 
 def _item_row(item: dict, card: dict, today: date) -> dict:

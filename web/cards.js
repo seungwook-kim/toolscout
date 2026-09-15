@@ -53,9 +53,11 @@ const Cards = {
       return;
     }
     const news = briefing.cards.filter((c) => !Cards.TOOL_TYPES.includes(c.type));
-    const tools = briefing.cards.filter((c) => Cards.TOOL_TYPES.includes(c.type));
+    const tools = briefing.cards.filter((c) => Cards.TOOL_TYPES.includes(c.type) && !c.related);
+    const related = briefing.cards.filter((c) => c.related);
     container.innerHTML = `<h2>뉴스</h2><div class="cards">${news.map(Cards.render).join("") || `<div class="empty">${day} 뉴스 카드 없음</div>`}</div>
-      <h2>새 MCP·스킬</h2><div class="cards">${tools.map(Cards.render).join("") || `<div class="empty">${day} 새 도구 없음</div>`}</div>`;
+      <h2>새 MCP·스킬</h2><div class="cards">${tools.map(Cards.render).join("") || `<div class="empty">${day} 새 도구 없음</div>`}</div>
+      ${related.length ? `<h2>이번 주 관련 MCP·스킬</h2><div class="cards">${related.map(Cards.render).join("")}</div>` : ""}`;
     container.querySelectorAll(".copy").forEach((b) => {
       b.onclick = async () => { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = "복사됨"; };
     });

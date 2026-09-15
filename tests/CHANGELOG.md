@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · run_daily --fake 관련 카드 5항목(두 프로필 다른 추천·이름 일치 우선·related 저장·재노출 0), check_deliver 관련 칸, 부록 C 기준 2를 실제 F3-b 후보 순서로 · W4-d · 통과
 - 2026-09-15 · feedback/check_merge.py 추가, check_scheduler에 월요일 합치기 4항목 · W4-c 주간 기억 합치기 · 10항목·23항목 통과
 - 2026-09-15 · run_daily --fake에 도구 목록 쌓기 4항목, check_tables items 열에 description · W4-b 관련 카드 후보 목록 · 통과
 - 2026-09-15 · check_scheduler에 실행 재시도·빠진 사용자만 다시·DB 실패 간격·실패 알림 한 번, check_deliver에 send_alert·wake_db · W4-a 재실행·실패 알림 · 19항목·check_deliver 통과

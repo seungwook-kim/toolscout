@@ -14,6 +14,7 @@ from typing import Callable
 TOOL_TYPES = ("mcp", "skill")
 SAFE_URL = re.compile(r"^https?://[^\s\"'<>]+$")
 NO_TOOLS = "오늘 새 도구 없음"
+RELATED_TITLE = "이번 주 관련 MCP·스킬"  # 월요일 관련 카드(F3-b)
 EMPTY_TITLE = "오늘 볼 만한 게 없었음"
 Links = Callable[[dict, str], str]
 
@@ -86,7 +87,8 @@ def _card_text(card: dict, links: Links | None = None) -> str:
 def render(day: date, role: str, cards: list[dict], empty_reason: str | None = None, links: Links | None = None) -> dict:
     """반환: {subject, html, text}. cards는 순위 순서의 card_json."""
     news = [c for c in cards if c.get("type") not in TOOL_TYPES]
-    tools = [c for c in cards if c.get("type") in TOOL_TYPES]
+    tools = [c for c in cards if c.get("type") in TOOL_TYPES and not c.get("related")]
+    related = [c for c in cards if c.get("related")]
     head = f"{day.year}년 {day.month}월 {day.day}일 · {role} 기준"
     if not cards:
         body_html = (f'<h2 style="font-size:18px">{EMPTY_TITLE}</h2>'
@@ -95,9 +97,12 @@ def render(day: date, role: str, cards: list[dict], empty_reason: str | None = N
     else:
         body_html = ('<h2 style="font-size:18px;margin:16px 0 8px">뉴스</h2>' + ("".join(_card_html(c, links) for c in news) or "<p>오늘 뉴스 카드 없음</p>")
                      + '<h2 style="font-size:18px;margin:16px 0 8px">새 MCP·스킬</h2>'
-                     + ("".join(_card_html(c, links) for c in tools) or f'<p style="color:#555">{NO_TOOLS}</p>'))
+                     + ("".join(_card_html(c, links) for c in tools) or f'<p style="color:#555">{NO_TOOLS}</p>')
+                     + (f'<h2 style="font-size:18px;margin:16px 0 8px">{RELATED_TITLE}</h2>' + "".join(_card_html(c, links) for c in related)
+                        if related else ""))
         body_text = ("[뉴스]\n" + ("\n\n".join(_card_text(c, links) for c in news) or "오늘 뉴스 카드 없음")
-                     + "\n\n[새 MCP·스킬]\n" + ("\n\n".join(_card_text(c, links) for c in tools) or NO_TOOLS))
+                     + "\n\n[새 MCP·스킬]\n" + ("\n\n".join(_card_text(c, links) for c in tools) or NO_TOOLS)
+                     + (f"\n\n[{RELATED_TITLE}]\n" + "\n\n".join(_card_text(c, links) for c in related) if related else ""))
     page = (f'<div style="font-family:-apple-system,\'Segoe UI\',\'Malgun Gothic\',sans-serif;max-width:640px;margin:0 auto;'
             f'color:#111;line-height:1.55"><p style="color:#555;margin:0 0 4px">toolscout 아침 브리핑</p>'
             f'<p style="color:#999;font-size:13px;margin:0 0 12px">{_e(head)}</p>{body_html}'
