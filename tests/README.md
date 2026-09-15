@@ -16,6 +16,7 @@
 - `sources/run_today.py`: 9곳 실제 수집, 300건 ±20% 넘으면 필터 강화 재측정 → `today_counts.json`, `report.md`
 - `pipeline/run_dedupe.py`: 정리·중복 제거 단위 검사 + 오늘 전후 건수 → `pipeline/dedupe_counts.json`
 - `pipeline/run_daily.py`: `--fake`는 검증 노드·저장·멱등·모델 장애·빈 행·옵션 29항목(2000-01-01 저장 후 삭제), 없으면 실제 한 번(`--users --limit`) → `pipeline/daily_report.json`, 형식 실패는 `pipeline/format_failures.json`
+- `pipeline/check_deliver.py`: 메일 렌더링(카드마다 trace_id·이스케이프·빈 행) + 발송함·sent_at 멱등(2000-01-02) + W1 API 키 검문
 - `mcp/list_tools.py`: 실제 HTTP로 도구 6개·키 검문·거부 규칙 → `mcp/list_tools_result.json`
 - `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)
 - `agent/run_loop.py`: 가짜 모델로 루프 동작 9항목 + 현재 모델표 해설가로 실제 "안녕"·도구 1개(통과 조건)
