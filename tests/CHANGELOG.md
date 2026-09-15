@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · check_docker가 CI 6단계(app 4·n8n 2) 모두 success인지 확인 · CI에 n8n 워크플로우 가져오기 추가 · check_docker 통과(ced74b9, n8n 기동·가져오기 success)
+
 - 2026-09-15 · n8n/check_workflows.py 추가, CI에 n8n 기동·워크플로우 가져오기 단계 · W1 워크플로우 검수(로컬 Node 20이라 n8n 2.38 실행 불가, CI 컨테이너로 가져오기) · check_workflows 13항목 통과
 
 - 2026-09-15 · pipeline/check_deliver.py 추가, daily_report.json 전량 실행 결과로 갱신 · 08:00 발송 검수 · check_deliver 19항목 통과, 전량 run_daily 실제 통과(4항목)

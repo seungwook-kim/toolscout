@@ -2,6 +2,13 @@
 
 새 세션은 맨 위 항목을 읽고 시작한다. 폴더별 상세 이력은 각 폴더의 `CHANGELOG.md`, 남은 작업은 각 폴더 README의 `## 할 일`에 있다.
 
+- 세션 5 · 2026-09-15 · 전량 하루 실행, 08:00 발송 준비·기록, n8n W1 (main 머지 완료)
+  - 끝난 것: 전량 실행(사용자 2명·카드 7·반려 5·호출 23·토큰 입력 56,604·출력 10,610·650초·전환 없음), 메일 본문(`pipeline/briefing_mail.py`, 카드 전체·카드마다 trace_id), 발송함·sent_at 기록(`pipeline/deliver.py`), n8n용 API(`routes/w1.py`), W1 워크플로우(`n8n/workflows/W1_daily.json`), CI에 n8n 가져오기
+  - 검수: check_deliver 19항목, check_workflows 13항목, CI 6단계 success(n8n 기동·가져오기 포함), 9/14 브리핑 개발 모드 콘솔 발송 2통·sent_at 7행
+  - 미완: n8n에서 W1 실제 실행(로컬 Docker 없음, n8n 2.38은 Node 24 필요인데 로컬 Node 20), 실제 메일 도착(개발 모드는 발송 금지, GMAIL_USER 비어 있음), 피드백 버튼(W3)
+  - 결정 필요: n8n을 어디서 돌릴지(Docker Desktop·Railway·Node 24), 실제 메일 테스트를 운영 모드로 할지, MCP 레지스트리 ReadTimeout 2회 연속(도구 후보 0건), gemma3 첫 로드 24.5초
+  - 다음 시작점: n8n 실행 환경 결정 → 자격 증명 2개 만들고 W1 켜기 → 07:00·08:00 실제 실행과 메일 도착 확인 (뼈대 완성 정의)
+
 - 세션 4 · 2026-09-14 · 개발용 로컬 모델(Ollama)과 첫 실제 하루 실행 (main 머지 완료)
   - 끝난 것: Windows Ollama 0.34.0 설치(WSL2는 다운로드가 초당 78KB로 제외), 로컬 모델 실측(`docs/local-model.md`), 개발 제공자 순서 ollama → groq → gemini → openrouter, Groq 모델 확정, run_daily `--users`·`--limit`, 형식 실패 예시 파일 누적, 모델 장애 사용자·카드 단위 건너뜀(전원 실패 종료 코드 2), 카드 0건 empty_reason 행(briefings 기본키 이전), 계획안 모델 장애 행·한글 비율 어절 60%
   - 모델: 큐레이터·게이트 gemma3:12b(8.96GiB, 도구 호출 미지원), 해설가·검증관 groq qwen3.8-27b. qwen3:14b(9.82GiB)는 삭제
