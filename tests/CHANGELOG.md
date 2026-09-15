@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-15 · run_daily --fake에 회귀 검사 3항목(잘린 JSON 형식 실패, 후보 단계 상한·순서) · 빈 후보 메일 버그 · 통과
+
 - 2026-09-15 · 개발 프로필 3개(A·B·C)에 맞춰 check_tables·check_deliver·run_curator·run_daily 조건 수정(A·B 비교는 그대로) · 프로필 C 추가 · check_tables·check_deliver·run_daily --fake·run_explainer --fake 통과
 
 - 2026-09-15 · pipeline/check_scheduler.py 추가, check_deliver를 가짜 SMTP 발송 검사로 변경, n8n/check_workflows.py 삭제, check_docker·check_readme·check_folder_docs·check_env_example에서 n8n 제거·SCHEDULER_ENABLED 추가, 검수 서버는 예약 끔 · n8n 제외 결정 · check_scheduler 11·check_deliver 24항목, check_readme·check_folder_docs·check_env_example·check_main 통과

@@ -46,6 +46,9 @@ async def ask_json(role: str, prompt: str, payload: Any, schema: type[BaseModel]
         stats.input_tokens += result["usage"]["input_tokens"]
         stats.output_tokens += result["usage"]["output_tokens"]
         try:
+            if not isinstance(result["output"], dict) or set(result["output"]) == {"text"}:
+                # parse_output이 JSON을 못 읽으면 {"text": 원문}을 준다. 기본값만 있는 규격(빈 목록)으로 통과되지 않게 막는다
+                raise ValueError("JSON 객체가 아니다 (출력이 끊겼거나 형식이 틀림)")
             parsed = schema.model_validate(result["output"])
             if check:
                 check(parsed)
