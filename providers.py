@@ -1,4 +1,4 @@
-"""공급자별 모델 호출 (Anthropic, Gemini, OpenAI 호환: OpenAI·OpenRouter·Groq·Ollama). 모델명과 역할 배정은 models.py에만 둔다.
+"""공급자별 모델 호출 (Anthropic, Gemini, OpenAI 호환: OpenAI·OpenRouter·Groq·Ollama·Meta Muse Spark). 모델명과 역할 배정은 models.py에만 둔다.
 
 모두 langchain_core 메시지를 받아 AIMessage(tool_calls 포함)로 돌려준다.
 선택 옵션: temperature(Gemini·OpenRouter·Groq·Ollama), thinking(Gemini thinking_level),
@@ -182,6 +182,15 @@ def _openrouter(model: str, messages: list[BaseMessage], tools, temperature: flo
     return _openai_compatible("openrouter", OPENROUTER_URL, "OPENROUTER_API_KEY", extra, model, messages, tools)
 
 
+def _meta(model: str, messages: list[BaseMessage], tools, temperature: float | None = None) -> AIMessage:
+    """Meta Muse Spark (OpenRouter 경유). openrouter와 키·주소는 같지만 제공자 이름을 나눠 한도·전환을 따로 센다.
+    실제로 답한 모델 이름은 response_metadata의 served_model에서 본다 (1.3을 불렀는데 1.1이 답하는지 확인용)."""
+    extra: dict[str, Any] = {"max_tokens": MAX_TOKENS}
+    if temperature is not None:
+        extra["temperature"] = temperature
+    return _openai_compatible("meta", OPENROUTER_URL, "OPENROUTER_API_KEY", extra, model, messages, tools)
+
+
 def _groq(model: str, messages: list[BaseMessage], tools, temperature: float | None = None,
           reasoning: str | None = None) -> AIMessage:
     """reasoning: reasoning_effort (모델마다 받는 값이 다르다. 모델표에 맞는 값을 둔다)."""
@@ -234,15 +243,16 @@ def _openai_compatible(provider: str, url: str, key_env: str | None, extra: dict
         tool_calls=[{"name": tc["function"]["name"], "args": json.loads(tc["function"]["arguments"] or "{}"),
                      "id": tc["id"], "type": "tool_call"} for tc in message.get("tool_calls") or []],
         usage_metadata=_usage(usage.get("prompt_tokens"), usage.get("completion_tokens")),
-        response_metadata={"provider": provider, "model": model, "finish_reason": data["choices"][0].get("finish_reason")},
+        response_metadata={"provider": provider, "model": model, "served_model": data.get("model"),  # 실제로 답한 모델
+                           "finish_reason": data["choices"][0].get("finish_reason")},
     )
 
 
 PROVIDERS: dict[str, Callable[..., AIMessage]] = {
     "anthropic": _anthropic, "gemini": _gemini, "openai": _openai, "openrouter": _openrouter,
-    "groq": _groq, "ollama": _ollama,
+    "groq": _groq, "ollama": _ollama, "meta": _meta,
 }
 # 공급자별로 받는 선택 옵션. models._call_one이 이 목록에 있는 것만 넘긴다
 OPTIONS: dict[str, tuple[str, ...]] = {"anthropic": (), "openai": (), "gemini": ("temperature", "thinking"),
                                        "openrouter": ("temperature", "reasoning"), "groq": ("temperature", "reasoning"),
-                                       "ollama": ("temperature", "reasoning")}
+                                       "ollama": ("temperature", "reasoning"), "meta": ("temperature",)}

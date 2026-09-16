@@ -1,0 +1,110 @@
+{
+  "models": {
+    "contributor": "meta/muse-spark-1.3-contributor",
+    "standard": "meta/muse-spark-1.3"
+  },
+  "unit_price_usd_per_token": {
+    "meta/muse-spark-1.3-contributor": {
+      "prompt": 1e-07,
+      "completion": 2e-07
+    },
+    "meta/muse-spark-1.3": {
+      "prompt": 1.25e-06,
+      "completion": 4.25e-06
+    },
+    "meta/muse-spark-1.2-contributor": {
+      "prompt": 1e-07,
+      "completion": 2e-07
+    },
+    "meta/muse-spark-1.2": {
+      "prompt": 1.25e-06,
+      "completion": 4.25e-06
+    },
+    "meta/muse-spark-1.1": {
+      "prompt": 1.25e-06,
+      "completion": 4.25e-06
+    }
+  },
+  "served_models": [],
+  "calls": 6,
+  "seconds": {
+    "avg": 0.2,
+    "max": 0.5
+  },
+  "cost": {
+    "usd_total": 0.0,
+    "input_tokens": 0,
+    "output_tokens": 0
+  },
+  "selection": {
+    "items": 20,
+    "selected": 0,
+    "seconds": 1.0,
+    "calls": 1,
+    "first_try_ok": false,
+    "passed": false,
+    "format_failures": 0,
+    "errors": [],
+    "model_failures": [
+      "{'label': '선별 1묶음', 'reason': \"모델 장애 (meta HTTPStatusError: Client error '403 Forbidden' for url 'https://openrouter.ai/api/v1/chat/completions'\\nFor more infor"
+    ],
+    "topics": []
+  },
+  "summaries": [
+    {
+      "title": "“AI 에이전트가 상호 거래·정산까지”...카카오페이 자율결제 실증 완료",
+      "seconds": 0.1,
+      "json_ok": false,
+      "chars": 0,
+      "within_120": false,
+      "hangul_ratio": 0,
+      "summary_ko": null,
+      "error": "curator 모델 장애: meta HTTPStatusError: Client error '403 Forbidden' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://de"
+    },
+    {
+      "title": "앤트로픽 '페이블 5.1', 370년 미해결 난제 암호 44분 만에 풀었다",
+      "seconds": 0.1,
+      "json_ok": false,
+      "chars": 0,
+      "within_120": false,
+      "hangul_ratio": 0,
+      "summary_ko": null,
+      "error": "curator 모델 장애: meta HTTPStatusError: Client error '403 Forbidden' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://de"
+    },
+    {
+      "title": "AI agents now have a place to snitch",
+      "seconds": 0.1,
+      "json_ok": false,
+      "chars": 0,
+      "within_120": false,
+      "hangul_ratio": 0,
+      "summary_ko": null,
+      "error": "curator 모델 장애: meta HTTPStatusError: Client error '403 Forbidden' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://de"
+    }
+  ],
+  "tool": {
+    "tool_called": false,
+    "error": "verifier 모델 장애: meta HTTPStatusError: Client error '403 Forbidden' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://d"
+  },
+  "card": {
+    "status": "model_failed",
+    "seconds": 0.1,
+    "format_failures": 0,
+    "reason": "모델 장애 (meta HTTPStatusError: Client error '403 Forbidden' for url 'https://openrouter.ai/api/v1/chat/completions'\nFor more information check: https://developer.",
+    "summary_ko": null,
+    "for_me": null,
+    "summary_within_120": false,
+    "hangul_ratio": 0
+  },
+  "checks": {
+    "선별_20건_규격_통과": false,
+    "선별_첫응답_형식_통과": false,
+    "한국어_요약_3건_JSON": false,
+    "한국어_요약_120자·한글비율_0.6": false,
+    "도구호출_요청": false,
+    "도구결과_뒤_최종답": false,
+    "카드_1장_작성": false,
+    "실제_응답_모델이_1.3": false
+  },
+  "pass": false
+}
