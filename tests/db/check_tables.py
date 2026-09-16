@@ -30,8 +30,9 @@ PLAN_COLUMNS = {
     "feedback": "user_id item_id action reason memo created_at",
     "questions": "user_id session_date turn_no question gate answer sources_json trace_id created_at",
     "used_tokens": "token_hash purpose used_at expires_at",
+    "invite_codes": "code max_uses used expires_at created_by created_at",  # 초대제 (2026-09-16)
 }
-CHECKS = {"ck_weights_range", "ck_items_type", "ck_skill_reviews_risk", "ck_questions_gate"}
+CHECKS = {"ck_weights_range", "ck_items_type", "ck_skill_reviews_risk", "ck_questions_gate", "ck_users_status"}
 
 
 def ddl_compiles() -> dict:
@@ -81,7 +82,7 @@ def url_checks() -> dict:
 
 
 def live_create() -> dict:
-    """Supabase에 표 9개를 만들고 개발 프로필 A·B·C를 넣는다. 이미 있는 표에 칸이 빠졌는지도 본다."""
+    """Supabase에 표를 만들고 개발 프로필 A·B·C와 데모 프로필을 넣는다. 이미 있는 표에 칸이 빠졌는지도 본다."""
     if not os.environ.get("DATABASE_URL"):
         return {"status": "미실행(DATABASE_URL 비어있음)", "ok": False}
     try:
@@ -102,6 +103,7 @@ def live_create() -> dict:
             "tables_created": sorted(set(db.TABLES) & names),
             "missing_tables": sorted(set(db.TABLES) - names),
             "users_is_test_column": "is_test" in user_columns,
+            "users_초대제_칸": {"status", "invite_code_used", "is_demo"} <= user_columns,
             "items_stars_checked_at_column": "stars_checked_at" in item_columns,
             "briefings_empty_row_ready": ("empty_reason" in briefing_columns and briefing_pk == ["id"]
                                           and briefing_columns["item_id"]["nullable"]
@@ -109,7 +111,8 @@ def live_create() -> dict:
             "test_user_ids": test_ids,
             "test_users": [{"id": u.id, "role": u.role, "tools": u.profile_tools_tags} for u in test_users],
         }
-        result["ok"] = (not result["missing_tables"] and result["users_is_test_column"]
+        result["demo_user_id"] = db.seed_demo_user(engine)
+        result["ok"] = (not result["missing_tables"] and result["users_is_test_column"] and result["users_초대제_칸"]
                         and result["items_stars_checked_at_column"] and result["briefings_empty_row_ready"]
                         and len(test_users) >= 2)
         return result
@@ -125,12 +128,12 @@ def main() -> int:
     ddl = ddl_compiles()
     json_cols = [f"{t}.{c.name}" for t in db.TABLES for c in tables[t].columns if isinstance(c.type, postgresql.JSONB)]
     checks = {
-        "표_11개(used_tokens·verify_requests_포함)": set(tables) == set(db.TABLES) and len(db.TABLES) == 11,
+        "표_12개(used_tokens·verify_requests·invite_codes_포함)": set(tables) == set(db.TABLES) and len(db.TABLES) == 12,
         "계획안_칸_모두_있음": not any(missing.values()),
         "postgres_DDL_컴파일": all(v is True for v in ddl.values()),
         "JSON_칸_9개는_JSONB(run_stats·probes.tools·stages·verify_requests.install 포함)": len(json_cols) == 9,
         "briefings_trace_id_NOT_NULL": tables["briefings"].c.trace_id.nullable is False,
-        "check_제약_4개": CHECKS <= constraints,
+        "check_제약_5개": CHECKS <= constraints,
         "sqlite_흔적_없음": "sqlite" not in (ROOT / "db.py").read_text(encoding="utf-8").lower(),
         "DATABASE_URL_없으면_명확한_에러": missing_url_raises(),
         "users_is_test_칸": "is_test" in columns["users"],

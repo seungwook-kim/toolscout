@@ -1,5 +1,6 @@
 # web/ CHANGELOG
 
+- 2026-09-16 · invite.html·admin.html·demo.html 추가, cards.js에 readonly(버튼 없이 카드만) · 초대 코드 화면과 공개 데모 · check_access 통과
 - 2026-09-16 · cards.js 파이프라인 검증관 칸을 run_stats verified·verify_requested·rollbacks로 채움("아직 붙지 않았어요" 문구 제거) · 세션 8 5단계 · check_design·check_rules 통과
 - 2026-09-15 · cards.js: 스킬 카드 "SKILL.md 읽어봤더니"(위험 신호 칩·충실도·인용), MCP 검증 메모(설치법 미확인 등), 고정 문구(도구 동작은 범위 밖·안전 보증 아님)를 결과가 없어도 표시 · 세션 8 검증관 4단계 · check_design·check_rules 통과
 - 2026-09-15 · history.html: 날짜 칩과 그날 칸을 날짜마다 접었다 펴는 details 칸으로(머리는 .sec-h, 처음 펼칠 때 불러옴), app.css 보충에 접힘 삼각형 · 사용자 요청 · check_briefings·check_design 통과

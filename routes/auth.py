@@ -2,10 +2,13 @@
 
 - POST /api/auth/request {email}: 서명 링크(15분, 1회용)를 메일로 보낸다
   개발 모드는 ADMIN_EMAILS 주소만 받는다 (개발 모드 실제 발송 예외와 같은 범위)
-- GET /auth/verify?token=: 링크 확인 → 사용자가 없으면 만든다 → 세션 쿠키 → 프로필이 비었으면 /settings, 아니면 /
+- GET /auth/verify?token=: 링크 확인 → 사용자가 없으면 만든다(status pending) → 세션 쿠키 → 승인 전이면 /invite,
+  프로필이 비었으면 /settings, 아니면 /
   개발 모드에서는 로그인한 사용자를 is_test=True로 둬서 브리핑 대상에 넣는다
 - POST /api/auth/logout, GET /api/me
-세션 쿠키 ts_session: 서명 토큰(30일), HttpOnly, SameSite=Lax. 모든 API는 세션이 필요하다 (메일 피드백 링크 제외).
+세션 쿠키 ts_session: 서명 토큰(30일), HttpOnly, SameSite=Lax. 모든 API는 세션이 필요하다 (메일 피드백 링크·공개 데모 제외).
+가입은 초대제다 (2026-09-16 사용자 결정). 로그인은 누구나 하지만 status가 pending·blocked면 초대 코드 화면만 보이고
+브리핑·질문·피드백·설정 API는 403이다 (require_approved).
 """
 import os
 import re
@@ -56,6 +59,20 @@ def require_user(request: Request) -> db.User:
     user = current_user(request)
     if user is None:
         raise HTTPException(status_code=401, detail="로그인이 필요해요")
+    return user
+
+
+def approved(user: db.User) -> bool:
+    return user.status == "approved"
+
+
+def require_approved(request: Request) -> db.User:
+    """세션 + 승인된 사용자. 초대 코드를 아직 안 넣었거나 차단된 사용자는 403 (2026-09-16 사용자 결정)."""
+    user = require_user(request)
+    if user.status == "blocked":
+        raise HTTPException(status_code=403, detail="이 계정은 사용할 수 없어요")
+    if not approved(user):
+        raise HTTPException(status_code=403, detail="초대 코드를 먼저 넣어 주세요")
     return user
 
 
@@ -113,6 +130,8 @@ def verify_link(token: str = "") -> RedirectResponse:
             user.is_test = True  # 개발 모드: 로그인한 사용자도 브리핑 대상(is_test)에 넣는다
         s.commit()
         s.refresh(user)
+    if not approved(user):  # 초대 코드를 넣기 전에는 초대 화면만 (2026-09-16 사용자 결정)
+        return login_response(user, "/invite")
     return login_response(user, "/" if profile_done(user) else "/settings")
 
 
@@ -126,4 +145,5 @@ def logout() -> JSONResponse:
 @router.get("/api/me")
 def me(user: db.User = Depends(require_user)) -> dict:
     return {"id": user.id, "email": user.email, "role": user.role, "profile_done": profile_done(user),
-            "is_admin": is_admin(user.email), "dev_mode": models.dev_mode()}
+            "is_admin": is_admin(user.email), "dev_mode": models.dev_mode(), "status": user.status,
+            "approved": approved(user)}

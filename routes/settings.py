@@ -17,7 +17,7 @@ import models
 from agent.schemas import TOPICS
 from pipeline import persist, run_daily
 from pipeline.scheduler import scheduler
-from routes.auth import SESSION_COOKIE, profile_done, require_user
+from routes.auth import SESSION_COOKIE, profile_done, require_approved, require_user
 
 router = APIRouter()
 _runs: dict[int, dict] = {}  # 사용자별 "지금 만들기" 상태 (프로세스 메모리)
@@ -34,7 +34,7 @@ class ProfileBody(BaseModel):
 
 
 @router.get("/api/profile")
-def get_profile(user: db.User = Depends(require_user)) -> dict:
+def get_profile(user: db.User = Depends(require_approved)) -> dict:
     return {"roles": memory.ROLE_CHOICES, "presets": memory.ROLE_PRESETS, "topics": TOPICS,
             "notify_times": memory.NOTIFY_TIMES, "channels": [{"id": "email", "label": "이메일", "ready": True},
                                                             {"id": "kakao", "label": "카카오톡 (준비 중)", "ready": False}],
@@ -42,7 +42,7 @@ def get_profile(user: db.User = Depends(require_user)) -> dict:
 
 
 @router.post("/api/profile")
-def save_profile(body: ProfileBody, user: db.User = Depends(require_user)) -> dict:
+def save_profile(body: ProfileBody, user: db.User = Depends(require_approved)) -> dict:
     try:
         memory.save_profile(user.id, role=body.role, tools_tags=body.tools_tags, free_text=body.free_text,
                             weights=body.weights, notify_time=body.notify_time, channel=body.channel)
@@ -52,13 +52,13 @@ def save_profile(body: ProfileBody, user: db.User = Depends(require_user)) -> di
 
 
 @router.post("/api/memory/forget")
-def forget(user: db.User = Depends(require_user)) -> dict:
+def forget(user: db.User = Depends(require_approved)) -> dict:
     counts = memory.forget(user.id)
     return {"ok": True, "deleted": counts, "message": "기억을 지웠어요. 다음 브리핑은 프로필만으로 골라요"}
 
 
 @router.post("/api/account/delete")
-def delete_account(user: db.User = Depends(require_user)) -> JSONResponse:
+def delete_account(user: db.User = Depends(require_user)) -> JSONResponse:  # 계정 삭제는 승인 전에도 할 수 있어야 한다
     memory.delete_account(user.id)
     response = JSONResponse({"ok": True, "message": "계정과 기록을 모두 지웠어요"})
     response.delete_cookie(SESSION_COOKIE)
@@ -72,7 +72,7 @@ async def _make_now(user_id: int) -> None:
 
 
 @router.post("/api/briefing/now", status_code=202)
-async def make_now(user: db.User = Depends(require_user)) -> dict:
+async def make_now(user: db.User = Depends(require_approved)) -> dict:
     if not profile_done(user):
         raise HTTPException(status_code=400, detail="프로필을 먼저 저장해 주세요")
     if models.dev_mode() and not user.is_test:
@@ -90,5 +90,5 @@ async def make_now(user: db.User = Depends(require_user)) -> dict:
 
 
 @router.get("/api/briefing/now")
-def make_now_status(user: db.User = Depends(require_user)) -> dict:
+def make_now_status(user: db.User = Depends(require_approved)) -> dict:
     return _runs.get(user.id, {"status": "idle"})

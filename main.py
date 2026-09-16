@@ -1,4 +1,4 @@
-"""FastAPI 앱 진입점: / 화면, /api/ 기능, /mcp MCP 서버 (계획안 9.3).
+"""FastAPI 앱 진입점: / 화면, /api/ 기능, /mcp MCP 서버, /demo 공개 데모 (계획안 9.3).
 
 실행: uv run uvicorn main:app --port 8000
 앱이 떠 있는 동안 06:55 예열·07:00 하루 실행·08:00 발송 예약이 돈다 (pipeline/scheduler.py). SCHEDULER_ENABLED=0이면 끈다.
@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 import mcp_server
 from agent import tracing
 from pipeline import scheduler
-from routes import ask, auth, briefings, feedback, pages, settings, w1
+from routes import ask, auth, briefings, demo, feedback, invite, pages, settings, w1
 
 WEB = Path(__file__).parent / "web"
 
@@ -45,6 +45,8 @@ app.include_router(settings.router)  # 프로필·기억 지우기·계정 삭�
 app.include_router(briefings.router)  # 오늘·날짜별 브리핑, 날짜 목록, 키워드 검색
 app.include_router(feedback.router)  # 피드백 버튼(W3): 웹 세션, 메일 서명 링크
 app.include_router(ask.router)  # 질문창(W2): 게이트·키워드 검색·해설가 답
+app.include_router(invite.router)  # 초대 코드 사용, 관리자 코드·가입 관리
+app.include_router(demo.router)  # 공개 데모 /demo (로그인 없음, 읽기 전용)
 app.include_router(w1.router)  # 아침 브리핑 작업을 직접 부르는 API (실행·발송·상태)
 app.mount("/static", StaticFiles(directory=WEB), name="static")
 app.mount("/mcp", mcp_app)

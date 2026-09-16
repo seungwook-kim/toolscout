@@ -1,4 +1,4 @@
-"""SQLModel 데이터 표 10개 (계획안 9.5, used_tokens는 2026-09-15 추가).
+"""SQLModel 데이터 표 12개 (계획안 9.5, used_tokens는 2026-09-15, invite_codes는 2026-09-16 추가).
 
 DB는 Supabase(Postgres) 하나로 간다. 연결 문자열은 .env의 DATABASE_URL에만 둔다.
 드라이버는 psycopg 3. Supabase에서 복사한 postgresql:// 문자열을 그대로 넣으면 여기서 변환한다.
@@ -36,7 +36,9 @@ def _jsonb(nullable: bool = False) -> Column:
 
 
 class User(SQLModel, table=True):
+    """가입은 초대제다. 로그인은 누구나 하지만 status가 approved여야 브리핑·질문·피드백을 쓴다 (2026-09-16 사용자 결정)."""
     __tablename__ = "users"
+    __table_args__ = (CheckConstraint("status IN ('pending', 'approved', 'blocked')", name="ck_users_status"),)
 
     id: int | None = Field(default=None, primary_key=True)
     kakao_id: str | None = Field(default=None, unique=True, index=True)
@@ -48,8 +50,24 @@ class User(SQLModel, table=True):
     class_code: str | None = Field(default=None, index=True)
     is_admin: bool = False
     is_test: bool = Field(default=False, index=True)  # 개발 모드 가짜 프로필. 무료 모델에는 이 사용자만 보낸다
+    is_demo: bool = Field(default=False, index=True)  # 공개 데모 /demo에 보여 줄 프로필 하나. 메일은 보내지 않는다
+    status: str = Field(default="pending", index=True)  # pending(초대 코드 입력 전) · approved · blocked
+    invite_code_used: str | None = None
     mcp_key_hash: str | None = Field(default=None, unique=True)
     notify_time: str = "08:00"  # 메일 받을 시각 (08:00·09:00·12:00·18:00)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class InviteCode(SQLModel, table=True):
+    """초대 코드. 관리자가 만들고 사용 횟수·만료가 있다 (계획안 7장 가입 흐름, 2026-09-16 사용자 결정)."""
+    __tablename__ = "invite_codes"
+
+    id: int | None = Field(default=None, primary_key=True)
+    code: str = Field(unique=True, index=True)
+    max_uses: int = 1
+    used: int = 0
+    expires_at: datetime | None = None
+    created_by: int | None = Field(default=None, foreign_key="users.id")
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -215,7 +233,7 @@ class UsedToken(SQLModel, table=True):
 
 
 TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions", "used_tokens",
-          "verify_requests"]
+          "verify_requests", "invite_codes"]
 
 
 def database_url() -> URL:
@@ -264,7 +282,21 @@ ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE"), (
                  ("probes", "tools", "JSONB NOT NULL DEFAULT '[]'::jsonb"), ("probes", "stages", "JSONB"),
                  ("skill_reviews", "tools_needed", "VARCHAR"), ("skill_reviews", "official", "BOOLEAN"),
                  ("skill_reviews", "source_url", "VARCHAR"), ("skill_reviews", "llm_signal", "VARCHAR"),
-                 ("skill_reviews", "status", "VARCHAR"), ("skill_reviews", "reviewed_at", "TIMESTAMP WITHOUT TIME ZONE")]
+                 ("skill_reviews", "status", "VARCHAR"), ("skill_reviews", "reviewed_at", "TIMESTAMP WITHOUT TIME ZONE"),
+                 ("users", "is_demo", "BOOLEAN NOT NULL DEFAULT FALSE"), ("users", "invite_code_used", "VARCHAR")]
+
+# 초대제 이전에 있던 사용자는 approved로 두고, 그 뒤에 새로 만들어지는 행만 pending으로 시작한다 (2026-09-16). 여러 번 돌려도 같다
+USERS_MIGRATION = [
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'approved'",
+    "ALTER TABLE users ALTER COLUMN status SET DEFAULT 'pending'",
+    "CREATE INDEX IF NOT EXISTS ix_users_status ON users (status)",
+    "CREATE INDEX IF NOT EXISTS ix_users_is_demo ON users (is_demo)",
+    """DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ck_users_status') THEN
+        ALTER TABLE users ADD CONSTRAINT ck_users_status CHECK (status IN ('pending', 'approved', 'blocked'));
+      END IF;
+    END $$""",
+]
 
 # 이미 만든 briefings 표를 카드 0건 행을 담을 수 있게 바꾼다 (2026-09-14). 데이터는 지우지 않고, 여러 번 돌려도 같다
 # (user_id, date, item_id) 복합 기본키 → id 기본키 + 같은 조합 유일(NULL도 같은 값으로 봄)
@@ -305,7 +337,7 @@ def init_db(engine: Engine | None = None) -> None:
     with engine.begin() as connection:
         for table, column, sql_type in ADDED_COLUMNS:
             connection.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {sql_type}")
-        for statement in BRIEFINGS_MIGRATION + SKILL_REVIEWS_MIGRATION:
+        for statement in BRIEFINGS_MIGRATION + SKILL_REVIEWS_MIGRATION + USERS_MIGRATION:
             connection.exec_driver_sql(statement)
 
 
@@ -334,11 +366,33 @@ def seed_test_users(engine: Engine | None = None) -> list[int]:
             if user is None:
                 user = User(**profile, is_test=True)
                 s.add(user)
-            user.is_test = True
+            user.is_test, user.status = True, "approved"  # 가짜 프로필은 초대 없이 승인 상태로 둔다
             s.commit()
             s.refresh(user)
             ids.append(user.id)
     return ids
+
+
+# 공개 데모 /demo에 보여 줄 프로필 하나 (2026-09-16 사용자 결정). 실제 사용자 프로필은 데모에 쓰지 않는다.
+# 하루 실행에는 들어가서 매일 갱신되고(해설 비용 하루 1명분), 메일은 받지 않는다 (가짜 주소)
+DEMO_USER = {"email": "demo@toolscout.test", "role": "개발자",
+             "profile_tools_tags": ["python", "claude code", "mcp"],
+             "profile_free_text": "AI 에이전트와 MCP 도구 소식을 따라가는 개발자"}
+
+
+def seed_demo_user(engine: Engine | None = None) -> int:
+    """데모 프로필을 이메일 기준으로 한 번만 만든다. 반환: 사용자 id."""
+    from sqlmodel import select
+
+    with Session(engine or get_engine()) as s:
+        user = s.exec(select(User).where(User.email == DEMO_USER["email"])).first()
+        if user is None:
+            user = User(**DEMO_USER)
+            s.add(user)
+        user.is_demo, user.is_test, user.status = True, True, "approved"
+        s.commit()
+        s.refresh(user)
+        return user.id
 
 
 @contextmanager

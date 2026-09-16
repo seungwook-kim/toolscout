@@ -1,7 +1,8 @@
 """하루 실행 (계획안 9.2 W1, 부록 B 1~6). 수집 → 정리 → 중복 제거 → 큐레이터 → 해설가 → 검증 노드 → 저장.
 
 - 발송은 다음 단계(이메일)다. 저장한 briefings.sent_at은 null로 남는다
-- 개발 모드(DEV_MODE≠0)는 users.is_test 사용자만 처리한다 (작업 규칙 7). 운영 모드는 is_test가 아닌 사용자
+- 개발 모드(DEV_MODE≠0)는 users.is_test 사용자만 처리한다 (작업 규칙 7). 운영 모드는 is_test가 아닌 사용자와 데모 프로필
+- 어느 쪽이든 status가 approved인 사용자만 (초대제, 2026-09-16 사용자 결정)
 - 오늘 이미 발송한 사용자는 건너뛰고, 미발송이면 다시 만든다 (재실행 멱등)
 - 하루 실행 전체가 트레이스 하나다. 카드마다 그 trace_id가 붙는다
 - 해설가는 MCP fetch_article로 원문을 읽으므로 앱 서버(/mcp)가 떠 있어야 한다
@@ -26,6 +27,7 @@ from dataclasses import asdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+from sqlalchemy import or_
 from sqlmodel import select
 
 import db
@@ -50,10 +52,14 @@ def today_kst() -> date:
 
 
 def target_user_ids() -> list[int]:
-    if models.dev_mode():
-        return memory.test_user_ids()
+    """승인된 사용자만 (2026-09-16 초대제). 개발 모드는 is_test 프로필, 운영 모드는 실제 사용자 + 데모 프로필."""
     with db.session() as s:
-        return list(s.exec(select(db.User.id).where(db.User.is_test == False).order_by(db.User.id)))  # noqa: E712
+        query = select(db.User.id).where(db.User.status == "approved")
+        if models.dev_mode():
+            query = query.where(db.User.is_test == True)  # noqa: E712
+        else:
+            query = query.where(or_(db.User.is_test == False, db.User.is_demo == True))  # noqa: E712
+        return list(s.exec(query.order_by(db.User.id)))
 
 
 def save_catalog(today: date, selected: list[dict]) -> int:

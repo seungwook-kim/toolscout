@@ -15,7 +15,7 @@ import db
 from agent import tracing
 from agent.schemas import TOPICS
 from pipeline.run_daily import today_kst
-from routes.auth import is_admin, require_user
+from routes.auth import is_admin, require_approved
 
 router = APIRouter()
 SEARCH_LIMIT = 30
@@ -75,17 +75,17 @@ def briefing_for(user: db.User, day: date) -> dict:
 
 
 @router.get("/api/briefings/today")
-def today(user: db.User = Depends(require_user)) -> dict:
+def today(user: db.User = Depends(require_approved)) -> dict:
     return briefing_for(user, today_kst())
 
 
 @router.get("/api/briefings")
-def by_date(day: date = Query(alias="date"), user: db.User = Depends(require_user)) -> dict:
+def by_date(day: date = Query(alias="date"), user: db.User = Depends(require_approved)) -> dict:
     return briefing_for(user, day)
 
 
 @router.get("/api/briefings/dates")
-def dates(user: db.User = Depends(require_user)) -> dict:
+def dates(user: db.User = Depends(require_approved)) -> dict:
     with db.get_engine().connect() as conn:
         rows = conn.execute(select(db.Briefing.date, func.count(db.Briefing.item_id))
                             .where(db.Briefing.user_id == user.id).group_by(db.Briefing.date)
@@ -94,7 +94,7 @@ def dates(user: db.User = Depends(require_user)) -> dict:
 
 
 @router.get("/api/search")
-def search(q: str = "", user: db.User = Depends(require_user)) -> dict:
+def search(q: str = "", user: db.User = Depends(require_approved)) -> dict:
     words = [w for w in q.split() if len(w) >= 2][:5]
     if not words:
         raise HTTPException(status_code=400, detail="두 글자 이상으로 검색해 주세요")

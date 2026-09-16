@@ -1,6 +1,7 @@
 """08:00 발송 (계획안 9.2 W1 "08:00 발송(멱등)", 예외 처리 표 "sent_at 없는 사용자만"). n8n 없이 앱이 직접 보낸다 (2026-09-15 사용자 결정).
 
-- outbox(day): 그날 sent_at이 비어 있는 briefings를 사용자별 메일 한 통으로 만든다 (카드 전체 또는 empty_reason)
+- outbox(day): 그날 sent_at이 비어 있는 briefings를 사용자별 메일 한 통으로 만든다 (카드 전체 또는 empty_reason).
+  공개 데모 프로필(users.is_demo)은 가짜 주소라 메일을 만들지 않는다 (2026-09-16)
 - send_day(day): Gmail SMTP(smtp.gmail.com 465)로 보내고, 한 통 보낼 때마다 그 사용자의 sent_at을 채운다. 실패한 사용자는 비워 둔다
 - 개발 모드(DEV_MODE≠0): is_test 사용자만, 받는 사람은 가짜 주소 대신 ADMIN_EMAILS(본인)로 바꾼다 (2026-09-15 사용자 승인).
   프로필이 여러 개여도 메일은 한 통으로 묶고 제목은 [개발 모드] 하나다 (2026-09-16 사용자 결정). 묶음이라 발송 실패는 그날 프로필 전부 미발송이고
@@ -108,7 +109,7 @@ def outbox(day: date, notify_until: str | None = None) -> list[dict]:
     query = (select(db.Briefing.user_id, db.Briefing.card_json, db.Briefing.empty_reason, db.Briefing.trace_id,
                     db.User.email, db.User.role)
              .join(db.User, db.User.id == db.Briefing.user_id)
-             .where(db.Briefing.date == day, db.Briefing.sent_at.is_(None))
+             .where(db.Briefing.date == day, db.Briefing.sent_at.is_(None), db.User.is_demo == False)  # noqa: E712
              .where(db.User.notify_time <= notify_until if notify_until else True)
              .order_by(db.Briefing.user_id, db.Briefing.rank))
     if models.dev_mode():

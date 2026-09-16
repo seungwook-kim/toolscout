@@ -29,6 +29,8 @@ def main() -> int:
             session_cookie = c.cookies.get(auth.SESSION_COOKIE)
             me = c.get("/api/me")
             reused = c.get(f"/auth/verify?token={link}", follow_redirects=False)
+            root_pending = c.get("/", follow_redirects=False)  # 승인 전에는 초대 화면 (2026-09-16 초대제)
+            common.approve_user(A)
             root_without_profile = c.get("/", follow_redirects=False)
             with db.session() as s:
                 created = s.get(db.User, common.user_id(A))
@@ -53,12 +55,13 @@ def main() -> int:
         "링크_메일_발송": sent.status_code == 200 and len(mail_texts) == 1 and "15분" in mail_texts[0],
         "1분_안_재요청은_429": again.status_code == 429,
         "세션없으면_API_401": no_session_me.status_code == 401,
-        "첫_로그인은_설정으로·쿠키": first.status_code == 303 and first.headers["location"] == "/settings" and bool(session_cookie),
+        "첫_로그인은_초대화면으로·쿠키": first.status_code == 303 and first.headers["location"] == "/invite" and bool(session_cookie),
+        "승인전_홈은_초대화면으로": root_pending.headers.get("location") == "/invite",
         "없던_사용자_생성·개발모드_is_test": created is not None and created.is_test is True and created.role == "",
         "세션으로_내정보": me.status_code == 200 and me.json()["email"] == A and me.json()["profile_done"] is False
         and me.json()["is_admin"] is True,
         "같은_링크_두번째는_거부": reused.headers["location"] == "/login?error=used",
-        "프로필_없으면_오늘화면_대신_설정": root_without_profile.headers.get("location") == "/settings",
+        "승인후_프로필_없으면_오늘화면_대신_설정": root_without_profile.headers.get("location") == "/settings",
         "만료_링크_거부": expired.headers["location"] == "/login?error=expired",
         "위조_링크_거부": forged.headers["location"] == "/login?error=invalid"
         and wrong_purpose.headers["location"] == "/login?error=invalid",
