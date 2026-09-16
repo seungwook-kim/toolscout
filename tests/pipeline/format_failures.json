@@ -118,5 +118,29 @@
     "raw_head": "```json\n{\n  \"judgments\": [\n    {\"id\": 1, \"ai_related\": true, \"worth_today\": false, \"topic\": \"model_release\", \"reason\": \"음악 앱 관련 소식으로 AI 기술 활용 사례를 보여주지만, 긴급한 업데이트는 아님.\"},\n    {\"id\": 2, \"ai_related\": true, \"worth_today\": true, \"topic\": \"agent_framework\", \"summary\": \"생산성 플랫폼의 에이전트 기능 강화는 주목할 만한 트렌드.\"},",
     "raw_tail": "드 공유.\"},\n    {\"id\": 20, \"ai_related\": true, \"worth_today\": false, \"topic\": \"industry\", \"reason\": \"Google의 우주, 기술, 발견 관련 대화는 특정 이벤트 홍보에 해당.\"}\n  ]\n}\n```",
     "trace_id": "f94a15ec3416b08f3c7863adc9facf59"
+  },
+  {
+    "at": "2026-09-16T07:23:01+09:00",
+    "date": "2026-09-16",
+    "label": "사용자 45 후보",
+    "attempt": 1,
+    "error": "news: List should have at most 5 items after validation, not 10",
+    "provider": "ollama",
+    "model": "gemma3:12b",
+    "raw_head": "```json\n{\"news\": [{\"id\": 1, \"why\": \"WhatsApp Business MCP 서버 활용 AI 에이전트 개발은 업무 자동화에 기여하여 프로필의 관심사와 연결됨.\"}, {\"id\": 2, \"why\": \"AI 에이전트 개발 및 관리에 대한 관심사를 반영하는 에이전트 프레임워크 관련 기사임.\"}, {\"id\": 4, \"why\": \"카카오페이 AI 에이전트 결제 실증은 에이전트 활용 사례를 보여주며, 관심사를 충족시킴.\"}, {\"id\": 5, \"why\": \"금융 분야 에이전트 활용 사례는 금융 서비스 자동화에 관심 있",
+    "raw_tail": "ight Tools for MCP는 MCP 연동에 관심 있는 개발자에게 도움이 될 수 있음.\"}, {\"id\": 18, \"why\": \"Mock server는 AI 개발 테스트 환경 구축에 관심 있는 사용자에게 유용함.\"}], \"empty_reason\": null}\n```",
+    "trace_id": "06617f3a5dbadd096ffe4c222b884aef"
+  },
+  {
+    "at": "2026-09-16T07:23:01+09:00",
+    "date": "2026-09-16",
+    "label": "카드 45:com.mock-server/mockserver 8.0",
+    "attempt": 1,
+    "error": "cons.0.evidence_url: Input should be a valid string",
+    "provider": "groq",
+    "model": "qwen/qwen3.8-27b",
+    "raw_head": "{\n  \"reject\": false,\n  \"reject_reason\": null,\n  \"relevance\": 3,\n  \"summary_ko\": \"MockServer 8.0.0은 MCP를 통해 HTTP, gRPC, LLM 의존성을 모킹하고 카오스 테스트를 수행할 수 있는 도구입니다. 단일 포트에서 다양한 프로토콜을 지원하며 트래픽 기록 및 재현도 가능합니다.\",\n  \"for_me\": \"Python과 Claude Code를 사용하는 개발자로서, MCP 기반의 LLM API 모킹 기능을 활용해 테스트 환경 구축과 의존성 격리 시도를 할 ",
+    "raw_tail": "o\"\n    }\n  ],\n  \"cons\": [\n    {\n      \"text\": \"사용자 프로필의 '새 모델 공개 소식' 관심사와 직접적인 연관성이 낮음\",\n      \"evidence_url\": null\n    }\n  ],\n  \"install_cmd\": null\n}",
+    "trace_id": "06617f3a5dbadd096ffe4c222b884aef"
   }
 ]

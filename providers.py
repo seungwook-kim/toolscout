@@ -1,4 +1,4 @@
-"""공급자별 모델 호출 (Anthropic, Gemini, OpenAI 호환: OpenAI·OpenRouter·Groq·Ollama). 모델명과 역할 배정은 models.py에만 둔다.
+"""공급자별 모델 호출 (Anthropic, Gemini, OpenAI 호환: OpenAI·OpenRouter·Groq·Ollama, OpenCode Zen Responses API). 모델명과 역할 배정은 models.py에만.
 
 모두 langchain_core 메시지를 받아 AIMessage(tool_calls 포함)로 돌려준다.
 선택 옵션: temperature(Gemini·OpenRouter·Groq·Ollama), thinking(Gemini thinking_level),
@@ -20,6 +20,7 @@ OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 OLLAMA_URL = "http://localhost:11434/v1/chat/completions"  # 로컬 Ollama OpenAI 호환, 키 불필요
+OPENCODE_URL = "https://opencode.ai/zen/v1/responses"  # Muse Spark는 Responses API (https://opencode.ai/docs/zen, 2026-09-16 확인)
 REMOTE_TIMEOUT = 120
 LOCAL_TIMEOUT = 30  # 로컬 모델이 30초 안에 답하지 않으면 타임아웃으로 다음 제공자
 # 모델이 VRAM에 없을 때(프로세스 첫 호출, 또는 OLLAMA_KEEP_ALIVE 30분보다 오래 쉼)는 올리는 시간이 들어 90초 (2026-09-15 사용자 결정)
@@ -238,11 +239,55 @@ def _openai_compatible(provider: str, url: str, key_env: str | None, extra: dict
     )
 
 
+def _opencode(model: str, messages: list[BaseMessage], tools) -> AIMessage:
+    """OpenCode Zen Responses API. 시스템은 instructions, 대화는 input 항목(function_call·function_call_output), 도구는 평평한 function.
+    응답 output의 output_text는 본문, function_call은 tool_calls로 돌린다. reasoning 항목은 다시 보내지 않는다(store false라 id 참조 불가)."""
+    if not os.environ.get("OPENCODE_API_KEY"):
+        raise MissingKey("OPENCODE_API_KEY 비어있음")
+    system, conversation = _split_system(messages)
+    items: list[dict] = []
+    for m in conversation:
+        if isinstance(m, HumanMessage):
+            items.append({"role": "user", "content": m.text})
+        elif isinstance(m, AIMessage):
+            items += [{"role": "assistant", "content": m.text}] if m.text else []
+            items += [{"type": "function_call", "call_id": tc["id"], "name": tc["name"], "arguments": json.dumps(tc["args"], ensure_ascii=False)}
+                      for tc in m.tool_calls]
+        elif isinstance(m, ToolMessage):
+            items.append({"type": "function_call_output", "call_id": m.tool_call_id, "output": m.text})
+    body: dict[str, Any] = {"model": model, "input": items, "max_output_tokens": MAX_TOKENS, "store": False}
+    if system:
+        body["instructions"] = system
+    if tools:
+        body["tools"] = [{"type": "function", "name": t["function"]["name"], "description": t["function"].get("description", ""),
+                          "parameters": t["function"].get("parameters", {"type": "object"})} for t in tools]
+    with _http_client() as client:
+        response = client.post(OPENCODE_URL, headers={"Authorization": f"Bearer {os.environ['OPENCODE_API_KEY']}"}, json=body)
+    data = response.json() if "json" in response.headers.get("content-type", "") else {}
+    if response.status_code >= 400 and data.get("error"):  # 오류 종류·문구를 남긴다 (무료 등급 400 MissingSessionID 등)
+        raise ProviderError(f"opencode {response.status_code} {data['error'].get('type')}: {str(data['error'].get('message'))[:160]}",
+                            response.status_code)
+    response.raise_for_status()
+    if data.get("error") or "output" not in data:
+        error = data.get("error") or {}
+        raise ProviderError(f"opencode 오류 응답: {str(error.get('message', ''))[:200]}", error.get("code"))
+    output = data["output"] or []
+    usage = data.get("usage") or {}
+    return AIMessage(
+        content="".join(part.get("text") or "" for item in output if item.get("type") == "message"
+                        for part in item.get("content") or [] if part.get("type") == "output_text"),
+        tool_calls=[{"name": i["name"], "args": json.loads(i.get("arguments") or "{}"), "id": i.get("call_id") or i.get("id"), "type": "tool_call"}
+                    for i in output if i.get("type") == "function_call"],
+        usage_metadata=_usage(usage.get("input_tokens"), usage.get("output_tokens")),
+        response_metadata={"provider": "opencode", "model": model, "finish_reason": data.get("status")},
+    )
+
+
 PROVIDERS: dict[str, Callable[..., AIMessage]] = {
     "anthropic": _anthropic, "gemini": _gemini, "openai": _openai, "openrouter": _openrouter,
-    "groq": _groq, "ollama": _ollama,
+    "groq": _groq, "ollama": _ollama, "opencode": _opencode,
 }
 # 공급자별로 받는 선택 옵션. models._call_one이 이 목록에 있는 것만 넘긴다
 OPTIONS: dict[str, tuple[str, ...]] = {"anthropic": (), "openai": (), "gemini": ("temperature", "thinking"),
                                        "openrouter": ("temperature", "reasoning"), "groq": ("temperature", "reasoning"),
-                                       "ollama": ("temperature", "reasoning")}
+                                       "ollama": ("temperature", "reasoning"), "opencode": ()}
