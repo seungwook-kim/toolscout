@@ -8,7 +8,8 @@
 - `env/check_env_example.py`: `.env.example` 키 목록·`.env` git 무시 / `env/check_docker.py`: GitHub Actions `ci` 4단계, compose(app 1개)·Dockerfile
 - `models/check_models.py`: 모델표, 제공자 순서 전환(429·503·529·연결·타임아웃·키 없음), 모델 장애, 옵션 전달, 호출 간격 + 개발 4역할 실제 호출
 - `models/check_local_models.py`·`check_groq.py`: 로컬 Ollama VRAM·도구 호출·한글 실측, Groq 목록 API·도구 호출·한도 → `models/local_models.json`·`groq_models.json`
-- `db/check_tables.py`: 표 11개·연결 문자열 변환·is_test·briefings 빈 행 구조 + Supabase 실제 생성·개발 프로필 A·B·C
+- `access/check_access.py`: 초대제(승인 전 403 6종·코드 기한·횟수·관리자 API)와 공개 데모(비로그인 200·버튼 없음·사용자 노출 없음·분당 60회·색인)
+- `db/check_tables.py`: 표 12개·연결 문자열 변환·is_test·briefings 빈 행 구조 + Supabase 실제 생성·개발 프로필 A·B·C
 - `sources/check_fallbacks.py`: MCP 레지스트리 재시도·전날 결과, 긱뉴스 외부 링크 / `sources/run_today.py`: 9곳 실제 수집 건수 → `report.md`
 - `pipeline/run_dedupe.py`: 정리·중복 제거 단위 검사 + 전후 건수
 - `pipeline/run_daily.py`: `--fake`는 검증 노드·저장·멱등·모델 장애·빈 행·도구 목록 쌓기·옵션(2000-01-01 저장 후 삭제), 없으면 실제 한 번(`--users --limit`) → `daily_report.json`, 형식 실패는 `format_failures.json`

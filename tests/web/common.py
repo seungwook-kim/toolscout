@@ -3,6 +3,7 @@
 - 예약은 끄고(SCHEDULER_ENABLED=0), 메일은 MAIL_FAKE_DIR로 보낸다 (실제 발송 없음)
 - 검수용 사용자 주소는 web-*@toolscout.test. ADMIN_EMAILS에 넣어 개발 모드 로그인 링크를 받게 한다
 - 끝나면 검수용 사용자와 그 사람의 weights·seen·feedback·questions·briefings를 지운다
+- 로그인한 검수용 사용자는 승인(status approved) 상태로 둔다. 초대 대기 상태가 필요하면 login(..., approve=False)
 """
 import json
 import os
@@ -53,8 +54,9 @@ def last_link(to: str) -> str:
     return ""
 
 
-def login(c: TestClient, email: str) -> None:
-    """메일 링크를 받아 눌러 세션을 만든다."""
+def login(c: TestClient, email: str, approve: bool = True) -> None:
+    """메일 링크를 받아 눌러 세션을 만든다. 가입은 초대제라 새 사용자는 pending이므로 기본으로 승인해 둔다 (2026-09-16).
+    초대 검수(tests/access)만 approve=False로 대기 상태를 그대로 본다."""
     admin_emails(email)
     from routes import auth
 
@@ -62,6 +64,17 @@ def login(c: TestClient, email: str) -> None:
     response = c.post("/api/auth/request", json={"email": email})
     assert response.status_code == 200, response.text
     c.get(f"/auth/verify?token={last_link(email)}", follow_redirects=False)
+    if approve:
+        approve_user(email)
+
+
+def approve_user(email: str) -> None:
+    """검수용 사용자를 승인 상태로 (초대 코드 없이)."""
+    with db.session() as s:
+        user = s.exec(select(db.User).where(db.User.email == email)).scalars().first()
+        if user is not None:
+            user.status = "approved"
+            s.commit()
 
 
 def user_id(email: str) -> int | None:

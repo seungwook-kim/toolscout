@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>toolscout 초대 코드</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#15181E">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+</head>
+<body>
+  <header class="mast" id="mast"></header>
+  <main>
+    <section class="sec">
+      <div class="sec-h"><h2>초대 코드</h2><span class="hint">지금은 초대받은 분만 쓸 수 있어요</span></div>
+      <div class="item">
+        <div class="mark"></div>
+        <div>
+          <form id="invite-form">
+            <div class="acts">
+              <input id="code" type="text" maxlength="16" autocomplete="off" autocapitalize="characters"
+                     placeholder="예: ABCD2345" aria-label="초대 코드" required>
+              <button class="go" type="submit">확인</button>
+              <span class="fb" id="msg"></span>
+            </div>
+          </form>
+          <p class="sum">코드가 없다면 <a href="/demo">읽기 전용 데모</a>를 먼저 볼 수 있어요.</p>
+          <div class="acts"><button class="act" type="button" id="logout">다른 계정으로 로그인</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    $("invite-form").onsubmit = async (event) => {
+      event.preventDefault();
+      const code = $("code").value.trim();
+      if (!code) return;
+      const button = $("invite-form").querySelector("button");
+      button.disabled = true;
+      try {
+        const data = await TS.api("/api/invite/redeem", { method: "POST", body: { code } });
+        TS.message($("msg"), data.message);
+        setTimeout(() => { location.href = "/settings"; }, 700);
+      } catch (e) {
+        TS.message($("msg"), e.message, true);
+        button.disabled = false;
+      }
+    };
+
+    $("logout").onclick = async () => {
+      await TS.api("/api/auth/logout", { method: "POST", allow401: true });
+      location.href = "/login";
+    };
+
+    TS.mast({ session: false, title: "초대 코드 확인", basis: "코드를 넣으면 내일 아침부터 브리핑이 갑니다." });
+  </script>
+</body>
+</html>

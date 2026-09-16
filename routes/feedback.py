@@ -12,7 +12,7 @@ from pydantic import BaseModel
 import db
 import memory
 from routes import tokens
-from routes.auth import base_url, require_user
+from routes.auth import base_url, require_approved
 
 LINK_TTL = 24 * 3600
 NOTE_TTL = 3600
@@ -55,7 +55,7 @@ def _apply(user_id: int, item_id: int, action: str) -> dict:
 
 
 @router.post("/api/feedback")
-def post_feedback(body: FeedbackBody, user: db.User = Depends(require_user)) -> dict:
+def post_feedback(body: FeedbackBody, user: db.User = Depends(require_approved)) -> dict:
     result = _apply(user.id, body.item_id, body.action)
     if result["status"] == "recorded" and (body.reason or body.memo):
         note(result["feedback_id"], NoteBody(reason=body.reason, memo=body.memo), user)
@@ -63,7 +63,7 @@ def post_feedback(body: FeedbackBody, user: db.User = Depends(require_user)) -> 
 
 
 @router.post("/api/feedback/{feedback_id:int}/note")  # :int가 없으면 /api/feedback/link/note를 이 경로가 먼저 잡는다
-def note(feedback_id: int, body: NoteBody, user: db.User = Depends(require_user)) -> dict:
+def note(feedback_id: int, body: NoteBody, user: db.User = Depends(require_approved)) -> dict:
     try:
         return memory.note_feedback(user.id, feedback_id, reason=body.reason, memo=body.memo)
     except memory.FeedbackError as exc:

@@ -1,5 +1,6 @@
 // 브리핑 카드와 피드백 버튼 (오늘 브리핑·지난 브리핑 공용). 마크업은 docs/design-reference.html의 .item·.tool 구조.
 const Cards = {
+  readonly: false,  // 공개 데모(/demo)는 피드백 버튼 없이 읽기만 (2026-09-16)
   REASONS: ["번역 어색", "사실 틀림", "나랑 상관없음"],
   TOOL_TYPES: ["mcp", "skill"],
   STEPS: ["설치", "실행", "도구 목록", "인증"],
@@ -18,6 +19,7 @@ const Cards = {
   },
 
   acts(card, actions) {
+    if (Cards.readonly) return "";
     const on = new Set(card.feedback.actions || []);
     return `<div class="acts">${actions.map((a) =>
       `<button class="act${a === "써봤음" ? " p" : ""}" type="button" aria-pressed="${on.has(a)}" data-action="${a}" data-item="${card.item_id}">${a}</button>`).join("")}<span class="fb"></span></div>`;
@@ -170,7 +172,7 @@ const Cards = {
     container.querySelectorAll("[data-copy]").forEach((b) => {
       b.onclick = async () => { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = "복사됨"; };
     });
-    container.querySelectorAll("button[data-action]").forEach((b) => { b.onclick = () => Cards.feedback(b); });
+    if (!Cards.readonly) container.querySelectorAll("button[data-action]").forEach((b) => { b.onclick = () => Cards.feedback(b); });
   },
 
   // 버튼: aria-pressed 토글, 관심없음은 카드 muted, 서버 응답 문구를 .fb에. 같은 버튼을 다시 누르면 취소

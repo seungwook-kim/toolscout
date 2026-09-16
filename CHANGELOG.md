@@ -2,6 +2,21 @@
 
 새 세션은 맨 위 항목을 읽고 시작한다. 폴더별 상세 이력은 각 폴더의 `CHANGELOG.md`, 남은 작업은 각 폴더 README의 `## 할 일`에 있다.
 
+- 세션 9 · 2026-09-16 · 개발 모드 메일 묶기, 검증관·되돌림 main 머지, OpenRouter meta 제공자, 초대제 가입과 공개 데모 /demo
+  - 결정(사용자): 개발 모드 메일은 프로필마다 한 통이 아니라 전부 묶어 한 통 / 가입은 초대제(코드 입력 전에는 초대 화면만) / 로그인 없이 보는 읽기 전용 데모 /demo
+  - 끝난 것: briefing_mail.combine과 deliver 묶음 발송(실패하면 그날 전부 미발송, 운영 모드는 사용자별 한 통 그대로),
+    feat/verifier·feat/mail-single main 머지와 앱 재시작(내일 06:00 W1-a부터), providers의 meta 공급자(OpenRouter 경유 Muse Spark)와 학습 티어 정책(allow_user_text),
+    invite_codes 표·users.status·is_demo·invite_code_used, routes/invite.py·demo.py, 화면 invite·admin·demo, cards.js readonly, robots.txt·noindex
+  - 검수: check_access 30항목(신규)·check_deliver 27·check_tables·check_auth·check_rules·check_design·check_ask·check_settings·check_briefings·check_feedback·
+    check_main·check_scheduler·tests.pipeline.run_daily --fake·check_models·check_folder_docs·check_readme 통과
+  - 실제 확인: 오늘(9/16) 브리핑 4통을 묶음 한 통으로 재발송(프로필 4개·카드 15장, 실패 0), 데모 프로필(user 113) 하루 실행 1명분으로 카드 7장 생성
+  - 막힌 것: OpenRouter가 Muse Spark 계열에 403 "requires 18+ age confirmation"(계정 설정). 확인 뒤 tests/models/try_muse.py를 다시 돌리면 된다.
+    OpenCode Zen 직결은 무료 등급이 앱 밖 호출을 막아(400 MissingSessionID) feat/opencode 브랜치에 둔 채 접었다
+  - 바로잡음: gate.py 주석의 모델명(모델표 밖 하드코딩 금지 규칙) 제거로 check_models 통과
+  - 미완·주의: 데모는 "가장 최근 발송 브리핑" 대신 "가장 최근 브리핑"을 보여 준다(데모 프로필은 가짜 주소라 메일을 안 보낸다).
+    계정 삭제만 승인 전에도 열어 뒀다. 공개 MCP 키 발급 API는 아직 없어 초대 검문을 붙일 자리도 없다
+  - 다음 시작점: 9/17 06:00 W1-a·07:00 실행·08:00 묶음 메일 확인 → OpenRouter 18+ 확인 뒤 Muse Spark 시험 → 배포 주소(APP_BASE_URL)와 초대 코드 첫 발급
+
 - 세션 8 · 2026-09-16 · 검증관(E2B 4단계·SKILL.md 판독)과 되돌림 두 개, 06:00 검증 예약 W1-a (feat/verifier, 9/16 08:00 뼈대 확인 뒤 머지)
   - 결정(사용자): 검증 코드는 agent/ 아래(probe.py·skill_check.py·verifier.py), 요청은 새 표 verify_requests, 브랜치에서 진행하고 머지는 확인 뒤
   - 끝난 것: tests/e2b/smoke·mcp/sandbox_probe(샌드박스 안 stdio·HTTP MCP 클라이언트), probe_mcp(설치 90초·실행 30초·차단 뒤 도구 목록·인증, curl류 거부, 하루 30건, probes), read_skill(GitHub·SkillsMP 10,000자·<data>·정규식 5종 인용), 검증관(레지스트리 설치 정보는 모델 없이, 없을 때만 README 판단, 스킬은 모델·정규식 다르면 확인 필요, 공식은 생략), 카드·메일 고정 문구 두 개, 되돌림 1(실패 도구 → 큐레이터 대체·비움)·2(근거 없는 도구 카드 → 재검증 → 다시 해설 → 확인 필요), 06:00 W1-a(따로 도는 작업)

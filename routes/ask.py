@@ -23,7 +23,7 @@ import gate
 import models
 from agent import explainer, tracing
 from pipeline.run_daily import today_kst
-from routes.auth import require_user
+from routes.auth import require_approved
 
 log = logging.getLogger("toolscout.ask")
 router = APIRouter()
@@ -148,7 +148,7 @@ def _turn(row) -> dict:
 
 
 @router.get("/api/ask")
-def history(user: db.User = Depends(require_user)) -> dict:
+def history(user: db.User = Depends(require_approved)) -> dict:
     turns = today_turns(user.id, today_kst())
     limit = question_limit()
     return {"turns": [_turn(t) for t in turns], "limit": limit,
@@ -156,7 +156,7 @@ def history(user: db.User = Depends(require_user)) -> dict:
 
 
 @router.post("/api/ask")
-async def ask(body: AskBody, user: db.User = Depends(require_user)) -> dict:
+async def ask(body: AskBody, user: db.User = Depends(require_approved)) -> dict:
     question = body.question.strip()
     if not question:
         raise HTTPException(status_code=400, detail="질문을 적어 주세요")

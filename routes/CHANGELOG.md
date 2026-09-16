@@ -1,5 +1,6 @@
 # routes/ CHANGELOG
 
+- 2026-09-16 · 초대제(auth.require_approved·invite.py 코드 사용과 관리자 API)와 공개 데모(demo.py, 분당 60회·robots), pages에 /invite·/admin/invites·noindex · 가입은 초대제, 데모는 읽기 전용 (2026-09-16 사용자 결정) · check_access 30항목 통과
 - 2026-09-15 · briefings.py 응답에 카드마다 item_meta(별 수·버전·출처·공개 시각), 그날 run_stats(선별·반려·검증) · 새 화면 파이프라인·도구 메타 칸 (사용자 승인: 읽기 전용으로 채우기) · check_design A 5항목·check_briefings 통과
 - 2026-09-15 · ask.py 키워드 검색에 items.description(수집 원문 설명) 포함 · 쌓인 도구 목록을 질문 후보로 · check_ask 20항목 통과
 - 2026-09-15 · ask.py 추가(POST·GET /api/ask) · 웹앱 본체 5단계 질문창 W2, 부록 E · check_ask 20항목 통과 (흔한 단어 "MCP"가 847건 걸려 최신순 60건에서 어제 카드가 빠지던 문제를 일치 점수순으로 수정)

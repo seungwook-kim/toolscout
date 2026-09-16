@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>toolscout 데모 브리핑</title>
+  <meta name="description" content="매일 아침 AI 소식과 새 MCP·스킬을 내 기준으로 골라 한글로 해설하는 브리핑. 읽기 전용 데모입니다.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#15181E">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+</head>
+<body>
+  <header class="mast" id="mast"></header>
+
+  <main>
+    <div id="briefing"><section class="sec"><div class="empty">불러오는 중이에요</div></section></div>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/cards.js"></script>
+  <script>
+    // 읽기 전용 데모: 피드백 버튼·질문창·설정 링크 없음. 파이프라인 숫자는 그대로 보여 준다
+    Cards.readonly = true;
+
+    (async () => {
+      const briefing = await TS.api("/api/demo/briefing");
+      const basis = `${TS.esc(briefing.notice)}<br>기준 <b>${TS.esc(briefing.profile_line || "데모 프로필")}</b> · <a href="/login">초대 코드가 있다면 로그인</a>`;
+      await TS.mast({ session: false, title: "오늘의 도구", when: TS.longDate(briefing.date), basis, pipe: Cards.pipe(briefing) });
+      Cards.mount(document.getElementById("briefing"), briefing);
+    })();
+  </script>
+</body>
+</html>

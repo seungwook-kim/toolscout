@@ -1,11 +1,14 @@
 # routes/
 
-웹앱 화면과 기능 API 라우터. 상태: 로그인·프로필·브리핑·지난 브리핑·피드백·질문 구현 (계획안 9.3).
+웹앱 화면과 기능 API 라우터. 상태: 로그인·프로필·브리핑·지난 브리핑·피드백·질문·초대제·공개 데모 구현 (계획안 9.3).
 
 ## 파일
-- `auth.py`: 이메일 매직링크 로그인(15분·1회용), 세션 쿠키(30일), `/api/me`. 개발 모드는 ADMIN_EMAILS만 링크 받음, 로그인 사용자 is_test
+- `auth.py`: 이메일 매직링크 로그인(15분·1회용), 세션 쿠키(30일), `/api/me`, 로그인 사용자 is_test. `require_approved`는 초대 승인된
+  사용자만(브리핑·검색·질문·피드백·프로필이 이 검문을 쓰고, 계정 삭제는 세션만)
+- `invite.py`: 초대 코드 사용(`/api/invite/redeem`, 1분 10회), 관리자 코드 생성·목록과 가입 승인·차단(`/api/admin/*`, ADMIN_EMAILS만)
+- `demo.py`: 공개 데모 `/demo`와 `/api/demo/briefing`. 데모 프로필(users.is_demo)의 최근 브리핑을 읽기 전용으로, IP당 분당 60회
 - `tokens.py`: SESSION_SECRET HMAC 서명 토큰(로그인·세션·피드백 링크), 1회용은 `used_tokens`에 해시로 기록
-- `pages.py`: `/` `/login` `/settings` `/history` `/f` 정적 화면. 세션 없으면 /login, 프로필 없으면 /settings
+- `pages.py`: `/` `/login` `/invite` `/settings` `/history` `/admin/invites` `/f` 화면과 `/robots.txt`. 세션 없으면 /login, 승인 전이면 /invite, 프로필 없으면 /settings, 데모 말고는 noindex
 - `w1.py`: 아침 브리핑 작업을 직접 부르는 API (X-Service-Key). 실행·지금 발송·예약 상태
 - `settings.py`: 프로필(직군 5·주제 10 관심도·도구·자유 한 줄·알림 채널·시간), 내 기억 지우기, 계정 삭제, 오늘 브리핑 지금 만들기(본인만)
 - `briefings.py`: 오늘·날짜별 브리핑(내 카드·피드백 상태·N건 중 M건·기준 한 줄·관리자만 트레이스·카드 item_meta·run_stats), 날짜 목록, 키워드 검색
@@ -19,7 +22,7 @@
 
 ## 관련
 - 루트 `main.py`: 라우터와 `/static`(web/) mount / `pipeline/`: scheduler·run_daily·deliver
-- `tests/web/`: 로그인·피드백·질문 검수
+- `tests/web/`: 로그인·피드백·질문 검수 / `tests/access/`: 초대제·데모 검수
 
 ## 할 일
 - [ ] 카카오 로그인 (자리만 비워 둠)

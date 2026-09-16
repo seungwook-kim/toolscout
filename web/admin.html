@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>toolscout 초대 관리</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#15181E">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+</head>
+<body>
+  <header class="mast" id="mast"></header>
+
+  <main>
+    <section class="sec">
+      <div class="sec-h"><h2>초대 코드</h2><span class="hint">사용 횟수와 기한을 정해 만들어요</span></div>
+      <div class="item">
+        <div class="mark"></div>
+        <div>
+          <form id="new-form">
+            <div class="acts">
+              <label for="max-uses">사용 횟수</label>
+              <input id="max-uses" type="number" min="1" max="100" value="1" aria-label="사용 횟수">
+              <label for="days">기한(일)</label>
+              <input id="days" type="number" min="1" max="365" value="30" aria-label="기한(일)">
+              <button class="go" type="submit">코드 만들기</button>
+              <span class="fb" id="new-msg"></span>
+            </div>
+          </form>
+          <div id="codes"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><h2>가입 상태</h2><span class="hint">승인하면 다음 하루 실행부터 브리핑을 받아요</span></div>
+      <div id="users"></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const LABEL = { pending: "대기", approved: "승인", blocked: "차단" };
+
+    function codeRow(c) {
+      const left = c.unusable ? TS.esc(c.unusable) : `${c.left}회 남음`;
+      const until = c.expires_at ? `${TS.esc(c.expires_at.slice(0, 10))}까지` : "기한 없음";
+      return `<article class="tool"><div class="mark"><i></i></div><div>
+        <h3><code>${TS.esc(c.code)}</code></h3>
+        <div class="src">${TS.esc(String(c.used))} / ${TS.esc(String(c.max_uses))}회 사용 · ${left} · ${until}</div>
+      </div></article>`;
+    }
+
+    function userRow(u) {
+      const tags = [u.is_demo ? "데모" : "", u.is_test ? "테스트" : ""].filter(Boolean).join(" · ");
+      const buttons = ["approved", "blocked", "pending"].filter((s) => s !== u.status)
+        .map((s) => `<button class="act" type="button" data-user="${u.id}" data-status="${s}">${LABEL[s]}으로</button>`).join("");
+      return `<article class="item"><div class="mark"><i></i></div><div>
+        <div class="topic">${TS.esc(LABEL[u.status] || u.status)}${tags ? ` · ${TS.esc(tags)}` : ""}</div>
+        <h3>${TS.esc(u.email || "(이메일 없음)")}</h3>
+        <div class="src">${TS.esc(u.role || "직군 미설정")} · 가입 ${TS.esc(u.created_at.slice(0, 10))}${u.invite_code_used ? ` · 코드 ${TS.esc(u.invite_code_used)}` : ""}</div>
+        <div class="acts">${buttons}<span class="fb"></span></div>
+      </div></article>`;
+    }
+
+    async function load() {
+      const [codes, users] = await Promise.all([TS.api("/api/admin/invites"), TS.api("/api/admin/users")]);
+      $("codes").innerHTML = codes.codes.map(codeRow).join("") || '<div class="empty">아직 만든 코드가 없어요</div>';
+      $("users").innerHTML = users.users.map(userRow).join("");
+      $("users").querySelectorAll("button[data-user]").forEach((b) => {
+        b.onclick = async () => {
+          const fb = b.closest(".acts").querySelector(".fb");
+          try {
+            await TS.api(`/api/admin/users/${b.dataset.user}/status`, { method: "POST", body: { status: b.dataset.status } });
+            TS.message(fb, "바꿨어요");
+            load();
+          } catch (e) {
+            TS.message(fb, e.message, true);
+          }
+        };
+      });
+    }
+
+    $("new-form").onsubmit = async (event) => {
+      event.preventDefault();
+      try {
+        const data = await TS.api("/api/admin/invites", {
+          method: "POST",
+          body: { max_uses: Number($("max-uses").value), expires_days: Number($("days").value) },
+        });
+        TS.message($("new-msg"), `코드 ${data.code}`);
+        load();
+      } catch (e) {
+        TS.message($("new-msg"), e.message, true);
+      }
+    };
+
+    (async () => {
+      await TS.mast({ title: "초대 관리", when: "관리자", basis: "코드를 만들어 전달하고, 가입 요청을 승인하거나 차단해요." });
+      load();
+    })();
+  </script>
+</body>
+</html>

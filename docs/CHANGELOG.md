@@ -1,5 +1,6 @@
 # docs/ CHANGELOG
 
+- 2026-09-16 · 계획안 6장 범위에 초대제 가입과 읽기 전용 데모 /demo 추가 · 2026-09-16 사용자 결정 반영 · check_folder_docs·check_readme 통과
 - 2026-09-15 · 계획안 9.5에 verify_requests 표, probes·skill_reviews 칸(skipped 포함) · 세션 8 검증관 · check_readme 통과
 
 - 2026-09-15 · design-reference.html(웹앱 디자인 기준) 추가, img에 today-desktop·today-mobile·pwa-standalone · 사용자 디자인 지시 · check_readme 통과
