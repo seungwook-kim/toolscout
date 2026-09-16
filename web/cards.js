@@ -3,6 +3,9 @@ const Cards = {
   REASONS: ["번역 어색", "사실 틀림", "나랑 상관없음"],
   TOOL_TYPES: ["mcp", "skill"],
   STEPS: ["설치", "실행", "도구 목록", "인증"],
+  MCP_SCOPE: "도구가 올바르게 동작하는지는 범위 밖입니다.",
+  SKILL_SCOPE: "안전 보증이 아니라 위험 신호 표시입니다.",
+  RISK_CHIP: { ok: "ok", caution: "warn", unverified: "warn", skipped: "na" },
 
   why(card) {
     const trace = card.trace_url && TS.safeUrl(card.trace_url)
@@ -69,13 +72,14 @@ const Cards = {
     return `<div class="${cls}"><h4>${title}</h4><ul>${rows}</ul></div>`;
   },
 
-  // 검증 4단계 칩. 검증관 결과가 없으면 전부 na, 제목 옆에 "검증 예정"
+  // 검증 4단계 칩. 검증관 결과가 없으면 전부 na, 제목 옆에 "검증 예정"(또는 설치법 미확인 같은 메모). 범위 문구는 늘 고정
   verify(card) {
+    if (card.type === "skill") return Cards.risk(card);
     const v = card.verification;
     if (!v) {
-      return `<div class="verify"><div class="t">직접 깔아봤더니 <small>검증 예정</small></div>
+      return `<div class="verify"><div class="t">직접 깔아봤더니 <small>${TS.esc(card.verification_note || "검증 예정")}</small></div>
         <div class="steps">${Cards.STEPS.map((s) => `<span class="step na"><i></i>${s}</span>`).join("")}</div>
-        <div class="note">검증관이 붙으면 샌드박스에서 설치·실행·도구 목록·인증 요구를 확인해 여기에 표시합니다.</div></div>`;
+        <div class="note">검증관이 샌드박스에서 설치·실행·도구 목록·인증 요구를 확인해 여기에 표시합니다. ${Cards.MCP_SCOPE}</div></div>`;
     }
     const cls = { ok: "ok", success: "ok", auth: "warn", warn: "warn", fail: "bad", error: "bad", na: "na" };
     const steps = ["install", "run", "tools_list", "auth_required"].map((key, n) => {
@@ -85,7 +89,22 @@ const Cards = {
       return `<span class="step ${cls[state] || "na"}"><i></i>${TS.esc(label)}</span>`;
     }).join("");
     return `<div class="verify"><div class="t">직접 깔아봤더니 <small>${TS.esc(v.probed_at || "")}</small></div>
-      <div class="steps">${steps}</div><div class="note">설치·기동·도구 노출까지 확인한 결과입니다. 도구가 올바르게 동작하는지는 범위 밖입니다.</div></div>`;
+      <div class="steps">${steps}</div><div class="note">설치·기동·도구 노출까지 확인한 결과입니다. ${Cards.MCP_SCOPE}</div></div>`;
+  },
+
+  // 스킬 판독: 위험 신호 칩(정상·주의·확인 필요·공식 출처 생략) + 인용 + 충실도. 안전 보증 아님 문구는 늘 고정
+  risk(card) {
+    const r = card.risk_signal;
+    if (!r) {
+      return `<div class="verify"><div class="t">SKILL.md 읽어봤더니 <small>${TS.esc(card.verification_note || "판독 예정")}</small></div>
+        <div class="steps"><span class="step na"><i></i>위험 신호 판독 예정</span></div><div class="note">${Cards.SKILL_SCOPE}</div></div>`;
+    }
+    const chips = [`<span class="step ${Cards.RISK_CHIP[r.level] || "na"}"><i></i>위험 신호 ${TS.esc(r.label)}</span>`]
+      .concat(r.completeness ? [`<span class="step na"><i></i>충실도 ${TS.esc(r.completeness)}</span>`] : [])
+      .concat((r.hits || []).map((h) => `<span class="step na"><i></i>${TS.esc(h)}</span>`)).join("");
+    const quote = r.quote ? `인용: ${TS.esc(r.quote)}. ` : "";
+    return `<div class="verify"><div class="t">SKILL.md 읽어봤더니 <small>${TS.esc(r.reviewed_at || "")}</small></div>
+      <div class="steps">${chips}</div><div class="note">${quote}${Cards.SKILL_SCOPE}</div></div>`;
   },
 
   tool(card) {
@@ -127,7 +146,7 @@ const Cards = {
     const explained = stats.rejected != null ? `반려 ${stats.rejected} · 원문 재조회 ${refetched}` : `원문 재조회 ${refetched}`;
     return `<div class="pipe" aria-label="오늘 새벽 에이전트 작업">
       <div><div class="who"><i></i>큐레이터</div><div class="what">${curator}</div><div class="sub">${hasStats ? "수집 · 선별 · 내 기준 정렬" : "수집 · 내 기준 정렬"}</div></div>
-      <div><div class="who"><i></i>검증관</div><div class="what">0 <span>/ 0 검증</span></div><div class="sub">샌드박스 검증은 아직 붙지 않았어요</div></div>
+      <div><div class="who"><i></i>검증관</div><div class="what">${stats.verified ?? 0} <span>/ ${stats.verify_requested ?? 0} 검증</span></div><div class="sub">${stats.rollbacks ? `샌드박스 설치 · 도구 목록 · 되돌림 ${stats.rollbacks}` : "샌드박스 설치 · 도구 목록"}</div></div>
       <div><div class="who"><i></i>해설가</div><div class="what">${briefing.count} <span>장 작성</span></div><div class="sub">${explained}</div></div>
     </div>`;
   },

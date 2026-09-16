@@ -1,5 +1,10 @@
 # agent/ CHANGELOG
 
+- 2026-09-16 · verifier.registry_plan(설치 정보가 있으면 모델 없이 npx·uvx·원격, 자리표시자 주소·도커 이미지만이면 실측 불가), probe npm 설치 전 Node 22 준비·자리표시자 주소 거부 문구 · 실제 5건에서 판단 단계가 항목당 약 200초(모델이 README 두 번·30초 제한), desktop-commander가 Node 20.9 require(esm)으로 실행 실패 · check_verifier 21항목·desktop-commander 4단계 성공(도구 26개)
+- 2026-09-16 · curator.replan_failed(되돌림 1: 대체 선택·비움, 모델 장애면 그 도구만 빠짐), schemas ReplanDecision·Card.verification_note, 해설가 입력에 검증 결과, reverify 스팬 이름 verify:reverify · 세션 8 되돌림 5단계 · check_rollback 16항목 통과
+- 2026-09-15 · verifier.py(설치 방법 판단·probe_mcp, 스킬 판독·정규식 비교·공식 생략, reverify), schemas McpProbePlan·SkillJudgment · 세션 8 검증관 4단계 · check_verifier 17항목 통과(삽입 문장에 모델이 넘어가도 정상이 아니라 확인 필요)
+- 2026-09-15 · skill_check.py 추가(원문 주소 변환·SkillsMP API로 GitHub 원문, 절단 전 전체 정규식, 보이지 않는 문자는 [U+XXXX] 인용) · 세션 8 검증관 3단계 read_skill · check_skill_read 13항목 통과, 실제 스킬 6개(공식 3·SkillsMP 3) 오탐 0
+- 2026-09-15 · probe.py 추가(설치 명령 파싱·가드·4단계·인증 요구 감지·probes 저장), loop MCP 읽기 제한 120 → 240초 · 세션 8 검증관 2단계 probe_mcp · check_probe 10항목 통과(server-everything 22초 도구 13, mcp-server-fetch 28초, DeepWiki 원격, Apify 401, brave-search BRAVE_API_KEY 감지)
 - 2026-09-15 · curator.pick_related·RELATED_PROMPT, schemas.RelatedPicks·Card.related, explainer가 related 항목도 카드로 · F3-b 관련 카드(월요일 최대 3장, 사용자 결정) · run_daily --fake 관련 카드 5항목·부록 C 기준 2 통과
 - 2026-09-15 · explainer.answer·AnswerOutput 추가, loop.run에 max_tool_calls · 질문창 W2(부록 E 도구 최대 3회·600자·확인한 곳) · check_ask 20항목, run_loop·run_explainer --fake 회귀 통과
 - 2026-09-15 · curator: 모델이 고른 후보를 주제 가중치로 안정 정렬, 결과·트레이스에 사용자별 weights · 부록 C "다음 날 큐레이터가 가중치를 읽어 정렬" · check_appendix_c 6항목·run_daily --fake 통과

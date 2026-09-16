@@ -5,6 +5,7 @@
 - 외부 텍스트(기사 제목, 모델 출력)는 모두 HTML 이스케이프한다. 링크는 http(s)만 쓴다
 - HTML과 같은 내용의 텍스트 본문을 함께 만든다
 - 피드백 버튼(W3, 부록 C): links(card, 버튼)가 있으면 카드마다 서명 링크 버튼. 뉴스는 관심없음·이상함, 도구는 써봤음까지 셋
+- 검증 결과(세션 8): MCP는 "직접 깔아봤더니" 4단계, 스킬은 "SKILL.md 읽어봤더니" 위험 신호. 두 고정 문구는 결과가 없어도 늘 붙인다
 """
 import html
 import re
@@ -16,6 +17,9 @@ SAFE_URL = re.compile(r"^https?://[^\s\"'<>]+$")
 NO_TOOLS = "오늘 새 도구 없음"
 RELATED_TITLE = "이번 주 관련 MCP·스킬"  # 월요일 관련 카드(F3-b)
 EMPTY_TITLE = "오늘 볼 만한 게 없었음"
+MCP_SCOPE = "도구가 올바르게 동작하는지는 범위 밖입니다."  # 부록 D 5, 카드 템플릿 고정
+SKILL_SCOPE = "안전 보증이 아니라 위험 신호 표시입니다."  # 부록 D 스킬 3, 카드 템플릿 고정
+STEP_KEYS = ("install", "run", "tools_list", "auth_required")
 Links = Callable[[dict, str], str]
 
 
@@ -46,6 +50,22 @@ def _points_html(label: str, points: list[dict]) -> str:
     return f'<p style="margin:8px 0 2px;font-weight:600">{label}</p><ul style="margin:0;padding-left:18px">{rows}</ul>'
 
 
+def verify_lines(card: dict) -> list[str]:
+    """도구 카드의 검증 결과 줄 (HTML·텍스트 공용 원문, 이스케이프 전)."""
+    if card.get("type") == "mcp":
+        verification = card.get("verification") or {}
+        steps = " / ".join((verification.get(k) or {}).get("label", "") for k in STEP_KEYS if verification.get(k))
+        head = f"직접 깔아봤더니: {steps}" if steps else f"직접 깔아봤더니: {card.get('verification_note') or '검증 예정'}"
+        return [head, MCP_SCOPE]
+    if card.get("type") == "skill":
+        risk = card.get("risk_signal") or {}
+        if not risk:
+            return [f"SKILL.md 읽어봤더니: {card.get('verification_note') or '판독 예정'}", SKILL_SCOPE]
+        quote = f" \"{risk['quote']}\"" if risk.get("quote") else ""
+        return [f"SKILL.md 읽어봤더니: 위험 신호 {risk.get('label', '')}{quote}", SKILL_SCOPE]
+    return []
+
+
 def _card_html(card: dict, links: Links | None = None) -> str:
     link = _url(card.get("url"))
     title = f'<a href="{_e(link)}" style="color:#111;text-decoration:none">{_e(card.get("title"))}</a>' if link else _e(card.get("title"))
@@ -59,6 +79,9 @@ def _card_html(card: dict, links: Links | None = None) -> str:
     parts.append(_points_html("단점", card.get("cons") or []))
     if card.get("install_cmd") and card.get("type") in TOOL_TYPES:
         parts.append(f'<p style="margin:8px 0 0;font-size:13px">설치: <code>{_e(card["install_cmd"])}</code></p>')
+    for n, line in enumerate(verify_lines(card)):
+        style = "margin:8px 0 0;font-size:13px" if n == 0 else "margin:2px 0 0;color:#777;font-size:12px"
+        parts.append(f'<p style="{style}">{_e(line)}</p>')
     if links and card.get("item_id"):
         buttons = "".join(f'<a href="{_e(links(card, action))}" style="display:inline-block;margin:8px 6px 0 0;padding:4px 10px;'
                           f'border:1px solid #d1d5db;border-radius:6px;color:#111;text-decoration:none;font-size:13px">{action}</a>'
@@ -78,6 +101,7 @@ def _card_text(card: dict, links: Links | None = None) -> str:
             lines.append(f"  {label}: {point.get('text', '')} ({point.get('evidence_url', '')})")
     if card.get("install_cmd") and card.get("type") in TOOL_TYPES:
         lines.append(f"  설치: {card['install_cmd']}")
+    lines += [f"  {line}" for line in verify_lines(card)]
     if links and card.get("item_id"):
         lines += [f"  [{action}] {links(card, action)}" for action in actions_for(card)]
     lines.append(f"  trace_id {card.get('trace_id', '')}")

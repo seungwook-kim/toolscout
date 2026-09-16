@@ -1,99 +1,112 @@
 {
-  "date": "2000-01-05",
+  "date": "2000-01-11",
   "dev_mode": true,
   "options": {
     "users": 1,
     "limit": 40
   },
-  "collected": 181,
-  "prepared": 181,
+  "collected": 177,
+  "prepared": 177,
   "curator_input": 40,
   "source_failures": [],
   "skipped_sent_users": [],
-  "selected": 14,
-  "verify_requests": 1,
+  "catalog_saved": 6,
+  "verify_saved": 1,
+  "selected": 32,
+  "verify_requests": 3,
   "users": [
     {
       "user_id": 1,
       "role": "자바 백엔드 개발자",
-      "planned": 3,
+      "planned": 7,
+      "related_planned": 0,
       "rejected": [
         {
-          "title": "\"탈모약 개발·암 진단·주식 투자도 AI로\"...LG, 전문가 AI로 승부수",
-          "url": "https://www.aitimes.com/news/articleView.html?idxno=215257",
-          "reason": "LG의 산업 특화 AI(제조·과학·금융) 공개 뉴스는 자바 백엔드 개발자가 n8n으로 만드는 사내 AI 브리핑 봇 개발과 직접적인 기술적 연관성이 부족함"
+          "title": "앤트로픽 '페이블 5.1', 370년 미해결 난제 암호 44분 만에 풀었다",
+          "url": "https://www.aitimes.com/news/articleView.html?idxno=215301",
+          "reason": "역사적 암호 해독 뉴스는 자바 백엔드 개발자가 n8n으로 AI 브리핑 봇을 만드는 실무와 직접적인 연관성이 부족합니다."
         },
         {
-          "title": "코그니션, 키미 K3 기반 코딩 모델 'SWE-2' 출시...\"페이블 5.1 맞먹는 성능\"",
-          "url": "https://www.aitimes.com/news/articleView.html?idxno=215233",
-          "reason": "사용자가 n8n으로 사내 AI 브리핑 봇을 만드는 중인데, 해당 기사는 코그니션의 데빈(Devin) 서비스 내부에서만 제공되는 코딩 모델 SWE-2에 대한 내용으로, 사용자가 직접 설치하거나 API를 통해 활용할 수 없어 실질적 관련성이 낮음"
+          "title": "“AI 에이전트가 상호 거래·정산까지”...카카오페이 자율결제 실증 완료",
+          "url": "https://www.aitimes.com/news/articleView.html?idxno=215311",
+          "reason": "자바 백엔드 개발자가 만드는 '사내 AI 브리핑 봇'은 정보 수집 및 요약이 목적이며, 카카오페이의 '에이전틱 결제(자율 구매/판매)' 기술은 금융 거래 및 정산 인프라에 특화되어 있어 사용자의 현재 작업과 직접적인 연관성이 부족합니다."
         },
         {
-          "title": "Microsoft’s new AI ‘code of conduct’ tells models not to hack systems or trick humans",
-          "url": "https://techcrunch.com/2026/09/14/microsofts-new-ai-code-of-conduct-tells-models-not-to-hack-systems-or-trick-humans",
-          "reason": "사용자가 n8n으로 AI 브리핑 봇을 개발하는 실무자이고, 해당 기사는 모델 학습 단계의 거버넌스 원칙에 관한 것으로 개발 도구나 워크플로 구성에 직접 적용할 수 있는 정보가 부족함"
+          "title": "MS, '인본주의적 AI 행동 강령' 공개...\"AI는 인간에게 종속돼야\"",
+          "url": "https://www.aitimes.com/news/articleView.html?idxno=215268",
+          "reason": "사내 AI 브리핑 봇 개발에 직접 적용 가능한 기술적 지침이나 도구가 아닌, 거시적인 AI 윤리 원칙 발표 뉴스라 사용자 프로필과 직접적인 연결고리가 부족함"
+        },
+        {
+          "title": "베스핀글로벌, 업스테이지 '솔라' 활용해 울산 공교육 AI 서비스 구축",
+          "url": "https://www.aitimes.com/news/articleView.html?idxno=215295",
+          "reason": "해당 기사는 특정 교육 플랫폼(헬프나우)과 LLM(솔라)의 제휴 사례로, 사용자가 n8n으로 직접 AI 브리핑 봇을 구축하는 맥락과 기술적 연결고리가 부족합니다."
+        },
+        {
+          "title": "Agent-Native Plan 1.0.0",
+          "url": "https://github.com/BuilderIO/agent-native",
+          "reason": "Agent-Native는 TypeScript 기반 에이전트 UI 프레임워크로, 사용자가 사용하는 n8n 워크플로 자동화 환경과 기술 스택이 달라 직접적인 활용이 어렵습니다."
+        },
+        {
+          "title": "Agent-Native Slides 1.0.0",
+          "url": "https://github.com/BuilderIO/agent-native",
+          "reason": "Agent-Native는 TypeScript 기반 에이전트 프레임워크로, 자바 스프링 백엔드 개발자가 n8n으로 만드는 AI 브리핑 봇과 기술 스택 및 용도가 맞지 않습니다."
         }
       ],
       "excluded": [],
       "retried": 0,
-      "fixed": [],
+      "fixed": [
+        {
+          "title": "Early Anthropic hire, former METR COO have found a way to rein in rogue AI agents",
+          "fixes": [
+            "요약 128자 → 문장 끝에서 74자로 자름"
+          ]
+        }
+      ],
       "format_failed": [],
       "model_failed": [],
-      "titles": [],
-      "status": "empty",
-      "cards": 0,
-      "empty_reason": "후보 3건 모두 빠짐 (반려 3, 검증 제외 0, 형식 실패 0)",
+      "titles": [
+        "Early Anthropic hire, former METR COO have found a way to rein in rogue AI agents"
+      ],
+      "related_titles": [],
+      "rollbacks": {
+        "verify_failed": [],
+        "evidence_short": []
+      },
+      "status": "saved",
+      "cards": 1,
+      "empty_reason": null,
       "duplicates": []
     }
   ],
   "totals": {
     "users": 1,
     "briefings": 1,
-    "empty_users": 1,
+    "empty_users": 0,
     "failed_users": 0,
-    "cards": 0,
-    "rejected": 3,
+    "cards": 1,
+    "rejected": 6,
     "excluded": 0,
-    "calls": 8,
-    "input_tokens": 18328,
-    "output_tokens": 3840,
-    "format_failures": 2,
-    "unrecovered": 1
+    "calls": 11,
+    "input_tokens": 27061,
+    "output_tokens": 3896,
+    "format_failures": 0,
+    "unrecovered": 0
   },
   "all_users_failed": false,
   "providers": {
-    "ollama:gemma3:12b": 5,
-    "groq:qwen/qwen3.8-27b": 3
+    "ollama:gemma3:12b": 4,
+    "groq:qwen/qwen3.8-27b": 7
   },
   "failovers": {},
-  "rate_limits_429": {},
+  "rate_limits_429": {
+    "groq": 1
+  },
   "model_failures": [],
-  "failure_examples": [
-    {
-      "label": "선별 1묶음",
-      "attempt": 1,
-      "error": "judgments.1.reason: Field required",
-      "provider": "ollama",
-      "model": "gemma3:12b",
-      "raw_head": "```json\n{\n  \"judgments\": [\n    {\"id\": 1, \"ai_related\": true, \"worth_today\": true, \"topic\": \"model_release\", \"reason\": \"새로운 음악 앱 개발에 사용자 참여를 유도하는 실험적 접근 방식 소개.\"},\n    {\"id\": 2, \"ai_related\": true, \"worth_today\": true, \"topic\": \"agent_framework\", \"summary\": \"생산성 플랫폼의 에이전트 기반 업무 방식 전환을 보여주는 Superhuman의",
-      "raw_tail": "{\"id\": 20, \"ai_related\": true, \"worth_today\": true, \"topic\": \"model_release\", \"reason\": \"Christina Koch와 James Manyika의 우주, 기술, 발견에 대한 대화.\"}\n  ]\n}\n```",
-      "trace_id": "f94a15ec3416b08f3c7863adc9facf59"
-    },
-    {
-      "label": "선별 1묶음",
-      "attempt": 2,
-      "error": "judgments.1.reason: Field required",
-      "provider": "ollama",
-      "model": "gemma3:12b",
-      "raw_head": "```json\n{\n  \"judgments\": [\n    {\"id\": 1, \"ai_related\": true, \"worth_today\": false, \"topic\": \"model_release\", \"reason\": \"음악 앱 관련 소식으로 AI 기술 활용 사례를 보여주지만, 긴급한 업데이트는 아님.\"},\n    {\"id\": 2, \"ai_related\": true, \"worth_today\": true, \"topic\": \"agent_framework\", \"summary\": \"생산성 플랫폼의 에이전트 기능 강화는 주목할 만한 트렌드.\"},",
-      "raw_tail": "드 공유.\"},\n    {\"id\": 20, \"ai_related\": true, \"worth_today\": false, \"topic\": \"industry\", \"reason\": \"Google의 우주, 기술, 발견 관련 대화는 특정 이벤트 홍보에 해당.\"}\n  ]\n}\n```",
-      "trace_id": "f94a15ec3416b08f3c7863adc9facf59"
-    }
-  ],
-  "format_failures_recorded": 2,
-  "trace_id": "f94a15ec3416b08f3c7863adc9facf59",
-  "seconds": 586.6,
-  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/f94a15ec3416b08f3c7863adc9facf59",
+  "failure_examples": [],
+  "format_failures_recorded": 0,
+  "trace_id": "f0adb2de4bde2a9ffad600bc093052a5",
+  "seconds": 403.2,
+  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/f0adb2de4bde2a9ffad600bc093052a5",
   "checks": {
     "대상_사용자_모두_브리핑_저장": true,
     "모델장애_사용자_없음": true,
@@ -101,9 +114,9 @@
     "저장_행마다_trace_id·sent_at_null": true
   },
   "cleanup": {
-    "date": "2000-01-05",
+    "date": "2000-01-11",
     "briefings_deleted": 1,
-    "seen_deleted": 0
+    "seen_deleted": 1
   },
   "pass": true
 }

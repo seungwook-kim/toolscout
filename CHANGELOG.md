@@ -2,6 +2,19 @@
 
 새 세션은 맨 위 항목을 읽고 시작한다. 폴더별 상세 이력은 각 폴더의 `CHANGELOG.md`, 남은 작업은 각 폴더 README의 `## 할 일`에 있다.
 
+- 세션 8 · 2026-09-16 · 검증관(E2B 4단계·SKILL.md 판독)과 되돌림 두 개, 06:00 검증 예약 W1-a (feat/verifier, 9/16 08:00 뼈대 확인 뒤 머지)
+  - 결정(사용자): 검증 코드는 agent/ 아래(probe.py·skill_check.py·verifier.py), 요청은 새 표 verify_requests, 브랜치에서 진행하고 머지는 확인 뒤
+  - 끝난 것: tests/e2b/smoke·mcp/sandbox_probe(샌드박스 안 stdio·HTTP MCP 클라이언트), probe_mcp(설치 90초·실행 30초·차단 뒤 도구 목록·인증, curl류 거부, 하루 30건, probes), read_skill(GitHub·SkillsMP 10,000자·<data>·정규식 5종 인용), 검증관(레지스트리 설치 정보는 모델 없이, 없을 때만 README 판단, 스킬은 모델·정규식 다르면 확인 필요, 공식은 생략), 카드·메일 고정 문구 두 개, 되돌림 1(실패 도구 → 큐레이터 대체·비움)·2(근거 없는 도구 카드 → 재검증 → 다시 해설 → 확인 필요), 06:00 W1-a(따로 도는 작업)
+  - 검수: check_probe 10(실제 E2B)·check_skill_read 13·check_verifier 21·check_rollback 16·check_scheduler(검증 5 추가)·run_daily --fake·check_deliver·check_design·check_tables 통과
+  - 실제 검증 5건(도구 목록 8건에서 큐레이터 선택): 처음 평균 124초·최대 236초 → 판단 단계가 항목당 약 200초(모델이 설치 정보가 있어도 README 두 번, 30초 제한 반복)라 registry_plan으로 바꾼 뒤 5건 합계 129초·평균 26초
+    - MCP 단계(고친 뒤 서로 다른 6건): 설치 2/2(npm·pypi), 실행 2/2, 도구 목록 2/4(원격 2건은 토큰 필요로 401), 인증 필요 2·불필요 2, 실측 불가 2(자리표시자 주소·nuget). aihawk 37초 도구 16개, desktop-commander 73초 도구 26개
+    - desktop-commander는 샌드박스 Node 20.9에서 require(esm)로 실행 실패 → npm 설치 전 Node 22 준비(약 6초)로 4단계 성공
+    - 스킬 1건(anthropics 공식): 위험 신호 생략, 충실도 높음 27초. 도구 목록에 커뮤니티 스킬이 없어 정상·주의 분포는 실제로 못 봄(3단계 실제 스킬 6개 정규식 오탐 0)
+    - 되돌림: 실제 하루 실행(--users 1 --limit 40, 검수 날짜 2000-01-11, 끝나고 삭제) 403초·호출 11(ollama 4·groq 7)·429 1회·형식 실패 0에서 되돌림 1 0회·2 0회. 실패 검증이 없었고 도구 카드 2장이 근거 확인 전에 반려됨. 발동 경로는 check_rollback으로만 확인
+  - 바로잡음: save_requests 저장 수가 rowcount -1로 -5 보고 → returning으로 셈
+  - 미완·주의: 해설가 반려가 여전히 많음(백엔드 프로필 7건 중 6건), 같은 저장소 링크의 레지스트리 항목 두 개(Agent-Native Plan·Slides)가 한 사용자 계획에 같이 들어감, 원격 MCP는 토큰 없이 도구 목록을 못 봄(인증 필요로 표시)
+  - 다음 시작점: 9/16 08:00 메일 확인 → feat/verifier 머지·앱 재시작(다음 날 06:00 W1-a부터) → OpenCode Zen 제공자 → 초대제 가입·/demo
+
 - 세션 7 (디자인) · 2026-09-15 · 웹앱 화면을 docs/design-reference.html 기준으로, 화면용 읽기 전용 데이터, PWA (main 머지 완료)
   - 끝난 것: app.css는 참고 파일 style 그대로 + 토큰만 쓴 보충, 오늘 브리핑 마스트헤드·파이프라인 3칸·.item/.tool·질문 스레드·고정 입력바, 지난 브리핑(날짜별 접힘)·설정·로그인·피드백 같은 마스트헤드, briefings.run_stats·items.published_at·API item_meta(사용자 승인), manifest·아이콘 192/512
   - 검수: tests/web 7종(check_design 신규), check_main·check_tables·check_deliver·부록 C 통과, 폰 390·PC 1280 가로 넘침 0, Page.getAppManifest·설치 가능 여부 오류 0, CI success

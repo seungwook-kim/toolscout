@@ -1,0 +1,119 @@
+{
+  "date": "2026-09-16",
+  "dev_mode": true,
+  "pool": 3,
+  "pool_with_install_info": 3,
+  "curator_picked": 0,
+  "filled": 3,
+  "saved_new": 0,
+  "ran": 3,
+  "curator_stats": {
+    "calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "format_failures": 0,
+    "unrecovered": 0,
+    "model_failures": []
+  },
+  "verifier_providers": {},
+  "failovers": {},
+  "rate_limits_429": {},
+  "summary": {
+    "requests": 3,
+    "status": {
+      "rejected": 1,
+      "done": 2
+    },
+    "mcp_stage_success": {
+      "install": {
+        "성공": 2,
+        "대상": 2,
+        "해당없음": 0
+      },
+      "run": {
+        "성공": 2,
+        "대상": 2,
+        "해당없음": 0
+      },
+      "tools_list": {
+        "성공": 2,
+        "대상": 2,
+        "해당없음": 0
+      }
+    },
+    "mcp_auth": {
+      "미실행": 1,
+      "불필요": 2
+    },
+    "mcp_probe_seconds": [
+      0.0,
+      35.1,
+      71.7
+    ],
+    "skill_read": {},
+    "risk_signal": {},
+    "seconds_total": 110.9,
+    "seconds_avg": 37.0,
+    "seconds_max": 72.8
+  },
+  "items": [
+    {
+      "title": "dev.shiranui-isuzu/unity-mcp",
+      "kind": "mcp",
+      "status": "rejected",
+      "reason": "실측 불가(nuget 패키지 형식)",
+      "seconds": 1.2,
+      "by_curator": false,
+      "had_install_info": true,
+      "trace_id": "86af9d09a2e2db2646c247faa01b40e1",
+      "stages": {},
+      "requirements": null,
+      "plan": null,
+      "risk": null,
+      "risk_quote": null,
+      "completeness": null
+    },
+    {
+      "title": "io.github.feder-cr/aihawk",
+      "kind": "mcp",
+      "status": "done",
+      "reason": null,
+      "seconds": 36.9,
+      "by_curator": false,
+      "had_install_info": true,
+      "trace_id": "faeb0557cc747c248ff47bacb1ec683a",
+      "stages": {
+        "install": "성공",
+        "run": "성공",
+        "tools_list": "성공",
+        "auth": "불필요"
+      },
+      "requirements": [],
+      "plan": "pypi",
+      "risk": null,
+      "risk_quote": null,
+      "completeness": null
+    },
+    {
+      "title": "io.github.wonderwhy-er/desktop-commander",
+      "kind": "mcp",
+      "status": "done",
+      "reason": null,
+      "seconds": 72.8,
+      "by_curator": false,
+      "had_install_info": true,
+      "trace_id": "cc2e75fb94e9345f429ba92a9d190eca",
+      "stages": {
+        "install": "성공",
+        "run": "성공",
+        "tools_list": "성공",
+        "auth": "불필요"
+      },
+      "requirements": [],
+      "plan": "npm",
+      "risk": null,
+      "risk_quote": null,
+      "completeness": null
+    }
+  ]
+}

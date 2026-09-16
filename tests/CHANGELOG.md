@@ -1,5 +1,11 @@
 # tests/ CHANGELOG
 
+- 2026-09-16 · verify/run_real.py 추가(도구 목록에서 큐레이터가 실제 모델로 요청 → 06:00과 같은 verifier.run, 단계별 성공률·시간·위험 신호), check_verifier에 설치 정보 있으면 모델 안 부름·자리표시자·도커·저장 수 · 세션 8 7단계 · check_verifier 21항목 통과
+- 2026-09-16 · verify/check_rollback.py 추가(되돌림 1 대체·비움·장애, 되돌림 2 회복·확인 필요·공유·상한, 스팬), check_scheduler 06:00 검증 5항목(가짜 시계가 잠들기 전에 따로 도는 작업을 먼저 돌림), check_design 검증관 칸 문구 · 세션 8 5단계 · 전부 통과
+- 2026-09-15 · verify/check_verifier.py 추가 · 세션 8 검증관 4단계 · 17항목 통과, check_tables(skill_reviews skipped 제약)
+- 2026-09-15 · verify/check_skill_read.py와 fixtures(가짜 스킬 3: 외부 전송·판독 지시 삽입·깨끗함) 추가 · 세션 8 검증관 3단계 · 13항목 통과
+- 2026-09-15 · verify/check_probe.py 추가, check_tables 표 11개·JSONB 9칸(verify_requests·probes 칸 추가) · 세션 8 검증관 2단계 · 10항목·check_tables·list_tools·run_loop 통과
+- 2026-09-15 · e2b/smoke.py 추가 · 세션 8 검증관 1단계 E2B 연결 · 생성 954ms·echo 307ms·폐기 150ms, Python 3.11·Node 20·npm 10, deny_out 뒤 외부 통신 차단 확인
 - 2026-09-15 · web/check_design.py 추가, check_rules의 옛 CSS 두 칸 항목을 참고 파일 style 기준으로, check_tables JSONB 칸 수 5 → 6(briefings.run_stats) · 디자인 기준 적용·읽기 전용 데이터 · 통과
 - 2026-09-15 · run_daily --fake 관련 카드 5항목(두 프로필 다른 추천·이름 일치 우선·related 저장·재노출 0), check_deliver 관련 칸, 부록 C 기준 2를 실제 F3-b 후보 순서로 · W4-d · 통과
 - 2026-09-15 · feedback/check_merge.py 추가, check_scheduler에 월요일 합치기 4항목 · W4-c 주간 기억 합치기 · 10항목·23항목 통과
