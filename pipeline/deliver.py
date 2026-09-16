@@ -2,8 +2,9 @@
 
 - outbox(day): 그날 sent_at이 비어 있는 briefings를 사용자별 메일 한 통으로 만든다 (카드 전체 또는 empty_reason)
 - send_day(day): Gmail SMTP(smtp.gmail.com 465)로 보내고, 한 통 보낼 때마다 그 사용자의 sent_at을 채운다. 실패한 사용자는 비워 둔다
-- 개발 모드(DEV_MODE≠0): is_test 사용자만, 받는 사람은 가짜 주소 대신 ADMIN_EMAILS(본인)로 바꾸고 제목에 [개발 모드]를 붙인다
-  (2026-09-15 사용자 승인). ADMIN_EMAILS가 비어 있으면 실제로 보내지 않고 콘솔·DB만
+- 개발 모드(DEV_MODE≠0): is_test 사용자만, 받는 사람은 가짜 주소 대신 ADMIN_EMAILS(본인)로 바꾼다 (2026-09-15 사용자 승인).
+  프로필이 여러 개여도 메일은 한 통으로 묶고 제목은 [개발 모드] 하나다 (2026-09-16 사용자 결정). 묶음이라 발송 실패는 그날 프로필 전부 미발송이고
+  다음 시도에서 다시 묶어 보낸다. ADMIN_EMAILS가 비어 있으면 실제로 보내지 않고 콘솔·DB만
 - 운영 모드: users.email로 보낸다. GMAIL_USER·GMAIL_APP_PASSWORD 값은 로그에 쓰지 않는다
 실행: uv run python -m pipeline.deliver [--date 2026-09-15] [--console] [--preview-dir 폴더]
 """
@@ -149,13 +150,14 @@ def mark_sent(user_ids: list[int], day: date) -> int:
     return result.rowcount
 
 
-def build_email(message: dict, sender: str, recipients: list[str], dev: bool) -> EmailMessage:
+def build_email(mail: dict, sender: str, recipients: list[str]) -> EmailMessage:
+    """mail: {subject, text, html} (사용자 한 명분 또는 개발 모드 묶음)."""
     email = EmailMessage()
     email["From"] = f"toolscout <{sender}>"
     email["To"] = ", ".join(recipients)
-    email["Subject"] = f"[개발 모드 · 프로필 {message['role']}] {message['subject']}" if dev else message["subject"]
-    email.set_content(message["text"])
-    email.add_alternative(message["html"], subtype="html")
+    email["Subject"] = mail["subject"]
+    email.set_content(mail["text"])
+    email.add_alternative(mail["html"], subtype="html")
     return email
 
 
@@ -195,10 +197,18 @@ def send_day(day: date, notify_until: str | None = None, *, console: bool = Fals
             try:
                 with smtp_factory(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT) as smtp:
                     smtp.login(sender, password)
-                    for message in messages:
-                        recipients = admins if dev else [message["to"]]
+                    if dev:  # 개발 모드는 프로필이 전부 내 받은편지함으로 오니 한 통으로 묶는다 (2026-09-16 사용자 결정)
+                        combined = briefing_mail.combine(day, messages)
+                        user_ids = [m["user_id"] for m in messages]
                         try:
-                            smtp.send_message(build_email(message, sender, recipients, dev))
+                            smtp.send_message(build_email(combined, sender, admins))
+                            rows += mark_sent(user_ids, day)
+                            sent += user_ids
+                        except (smtplib.SMTPException, OSError) as exc:  # 한 통이라 전부 미발송, 다음 시도에서 다시 묶어 보낸다
+                            failed += [{"user_id": uid, "error": f"{type(exc).__name__}: {str(exc)[:160]}"} for uid in user_ids]
+                    for message in [] if dev else messages:  # 운영 모드는 사용자마다 각자 한 통
+                        try:
+                            smtp.send_message(build_email(message, sender, [message["to"]]))
                             rows += mark_sent([message["user_id"]], day)  # 한 통마다 기록해 중간에 죽어도 다시 보내지 않게
                             sent.append(message["user_id"])
                         except (smtplib.SMTPException, OSError) as exc:
@@ -208,7 +218,8 @@ def send_day(day: date, notify_until: str | None = None, *, console: bool = Fals
                 failed += [{"user_id": m["user_id"], "error": f"{type(exc).__name__}: {str(exc)[:160]}"}
                            for m in messages if m["user_id"] not in done]
         result = {"date": str(day), "dev_mode": dev, "mode": mode, "messages": len(messages), "sent": sent, "failed": failed,
-                  "rows_marked": rows, "recipients": "ADMIN_EMAILS" if dev and mode == "smtp" else "users.email"}
+                  "rows_marked": rows, "recipients": "ADMIN_EMAILS" if dev and mode == "smtp" else "users.email",
+                  "mails": 1 if dev and mode == "smtp" and messages else len(sent) + len(failed) if mode == "smtp" else 0}
         span.update(output=result, level="WARNING" if failed else "DEFAULT")
     return result
 

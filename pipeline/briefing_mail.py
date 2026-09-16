@@ -6,6 +6,7 @@
 - HTML과 같은 내용의 텍스트 본문을 함께 만든다
 - 피드백 버튼(W3, 부록 C): links(card, 버튼)가 있으면 카드마다 서명 링크 버튼. 뉴스는 관심없음·이상함, 도구는 써봤음까지 셋
 - 검증 결과(세션 8): MCP는 "직접 깔아봤더니" 4단계, 스킬은 "SKILL.md 읽어봤더니" 위험 신호. 두 고정 문구는 결과가 없어도 늘 붙인다
+- combine(day, sections): 개발 모드에서 프로필 여러 개의 브리핑을 한 통으로 묶는다 (운영 모드는 사용자마다 render 한 통)
 """
 import html
 import re
@@ -134,3 +135,31 @@ def render(day: date, role: str, cards: list[dict], empty_reason: str | None = N
     text = (f"toolscout 아침 브리핑\n{head}\n\n{body_text}\n\n"
             "요약은 원문을 바탕으로 AI가 썼습니다. 중요한 결정 전에는 원문 링크를 확인하세요.")
     return {"subject": subject(day, cards, empty_reason), "html": page, "text": text}
+
+
+def combine_subject(day: date, sections: list[dict]) -> str:
+    when = f"{day.month}월 {day.day}일"
+    cards = sum(s["cards"] for s in sections)
+    return f"[개발 모드] {when} AI 브리핑 · 프로필 {len(sections)}개 · 카드 {cards}장"
+
+
+def combine(day: date, sections: list[dict]) -> dict:
+    """개발 모드 묶음 메일 (2026-09-16 사용자 결정: 프로필마다 한 통이 아니라 다 합쳐 한 통).
+
+    sections: [{role, cards, html, text}] (render 결과에 프로필 이름·카드 수를 더한 것, 발송함 순서)
+    반환: {subject, html, text}. 맨 위에 프로필 목차, 아래에 프로필별 구역.
+    """
+    heads = [f"프로필 {s['role']} · 카드 {s['cards']}장" for s in sections]
+    toc = "".join(f"<li>{_e(head)}</li>" for head in heads)
+    body = "".join(f'<hr style="border:0;border-top:1px solid #ddd;margin:24px 0">'
+                   f'<h1 style="font-size:16px;margin:0 0 12px">{_e(head)}</h1>{section["html"]}'
+                   for head, section in zip(heads, sections))
+    page = (f'<div style="font-family:-apple-system,\'Segoe UI\',\'Malgun Gothic\',sans-serif;max-width:640px;margin:0 auto;color:#111">'
+            f'<p style="margin:0 0 4px">개발 모드 묶음 메일</p>'
+            f'<p style="color:#999;font-size:13px;margin:0 0 8px">가짜·테스트 프로필 {len(sections)}개의 브리핑을 한 통에 담았습니다.</p>'
+            f'<ul style="color:#555;font-size:13px;margin:0 0 8px">{toc}</ul>{body}</div>')
+    text = ("개발 모드 묶음 메일\n"
+            f"가짜·테스트 프로필 {len(sections)}개의 브리핑을 한 통에 담았습니다.\n"
+            + "\n".join(f"- {head}" for head in heads) + "\n\n"
+            + "\n\n".join(f"{'=' * 40}\n{head}\n{'=' * 40}\n{section['text']}" for head, section in zip(heads, sections)))
+    return {"subject": combine_subject(day, sections), "html": page, "text": text}

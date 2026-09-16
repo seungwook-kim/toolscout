@@ -3,7 +3,7 @@
 실행: uv run python -m tests.pipeline.check_deliver
 - 렌더링: 카드 전체·trace_id·뉴스/도구 칸·"오늘 새 도구 없음"·빈 행·이스케이프·위험 링크 차단
 - DB(날짜 2000-01-02로 넣고 끝나면 지움): 발송함 → sent_at 기록 → 다시 불러도 0통(멱등), 개발 모드는 is_test만
-- 발송(가짜 SMTP): 개발 모드는 ADMIN_EMAILS로 받는 사람을 바꾸고 제목에 [개발 모드], 보낸 사용자만 sent_at, 설정 없으면 기록 안 함
+- 발송(가짜 SMTP): 개발 모드는 프로필 전부를 ADMIN_EMAILS에 한 통으로(실패하면 전부 미발송), 운영 모드는 사용자마다 각자 한 통(보낸 사용자만 sent_at), 설정 없으면 기록 안 함
 - 실패 알림(W4): ADMIN_EMAILS에 한 통, 메일 설정·받는 사람이 없으면 보내지 않고 결과만 / DB 깨우기 접속
 - API(uvicorn 실제 기동, 예약 꺼짐): 서비스 키 없으면 401, 상태
 실제 메일은 보내지 않는다.
@@ -79,6 +79,20 @@ def render_checks() -> dict:
         and f"[{briefing_mail.RELATED_TITLE}]" in monday["text"] and briefing_mail.RELATED_TITLE not in mixed["html"]
         and monday["html"].index("관련 도구 카드") > monday["html"].index(briefing_mail.RELATED_TITLE),
         "빈_행이면_오늘_볼_만한_게_없었음": briefing_mail.EMPTY_TITLE in empty["subject"] and "반려 3" in empty["html"] and "반려 3" in empty["text"],
+        **combine_checks(mixed, empty),
+    }
+
+
+def combine_checks(mixed: dict, empty: dict) -> dict:
+    """개발 모드 묶음 메일 본문 (2026-09-16 사용자 결정: 프로필마다 한 통이 아니라 한 통에 전부)."""
+    sections = [{"role": "자바 백엔드 개발자", "cards": 2, **mixed}, {"role": "마케터", "cards": 0, **empty}]
+    one = briefing_mail.combine(DAY, sections)
+    return {
+        "묶음_제목_프로필수·카드수": one["subject"] == "[개발 모드] 1월 2일 AI 브리핑 · 프로필 2개 · 카드 2장",
+        "묶음_프로필_목차": all(f"프로필 {role} · 카드" in one["html"] and f"프로필 {role} · 카드" in one["text"]
+                        for role in ("자바 백엔드 개발자", "마케터")),
+        "묶음_본문_프로필_전부": all(t in one["html"] and t in one["text"] for t in ("trace-1", "trace-2", "반려 3")),
+        "묶음_프로필이름_이스케이프": "<script>" not in briefing_mail.combine(DAY, [{"role": "<script>", "cards": 0, **empty}])["html"],
     }
 
 
@@ -130,8 +144,8 @@ def send_checks(user_ids: list[int]) -> dict:
         os.environ.update({"GMAIL_USER": "sender@example.test", "GMAIL_APP_PASSWORD": "fakepassword0000",
                            "ADMIN_EMAILS": "me@example.test, other-admin@example.test"})
         seed(user_ids)
-        FakeSMTP.sent, FakeSMTP.logins, FakeSMTP.fail_subject = [], [], "마케터"
-        partial = deliver.send_day(DAY, smtp_factory=FakeSMTP)
+        FakeSMTP.sent, FakeSMTP.logins, FakeSMTP.fail_subject = [], [], "[개발 모드]"
+        failed_all = deliver.send_day(DAY, smtp_factory=FakeSMTP)  # 묶음 한 통이 실패하면 그날 프로필 전부 미발송
         remaining = deliver.outbox(DAY)
         FakeSMTP.fail_subject = None
         retry = deliver.send_day(DAY, smtp_factory=FakeSMTP)
@@ -148,17 +162,46 @@ def send_checks(user_ids: list[int]) -> dict:
                 os.environ.pop(k, None)
             else:
                 os.environ[k] = v
-    first_mail = FakeSMTP.sent[0] if FakeSMTP.sent else {}
+    one_mail = FakeSMTP.sent[0] if FakeSMTP.sent else {}
     return {
-        "개발모드_받는사람은_ADMIN_EMAILS": all(m["to"] == "me@example.test, other-admin@example.test" for m in FakeSMTP.sent)
-        and len(FakeSMTP.sent) == 2,
-        "개발모드_제목에_표시": first_mail.get("subject", "").startswith("[개발 모드 · 프로필 자바 백엔드 개발자]"),
-        "텍스트·HTML_둘다": first_mail.get("parts") == ["text/plain", "text/html"],
-        "실패한_사용자만_미발송_남음": partial["mode"] == "smtp" and partial["sent"] == [user_ids[0]]
-        and [f["user_id"] for f in partial["failed"]] == [user_ids[1]] and [m["user_id"] for m in remaining] == [user_ids[1]],
-        "다시_보내면_남은_사용자만": retry["sent"] == [user_ids[1]] and after_all["messages"] == 0,
+        "개발모드_받는사람은_ADMIN_EMAILS": all(m["to"] == "me@example.test, other-admin@example.test" for m in FakeSMTP.sent),
+        "개발모드_프로필_전부_한통": len(FakeSMTP.sent) == 1 and retry["mails"] == 1 and sorted(retry["sent"]) == sorted(user_ids),
+        "개발모드_제목에_표시": one_mail.get("subject", "").startswith("[개발 모드]") and "프로필 2개" in one_mail.get("subject", ""),
+        "텍스트·HTML_둘다": one_mail.get("parts") == ["text/plain", "text/html"],
+        "묶음_실패하면_전부_미발송": failed_all["mode"] == "smtp" and failed_all["sent"] == []
+        and sorted(f["user_id"] for f in failed_all["failed"]) == sorted(user_ids)
+        and sorted(m["user_id"] for m in remaining) == sorted(user_ids),
+        "다시_보내면_남은_사용자만": after_all["messages"] == 0,
         "메일설정_없으면_기록안함": missing["mode"] == "config_missing" and missing_left == 2 and not missing["sent"],
         "ADMIN_EMAILS_없으면_콘솔·DB만": console["mode"] == "console" and console["rows_marked"] == 3,
+        **prod_checks(user_ids),
+    }
+
+
+def prod_checks(user_ids: list[int]) -> dict:
+    """운영 모드(DEV_MODE=0)는 전과 같이 사용자마다 각자 한 통. 환경변수는 여기서만 바꾸고 되돌린다."""
+    keys = ("GMAIL_USER", "GMAIL_APP_PASSWORD", "ADMIN_EMAILS", "DEV_MODE")
+    saved = {k: os.environ.get(k) for k in keys}
+    try:
+        os.environ.update({"GMAIL_USER": "sender@example.test", "GMAIL_APP_PASSWORD": "fakepassword0000",
+                           "ADMIN_EMAILS": "me@example.test", "DEV_MODE": "0"})
+        seed(user_ids)
+        FakeSMTP.sent, FakeSMTP.fail_subject = [], briefing_mail.EMPTY_TITLE  # 마케터(빈 행)만 실패
+        partial = deliver.send_day(DAY, smtp_factory=FakeSMTP)
+        remaining = deliver.outbox(DAY)
+        FakeSMTP.fail_subject = None
+        retry = deliver.send_day(DAY, smtp_factory=FakeSMTP)
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    return {
+        "운영모드_사용자마다_각자_한통": partial["mails"] == 2 and all(m["to"].endswith(".test") and "[개발 모드]" not in m["subject"]
+                                                     for m in FakeSMTP.sent),
+        "운영모드_실패한_사용자만_남음": partial["sent"] == [user_ids[0]] and [f["user_id"] for f in partial["failed"]] == [user_ids[1]]
+        and [m["user_id"] for m in remaining] == [user_ids[1]] and retry["sent"] == [user_ids[1]],
     }
 
 
