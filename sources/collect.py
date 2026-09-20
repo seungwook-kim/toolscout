@@ -1,4 +1,4 @@
-"""소스 전체 수집. 뉴스는 24시간, 도구(MCP·스킬)는 7일 창을 쓴다 (계획안 9.2 W1).
+"""소스 전체 수집. 뉴스는 48시간, 도구(MCP·스킬)는 7일 창을 쓴다 (계획안 9.2 W1).
 
 소스 하나가 실패해도 나머지로 진행하고 실패를 기록한다 (계획안 부록 B 예외 처리).
 MCP 레지스트리는 자주 느리거나 500을 내서 (2026-09-14·15 실측) 제한 시간 60초로 2번 더 시도하고,
@@ -14,7 +14,11 @@ from sources import anthropic_skills, hackernews, mcp_registry
 from sources.common import KST, SourceResult, error_text, http_client
 from sources.rss import FEEDS, fetch_feed
 
-NEWS_WINDOW = timedelta(hours=24)
+# 뉴스 창 48시간. 하루 1회 07:00 실행이라 24시간이면 기사 하나가 후보에 오를 기회가 한 번뿐이고,
+# 그 실행에서 밀리면 창 밖으로 나가 다시 후보가 되지 못한다. 실제로 9월 17일 17시 36분 기사(판단 전용 모델 Jev 공개)가
+# 9월 18일 실행에서 밀린 뒤 9월 19일·20일 브리핑에 한 번도 오르지 못했다 (2026-09-21 실측).
+# 이미 보낸 항목은 pick_for_user의 seen_urls와 items.url 유일 제약이 막는다
+NEWS_WINDOW = timedelta(hours=48)
 TOOL_WINDOW = timedelta(days=7)
 MCP_TIMEOUT, MCP_RETRIES = 60, 2
 
