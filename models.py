@@ -65,6 +65,13 @@ PROD_MODELS: ModelTable = {
 #   분당 토큰 8K가 모델별이라 역할을 두 모델로 나눴다. 2026-09-14 목록 API·실제 도구 호출·JSON 응답으로 확정
 #   (tests/models/check_groq.py, 하루 1,000회·분당 8,000토큰. llama-3.3-70b-versatile은 이 계정에서 404)
 # - gemma-4-31b·26b는 무료 공급자(Google AI Studio) 429가 반복돼 뺐다 / OpenRouter 무료는 크레딧이 없으면 하루 50회
+#
+# 배포용 후보 (2026-09-21 실측, 아직 표에 넣지 않았다. 로컬을 못 쓰는 곳에 올릴 때 ollama 자리를 이걸로 바꾼다)
+#   openrouter openai/gpt-oss-20b: 선별 20건 5.0초(로컬 gemma3:12b 18.2초의 3.6배), JSON 규격 맞음,
+#   도구 호출 지원(로컬 모델의 가장 큰 제약이 풀린다), 한국어 요약 자연스러움. 입력 $0.030·출력 $0.130 per 1M,
+#   혼자 쓰면 하루 약 $0.005. reasoning은 반드시 low로 준다. none은 400(Reasoning is mandatory for this endpoint),
+#   지정하지 않으면 사고 토큰이 붙어 출력이 약 3배가 된다
+#   해설가·검증관 자리는 openrouter qwen/qwen3.8-27b(입력 $0.200·출력 $2.500 per 1M)를 같이 본다
 LOCAL_JSON_MODEL = {"provider": "ollama", "model": "gemma3:12b", "tools": False}
 GROQ_FAST = {"provider": "groq", "model": "openai/gpt-oss-20b", "reasoning": "low"}
 GROQ_KOREAN = {"provider": "groq", "model": "qwen/qwen3.8-27b", "reasoning": "none"}
