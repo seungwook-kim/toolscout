@@ -23,6 +23,11 @@ from sqlalchemy import delete, select  # noqa: E402
 import db  # noqa: E402
 
 
+# APP_BASE_URL이 https면 세션 쿠키가 secure로 발급돼 http 요청에는 실리지 않는다(브라우저와 같은 규칙).
+# 검수 클라이언트도 https로 요청해 배포 설정과 로컬 설정 어느 쪽에서도 로그인이 되게 한다 (2026-09-21)
+BASE_URL = "https://testserver"
+
+
 def admin_emails(*emails: str) -> None:
     current = [e for e in os.environ.get("ADMIN_EMAILS", "").split(",") if e.strip()]
     os.environ["ADMIN_EMAILS"] = ",".join(dict.fromkeys(current + list(emails)))
@@ -32,14 +37,14 @@ def client() -> TestClient:
     """with로 쓰면 앱 lifespan(MCP 세션 관리자)이 돈다. 프로세스에서 한 번만 with로 연다."""
     import main
 
-    return TestClient(main.app)
+    return TestClient(main.app, base_url=BASE_URL)
 
 
 def second_client() -> TestClient:
     """두 번째 사용자용. lifespan 없이 쿠키 저장소만 따로 쓴다 (MCP 세션 관리자는 한 번만 돌릴 수 있다)."""
     import main
 
-    return TestClient(main.app)
+    return TestClient(main.app, base_url=BASE_URL)
 
 
 def mails() -> list[dict]:
