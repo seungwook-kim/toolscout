@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-21 · agent/check_reject_rate.py 추가(실제로 반려됐던 항목 재투입, 무관한 대조 항목은 계속 반려되는지 같이 확인) · 해설가 반려율 · 5항목 통과. 앱 8000 포트와 fetch_article을 실제로 쓴다
+
 - 2026-09-21 · sources/check_catalog_title.py(제목 규칙·두 경로 공용·upsert 갱신·빈 값 보호)와 sources/backfill_titles.py(기존 행 보정) 추가 · 도구 목록 제목이 저장소 이름으로 굳던 문제 · 9항목 통과, 보정 40건
 
 - 2026-09-21 · pipeline/run_daily.py 관련 카드 검수용 도구 3개에 별 수(90만대) 부여 · 관련 카드 후보는 겹친 말 수 > 별 수 순으로 상위 30건만 모델에 가는데, 별 수가 없던 검수용 도구가 쌓인 실제 MCP 56건에 밀려 후보에서 빠지면서 검수 3항목이 실패하고 있었다(제품 코드는 정상) · run_daily --fake 전체 통과
