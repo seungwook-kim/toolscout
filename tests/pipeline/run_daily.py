@@ -207,11 +207,13 @@ async def related_checks(run, backend: int, marketer: int) -> dict:
     """관련 카드(F3-b). 검수용 도구 3개를 도구 목록에 넣고 --related로 돌린다. 백엔드(java·spring·n8n)와 마케터(notion)는 다른 도구가 맨 위."""
     with db.get_engine().begin() as c:
         c.execute(update(db.Briefing).where(db.Briefing.date == FAKE_DAY).values(sent_at=None))
-        for slug, desc, topic in (("spring-boot-mcp", "Spring Boot actuator tools", "coding_tools"),
-                                  ("notion-mcp-server", "Read and write Notion pages", "mcp_tools"),
-                                  ("weather-mcp", "Weather forecast data", "automation")):
+        # 별 수는 실제 도구 목록(최대 약 9만)보다 크게 준다. 관련 카드 후보는 겹친 말 수 > 별 수 순으로
+        # 상위 RELATED_PICK_INPUT건만 모델에 가는데, 별 수가 없으면 쌓인 실제 MCP에 밀려 검수용 도구가 후보에서 빠진다 (2026-09-21)
+        for slug, desc, topic, stars in (("spring-boot-mcp", "Spring Boot actuator tools", "coding_tools", 900_000),
+                                         ("notion-mcp-server", "Read and write Notion pages", "mcp_tools", 899_999),
+                                         ("weather-mcp", "Weather forecast data", "automation", 899_998)):
             c.execute(insert(db.Item).values(date=date(1999, 12, 30), type="mcp", topic=topic, title=f"검수 관련 {slug}",
-                                             url=f"{FAKE_HOST}rel/{slug}", description=desc, source="mcp_registry"))
+                                             url=f"{FAKE_HOST}rel/{slug}", description=desc, source="mcp_registry", stars=stars))
     report = await run(related=True)
     by_user = {u["user_id"]: u for u in report["users"]}
     with db.get_engine().connect() as c:
