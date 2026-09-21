@@ -41,6 +41,7 @@ def save(rows: list[dict]) -> int:
     if not rows:
         return 0
     try:
+        from sqlalchemy import func
         from sqlalchemy.dialects.postgresql import insert
 
         import db
@@ -52,7 +53,9 @@ def save(rows: list[dict]) -> int:
                   for r in unique.values()]
         statement = insert(db.Item).values(values)
         statement = statement.on_conflict_do_update(
-            index_elements=["url"], set_={"stars": statement.excluded.stars, "stars_checked_at": statement.excluded.stars_checked_at})
+            index_elements=["url"], set_={"stars": statement.excluded.stars, "stars_checked_at": statement.excluded.stars_checked_at,
+                                          # 표시명이 늦게 붙는 경우가 있어 빈 값이 아니면 새 제목으로 채운다 (2026-09-21)
+                                          "title": func.coalesce(func.nullif(statement.excluded.title, ""), db.Item.title)})
         with db.get_engine().begin() as connection:
             connection.execute(statement)
         return len(values)

@@ -76,6 +76,8 @@ def save_catalog(today: date, selected: list[dict]) -> int:
               for url, item in unique.items()]
     statement = insert(db.Item).values(values)
     statement = statement.on_conflict_do_update(index_elements=["url"], set_={
+        # 별 수 캐시가 먼저 이름만으로 행을 만들어 두면 제목이 io.github 형태로 굳는다. 빈 값이 아니면 새 제목으로 채운다 (2026-09-21)
+        "title": func.coalesce(func.nullif(statement.excluded.title, ""), db.Item.title),
         "topic": func.coalesce(statement.excluded.topic, db.Item.topic),
         "description": func.coalesce(statement.excluded.description, db.Item.description),
         "version": func.coalesce(statement.excluded.version, db.Item.version),

@@ -58,13 +58,21 @@ def fetch(since: datetime, client: httpx.Client, *, per_publisher: int = MAX_PER
                     "별수_새조회": stars.fetched, "별수_DB저장": saved}
     for entry, repo, _ in new + updates:
         server = entry["server"]
-        title = f"{server.get('title') or server.get('name', '')} {server.get('version', '')}".strip()
+        title = display_title(server)
         item = make_item(title=title, url=github_stars.repo_url(repo), published=_published(entry),
                          summary=server.get("description", ""), source="mcp_registry", type="mcp")
         if install := install_info(server):
             item["install"] = install  # 검증관이 설치 명령·원격 주소를 정할 때 쓴다 (세션 8)
         result.items.append(item)
     return result
+
+
+def display_title(server: dict) -> str:
+    """카드·도구 목록에 쓰는 제목. 레지스트리 표시명(title)이 있으면 그것, 없으면 이름(io.github.x/y)에 버전을 붙인다.
+
+    별 수 캐시 경로가 표시명 없이 이름만 저장해 도구 목록 56건 중 55건이 io.github 형태로 쌓였다 (2026-09-21).
+    """
+    return f"{server.get('title') or server.get('name', '')} {server.get('version', '')}".strip()
 
 
 def install_info(server: dict) -> dict | None:
@@ -103,7 +111,7 @@ class _Stars:
             url = github_stars.repo_url(repo)
             if url in self.new:
                 server = entry["server"]
-                rows.append({"url": url, "title": server.get("name", ""), "version": server.get("version"), "stars": self.new[url]})
+                rows.append({"url": url, "title": display_title(server), "version": server.get("version"), "stars": self.new[url]})
         return github_stars.save(rows)
 
 

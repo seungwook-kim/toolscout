@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-21 · persist.save_catalog upsert에 title 갱신 추가 · 별 수 캐시가 먼저 만든 이름 제목이 선별 통과 뒤에도 그대로 남았다 · check_catalog_title 9항목 통과
+
 - 2026-09-16 · run_daily.target_user_ids는 approved 사용자만(운영은 데모 프로필 포함), deliver.outbox에서 데모 프로필 제외 · 초대제 도입으로 대상이 달라짐 · check_access·check_deliver 통과
 - 2026-09-16 · 개발 모드 메일을 프로필마다 한 통에서 전부 묶어 한 통으로(briefing_mail.combine, deliver 묶음 발송·mails 칸) · 프로필이 전부 내 받은편지함으로 오는데 4통이 따로 와서 (2026-09-16 사용자 결정) · check_deliver 27항목 통과
 - 2026-09-16 · verification.save_requests 저장 수를 returning으로 셈 · 실제 실행에서 rowcount -1이 나와 저장 수가 -5로 보고됨 · check_verifier(저장 10·중복 저장 0) 통과

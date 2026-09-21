@@ -1,5 +1,7 @@
 # sources/ CHANGELOG
 
+- 2026-09-21 · mcp_registry.display_title로 제목 규칙을 한 곳에 모으고 별 수 캐시(StarCache.flush)도 쓰게, github_stars.save·persist.save_catalog upsert가 제목을 갱신(빈 값으로는 안 덮음) · 별 수 캐시가 표시명 없이 이름만 저장하고 두 upsert가 title을 갱신하지 않아 도구 목록 56건 중 55건이 io.github 형태로 굳었고 9월 21일 관련 카드 11건이 전부 그렇게 나갔다 · check_catalog_title 9항목·check_fallbacks·run_daily --fake 통과, backfill_titles로 기존 40건 보정(표시명 없음 12, 못 찾음 0)
+
 - 2026-09-21 · collect.NEWS_WINDOW 24시간 → 48시간 · 하루 1회 07:00 실행이라 24시간이면 기사가 후보에 오를 기회가 한 번뿐이고, 밀리면 창 밖으로 나가 다시 못 온다. 9월 17일 17시 36분 Jev 공개 기사가 9월 18일 실행에서 밀린 뒤 19일·20일 브리핑에 한 번도 오르지 못한 것을 실측 · check_news_window 10항목·check_fallbacks 7항목 통과
 
 - 2026-09-15 · mcp_registry 항목에 install(레지스트리 packages·remotes 요약), anthropic_skills 항목에 skill_url(커밋이 바꾼 SKILL.md 폴더) · 세션 8 검증관이 설치 명령·원문 주소를 정하게 · check_fallbacks 통과
