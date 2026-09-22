@@ -10,7 +10,7 @@
 - `persist.py`: 통과 카드를 items·briefings(trace_id, sent_at null)·seen에 저장. 카드 0건이면 empty_reason 행. 발송한 사용자는 건너뜀, 사용자별 run_stats·items.published_at도 저장. `save_catalog` 선별 통과 MCP·스킬 쌓기, `related_pool` 관련 카드 후보 100건(태그·써봤음 이름 일치 > 가중치 > 별 수), `wake_db`
 - `run_daily.py`: 수집 → 정리 → 중복 제거 → 큐레이터(월요일은 관련 카드도) → 도구 목록·검증 요청 쌓기 → 되돌림 1 → 해설가 → 되돌림 2 → 검증 노드 → 검증 칸 → 저장. 개발 모드는 is_test만, 트레이스 하나
   - `--users N`·`--limit N`(디버깅 `--users 1 --limit 40`). 모델 장애는 사용자·카드 단위로 건너뛰고 전원 실패면 종료 코드 2. 형식 실패 예시는 `tests/pipeline/format_failures.json`
-- `briefing_mail.py`: 메일 본문(HTML·텍스트). 카드·trace_id·피드백 서명 링크, 뉴스/도구/관련 칸, 빈 행, 검증 결과 줄과 고정 문구 두 개, `combine`(개발 모드 묶음: 목차 + 프로필별 구역)
+- `briefing_mail.py`: 메일 본문(HTML·텍스트). 카드·trace_id·피드백 서명 링크, 뉴스/도구/관련 칸, 빈 행, 검증 결과 줄과 고정 문구 두 개, `combine`(개발 모드 묶음: 목차 + 프로필별 구역, 구역마다 머리 안 되풀이). 색은 웹앱 디자인 토큰 값, 근거 링크는 원문과 다를 때만
 - `deliver.py`: 미발송 briefings를 사용자별 메일로 Gmail SMTP 발송, 한 통마다 sent_at. 개발 모드는 받는 사람을 ADMIN_EMAILS로 바꾸고 프로필 전부를
   [개발 모드] 한 통으로 묶는다(실패하면 전부 미발송, 다음 시도에 다시 묶음). ADMIN_EMAILS 없으면 콘솔·DB만, 메일 설정 없으면 기록 안 함. `send_alert`: 실패 알림
 - `scheduler.py`: 앱이 떠 있는 동안 06:00 검증(W1-a, 따로 도는 작업), 06:55 예열·DB 깨우기, 07:00 하루 실행, 알림 시각마다 발송 (KST). 놓친 실행은 22:00 전에 따라잡음
