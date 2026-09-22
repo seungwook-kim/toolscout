@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-22 · pipeline/run_daily.py --fake가 검수용 프로필을 도는 동안만 승인했다가 실패해도 원래 상태로 되돌림(approved_while_testing) · 사용자가 검수를 마쳤다며 가짜 프로필 A·B·C(user 1·2·3)를 하루 실행과 메일에서 빼기로 해 DB에서 blocked로 바꿨는데, 이 검수는 하루 실행과 같은 대상 선택(승인된 is_test)을 거쳐 그대로면 깨진다 · run_daily --fake·check_deliver·check_reject_rate·check_access 통과, 검수 뒤 blocked 유지 확인
+
 - 2026-09-22 · pipeline/check_mail_layout.py 추가(근거 링크 규칙 HTML·텍스트, 요일, 종류 칩, 머리 되풀이 없음, body, 카드마다 trace_id, 웹앱 색 토큰) · 메일 가독성 · 12항목 통과, 네트워크·DB 미사용
 
 - 2026-09-21 · web/common.py 검수 클라이언트를 https://testserver로 · APP_BASE_URL이 https면 세션 쿠키가 secure로 발급되는데 TestClient가 http로 요청해 쿠키가 실리지 않아 로그인이 필요한 검수가 401로 깨졌다(코드 버그 아님, 환경 의존) · check_design·check_auth·check_settings·check_briefings·check_feedback·check_ask·check_access 통과

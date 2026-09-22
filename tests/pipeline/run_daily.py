@@ -11,6 +11,7 @@ import os
 import re
 import sys
 import tempfile
+from contextlib import contextmanager
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -231,8 +232,28 @@ async def related_checks(run, backend: int, marketer: int) -> dict:
     }
 
 
+@contextmanager
+def approved_while_testing(user_ids: list[int]):
+    """검수용 프로필 A·B·C는 하루 실행과 메일에서 빼려고 차단해 두었다 (2026-09-22 사용자 결정).
+    이 검수는 하루 실행과 같은 대상 선택(승인된 is_test)을 거치므로, 도는 동안만 승인했다가 실패해도 원래 상태로 되돌린다."""
+    with db.get_engine().begin() as c:
+        before = dict(c.execute(select(db.User.id, db.User.status).where(db.User.id.in_(user_ids))).all())
+        c.execute(update(db.User).where(db.User.id.in_(user_ids)).values(status="approved"))
+    try:
+        yield
+    finally:
+        with db.get_engine().begin() as c:
+            for uid, status in before.items():
+                c.execute(update(db.User).where(db.User.id == uid).values(status=status))
+
+
 async def fake_run(mcp_url: str) -> dict:
     user_ids = memory.test_user_ids()
+    with approved_while_testing(user_ids):
+        return await _fake_run(mcp_url, user_ids)
+
+
+async def _fake_run(mcp_url: str, user_ids: list[int]) -> dict:
     backend, marketer = user_ids[0], user_ids[1]
     run = lambda mode="normal", **kw: run_daily.run(FAKE_DAY, items=fake_items(), mcp_url=mcp_url, model_call=fake_model(mode), **kw)
     first = await run()
