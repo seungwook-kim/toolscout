@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-22 · pipeline/check_mail_layout.py 추가(근거 링크 규칙 HTML·텍스트, 요일, 종류 칩, 머리 되풀이 없음, body, 카드마다 trace_id, 웹앱 색 토큰) · 메일 가독성 · 12항목 통과, 네트워크·DB 미사용
+
 - 2026-09-21 · web/common.py 검수 클라이언트를 https://testserver로 · APP_BASE_URL이 https면 세션 쿠키가 secure로 발급되는데 TestClient가 http로 요청해 쿠키가 실리지 않아 로그인이 필요한 검수가 401로 깨졌다(코드 버그 아님, 환경 의존) · check_design·check_auth·check_settings·check_briefings·check_feedback·check_ask·check_access 통과
 
 - 2026-09-21 · agent/check_reject_rate.py 추가(실제로 반려됐던 항목 재투입, 무관한 대조 항목은 계속 반려되는지 같이 확인) · 해설가 반려율 · 5항목 통과. 앱 8000 포트와 fetch_article을 실제로 쓴다

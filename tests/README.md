@@ -13,7 +13,7 @@
 - `sources/`: `check_fallbacks.py` 재시도·전날 결과·긱뉴스 링크 / `check_news_window.py` 창 48시간·보낸 항목·제외 규칙 / `check_catalog_title.py` 제목 규칙·upsert 갱신 / `backfill_titles.py` 기존 행 보정 / `run_today.py` 수집 건수 → `report.md`
 - `pipeline/run_dedupe.py`: 정리·중복 제거 단위 검사 + 전후 건수
 - `pipeline/run_daily.py`: `--fake`는 검증 노드·저장·멱등·모델 장애·빈 행·도구 목록 쌓기·옵션(2000-01-01 저장 후 삭제), 없으면 실제 한 번(`--users --limit`) → `daily_report.json`, 형식 실패는 `format_failures.json`
-- `pipeline/check_deliver.py`: 메일 렌더링(trace_id·이스케이프·빈 행)·개발 모드 묶음 한 통·운영 모드 사용자별 한 통 + sent_at 멱등 + 가짜 SMTP 발송·실패 알림 + DB 깨우기 + API 키
+- `pipeline/check_deliver.py`: 메일 렌더링(trace_id·이스케이프·빈 행)·개발 모드 묶음 한 통·운영 모드 사용자별 한 통 + sent_at 멱등 + 가짜 SMTP 발송·실패 알림 + DB 깨우기 + API 키 / `check_mail_layout.py`: 메일 모양 규칙 12항목
 - `pipeline/check_scheduler.py`: 가짜 시계로 06:00 검증·예열·실행·발송·따라잡기, 실행 실패 30분 재시도·빠진 사용자만·DB 실패·실패 알림 한 번
 - `feedback/check_appendix_c.py`: 부록 C 기준 3개(관심없음 3회 순위·트레이스 -3, 써봤음 → F3-b 후보 노션 계열 맨 위, 만료 링크 기록 0) / `check_merge.py`: 주간 합치기(30일 무반응 주제만 피드백만큼 되돌림·설정 값 유지·멱등)
 - `mcp/list_tools.py`: 도구 6개·키 검문 / `e2b/smoke.py`: E2B 생성·폐기·차단 / `verify/`: check_probe(실제 E2B), check_skill_read(정규식·원문), check_verifier(가짜 모델로 판단·판독·상태·카드 칸), check_rollback(되돌림 1·2 발동), run_real(실제 5건 → real_report.json), fixtures/ 가짜 스킬

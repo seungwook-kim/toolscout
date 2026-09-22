@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-22 · briefing_mail 모양 정리: 어두운 머리(요일 포함), 카드는 종류 칩(뉴스는 출처 도메인)·제목·요약·나한테는 순으로 무게를 줄이고 장점·단점은 +·− 한 줄씩, 근거 링크는 원문과 다를 때만, 버튼은 둥근 칩, trace_id는 옅게. 묶음 메일은 맨 위 머리 하나에 프로필 띠, render가 머리 없는 body를 같이 돌려줘 combine이 쓴다. 색은 웹앱 design-reference 토큰 값 · 사용자가 가독성이 너무 떨어진다고 함. 카드 하나가 화면 한 장을 넘고 모든 줄이 같은 무게였으며, 근거 링크가 전부 원문과 같은 주소로 되풀이됐다 · check_mail_layout 12항목(신규)·check_deliver·run_daily --fake·check_scheduler 통과
+
 - 2026-09-21 · persist.save_catalog upsert에 title 갱신 추가 · 별 수 캐시가 먼저 만든 이름 제목이 선별 통과 뒤에도 그대로 남았다 · check_catalog_title 9항목 통과
 
 - 2026-09-16 · run_daily.target_user_ids는 approved 사용자만(운영은 데모 프로필 포함), deliver.outbox에서 데모 프로필 제외 · 초대제 도입으로 대상이 달라짐 · check_access·check_deliver 통과
