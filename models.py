@@ -119,8 +119,21 @@ def dev_mode() -> bool:
     return os.environ.get("DEV_MODE", "1").strip() != "0"
 
 
+# 역할표 밖 단일 모델 (2026-09-23 사용자 결정). 개발·운영 모드 공통, 대체 없음(실패하면 ModelUnavailable → 호출부가 건너뜀)
+# - same_story: 같은 소식 묶기·큰 소식 묶기(agent/same_story.py). 유료 OpenRouter 키, 사용자가 정한 모델이다.
+#   9/23 시험 7세트 중 5세트 정답, 2세트에서 다른 소식을 뺐다. 다른 OpenRouter 모델로 바꾸거나 시험하지 않는다 (사용자 결정)
+#   출처: https://openrouter.ai/api/v1/models (2026-09-23 조회, 입력 $0.15·출력 $0.60 per 1M)
+SINGLE_MODEL_ROLES: ModelTable = {
+    "same_story": [{"provider": "openrouter", "model": "openai/gpt-4o-mini"}],
+}
+# 뉴스 중요도 점수(agent/importance.py): Jev. 사용자가 jevtypesafeai.com에서 산 키(JEV_API_KEY)라 그 사이트 주소로 부른다.
+# TypeSafe 공식 API(api.typesafe.ai)에서는 이 키가 401이다. 이 사이트는 "TypeSafe AI와 관계없는 독립 플랫폼"이라고 밝힌다.
+# 9/23 실측: 호출 1회 약 460토큰 $0.0002, 골든셋 32건 순위상관 0.94 (qwen 0.98·gemma 0.82·gpt-4o-mini 0.82)
+JEV = {"url": "https://jevtypesafeai.com/api/v1/decide", "key_env": "JEV_API_KEY", "model": "jev-1.13.0"}
+
+
 def active_models() -> ModelTable:
-    return DEV_MODELS if dev_mode() else PROD_MODELS
+    return {**(DEV_MODELS if dev_mode() else PROD_MODELS), **SINGLE_MODEL_ROLES}
 
 
 def call(role: str, messages: list[BaseMessage], tools: list[Any] | None = None, *,
