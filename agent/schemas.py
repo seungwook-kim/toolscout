@@ -64,6 +64,11 @@ class UserPicks(BaseModel):
     empty_reason: str | None = None  # 뉴스·도구가 모두 0건일 때 "오늘 비움" 이유
 
 
+class SameStory(BaseModel):
+    """같은 발표·사건을 다룬 뉴스 묶음. 2건 이상인 묶음만, id는 입력 번호."""
+    groups: list[list[int]] = Field(default_factory=list)
+
+
 class RelatedPicks(BaseModel):
     """관련 카드(F3-b) 선택. 날짜 무관 도구 목록에서 고른다."""
     tools: list[Pick] = Field(default_factory=list, max_length=MAX_RELATED)

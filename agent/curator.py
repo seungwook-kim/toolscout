@@ -13,7 +13,7 @@ import random
 from dataclasses import asdict
 
 import models
-from agent import schemas, structured, tracing
+from agent import same_story, schemas, structured, tracing
 from agent.structured import Stats
 
 ROLE = "curator"
@@ -40,6 +40,7 @@ SELECT_PROMPT = f"""너는 toolscout 큐레이터다. AI 에이전트를 만드�
 PICK_PROMPT = f"""너는 toolscout 큐레이터다. 한 사용자의 기억(프로필·주제 가중치)을 보고 오늘 후보 중 이 사용자에게 보여줄 항목을 고른다.
 - news: 뉴스 후보에서 최대 {schemas.MAX_NEWS}건, tools: 도구 후보에서 최대 {schemas.MAX_TOOLS}건. 중요한 순서로 쓴다
 - 직군·쓰는 도구·자유 한 줄과 실제로 이어지는 항목만 고른다. 연결이 약하면 개수를 줄이고 억지로 채우지 않는다
+- 같은 발표·같은 출시·같은 사건을 다룬 뉴스는 언어·매체가 달라도 하나만 고른다(공식 발표 원문이 있으면 그것). 남는 자리는 다른 소식으로 채운다
 - 가중치가 음수인 주제는 뒤로 미루고 양수인 주제는 앞으로 당긴다
 - 자유 한 줄에 보기 싫다고 적힌 기술·주제·회사는 고르지 않는다. 이 제외는 다른 기준보다 먼저다
 - why: 이 사용자에게 왜 이 카드인지 한국어 한 줄 (80자 이내). 프로필의 무엇과 이어지는지 드러낸다
@@ -154,7 +155,8 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
         return plan | {"failed": True, "failure_reason": stats.model_failed(label, exc)}
     if parsed is None:
         return plan | {"empty": True, "empty_reason": "후보 선정 응답 형식 실패"}
-    plan["news"] = _rank_by_weight([{**news[p.id - 1], "why": p.why} for p in parsed.news], weights)
+    picked, plan["same_story_dropped"] = await same_story.drop([{**news[p.id - 1], "why": p.why} for p in parsed.news], stats, model_call)
+    plan["news"] = _rank_by_weight(picked, weights)
     plan["tools"] = _rank_by_weight([{**tools[p.id - 1], "why": p.why} for p in parsed.tools], weights)
     plan["weights"] = {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS}  # 트레이스에 가중치가 보이게
     if not plan["news"] and not plan["tools"]:
