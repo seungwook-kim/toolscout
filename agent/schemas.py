@@ -45,6 +45,7 @@ class Judgment(BaseModel):
     ai_related: bool
     worth_today: bool
     topic: TopicId
+    importance: int = Field(default=3, ge=1, le=5)  # 개발자 전체에게 얼마나 큰 소식인지 (오늘의 큰 소식, 2026-09-23)
     reason: str = Field(min_length=2, max_length=120)
 
 
@@ -139,6 +140,7 @@ class Card(BaseModel):
     source_checked: bool
     notice: str | None = None  # "원문 확인 필요", "수집 실패, 전날 기준"을 " · "로 잇는다
     related: bool = False  # 관련 카드(F3-b, 월요일). 메일·화면에서 칸을 따로 둔다
+    headline: bool = False  # 오늘의 큰 소식 (agent/headline.py). 뉴스 맨 위에 고정
     verification_note: str | None = None  # 검증 결과 대신 메모 ("설치법 미확인", "설치 실패" 등, 세션 8)
     trace_id: str = Field(min_length=1)  # trace_id 없는 카드는 만들지 않는다 (작업 규칙 10)
 

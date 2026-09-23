@@ -20,6 +20,7 @@ TOOL_TYPES = ("mcp", "skill")
 SAFE_URL = re.compile(r"^https?://[^\s\"'<>]+$")
 NO_TOOLS = "오늘 새 도구 없음"
 RELATED_TITLE = "이번 주 관련 MCP·스킬"  # 월요일 관련 카드(F3-b)
+HEADLINE_LABEL = "오늘의 큰 소식"  # agent/headline.py
 EMPTY_TITLE = "오늘 볼 만한 게 없었음"
 MCP_SCOPE = "도구가 올바르게 동작하는지는 범위 밖입니다."  # 부록 D 5, 카드 템플릿 고정
 SKILL_SCOPE = "안전 보증이 아니라 위험 신호 표시입니다."  # 부록 D 스킬 3, 카드 템플릿 고정
@@ -93,6 +94,7 @@ def _card_html(card: dict, links: Links | None = None) -> str:
     label, color = KIND.get(card.get("type") or "news", KIND["news"])
     host = _host(link)
     chip = f"{label} · {host}" if host and card.get("type") not in TOOL_TYPES else label
+    chip = f"{HEADLINE_LABEL} · {chip}" if card.get("headline") else chip
     parts = [f'<div style="font-size:11px;font-weight:700;color:{color};letter-spacing:.04em;margin:0 0 6px">{_e(chip)}</div>']
     title = _e(card.get("title"))
     if link:
@@ -128,7 +130,7 @@ def _card_html(card: dict, links: Links | None = None) -> str:
 
 
 def _card_text(card: dict, links: Links | None = None) -> str:
-    lines = [f"■ {card.get('title', '')}", f"  {card.get('url', '')}"]
+    lines = [f"■ {'[' + HEADLINE_LABEL + '] ' if card.get('headline') else ''}{card.get('title', '')}", f"  {card.get('url', '')}"]
     if card.get("notice"):
         lines.append(f"  ({card['notice']})")
     lines += [f"  {card.get('summary_ko', '')}", f"  나한테는: {card.get('for_me', '')}", f"  이 카드인 이유: {card.get('why_this_card', '')}"]

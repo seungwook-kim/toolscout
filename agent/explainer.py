@@ -100,7 +100,8 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
                 type=item["type"], title=item["title"], url=item["url"], summary_ko=parsed.summary_ko or "",
                 for_me=parsed.for_me or "", why_this_card=item["why"], pros=parsed.pros, cons=parsed.cons,
                 install_cmd=parsed.install_cmd if item["type"] in TOOL_TYPES else None, relevance=parsed.relevance,
-                source_checked=checked, notice=" · ".join(notices) or None, related=bool(item.get("related")), trace_id=span.trace_id)
+                source_checked=checked, notice=" · ".join(notices) or None, related=bool(item.get("related")),
+                headline=bool(item.get("headline")), trace_id=span.trace_id)
             outcome = {"status": "card", "card": card.model_dump(), "item": item}
         span.update(output={"status": outcome["status"], "source_checked": checked, "reason": outcome.get("reason"),
                             "relevance": parsed.relevance if parsed else None},
