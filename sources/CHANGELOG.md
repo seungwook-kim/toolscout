@@ -1,5 +1,7 @@
 # sources/ CHANGELOG
 
+- 2026-09-23 · skillsmp.py 추가(주제어 8개 검색·githubUrl로 합침·items에 없는 것만·게시자당 3건·별 수 상위 20건), collect에 연결 · 스킬 소스가 anthropics/skills 커밋 하나뿐이라 최근 10일 수집이 1건이고 스킬 카드가 한 장도 안 나갔다. SkillsMP는 검색(q 필수)만 열려 있고 updatedAt이 긁어 간 시각이라(같은 날 받은 319건이 모두 4~5일 전) 창으로는 신규를 못 가린다 · check_skillsmp 11항목(신규)·check_fallbacks·check_news_window·check_catalog_title·run_daily --fake 통과. 실제 수집 319건 중 20건 올림, 그 주소로 skill_check.read 3건 판독 성공
+
 - 2026-09-21 · mcp_registry.display_title로 제목 규칙을 한 곳에 모으고 별 수 캐시(StarCache.flush)도 쓰게, github_stars.save·persist.save_catalog upsert가 제목을 갱신(빈 값으로는 안 덮음) · 별 수 캐시가 표시명 없이 이름만 저장하고 두 upsert가 title을 갱신하지 않아 도구 목록 56건 중 55건이 io.github 형태로 굳었고 9월 21일 관련 카드 11건이 전부 그렇게 나갔다 · check_catalog_title 9항목·check_fallbacks·run_daily --fake 통과, backfill_titles로 기존 40건 보정(표시명 없음 12, 못 찾음 0)
 
 - 2026-09-21 · collect.NEWS_WINDOW 24시간 → 48시간 · 하루 1회 07:00 실행이라 24시간이면 기사가 후보에 오를 기회가 한 번뿐이고, 밀리면 창 밖으로 나가 다시 못 온다. 9월 17일 17시 36분 Jev 공개 기사가 9월 18일 실행에서 밀린 뒤 19일·20일 브리핑에 한 번도 오르지 못한 것을 실측 · check_news_window 10항목·check_fallbacks 7항목 통과

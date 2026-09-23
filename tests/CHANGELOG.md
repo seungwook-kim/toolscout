@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-23 · sources/check_skillsmp.py 추가(주제어마다 호출·중복 합침·이미 본 주소 제외·게시자당 상한·별 수 정렬·항목 규격·키 없으면 건너뜀·일부 실패 진행·전부 실패면 오류) · 스킬 수집 · 11항목 통과, 네트워크 미사용
+
 - 2026-09-22 · pipeline/run_daily.py --fake가 검수용 프로필을 도는 동안만 승인했다가 실패해도 원래 상태로 되돌림(approved_while_testing) · 사용자가 검수를 마쳤다며 가짜 프로필 A·B·C(user 1·2·3)를 하루 실행과 메일에서 빼기로 해 DB에서 blocked로 바꿨는데, 이 검수는 하루 실행과 같은 대상 선택(승인된 is_test)을 거쳐 그대로면 깨진다 · run_daily --fake·check_deliver·check_reject_rate·check_access 통과, 검수 뒤 blocked 유지 확인
 
 - 2026-09-22 · pipeline/check_mail_layout.py 추가(근거 링크 규칙 HTML·텍스트, 요일, 종류 칩, 머리 되풀이 없음, body, 카드마다 trace_id, 웹앱 색 토큰) · 메일 가독성 · 12항목 통과, 네트워크·DB 미사용
