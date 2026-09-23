@@ -19,6 +19,19 @@ TOPICS: dict[str, str] = {
     "automation": "업무 자동화·노코드",
     "industry": "산업·투자·기업 동향",
 }
+# 선별 프롬프트에 붙는 주제별 경계. 이름표만 주면 로컬 모델이 "GPT"·"NPU" 같은 단어에 끌려 분류했다 (2026-09-23)
+TOPIC_GUIDE: dict[str, str] = {
+    "model_release": "새 모델·새 버전 공개, 벤치마크·성능 비교. 이미 나온 모델을 쓴 제품·사례·연구는 아니다",
+    "agent_framework": "에이전트를 만드는 방법 자체: 프레임워크·SDK·아키텍처·설계·평가. 에이전트 제품 출시·사용 사례는 아니다",
+    "mcp_tools": "MCP 서버·클라이언트, 모델이 외부 도구·API를 부르는 방식(function calling) 자체. AI 앱·브라우저 확장 일반은 아니다",
+    "coding_tools": "개발자가 코드를 쓰고 고치는 도구: IDE, 코딩 에이전트, 코드 리뷰·CI·테스트 자동화. 모델 성능 분석·하드웨어·교육 과정은 아니다",
+    "pricing": "요금, 무료 한도, 요금제·사용량 제한 변경",
+    "open_local": "가중치 공개 모델, 로컬·온디바이스 실행, 양자화·추론 엔진",
+    "data_rag": "검색, RAG, 임베딩, 벡터 DB, 데이터 파이프라인",
+    "safety_policy": "보안 취약점, 탈옥·프롬프트 주입, 안전 연구, 규제·법·정책",
+    "automation": "업무 자동화, 노코드·로우코드, 워크플로 도구",
+    "industry": "투자·인수·제휴, 기업 도입 사례, 칩·데이터센터 인프라, 교육 프로그램, 실적·인사",
+}
 TopicId = Literal["model_release", "agent_framework", "mcp_tools", "coding_tools", "pricing",
                   "open_local", "data_rag", "safety_policy", "automation", "industry"]
 

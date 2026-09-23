@@ -22,14 +22,16 @@ SUMMARY_CHARS = 200
 # 사용자별 후보 단계 입력 상한. 로컬 모델 문맥 8192토큰에서 후보 140건(약 7.7K토큰)을 넣자 답이 잘려 빈 후보가 됐다 (2026-09-15)
 PICK_MAX_NEWS, PICK_MAX_TOOLS, PICK_REASON_CHARS, PICK_SUMMARY_CHARS = 60, 20, 60, 120
 TOOL_TYPES = ("mcp", "skill")
-TOPIC_LINES = "\n".join(f"  - {key}: {label}" for key, label in schemas.TOPICS.items())
+TOPIC_LINES = "\n".join(f"  - {key}: {label}. {schemas.TOPIC_GUIDE[key]}" for key, label in schemas.TOPICS.items())
 JSON_ONLY = "출력은 JSON 객체 하나만 쓴다. 설명 문장이나 코드 블록을 붙이지 않는다."
 
 SELECT_PROMPT = f"""너는 toolscout 큐레이터다. AI 에이전트를 만드는 개발자가 오늘 볼 AI 소식과 도구를 고른다.
 입력 항목마다 판정한다.
 - ai_related: AI, LLM, 에이전트, MCP, AI 개발 도구와 직접 관련 있으면 true
 - worth_today: 개발자가 오늘 알아둘 새 소식·새 도구·의미 있는 업데이트면 true. 광고, 잡담, 단순 질문 글, 오래된 재탕은 false
-- topic: 아래 주제 id 중 하나
+- topic: 아래 주제 id 중 하나. 제목에 나온 단어가 아니라 이 글이 주로 무엇을 발표·다루는지로 정한다
+  (예: 은행이 기존 모델로 상담을 자동화한 사례는 model_release가 아니라 industry, 새 AI 칩 발표는 coding_tools가 아니라 industry)
+  agent_framework·mcp_tools·coding_tools는 개발 방법·도구 자체를 다룰 때만 쓴다. 제품 출시·기업 소식은 industry, 사고·규제·사회 문제는 safety_policy
 {TOPIC_LINES}
 - reason: 판정 근거를 한국어 한 줄로 (80자 이내)
 입력의 모든 id를 빠짐없이 한 번씩 판정한다.
