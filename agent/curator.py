@@ -13,7 +13,7 @@ import random
 from dataclasses import asdict
 
 import models
-from agent import headline, same_story, schemas, structured, tracing
+from agent import headline, importance, same_story, schemas, structured, tracing
 from agent.structured import Stats
 
 ROLE = "curator"
@@ -253,13 +253,14 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
         selected = await select(items, stats, random.Random(seed), model_call)
         batches = -(-len(items) // BATCH)
         select_failed = batches > 0 and sum(f["label"].startswith("선별") for f in stats.model_failures) == batches
-        tops = []
+        tops, scored = [], None
         if select_failed:
             plans = [{"user_id": m["user_id"], "news": [], "tools": [], "empty": False, "empty_reason": None, "failed": True,
                       "failure_reason": "선별 묶음 전부 모델 장애", "excluded": {}} for m in memories]
             verify = []
         else:
             plans = []
+            scored = await importance.rescore(selected) if model_call is None else None  # 검수(가짜 모델)에서는 Jev를 부르지 않는다
             tops = await headline.pick(selected, stats, model_call)
             for memory in memories:
                 plan = headline.attach(await pick_for_user(selected, memory, stats, model_call), tops, memory)
@@ -271,7 +272,7 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
                 plans.append(plan)
             verify = await verification_requests(selected, stats, model_call)
         result = {"selected": selected, "plans": plans, "verify": verify, "stats": asdict(stats), "seed": seed,
-                  "headlines": [{k: t[k] for k in ("title", "url", "coverage", "score")} for t in tops],
+                  "headlines": [{k: t[k] for k in ("title", "url", "coverage", "score")} for t in tops], "importance": scored,
                   "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id}
         span.update(output={"selected": len(selected),
                             "plans": [(p["user_id"], len(p["news"]), len(p["tools"]), len(p.get("related", []))) for p in plans],

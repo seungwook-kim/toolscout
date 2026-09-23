@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-23 · importance.py 추가: 선별 통과 뉴스마다 Jev(models.JEV)에 제목·요약 300자와 영어 5단계 기준을 보내 중요도를 바꾼다(동시 4개, 실패하면 선별 모델 점수 그대로, 가짜 모델 검수에서는 안 부름). same_story는 해설가 순서를 빌리던 것을 models.SINGLE_MODEL_ROLES['same_story'](OpenRouter 유료 모델, 사용자 지정)로 바꿨다 · 선별 모델 중요도가 평범한 기업 소식에 4~5점을 줬고, 같은 소식 묶기 모델을 임의로 빌려 쓴 것을 사용자가 바로잡았다 (둘 다 2026-09-23 사용자 결정) · 골든셋 32건(한국어 18·영어 14) 같은 영어 기준 순위상관: Jev 0.94, 선별 모델 0.82. Jev 32건 비용 $0.0076. check_importance 11항목(신규)·check_same_story·check_headline·check_topic_guide·check_mail_layout·check_rollback·run_daily --fake 2회·모델명 하드코딩 검사 통과
+
 - 2026-09-23 · 오늘의 큰 소식 headline.py 추가. 선별 판정에 importance(1~5)를 받고, 중요도 3 이상 뉴스 30건을 same_story.groups로 묶어 점수(최고 중요도 + 다룬 곳 - 1 + 공식 1)가 가장 높은 소식을 사용자 관심도와 상관없이 뉴스 맨 위에 둔다. 3곳 이상 또는 중요도 5를 2곳 이상일 때만, 두 번째도 8점 이상이면 2칸. 같은 소식의 다른 기사는 빼고 뉴스는 합쳐 5장. 카드에 headline 칸, same_story는 groups/drop으로 나눴다 · 9/23 오퍼스 5.5가 관심도에 밀려 빠졌다. Jev는 보류(사용자 결정) · 9/23 뉴스 193건 실측: 큰 소식 GPT-6 Sol·Luna(4곳·공식·9점). check_headline 17항목(신규)·check_same_story·check_mail_layout·check_rollback·run_daily --fake 통과
 
 - 2026-09-23 · same_story.py 추가, pick_for_user가 고른 뉴스에서 같은 소식을 빼고 same_story_dropped를 남긴다. 후보 프롬프트에 '같은 소식은 하나만' 한 줄 · 9/23 본인 뉴스 5장 중 2장이 GPT-6 Sol·Luna 영문·한국어였다. 프롬프트 한 줄만으로는 로컬 모델이 못 지켰고, 예비를 같이 고르게 하자 뉴스를 3장만 골랐다. gemma3:12b는 이름만 같은 다른 소식을 묶어 5건 중 3건을 잘못 뺐고, qwen3.8-27b는 9건 중 8건을 빼고 잘못 뺀 것 0이라 해설가 모델 순서를 빌린다 · check_same_story 8항목(신규)·run_daily --fake 3회·check_rollback·check_skill_now·check_scheduler·check_reject_rate·check_topic_guide 통과

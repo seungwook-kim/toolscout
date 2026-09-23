@@ -4,7 +4,7 @@
 - 묶음마다 앞(중요 순) 하나만 남기고 순서는 그대로, 빈 자리는 채우지 않는다 / 겹침 없으면 그대로
 - 한 장 이하면 모델을 부르지 않는다 / 모델에는 제목만 간다
 - 범위 밖·두 묶음에 든 id는 규격 실패로 1회 다시 묻고, 그래도 틀리면 그대로 / 모델 장애면 그대로 두고 장애 기록
-- 기본 모델은 해설가 순서(MODEL_ROLE)를 빌린다
+- 기본 모델은 same_story 단일 모델(models.SINGLE_MODEL_ROLES, OpenRouter gpt-4o-mini)
 - pick_for_user가 고른 뉴스에서 겹침을 빼고 same_story_dropped를 남긴다
 실제 모델 측정(9/23 제목 7묶음, 겹침 9건): qwen3.8-27b 8건 뺌·잘못 뺀 것 0, gemma3:12b는 서로 다른 소식 5건 중 3건을 잘못 뺐다.
 """
@@ -69,7 +69,7 @@ async def main() -> None:
         await same_story.drop(PICKS, Stats())
     finally:
         models.call = original
-    check("기본 모델은 해설가 순서", roles == [same_story.MODEL_ROLE] == ["explainer"])
+    check("기본 모델은 same_story 단일 모델", roles == [same_story.MODEL_ROLE] == ["same_story"])
 
     selected = [{"type": "news", "title": p["title"], "url": p["url"], "topic": "model_release", "reason": "r", "source": "s"} for p in PICKS]
     memory = {"user_id": 1, "is_test": True, "profile": {"role": "개발자"}, "weights": {"model_release": 3}, "seen_urls": []}

@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-23 · agent/check_importance.py 추가(뉴스만·요청 내용·반올림·단계 번호·범위·실패는 그대로·키 없음·비용·모델표·가짜 모델이면 안 부름), check_same_story 기본 모델을 same_story 단일 모델로 · Jev 중요도·같은 소식 모델 지정 · 11항목 통과, Jev·네트워크 미사용
+
 - 2026-09-23 · agent/check_headline.py 추가(뽑힘·대표 등급·점수·1칸/2칸·기준 미달 없음·모델 장애·맨 위 고정·같은 소식 빠짐·5장·본 소식·가중치 -5·importance 기본값·카드·메일 표시·curator.run 연결) · 오늘의 큰 소식 · 17항목 통과
 
 - 2026-09-23 · agent/check_same_story.py 추가(앞 하나만·채우지 않음·제목만·한 장이면 안 부름·잘못된 id·장애·해설가 순서·pick_for_user 연결), pipeline/run_daily.py 가짜 모델에 같은 소식 묶기 답 · 같은 소식 겹침 빼기 · 8항목 통과
