@@ -39,7 +39,7 @@ def _data(messages) -> dict:
 
 
 def fake_model(mode: str = "normal"):
-    """큐레이터 3종·해설가 요청을 시스템 프롬프트로 구분해 정해진 답을 준다.
+    """큐레이터 3종·같은 소식 묶기·해설가 요청을 시스템 프롬프트로 구분해 정해진 답을 준다.
 
     mode: normal / outage_backend(백엔드 카드 해설 전부 모델 장애, 마케터는 전부 반려) / dead(모든 호출 모델 장애)
     """
@@ -59,6 +59,8 @@ def fake_model(mode: str = "normal"):
             body = {"tools": [{"id": i["id"], "why": "검수용 관련 이유"} for i in data["tools"] if i["title"].startswith("검수 관련")][::-1][:3]}
         elif '"requests"' in system:
             body = {"requests": []}
+        elif '"groups"' in system:  # 같은 소식 묶기(agent/same_story.py): 검수 데이터에는 겹치는 소식이 없다
+            body = {"groups": []}
         else:
             title, url, retry = data["item"]["title"], data["item"]["url"], "검증 노드가 직전 카드를" in system
             marketer = data["profile"]["role"] == "마케터"
