@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-23 · autorestart.py 추가, scheduler 루프가 한 바퀴마다 부른다: main에 추적 파일 수정 없이 새 커밋이 있고, 06:00~09:00이 아니고, 하루 실행·검증·재실행 예약이 없고, 다음 예정 작업까지 10분 넘게 남았으면 SIGINT로 정상 종료해 런처가 10초 뒤 새 코드로 띄운다. git이 없거나 AUTO_RESTART=0이면 꺼짐 · 예약 실행이 앱 안에서 돌아 코드를 고치고 재시작을 빠뜨리면 다음 날 옛 코드로 돌았다(9/21) (2026-09-23 사용자 요청) · check_autorestart 14항목(신규)·check_scheduler·check_skill_now·run_daily --fake 통과
+
 - 2026-09-23 · run_daily.review_skills_now 추가: 카드로 나갈 스킬을 하루 실행 안에서 바로 판독하고 결과를 그날 카드에 붙인다(이미 판독된 것·이번에 안 뽑힌 스킬은 건너뜀, 한 번에 5건, 실패해도 실행 계속, 보고에 skills_reviewed) · 검증이 다음 날 06:00이라 처음 나가는 스킬 카드에는 늘 '판독 예정'만 붙었다. SKILL.md 읽기는 몇 초라 실행 안으로 옮길 수 있고, MCP는 E2B 설치 90초라 그대로 06:00에 남긴다 (2026-09-23 사용자 결정) · check_skill_now 10항목(신규)·run_daily --fake·check_verifier·check_rollback·check_scheduler 통과
 
 - 2026-09-22 · briefing_mail 모양 정리: 어두운 머리(요일 포함), 카드는 종류 칩(뉴스는 출처 도메인)·제목·요약·나한테는 순으로 무게를 줄이고 장점·단점은 +·− 한 줄씩, 근거 링크는 원문과 다를 때만, 버튼은 둥근 칩, trace_id는 옅게. 묶음 메일은 맨 위 머리 하나에 프로필 띠, render가 머리 없는 body를 같이 돌려줘 combine이 쓴다. 색은 웹앱 design-reference 토큰 값 · 사용자가 가독성이 너무 떨어진다고 함. 카드 하나가 화면 한 장을 넘고 모든 줄이 같은 무게였으며, 근거 링크가 전부 원문과 같은 주소로 되풀이됐다 · check_mail_layout 12항목(신규)·check_deliver·run_daily --fake·check_scheduler 통과

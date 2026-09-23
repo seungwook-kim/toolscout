@@ -12,6 +12,7 @@
   미완료 요청은 다음 날 06:00이 다시 꺼낸다 (세션 8, 계획안 조정 "검증관 크론은 W1과 분리")
 - 월요일에는 하루 실행 전에 주간 기억 합치기(memory.merge_weights). 06:55 뒤에 켜져도 그날 실행 전에 한 번 (계획안 W4)
 - 절전으로 시계가 건너뛰어도 늦게라도 돌도록 최대 60초마다 벽시계를 다시 본다
+- 할 일을 마칠 때마다 main 커밋이 바뀌었는지 보고, 한가하면 스스로 꺼져 런처가 새 코드로 다시 띄운다 (pipeline/autorestart.py)
 - 상태(다음 예정·마지막 실행·마지막 발송)는 GET /api/w1/status. SCHEDULER_ENABLED=0이면 켜지 않는다 (검수 서버)
 """
 import asyncio
@@ -25,7 +26,7 @@ import memory
 import models
 from memory import NOTIFY_TIMES
 from agent import tracing, verifier
-from pipeline import deliver, persist, run_daily
+from pipeline import autorestart, deliver, persist, run_daily
 
 log = logging.getLogger("toolscout.scheduler")
 
@@ -69,6 +70,7 @@ class Scheduler:
     _run_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _task: asyncio.Task | None = None
     _verify_task: asyncio.Task | None = None
+    _restart: autorestart.AutoRestart | None = None
 
     def running(self) -> bool:
         return self._run_lock.locked()
@@ -226,11 +228,15 @@ class Scheduler:
                 await self.tick()
             except Exception:  # 예약 루프는 죽지 않는다
                 log.exception("예약 작업 실패")
+            busy = self.running() or self.state["run_retry_at"] is not None or not (self._verify_task is None or self._verify_task.done())
+            if self._restart is not None:  # 꺼지는 신호가 안 먹어도 예약은 계속 돈다
+                self._restart.check(self.now(), busy, self.next_event())
             wait = (self.next_event() - self.now()).total_seconds()
             await self.sleep(max(1.0, min(wait, MAX_NAP_SECONDS)))
 
     def start(self) -> None:
         if self._task is None or self._task.done():
+            self._restart = autorestart.AutoRestart()
             self._task = asyncio.create_task(self.loop())
             log.warning("예약 작업 시작: 매일 %s 검증, %s 예열, %s 하루 실행, %s 발송 (KST)", VERIFY_AT.strftime("%H:%M"),
                         WARM_AT.strftime("%H:%M"), RUN_AT.strftime("%H:%M"), "·".join(NOTIFY_TIMES))
