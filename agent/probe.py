@@ -1,4 +1,4 @@
-"""probe_mcp 구현 (계획안 5장 도구 가드, 부록 D, CLAUDE.md 조정: 설치 90초·실행 30초). E2B 샌드박스에서 MCP 동작 검증 4단계.
+"""probe_mcp 구현 (계획안 5장 도구 가드, 부록 D, 작업 규칙 조정: 설치 90초·실행 30초). E2B 샌드박스에서 MCP 동작 검증 4단계.
 
 - 입력: 설치 명령(npx·npm install·uvx·pipx run·pip install), 종류(npm|pypi|remote), 원격이면 URL
 - ① 설치: 네트워크 허용, 90초 ② 실행: 네트워크 차단 뒤 표준입력을 열어 둔 채 몇 초 살아 있는지, 30초
