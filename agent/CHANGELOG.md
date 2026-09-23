@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-23 · 오늘의 큰 소식 headline.py 추가. 선별 판정에 importance(1~5)를 받고, 중요도 3 이상 뉴스 30건을 same_story.groups로 묶어 점수(최고 중요도 + 다룬 곳 - 1 + 공식 1)가 가장 높은 소식을 사용자 관심도와 상관없이 뉴스 맨 위에 둔다. 3곳 이상 또는 중요도 5를 2곳 이상일 때만, 두 번째도 8점 이상이면 2칸. 같은 소식의 다른 기사는 빼고 뉴스는 합쳐 5장. 카드에 headline 칸, same_story는 groups/drop으로 나눴다 · 9/23 오퍼스 5.5가 관심도에 밀려 빠졌다. Jev는 보류(사용자 결정) · 9/23 뉴스 193건 실측: 큰 소식 GPT-6 Sol·Luna(4곳·공식·9점). check_headline 17항목(신규)·check_same_story·check_mail_layout·check_rollback·run_daily --fake 통과
+
 - 2026-09-23 · same_story.py 추가, pick_for_user가 고른 뉴스에서 같은 소식을 빼고 same_story_dropped를 남긴다. 후보 프롬프트에 '같은 소식은 하나만' 한 줄 · 9/23 본인 뉴스 5장 중 2장이 GPT-6 Sol·Luna 영문·한국어였다. 프롬프트 한 줄만으로는 로컬 모델이 못 지켰고, 예비를 같이 고르게 하자 뉴스를 3장만 골랐다. gemma3:12b는 이름만 같은 다른 소식을 묶어 5건 중 3건을 잘못 뺐고, qwen3.8-27b는 9건 중 8건을 빼고 잘못 뺀 것 0이라 해설가 모델 순서를 빌린다 · check_same_story 8항목(신규)·run_daily --fake 3회·check_rollback·check_skill_now·check_scheduler·check_reject_rate·check_topic_guide 통과
 
 - 2026-09-23 · 선별 프롬프트에 주제별 경계(schemas.TOPIC_GUIDE)와 규칙 두 줄(제목 단어가 아니라 글이 다루는 것으로, agent_framework·mcp_tools·coding_tools는 개발 방법·도구 자체일 때만)을 붙였다 · 주제 이름표만 주자 로컬 모델이 'GPT'·'NPU' 같은 단어에 끌려 회사 사례를 model_release로, 칩·교육 소식을 coding_tools로 붙였고, 관심도 가중치가 이 판정을 믿고 움직인다 · 측정: 9/23 48시간 뉴스 193건을 고정해 같은 시드로 선별(gemma3:12b), 통과 약 120건을 사람이 매긴 주제(애매하면 여러 개 인정, AI 무관 몇 건 제외)와 비교. 정확 56% → 경계 추가 64% → 개발 주제 규칙 70%, model_release 정확 22/29 → 21/26. 로컬 실행·에이전트 앱 경계를 더 넣은 3차는 70% 그대로라 넣지 않았다. 선별 통과 건수 125 → 124로 고르는 기준은 그대로. Ollama 실측 입력 묶음 최대 2,845 → 3,226토큰 · check_topic_guide 6항목(신규)·run_daily --fake 통과

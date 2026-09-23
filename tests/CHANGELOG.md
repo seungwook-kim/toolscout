@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-23 · agent/check_headline.py 추가(뽑힘·대표 등급·점수·1칸/2칸·기준 미달 없음·모델 장애·맨 위 고정·같은 소식 빠짐·5장·본 소식·가중치 -5·importance 기본값·카드·메일 표시·curator.run 연결) · 오늘의 큰 소식 · 17항목 통과
+
 - 2026-09-23 · agent/check_same_story.py 추가(앞 하나만·채우지 않음·제목만·한 장이면 안 부름·잘못된 id·장애·해설가 순서·pick_for_user 연결), pipeline/run_daily.py 가짜 모델에 같은 소식 묶기 답 · 같은 소식 겹침 빼기 · 8항목 통과
 
 - 2026-09-23 · agent/check_topic_guide.py 추가(주제 10개 정의·프롬프트에 한 줄씩·단어 아닌 내용 규칙·개발 주제 경계·model_release 사례 제외·프롬프트 1,800자) · 주제 분류 보강 · 6항목 통과, 모델·네트워크 미사용

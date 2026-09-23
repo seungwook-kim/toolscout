@@ -13,7 +13,7 @@ import random
 from dataclasses import asdict
 
 import models
-from agent import same_story, schemas, structured, tracing
+from agent import headline, same_story, schemas, structured, tracing
 from agent.structured import Stats
 
 ROLE = "curator"
@@ -33,9 +33,10 @@ SELECT_PROMPT = f"""너는 toolscout 큐레이터다. AI 에이전트를 만드�
   (예: 은행이 기존 모델로 상담을 자동화한 사례는 model_release가 아니라 industry, 새 AI 칩 발표는 coding_tools가 아니라 industry)
   agent_framework·mcp_tools·coding_tools는 개발 방법·도구 자체를 다룰 때만 쓴다. 제품 출시·기업 소식은 industry, 사고·규제·사회 문제는 safety_policy
 {TOPIC_LINES}
+- importance: 개발자 전체에게 얼마나 큰 소식인지 1~5. 5는 주요 회사의 새 모델·제품 공개처럼 여러 매체가 함께 다룰 소식, 1은 작은 개인 프로젝트·단신
 - reason: 판정 근거를 한국어 한 줄로 (80자 이내)
 입력의 모든 id를 빠짐없이 한 번씩 판정한다.
-{JSON_ONLY} 형식: {{"judgments": [{{"id": 1, "ai_related": true, "worth_today": true, "topic": "mcp_tools", "reason": "..."}}]}}"""
+{JSON_ONLY} 형식: {{"judgments": [{{"id": 1, "ai_related": true, "worth_today": true, "topic": "mcp_tools", "importance": 3, "reason": "..."}}]}}"""
 
 PICK_PROMPT = f"""너는 toolscout 큐레이터다. 한 사용자의 기억(프로필·주제 가중치)을 보고 오늘 후보 중 이 사용자에게 보여줄 항목을 고른다.
 - news: 뉴스 후보에서 최대 {schemas.MAX_NEWS}건, tools: 도구 후보에서 최대 {schemas.MAX_TOOLS}건. 중요한 순서로 쓴다
@@ -99,7 +100,8 @@ async def select(items: list[dict], stats: Stats, rng: random.Random, model_call
             continue
         for judgment in parsed.judgments if parsed else []:
             if judgment.ai_related and judgment.worth_today:
-                selected.append({**items[batch[judgment.id - 1]], "topic": judgment.topic, "reason": judgment.reason})
+                selected.append({**items[batch[judgment.id - 1]], "topic": judgment.topic, "importance": judgment.importance,
+                                 "reason": judgment.reason})
     return selected
 
 
@@ -251,14 +253,16 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
         selected = await select(items, stats, random.Random(seed), model_call)
         batches = -(-len(items) // BATCH)
         select_failed = batches > 0 and sum(f["label"].startswith("선별") for f in stats.model_failures) == batches
+        tops = []
         if select_failed:
             plans = [{"user_id": m["user_id"], "news": [], "tools": [], "empty": False, "empty_reason": None, "failed": True,
                       "failure_reason": "선별 묶음 전부 모델 장애", "excluded": {}} for m in memories]
             verify = []
         else:
             plans = []
+            tops = await headline.pick(selected, stats, model_call)
             for memory in memories:
-                plan = await pick_for_user(selected, memory, stats, model_call)
+                plan = headline.attach(await pick_for_user(selected, memory, stats, model_call), tops, memory)
                 if related_pools is not None and not plan["failed"] and memory["user_id"] in related_pools:
                     today_urls = {i["url"] for i in plan["news"] + plan["tools"]}
                     plan["related"] = await pick_related(related_pools[memory["user_id"]], memory, today_urls, stats, model_call)
@@ -267,6 +271,7 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
                 plans.append(plan)
             verify = await verification_requests(selected, stats, model_call)
         result = {"selected": selected, "plans": plans, "verify": verify, "stats": asdict(stats), "seed": seed,
+                  "headlines": [{k: t[k] for k in ("title", "url", "coverage", "score")} for t in tops],
                   "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id}
         span.update(output={"selected": len(selected),
                             "plans": [(p["user_id"], len(p["news"]), len(p["tools"]), len(p.get("related", []))) for p in plans],

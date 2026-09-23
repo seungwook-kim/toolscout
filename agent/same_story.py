@@ -22,24 +22,27 @@ PROMPT = """너는 toolscout 큐레이터다. 뉴스 제목 목록에서 같은 
 출력은 JSON 객체 하나만 쓴다. 설명 문장이나 코드 블록을 붙이지 않는다. 형식: {"groups": [[1, 3]]}"""
 
 
-async def drop(picks: list[dict], stats: Stats, model_call=None) -> tuple[list[dict], int]:
-    """picks(중요 순)에서 같은 소식을 묶어 묶음마다 앞 하나만 남긴다. 반환: (남긴 뉴스, 뺀 건수)."""
-    if len(picks) < 2:
-        return picks, 0
-
+async def groups(items: list[dict], stats: Stats, model_call=None, label: str = "같은 소식 묶기") -> list[list[int]] | None:
+    """items 제목을 같은 소식끼리 묶는다. 반환: 2건 이상 묶음의 1부터 센 번호 목록, 모델 장애·형식 실패면 None."""
     def ids_valid(parsed: schemas.SameStory):
         flat = [i for group in parsed.groups for i in group]
-        if len(set(flat)) != len(flat) or any(not 1 <= i <= len(picks) for i in flat):
+        if len(set(flat)) != len(flat) or any(not 1 <= i <= len(items) for i in flat):
             raise ValueError("묶음 id가 범위 밖이거나 두 묶음에 들어감")
 
     call = model_call or (lambda _role, messages, tools=None: models.call(MODEL_ROLE, messages, tools, temperature=0))
     try:
-        parsed = await structured.ask_json("curator", PROMPT, [{"id": n, "title": i["title"]} for n, i in enumerate(picks, 1)],
-                                           schemas.SameStory, stats, ids_valid, "같은 소식 묶기", call)
+        parsed = await structured.ask_json("curator", PROMPT, [{"id": n, "title": i["title"]} for n, i in enumerate(items, 1)],
+                                           schemas.SameStory, stats, ids_valid, label, call)
     except models.ModelUnavailable as exc:
-        stats.model_failed("같은 소식 묶기", exc)
+        stats.model_failed(label, exc)
+        return None
+    return [sorted(g) for g in parsed.groups if len(g) > 1] if parsed else None
+
+
+async def drop(picks: list[dict], stats: Stats, model_call=None) -> tuple[list[dict], int]:
+    """picks(중요 순)에서 같은 소식을 묶어 묶음마다 앞 하나만 남긴다. 반환: (남긴 뉴스, 뺀 건수)."""
+    if len(picks) < 2:
         return picks, 0
-    if parsed is None:
-        return picks, 0
-    later = {i for group in parsed.groups if len(group) > 1 for i in sorted(group)[1:]}  # 묶음에서 앞 번호 하나만 남긴다
+    found = await groups(picks, stats, model_call)
+    later = {i for group in found or [] for i in group[1:]}  # 묶음에서 앞 번호 하나만 남긴다
     return [item for n, item in enumerate(picks, 1) if n not in later], len(later)
