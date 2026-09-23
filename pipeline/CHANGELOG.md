@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-23 · watchdog.py 추가: 앱과 따로 도는 Windows 작업이 08:30·09:30·12:30·18:30(놓치면 켜질 때)에 앱 응답(/api/health)과 알림 시각 30분 지난 대상 사용자(데모 제외)의 오늘 발송(briefings.sent_at)을 보고, 앱 무응답·브리핑 없음·미발송·DB 조회 실패를 나눠 ADMIN_EMAILS에 알린다. 같은 날 같은 문제는 한 번, 못 보냈으면 다음 확인에 다시. README 할 일에서 끝난 '다음 날 자동 실행 확인'을 뺐다 · 앱이 통째로 죽으면 앱이 보내는 실패 알림도 안 나가 하루 이틀 뒤에야 알게 된다 (2026-09-23 사용자 요청) · check_watchdog 14항목(신규) 통과, 작업 스케줄러로 한 번 실행해 정상 종료
+
 - 2026-09-23 · autorestart.py 추가, scheduler 루프가 한 바퀴마다 부른다: main에 추적 파일 수정 없이 새 커밋이 있고, 06:00~09:00이 아니고, 하루 실행·검증·재실행 예약이 없고, 다음 예정 작업까지 10분 넘게 남았으면 SIGINT로 정상 종료해 런처가 10초 뒤 새 코드로 띄운다. git이 없거나 AUTO_RESTART=0이면 꺼짐 · 예약 실행이 앱 안에서 돌아 코드를 고치고 재시작을 빠뜨리면 다음 날 옛 코드로 돌았다(9/21) (2026-09-23 사용자 요청) · check_autorestart 14항목(신규)·check_scheduler·check_skill_now·run_daily --fake 통과
 
 - 2026-09-23 · run_daily.review_skills_now 추가: 카드로 나갈 스킬을 하루 실행 안에서 바로 판독하고 결과를 그날 카드에 붙인다(이미 판독된 것·이번에 안 뽑힌 스킬은 건너뜀, 한 번에 5건, 실패해도 실행 계속, 보고에 skills_reviewed) · 검증이 다음 날 06:00이라 처음 나가는 스킬 카드에는 늘 '판독 예정'만 붙었다. SKILL.md 읽기는 몇 초라 실행 안으로 옮길 수 있고, MCP는 E2B 설치 90초라 그대로 06:00에 남긴다 (2026-09-23 사용자 결정) · check_skill_now 10항목(신규)·run_daily --fake·check_verifier·check_rollback·check_scheduler 통과
