@@ -25,6 +25,10 @@
     ② 선별 주제 분류: 주제별 경계(schemas.TOPIC_GUIDE). 9/23 뉴스 고정 비교에서 사람 판정과 일치 56% → 70%(로컬 모델 한계로 보임)
     ③ 같은 소식 겹침 빼기 agent/same_story.py: 해설가 모델 순서를 빌려 같은 사건은 하나만, 빈 자리는 안 채움
     남은 것: tests/pipeline/run_daily --fake가 가끔 실패(장애 전후 briefings 비교가 조회 순서에 따라 달라지는 것으로 보임, 미수정)
+  - 오늘의 큰 소식(agent/headline.py): 여러 곳이 다룬 소식을 관심도와 상관없이 뉴스 맨 위에 1칸, 두 번째도 8점 이상이면 2칸
+  - 결정(사용자): 뉴스 중요도는 Jev(agent/importance.py, models.JEV), 같은 소식 묶기는 OpenRouter 유료 단일 모델(models.SINGLE_MODEL_ROLES).
+    OpenRouter는 사용자가 정한 모델만 쓰고 다른 모델을 시험하지 않는다. Jev 키는 jevtypesafeai.com(비공식 재판매) 것이라 그 사이트 주소로 부른다
+  - 저장소 흔적 정리: .gitignore의 로컬 도구 항목을 .git/info/exclude로, agent/probe.py 설명 문구 정리. 과거 기록 다시 쓰기는 권한에서 막혀 보류
   - 주의: pipeline/run_daily.py가 300줄이 됐다. 더 늘리기 전에 나눌지 물어야 한다 (작업 규칙)
   - 다음 시작점(9/24 아침에 볼 것): ① 스킬 카드가 실제로 나오는지, 나왔다면 "SKILL.md 읽어봤더니"에 판독 예정이 아닌 결과가 붙었는지
     ② 오퍼스 5.5가 본인 브리핑에 들어왔는지(관심도 5로 올린 효과) ③ 메일이 본인 구역 하나로만 오는지, 새 메일 모양이 폰에서 읽을 만한지
