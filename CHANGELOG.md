@@ -24,7 +24,8 @@
     ① 앱 바깥 감시 pipeline/watchdog.py + Windows 작업 `toolscout watchdog`(08:30·09:30·12:30·18:30). 앱 무응답·브리핑 없음·미발송·DB 실패를 알림
     ② 선별 주제 분류: 주제별 경계(schemas.TOPIC_GUIDE). 9/23 뉴스 고정 비교에서 사람 판정과 일치 56% → 70%(로컬 모델 한계로 보임)
     ③ 같은 소식 겹침 빼기 agent/same_story.py: 해설가 모델 순서를 빌려 같은 사건은 하나만, 빈 자리는 안 채움
-    남은 것: tests/pipeline/run_daily --fake가 가끔 실패(장애 전후 briefings 비교가 조회 순서에 따라 달라지는 것으로 보임, 미수정)
+    남은 것: tests/pipeline/run_daily --fake가 가끔 실패(장애 전후 briefings 비교가 조회 순서에 따라 달라지는 것으로 보임).
+    9/25 고침: 조회에 ORDER BY가 없었다. 상세는 tests/CHANGELOG
   - 오늘의 큰 소식(agent/headline.py): 여러 곳이 다룬 소식을 관심도와 상관없이 뉴스 맨 위에 1칸, 두 번째도 8점 이상이면 2칸
   - 결정(사용자): 뉴스 중요도는 Jev(agent/importance.py, models.JEV), 같은 소식 묶기는 OpenRouter 유료 단일 모델(models.SINGLE_MODEL_ROLES).
     OpenRouter는 사용자가 정한 모델만 쓰고 다른 모델을 시험하지 않는다. Jev 키는 jevtypesafeai.com(비공식 재판매) 것이라 그 사이트 주소로 부른다
