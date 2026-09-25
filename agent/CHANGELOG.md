@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-25 · 사용자 후보에서 Jev 중요도 2 이하 뉴스를 뺀다(남는 게 10건 미만이면 그대로). same_story는 시간 초과·503이면 같은 모델로 한 번 더(models.py). 큐레이터 트레이스에 큰 소식·중요도 결과를 남긴다 · 9/25 본인 뉴스 5장 중 4장이 모델 출시로 잘못 분류된 OpenAI 고객 사례였고, 9/24는 큰 소식 묶기 호출이 한 번 시간 초과로 실패해 큰 소식 칸이 빠졌다(원인을 호출 기록을 뒤져 찾음) · check_importance 14항목(3 추가)·check_headline·check_same_story·check_topic_guide·check_reject_rate·check_rollback·check_mail_layout·run_daily --fake·모델명 하드코딩 검사 통과
+
 - 2026-09-23 · importance.py 추가: 선별 통과 뉴스마다 Jev(models.JEV)에 제목·요약 300자와 영어 5단계 기준을 보내 중요도를 바꾼다(동시 4개, 실패하면 선별 모델 점수 그대로, 가짜 모델 검수에서는 안 부름). same_story는 해설가 순서를 빌리던 것을 models.SINGLE_MODEL_ROLES['same_story'](OpenRouter 유료 모델, 사용자 지정)로 바꿨다 · 선별 모델 중요도가 평범한 기업 소식에 4~5점을 줬고, 같은 소식 묶기 모델을 임의로 빌려 쓴 것을 사용자가 바로잡았다 (둘 다 2026-09-23 사용자 결정) · 골든셋 32건(한국어 18·영어 14) 같은 영어 기준 순위상관: Jev 0.94, 선별 모델 0.82. Jev 32건 비용 $0.0076. check_importance 11항목(신규)·check_same_story·check_headline·check_topic_guide·check_mail_layout·check_rollback·run_daily --fake 2회·모델명 하드코딩 검사 통과
 
 - 2026-09-23 · 오늘의 큰 소식 headline.py 추가. 선별 판정에 importance(1~5)를 받고, 중요도 3 이상 뉴스 30건을 same_story.groups로 묶어 점수(최고 중요도 + 다룬 곳 - 1 + 공식 1)가 가장 높은 소식을 사용자 관심도와 상관없이 뉴스 맨 위에 둔다. 3곳 이상 또는 중요도 5를 2곳 이상일 때만, 두 번째도 8점 이상이면 2칸. 같은 소식의 다른 기사는 빼고 뉴스는 합쳐 5장. 카드에 headline 칸, same_story는 groups/drop으로 나눴다 · 9/23 오퍼스 5.5가 관심도에 밀려 빠졌다. Jev는 보류(사용자 결정) · 9/23 뉴스 193건 실측: 큰 소식 GPT-6 Sol·Luna(4곳·공식·9점). check_headline 17항목(신규)·check_same_story·check_mail_layout·check_rollback·run_daily --fake 통과

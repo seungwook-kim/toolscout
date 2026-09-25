@@ -21,6 +21,9 @@ BATCH = 20
 SUMMARY_CHARS = 200
 # 사용자별 후보 단계 입력 상한. 로컬 모델 문맥 8192토큰에서 후보 140건(약 7.7K토큰)을 넣자 답이 잘려 빈 후보가 됐다 (2026-09-15)
 PICK_MAX_NEWS, PICK_MAX_TOOLS, PICK_REASON_CHARS, PICK_SUMMARY_CHARS = 60, 20, 60, 120
+# 중요도(agent/importance.py, Jev) 이 값 이하 뉴스는 사용자 후보에서 뺀다. 남는 뉴스가 PICK_MIN_STRONG건 미만이면 빼지 않는다.
+# 9/25 본인 뉴스 5장 중 4장이 모델 출시로 잘못 분류된 고객 사례였고, Jev는 이런 사례에 2~2.5점을 줬다 (2026-09-25)
+LOW_IMPORTANCE, PICK_MIN_STRONG = 2, 10
 TOOL_TYPES = ("mcp", "skill")
 TOPIC_LINES = "\n".join(f"  - {key}: {label}. {schemas.TOPIC_GUIDE[key]}" for key, label in schemas.TOPICS.items())
 JSON_ONLY = "출력은 JSON 객체 하나만 쓴다. 설명 문장이나 코드 블록을 붙이지 않는다."
@@ -106,9 +109,12 @@ async def select(items: list[dict], stats: Stats, rng: random.Random, model_call
 
 
 def _pick_pool(news: list[dict], tools: list[dict], weights: dict) -> tuple[list[dict], list[dict]]:
-    """후보 단계에 넣을 항목. 상한을 넘으면 뉴스는 주제 가중치 > 공식·매체·커뮤니티 > 최신, 도구는 가중치 > 별 수 순으로 자른다."""
+    """후보 단계에 넣을 항목. 중요도 낮은 뉴스를 빼고(남는 게 충분할 때만), 상한을 넘으면 뉴스는 주제 가중치 > 공식·매체·커뮤니티 > 최신,
+    도구는 가중치 > 별 수 순으로 자른다."""
     from pipeline.dedupe import SOURCE_TIER
 
+    strong = [i for i in news if i.get("importance", 3) > LOW_IMPORTANCE]
+    news = strong if len(strong) >= PICK_MIN_STRONG else news
     news = sorted(news, key=lambda i: str(i.get("published_at") or ""), reverse=True)
     news.sort(key=lambda i: (-weights.get(i["topic"], 0), SOURCE_TIER.get(i["source"], 9)))
     tools = sorted(tools, key=lambda i: (-weights.get(i["topic"], 0), -(i.get("stars") or 0)))
@@ -277,5 +283,6 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
         span.update(output={"selected": len(selected),
                             "plans": [(p["user_id"], len(p["news"]), len(p["tools"]), len(p.get("related", []))) for p in plans],
                             "weights": {p["user_id"]: p.get("weights", {}) for p in plans},
+                            "headlines": result["headlines"], "importance": scored,  # 큰 소식이 빠진 날 원인을 트레이스에서 본다
                             "verify": len(verify), "stats": asdict(stats) | {"failure_examples": len(stats.failure_examples)}})
     return result

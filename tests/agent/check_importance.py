@@ -6,6 +6,7 @@
 - 실패한 기사는 선별 모델 점수 그대로, 나머지는 반영 / 키 없으면 아무것도 안 보냄 / 비용 합산
 - 모델표: same_story는 OpenRouter gpt-4o-mini 단일 모델, 역할표 4개는 그대로 / Jev 주소는 models.JEV
 - curator.run은 가짜 모델(검수)일 때 Jev를 부르지 않는다
+- same_story 시간 초과면 같은 모델로 한 번 더 / 중요도 2 이하 뉴스는 사용자 후보에서 빠짐(남는 게 10건 미만이면 그대로)
 """
 import asyncio
 import json
@@ -82,10 +83,36 @@ async def main() -> None:
         if saved is not None:
             os.environ[models.JEV["key_env"]] = saved
     check("키 없으면 아무것도 안 보냄", none == {"scored": 0, "failed": 0, "skipped": 3, "cost_usd": 0.0})
-    check("모델표: same_story는 gpt-4o-mini 단일, 역할표 4개 그대로",
-          models.active_models()["same_story"] == [{"provider": "openrouter", "model": "openai/gpt-4o-mini"}]
+    check("모델표: same_story는 gpt-4o-mini 하나를 두 번(같은 모델 재시도), 역할표 4개 그대로",
+          models.active_models()["same_story"] == [{"provider": "openrouter", "model": "openai/gpt-4o-mini"}] * 2
           and set(models.DEV_MODELS) == set(models.PROD_MODELS) == {"curator", "verifier", "explainer", "gate"})
     check("Jev 주소는 models.JEV", models.JEV["url"].endswith("/api/v1/decide") and models.JEV["key_env"] == "JEV_API_KEY")
+
+    import httpx
+    from langchain_core.messages import AIMessage as AI, HumanMessage
+    seen_models = []
+
+    def flaky(model, messages, tools, **kw):
+        seen_models.append(model)
+        if len(seen_models) == 1:
+            raise httpx.ReadTimeout("timed out")
+        return AI('{"groups": []}', usage_metadata={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2})
+    saved_adapter, saved_interval = models.PROVIDERS["openrouter"], dict(models.FREE_TIER_MIN_INTERVAL)
+    models.PROVIDERS["openrouter"] = flaky
+    models.FREE_TIER_MIN_INTERVAL.clear()
+    try:
+        reply = models.call("same_story", [HumanMessage("x")])
+    finally:
+        models.PROVIDERS["openrouter"] = saved_adapter
+        models.FREE_TIER_MIN_INTERVAL.update(saved_interval)
+    check("same_story 시간 초과면 같은 모델로 한 번 더", len(seen_models) == 2 and len(set(seen_models)) == 1 and reply.text == '{"groups": []}')
+
+    def news_item(n, imp):
+        return {"type": "news", "title": f"n{n}", "url": f"u{n}", "source": "openai", "topic": "model_release", "importance": imp}
+    pool, _ = curator._pick_pool([news_item(n, 2) for n in range(4)] + [news_item(n, 4) for n in range(10, 20)], [], {"model_release": 5})
+    check("중요도 2 이하 뉴스는 후보에서 빠짐", len(pool) == 10 and all(i["importance"] > 2 for i in pool))
+    few, _ = curator._pick_pool([news_item(n, 2) for n in range(4)] + [news_item(n, 4) for n in range(10, 15)], [], {})
+    check("남는 뉴스가 10건 미만이면 빼지 않음", len(few) == 9)
 
     called = []
     original = importance.rescore
