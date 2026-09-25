@@ -8,11 +8,14 @@
 - 06:00~09:00 KST가 아니다 (검증·예열·하루 실행·첫 발송 시간대)
 - 하루 실행·검증이 돌고 있지 않고, 재실행 예약이 없고, 다음 예정 작업까지 10분 넘게 남았다
 git이 없으면(배포 컨테이너 등) 끈다. AUTO_RESTART=0이어도 끈다.
+정상 종료가 FORCE_EXIT_SECONDS 안에 끝나지 않으면 강제 종료한다. 9/25 19:58 열린 MCP 연결 때문에 uvicorn이 "Shutting down"에서
+멈춰 앱이 3분 꺼져 있었다(런처는 프로세스가 끝나야 다시 띄운다).
 """
 import logging
 import os
 import signal
 import subprocess
+import threading
 from datetime import datetime, time, timedelta
 from pathlib import Path
 
@@ -21,6 +24,7 @@ log = logging.getLogger("toolscout.autorestart")
 ROOT = Path(__file__).resolve().parent.parent
 QUIET_FROM, QUIET_UNTIL = time(6, 0), time(9, 0)
 EVENT_MARGIN = timedelta(minutes=10)
+FORCE_EXIT_SECONDS = 20
 
 
 def _git(*args: str) -> str | None:
@@ -41,8 +45,9 @@ def repo_state() -> dict | None:
 
 
 class AutoRestart:
-    def __init__(self, state_fn=repo_state, trigger=lambda: signal.raise_signal(signal.SIGINT)):
-        self.state_fn, self.trigger = state_fn, trigger
+    def __init__(self, state_fn=repo_state, trigger=lambda: signal.raise_signal(signal.SIGINT),
+                 force_exit=lambda: os._exit(3), force_after: float = FORCE_EXIT_SECONDS):
+        self.state_fn, self.trigger, self.force_exit, self.force_after = state_fn, trigger, force_exit, force_after
         start = state_fn() if os.environ.get("AUTO_RESTART", "1") != "0" else None
         self.start_head = start["head"] if start else None
         self.fired = False
@@ -64,5 +69,12 @@ class AutoRestart:
             return False
         self.fired = True
         log.warning("코드가 바뀌어 앱을 재시작한다 (%s). 런처가 10초 뒤 다시 띄운다", why)
+        timer = threading.Timer(self.force_after, self._force)  # 정상 종료가 멈추면 강제로 끝낸다
+        timer.daemon = True
+        timer.start()
         self.trigger()
         return True
+
+    def _force(self) -> None:
+        log.warning("정상 종료가 %s초 안에 끝나지 않아 강제 종료한다 (열린 연결 등). 런처가 10초 뒤 다시 띄운다", self.force_after)
+        self.force_exit()

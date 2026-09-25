@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-25 · pipeline/check_autorestart.py: 강제 종료 호출 확인, 실제 uvicorn 시험을 정상 종료(8011)와 끝나지 않는 연결을 연 강제 종료(8012) 둘로 · 자동 재시작 멈춤 사고 · 16항목 통과
+
 - 2026-09-25 · agent/check_importance.py에 같은 모델 재시도·중요도 낮은 뉴스 빼기·10건 미만이면 그대로 3항목 추가 · 9/24·25 메일 점검 뒤 수정 · 14항목 통과
 
 - 2026-09-23 · agent/check_importance.py 추가(뉴스만·요청 내용·반올림·단계 번호·범위·실패는 그대로·키 없음·비용·모델표·가짜 모델이면 안 부름), check_same_story 기본 모델을 same_story 단일 모델로 · Jev 중요도·같은 소식 모델 지정 · 11항목 통과, Jev·네트워크 미사용
