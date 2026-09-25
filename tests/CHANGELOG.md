@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-25 · pipeline/run_daily.py: briefings 조회에 ORDER BY id, 행 하나를 UPDATE한 뒤 전후·실행 계획별 순서를 비교하는 항목 추가 · --fake 간헐 실패(ORDER BY 없는 목록 비교가 행 위치·계획에 따라 갈림, 고치기 전 이 항목으로 기존 장애 전후 비교 실패 재현) · 47항목 2회 통과
+
 - 2026-09-25 · pipeline/check_autorestart.py: 강제 종료 호출 확인, 실제 uvicorn 시험을 정상 종료(8011)와 끝나지 않는 연결을 연 강제 종료(8012) 둘로 · 자동 재시작 멈춤 사고 · 16항목 통과
 
 - 2026-09-25 · agent/check_importance.py에 같은 모델 재시도·중요도 낮은 뉴스 빼기·10건 미만이면 그대로 3항목 추가 · 9/24·25 메일 점검 뒤 수정 · 14항목 통과

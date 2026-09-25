@@ -16,7 +16,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from langchain_core.messages import AIMessage
-from sqlalchemy import delete, func, insert, select, update
+from sqlalchemy import delete, func, insert, select, text, update
 
 import db
 import memory
@@ -32,6 +32,8 @@ KOREAN = {"summary_ko": "테스트 도구가 새 버전을 냈다. 설치 절차
 LONG_SUMMARY = "테스트 도구가 새 버전을 냈다. 설치 절차가 짧아졌고 설정 파일 하나로 끝난다. " + "추가 설명이 길게 이어진다 " * 8 + "마지막 문장이다."
 ENGLISH = {"summary_ko": "Test tool released a new version today.", "for_me": "Useful when building an internal bot.", "relevance": 4}
 OUTAGE = models.ModelUnavailable("explainer", ["ollama 타임아웃", "groq 키 없음", "gemini 429", "openrouter 429"])
+# 같은 조회를 실행 계획만 바꿔 돌린다. ORDER BY가 없으면 인덱스 스캔과 순차 스캔의 행 순서가 다를 수 있다
+PLANS = {"index": ("enable_seqscan", "enable_bitmapscan"), "seq": ("enable_indexscan", "enable_bitmapscan")}
 
 
 def _data(messages) -> dict:
@@ -94,11 +96,14 @@ def fake_items() -> list[dict]:
     return [r | {"published_at": "2000-01-01T00:00:00+00:00", "summary": "검수용 항목"} for r in rows]
 
 
-def rows_for(user_ids: list[int]) -> dict:
+def rows_for(user_ids: list[int], plan: str | None = None) -> dict:
     with db.get_engine().connect() as c:
+        for setting in PLANS.get(plan, ()):
+            c.execute(text(f"SET LOCAL {setting} = off"))
         briefings = c.execute(select(db.Briefing.user_id, db.Briefing.item_id, db.Briefing.trace_id, db.Briefing.sent_at,
                                      db.Briefing.card_json, db.Briefing.empty_reason)
-                              .where(db.Briefing.date == FAKE_DAY, db.Briefing.user_id.in_(user_ids))).all()
+                              .where(db.Briefing.date == FAKE_DAY, db.Briefing.user_id.in_(user_ids))
+                              .order_by(db.Briefing.id)).all()  # 목록째 비교하므로 순서를 고정한다 (order_checks)
         item_ids = [r[0] for r in c.execute(select(db.Item.id).where(db.Item.url.like(f"{FAKE_HOST}%")))]
         seen = c.execute(select(db.Seen.user_id, func.count()).where(db.Seen.item_id.in_(item_ids)).group_by(db.Seen.user_id)).all()
     return {"briefings": briefings, "seen": dict(seen)}
@@ -234,6 +239,16 @@ async def related_checks(run, backend: int, marketer: int) -> dict:
     }
 
 
+def order_checks(user_ids: list[int]) -> bool:
+    """발송 때처럼 행 하나를 UPDATE하면 새 행 버전이 뒤로 옮겨 가, ORDER BY 없는 조회는 UPDATE 전후와 실행 계획마다 순서가 갈린다.
+    2026-09-25 run_daily --fake 간헐 실패(장애 전후 비교) 원인. 값은 그대로 두는 UPDATE라 뒤 검수에 영향이 없다."""
+    before = rows_for(user_ids)
+    with db.get_engine().begin() as c:
+        first = c.execute(select(func.min(db.Briefing.id)).where(db.Briefing.date == FAKE_DAY)).scalar()
+        c.execute(update(db.Briefing).where(db.Briefing.id == first).values(sent_at=None))
+    return rows_for(user_ids) == before and rows_for(user_ids, "index") == rows_for(user_ids, "seq")
+
+
 @contextmanager
 def approved_while_testing(user_ids: list[int]):
     """검수용 프로필 A·B·C는 하루 실행과 메일에서 빼려고 차단해 두었다 (2026-09-22 사용자 결정).
@@ -265,6 +280,7 @@ async def _fake_run(mcp_url: str, user_ids: list[int]) -> dict:
     after_second = rows_for(user_ids)
     outage = await run("outage_backend")
     after_outage = rows_for(user_ids)
+    same_order = order_checks(user_ids)
     dead = await run("dead")
     after_dead = rows_for(user_ids)
     with db.get_engine().begin() as c:
@@ -313,6 +329,7 @@ async def _fake_run(mcp_url: str, user_ids: list[int]) -> dict:
                                                and empty_rows(after_outage, marketer)[0][2] == outage["trace_id"]
                                                and after_outage["seen"].get(marketer, 0) == 0,
             "일부_장애는_종료코드_0": not outage["all_users_failed"] and run_daily.exit_code(outage) == 0,
+            "브리핑_조회순서가_행위치·실행계획과_무관": same_order,
             "전사용자_장애면_종료코드_2·저장없음": dead["all_users_failed"] and run_daily.exit_code(dead) == 2
                                               and after_dead["briefings"] == after_outage["briefings"],
             "users_1이면_발송안한_첫_사용자만": one_user["skipped_sent_users"] == [backend]
