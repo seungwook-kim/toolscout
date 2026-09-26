@@ -1,5 +1,6 @@
 # web/ CHANGELOG
 
+- 2026-09-26 · cards.js 스킬 위험 신호 인용 앞에 근거(판독 모델만·규칙 검사만 위험으로 봄) · 내부 표시 "모델:"이 그대로 보이던 것 · check_design·check_briefings 통과
 - 2026-09-16 · invite.html·admin.html·demo.html 추가, cards.js에 readonly(버튼 없이 카드만) · 초대 코드 화면과 공개 데모 · check_access 통과
 - 2026-09-16 · cards.js 파이프라인 검증관 칸을 run_stats verified·verify_requested·rollbacks로 채움("아직 붙지 않았어요" 문구 제거) · 세션 8 5단계 · check_design·check_rules 통과
 - 2026-09-15 · cards.js: 스킬 카드 "SKILL.md 읽어봤더니"(위험 신호 칩·충실도·인용), MCP 검증 메모(설치법 미확인 등), 고정 문구(도구 동작은 범위 밖·안전 보증 아님)를 결과가 없어도 표시 · 세션 8 검증관 4단계 · check_design·check_rules 통과

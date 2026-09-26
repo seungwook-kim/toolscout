@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-26 · presend.py 추가: 스킬 발송 전 판독을 run_daily에서 옮기고(300줄 규칙), MCP 카드도 발송 전 E2B 설치 검증(4건·10분 예산). 검증 메모를 요청 상태대로("다음 날 06:00 검증 예정"·미완료 이유·요청 없으면 "검증 안 함"), 위험 신호 확인 필요 줄에 근거(판독 모델만·규칙 검사만)와 정리한 인용문 · 9/16~9/26 발송분 점검에서 MCP 카드 24장 중 10장이 요청 없이 "검증 예정"으로 나감, "모델:" 표시·마크다운이 그대로 나감 · check_mcp_now 18·check_skill_now·check_rollback·check_verifier·check_mail_layout·check_deliver·run_daily --fake 통과
+
 - 2026-09-25 · autorestart: 신호를 보낸 뒤 20초 안에 정상 종료가 끝나지 않으면 강제 종료(os._exit(3))해 런처가 다시 띄운다 · 9/25 19:58 자동 재시작 때 열린 MCP 연결 때문에 uvicorn이 'Shutting down'에서 멈춰 앱이 약 3분 꺼져 있었다(손으로 프로세스를 끝내 복구). 매일 실행도 MCP 연결을 쓰므로 같은 일이 날 수 있었다 · check_autorestart 16항목(끝나지 않는 연결을 열어 둔 실제 uvicorn이 강제 종료로 빠져나옴, 강제 종료를 끄면 멈추는 것도 확인)·check_scheduler·check_importance·run_daily --fake 통과
 
 - 2026-09-23 · watchdog.py 추가: 앱과 따로 도는 Windows 작업이 08:30·09:30·12:30·18:30(놓치면 켜질 때)에 앱 응답(/api/health)과 알림 시각 30분 지난 대상 사용자(데모 제외)의 오늘 발송(briefings.sent_at)을 보고, 앱 무응답·브리핑 없음·미발송·DB 조회 실패를 나눠 ADMIN_EMAILS에 알린다. 같은 날 같은 문제는 한 번, 못 보냈으면 다음 확인에 다시. README 할 일에서 끝난 '다음 날 자동 실행 확인'을 뺐다 · 앱이 통째로 죽으면 앱이 보내는 실패 알림도 안 나가 하루 이틀 뒤에야 알게 된다 (2026-09-23 사용자 요청) · check_watchdog 14항목(신규) 통과, 작업 스케줄러로 한 번 실행해 정상 종료

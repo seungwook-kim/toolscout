@@ -84,8 +84,9 @@ def verify_lines(card: dict) -> list[str]:
         risk = card.get("risk_signal") or {}
         if not risk:
             return [f"SKILL.md 읽어봤더니: {card.get('verification_note') or '판독 예정'}", SKILL_SCOPE]
+        basis = f" ({risk['basis']})" if risk.get("basis") else ""
         quote = f" \"{risk['quote']}\"" if risk.get("quote") else ""
-        return [f"SKILL.md 읽어봤더니: 위험 신호 {risk.get('label', '')}{quote}", SKILL_SCOPE]
+        return [f"SKILL.md 읽어봤더니: 위험 신호 {risk.get('label', '')}{basis}{quote}", SKILL_SCOPE]
     return []
 
 

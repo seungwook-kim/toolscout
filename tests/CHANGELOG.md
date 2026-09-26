@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-26 · verify/check_mcp_now.py 추가(MCP만·한도·시간 예산·실패 계속·요청 먼저 저장, 요청 상태 메모, 요청 없으면 검증 안 함, 위험 신호 근거·인용 정리), check_skill_now는 pipeline/presend를 보게, run_daily --fake에 MCP 발송 전 검증 항목·가짜 설치 방법 답·요청 행 뒷정리 · MCP 발송 전 검증 · check_mcp_now 18항목 통과
+
 - 2026-09-25 · pipeline/run_daily.py: briefings 조회에 ORDER BY id, 행 하나를 UPDATE한 뒤 전후·실행 계획별 순서를 비교하는 항목 추가 · --fake 간헐 실패(ORDER BY 없는 목록 비교가 행 위치·계획에 따라 갈림, 고치기 전 이 항목으로 기존 장애 전후 비교 실패 재현) · 47항목 2회 통과
 
 - 2026-09-25 · pipeline/check_autorestart.py: 강제 종료 호출 확인, 실제 uvicorn 시험을 정상 종료(8011)와 끝나지 않는 연결을 연 강제 종료(8012) 둘로 · 자동 재시작 멈춤 사고 · 16항목 통과

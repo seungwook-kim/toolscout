@@ -15,7 +15,7 @@ import json
 import sys
 from datetime import date
 
-from pipeline import run_daily, verification
+from pipeline import presend, verification
 
 DAY = date(2026, 9, 23)
 
@@ -36,7 +36,7 @@ def curated(plans: list[dict]) -> dict:
 def run_with(plans: list[dict], reviewed: set[str] = frozenset(), fail: bool = False) -> tuple[dict, dict]:
     """verification·verifier를 가짜로 바꿔 review_skills_now만 돌린다. 반환: (결과, 기록)."""
     log: dict = {"requests": [], "saved": []}
-    before = (verification.results_for, verification.save_requests, verification.item_id_for, run_daily.verifier.run)
+    before = (verification.results_for, verification.save_requests, verification.item_id_for, presend.verifier.run)
 
     async def fake_run(requests, **kwargs):
         log["requests"] = requests
@@ -47,11 +47,11 @@ def run_with(plans: list[dict], reviewed: set[str] = frozenset(), fail: bool = F
     verification.results_for = lambda urls: {u: {"risk_signal": {"level": "normal"}} for u in urls if u in reviewed}
     verification.save_requests = lambda day, requests: log["saved"].append((day, [r["url"] for r in requests])) or len(requests)
     verification.item_id_for = lambda url: int(url.rsplit("-", 1)[-1]) + 100
-    run_daily.verifier.run = fake_run
+    presend.verifier.run = fake_run
     try:
-        return asyncio.run(run_daily.review_skills_now(curated(plans), DAY, None, "http://x/mcp")), log
+        return asyncio.run(presend.review_skills_now(curated(plans), DAY, None, "http://x/mcp")), log
     finally:
-        (verification.results_for, verification.save_requests, verification.item_id_for, run_daily.verifier.run) = before
+        (verification.results_for, verification.save_requests, verification.item_id_for, presend.verifier.run) = before
 
 
 def main() -> int:
@@ -73,7 +73,7 @@ def main() -> int:
         "요청_행_먼저_저장": log["saved"] and log["saved"][0][0] == DAY and set(log["saved"][0][1]) == set(urls),
         "결과_집계": result == {"asked": 2, "done": 2, "skipped": 0, "trace_id": "t-skill"},
         "이미_판독한_것은_건너뜀": skipped_result["asked"] == 0 and skipped_result["skipped"] == 2 and not skipped_log["requests"],
-        "한_실행_한도": len(many_log["requests"]) == run_daily.SKILL_REVIEW_LIMIT and many["asked"] == run_daily.SKILL_REVIEW_LIMIT,
+        "한_실행_한도": len(many_log["requests"]) == presend.SKILL_REVIEW_LIMIT and many["asked"] == presend.SKILL_REVIEW_LIMIT,
         "스킬이_없으면_아무것도_안_함": none_result["asked"] == 0 and not none_log["requests"] and not none_log["saved"],
         "판독_실패해도_실행은_계속": failed["done"] == 0 and failed.get("error") == "RuntimeError",
     }

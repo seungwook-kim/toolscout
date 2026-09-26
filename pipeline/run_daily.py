@@ -13,8 +13,7 @@
 - 월요일(KST)에는 사용자마다 관련 카드(F3-b)를 최대 3장 더 만든다. --related로 요일과 상관없이 켤 수 있다
 - 검증(세션 8): 큐레이터 검증 요청을 verify_requests에 쌓고(06:00 W1-a가 처리), 사용자 후보마다 검증 결과를 읽어
   되돌림 1(실패 도구 대체·비움) → 해설 → 되돌림 2(근거 부족 재검증) → 검증 노드 → 카드에 verification·risk_signal
-- 스킬은 카드로 나가기 전에 이 실행 안에서 바로 판독한다 (2026-09-23 사용자 결정). SKILL.md를 읽는 일이라 몇 초면 끝난다.
-  MCP는 E2B 설치 90초라 그대로 다음 날 06:00 W1-a에 남긴다
+- 카드로 나갈 스킬·MCP는 이 실행 안에서 바로 판독·설치해 본다 (pipeline/presend.py, 스킬 9/23·MCP 9/26 사용자 결정)
 실행: uv run python -m pipeline.run_daily [--users N] [--limit N] [--mcp-url URL]
   디버깅은 --users 1 --limit 40, 전량은 하루 1회
 """
@@ -35,9 +34,9 @@ from sqlmodel import select
 import db
 import memory
 import models
-from agent import curator, explainer, loop, tracing, verifier
+from agent import curator, explainer, loop, tracing
 from agent.structured import MAX_EXAMPLES, Stats
-from pipeline import persist, rollback, validate, verification
+from pipeline import persist, presend, rollback, validate, verification
 from pipeline.dedupe import SOURCE_TIER, dedupe
 from pipeline.normalize import normalize
 
@@ -89,48 +88,6 @@ def top_items(items: list[dict], limit: int | None) -> list[dict]:
     tools = sorted((i for i in items if i["type"] != "news"), key=lambda i: i.get("stars") or 0, reverse=True)
     news_count = min(len(news), round(limit * len(news) / len(items)))
     return news[:news_count] + tools[:limit - news_count]
-
-
-SKILL_REVIEW_LIMIT = 5  # 한 실행에서 그 자리 판독할 스킬 수. 스킬 카드는 하루 몇 장이라 넉넉하다
-
-
-async def review_skills_now(curated: dict, today: date, model_call, mcp_url: str) -> dict:
-    """카드로 나갈 스킬을 발송 전에 판독한다 (2026-09-23 사용자 결정).
-
-    SKILL.md를 읽고 정규식과 모델 판단을 맞춰 보는 일이라 몇 초면 끝나서, MCP 샌드박스 검증(설치 90초)과 달리
-    하루 실행 안에서 할 수 있다. 이러면 처음 나가는 스킬 카드에도 "판독 예정" 대신 결과가 붙는다.
-    이미 판독된 것과 이번에 안 뽑힌 스킬은 건너뛴다. 실패해도 그날 실행을 멈추지 않는다.
-    반환: {asked, done, skipped}.
-    """
-    planned: dict[str, dict] = {}
-    for plan in curated["plans"]:
-        for item in plan["tools"] + plan.get("related", []):
-            if item.get("type") == "skill":
-                planned.setdefault(item["url"], item)
-    if not planned:
-        return {"asked": 0, "done": 0, "skipped": 0}
-    known = await asyncio.to_thread(verification.results_for, list(planned))
-    todo = [item for url, item in planned.items() if not (known.get(url) or {}).get("risk_signal")]
-    skipped = len(planned) - len(todo)
-    if not todo:
-        return {"asked": 0, "done": 0, "skipped": skipped}
-    await asyncio.to_thread(verification.save_requests, today,
-                            [item | {"depth": "read", "verify_reason": "스킬 카드 발송 전 판독"} for item in todo])
-    requests = []
-    for item in todo[:SKILL_REVIEW_LIMIT]:
-        item_id = await asyncio.to_thread(verification.item_id_for, item["url"])
-        if item_id is not None:
-            requests.append({"item_id": item_id, "kind": "skill", "depth": "read", "type": "skill",
-                             "title": item["title"], "url": item["url"], "install": verification.install_info(item) or {}})
-    if not requests:
-        return {"asked": 0, "done": 0, "skipped": skipped}
-    try:
-        result = await verifier.run(requests, model_call=model_call, mcp_url=mcp_url)
-    except Exception as exc:  # 판독이 막혀도 브리핑은 나간다
-        log.warning("스킬 발송 전 판독 건너뜀 (%s)", type(exc).__name__)
-        return {"asked": len(requests), "done": 0, "skipped": skipped, "error": type(exc).__name__}
-    return {"asked": len(requests), "done": result["counts"].get("done", 0), "skipped": skipped,
-            "trace_id": result.get("trace_id")}
 
 
 def record_format_failures(examples: list[dict], today: date) -> int:
@@ -185,8 +142,9 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
         curated = await curator.run(curator_input, memories, model_call=model_call, related_pools=pools) if memories else None
         catalog_saved = await asyncio.to_thread(save_catalog, today, curated["selected"]) if curated else 0
         verify_saved = await asyncio.to_thread(verification.save_requests, today, curated["verify"]) if curated else 0
-        # 스킬은 여기서 바로 판독해야 오늘 나가는 카드에 결과가 붙는다 (MCP는 E2B가 느려 다음 날 06:00)
-        skills_reviewed = await review_skills_now(curated, today, model_call, mcp_url) if curated else {"asked": 0, "done": 0, "skipped": 0}
+        # 카드로 나갈 스킬·MCP는 여기서 바로 확인해야 오늘 카드에 결과가 붙는다. 설치 실패는 아래 되돌림 1이 받는다
+        skills_reviewed = await presend.review_skills_now(curated, today, model_call, mcp_url) if curated else {"asked": 0}
+        mcps_probed = await presend.probe_mcps_now(curated, today, model_call, mcp_url) if curated else {"asked": 0}
         stats, results, reverified = Stats(), [], {}  # reverified: 되돌림 2 재검증 결과를 사용자끼리 공유 (항목당 1회)
         by_user = {m["user_id"]: m for m in memories}
         for plan in curated["plans"] if curated else []:
@@ -248,6 +206,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
             "date": str(today), "dev_mode": models.dev_mode(), "options": {"users": users, "limit": limit},
             "collected": len(items), "prepared": len(prepared), "curator_input": len(curator_input),
             "source_failures": failures, "skipped_sent_users": sorted(sent), "catalog_saved": catalog_saved, "verify_saved": verify_saved, "skills_reviewed": skills_reviewed,
+            "mcps_probed": mcps_probed,
             "selected": len(curated["selected"]) if curated else 0, "verify_requests": len(curated["verify"]) if curated else 0,
             "users": results,
             "totals": {"users": len(results), "briefings": sum(1 for r in results if r["status"] in ("saved", "empty")),
