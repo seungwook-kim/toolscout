@@ -89,12 +89,19 @@ async def evidence_short(explained: dict, items_by_url: dict[str, dict], memory:
     return events
 
 
+NOT_REQUESTED = {"mcp": "검증 안 함", "skill": "판독 안 함"}
+
+
 def attach(cards: list[dict], results: dict) -> list[dict]:
-    """카드에 검증 결과 칸을 붙인다 (verification·risk_signal·verification_note)."""
+    """카드에 검증 결과 칸을 붙인다 (verification·risk_signal·verification_note).
+    요청 행조차 없는 도구 카드는 "검증 안 함"으로 적는다. 비워 두면 메일·화면이 "검증 예정"으로 보여 사실과 달라진다."""
     out = []
     for card in cards:
         found = results.get(card["url"]) or {}
+        note = found.get("note")
+        if not found and card.get("type") in NOT_REQUESTED:
+            note = NOT_REQUESTED[card["type"]]
         out.append(card | {"verification": found.get("verification") or card.get("verification"),
                            "risk_signal": found.get("risk_signal") or card.get("risk_signal"),
-                           "verification_note": found.get("note")})
+                           "verification_note": note})
     return out

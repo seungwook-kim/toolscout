@@ -104,7 +104,7 @@ const Cards = {
     const chips = [`<span class="step ${Cards.RISK_CHIP[r.level] || "na"}"><i></i>위험 신호 ${TS.esc(r.label)}</span>`]
       .concat(r.completeness ? [`<span class="step na"><i></i>충실도 ${TS.esc(r.completeness)}</span>`] : [])
       .concat((r.hits || []).map((h) => `<span class="step na"><i></i>${TS.esc(h)}</span>`)).join("");
-    const quote = r.quote ? `인용: ${TS.esc(r.quote)}. ` : "";
+    const quote = (r.basis ? `${TS.esc(r.basis)}. ` : "") + (r.quote ? `인용: ${TS.esc(r.quote)}. ` : "");
     return `<div class="verify"><div class="t">SKILL.md 읽어봤더니 <small>${TS.esc(r.reviewed_at || "")}</small></div>
       <div class="steps">${chips}</div><div class="note">${quote}${Cards.SKILL_SCOPE}</div></div>`;
   },

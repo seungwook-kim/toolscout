@@ -63,6 +63,8 @@ def fake_model(mode: str = "normal"):
             body = {"requests": []}
         elif '"groups"' in system:  # 같은 소식 묶기(agent/same_story.py): 검수 데이터에는 겹치는 소식이 없다
             body = {"groups": []}
+        elif "동작 검증할 설치 방법" in system:  # MCP 발송 전 검증(pipeline/presend.py): E2B를 띄우지 않게 멈춘다
+            body = {"action": "stop", "kind": None, "command": None, "url": None, "reason": "설치법 미확인"}
         else:
             title, url, retry = data["item"]["title"], data["item"]["url"], "검증 노드가 직전 카드를" in system
             marketer = data["profile"]["role"] == "마케터"
@@ -113,6 +115,7 @@ def cleanup() -> None:
     with db.get_engine().begin() as c:
         item_ids = [r[0] for r in c.execute(select(db.Item.id).where(db.Item.url.like(f"{FAKE_HOST}%")))]
         c.execute(delete(db.Seen).where(db.Seen.item_id.in_(item_ids)))
+        c.execute(delete(db.VerifyRequest).where(db.VerifyRequest.item_id.in_(item_ids)))  # 발송 전 검증이 남긴 요청
         c.execute(delete(db.Briefing).where(db.Briefing.date == FAKE_DAY))
         c.execute(delete(db.Item).where(db.Item.id.in_(item_ids)))
 
@@ -300,6 +303,8 @@ async def _fake_run(mcp_url: str, user_ids: list[int]) -> dict:
         "checks": unit_checks() | await regression_checks() | catalog | related | {
             "관련카드_월요일아니면_기본은_안만듦": all(u["related_planned"] == 0 for u in first["users"]),
             "도구목록_저장수_보고": first["catalog_saved"] == 2,
+            "MCP_카드는_발송전_검증·결과메모": first["mcps_probed"]["asked"] >= 1
+            and all(b[4].get("verification_note") == "설치법 미확인" for b in after_first["briefings"] if b[4] and b[4]["type"] == "mcp"),
             "is_test_사용자_전부": sorted(users) == sorted(user_ids) and len(user_ids) >= 2,
             "영어_첫응답_재시도후_살아남음": all("ENGLISH 첫 응답만 영어" in u["titles"] for u in users.values()),
             "계속_영어면_제외_이유기록": all(any(e["title"] == "ALWAYS_ENGLISH 계속 영어" and "한글 비율" in " ".join(e["reasons"])

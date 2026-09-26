@@ -6,6 +6,7 @@
 - save_review: skill_reviews 저장
 - 카드 칸: probes → verification(칩 4개), skill_reviews → risk_signal. 고정 문구는 카드 템플릿(web/cards.js, briefing_mail)에 둔다
 """
+import re
 from datetime import date
 
 from sqlalchemy import or_, select, update
@@ -17,6 +18,9 @@ MAX_ATTEMPTS = 3
 DUE_LIMIT = 10  # 전날 요청 5 + 재시도
 OK, FAIL, NA = "성공", "실패", "해당없음"
 RISK_LABELS = {"ok": "정상", "caution": "주의", "unverified": "확인 필요", "skipped": "공식 출처, 위험 신호 생략"}
+# 확인 필요는 판독 모델과 규칙 검사(정규식)가 엇갈린 경우다. 검증관이 남긴 내부 표시를 읽을 수 있는 말로 (9/24·25 메일 점검)
+QUOTE_SOURCES = {"모델: ": "판독 모델만 위험으로 봄", "정규식: ": "규칙 검사만 위험으로 봄"}
+QUOTE_MAX = 160
 
 
 def install_info(item: dict) -> dict | None:
@@ -105,14 +109,38 @@ def card_verification(row) -> dict | None:
     }
 
 
+def readable_quote(quote: str | None) -> tuple[str | None, str | None]:
+    """반환: (근거, 인용문). 인용문은 마크다운 강조·코드 표시와 줄바꿈을 걷어 한 줄로, 길면 자른다."""
+    if not quote:
+        return None, None
+    raw = next((old for old in QUOTE_SOURCES if quote.startswith(old)), "")
+    basis, body = QUOTE_SOURCES.get(raw), quote[len(raw):]
+    body = re.sub(r"\s+", " ", re.sub(r"\*\*|__|`", "", body)).strip()
+    if len(body) > QUOTE_MAX:
+        body = body[:QUOTE_MAX - 1].rstrip() + "…"
+    return basis, body
+
+
 def card_risk(row) -> dict | None:
     """skill_reviews 행 → 카드 risk_signal 칸."""
     if row is None or row.status != "done":
         return None
     level = row.risk_signal or "unverified"
-    return {"level": level, "label": RISK_LABELS.get(level, level), "quote": row.risk_quote, "purpose": row.purpose,
+    basis, quote = readable_quote(row.risk_quote)
+    return {"level": level, "label": RISK_LABELS.get(level, level), "basis": basis, "quote": quote, "purpose": row.purpose,
             "trigger": row.trigger, "steps": row.steps_summary, "tools_needed": row.tools_needed, "completeness": row.completeness,
             "hits": sorted({h.get("category", "") for h in (row.regex_hits or [])}), "reviewed_at": f"{row.reviewed_at:%m-%d %H:%M}"}
+
+
+def request_note(kind: str | None, status: str | None, error: str | None, attempts: int) -> str | None:
+    """결과가 아직 없는 카드의 메모. 요청 상태를 그대로 옮겨 "검증 예정"이 사실과 어긋나지 않게 한다 (2026-09-26 발송분 점검)."""
+    word = "판독" if kind == "skill" else "검증"
+    if status == "pending":
+        return f"다음 날 06:00 {word} 예정"
+    if status == "incomplete":
+        again = ", 다음 날 다시" if attempts < MAX_ATTEMPTS else ""
+        return f"{word} 미완료({error or '이유 없음'}){again}"[:200]
+    return error
 
 
 def results_for(urls: list[str]) -> dict[str, dict]:
@@ -120,7 +148,8 @@ def results_for(urls: list[str]) -> dict[str, dict]:
     if not urls:
         return {}
     with db.get_engine().connect() as conn:
-        rows = conn.execute(select(db.Item.url, db.Item.id, db.VerifyRequest.status, db.VerifyRequest.last_error)
+        rows = conn.execute(select(db.Item.url, db.Item.id, db.VerifyRequest.kind, db.VerifyRequest.status, db.VerifyRequest.last_error,
+                                   db.VerifyRequest.attempts)
                             .outerjoin(db.VerifyRequest, db.VerifyRequest.item_id == db.Item.id).where(db.Item.url.in_(urls))).all()
         ids = [r.id for r in rows]
         probes = {p.item_id: p for p in conn.execute(select(db.Probe).where(db.Probe.item_id.in_(ids))).all()} if ids else {}
@@ -128,9 +157,8 @@ def results_for(urls: list[str]) -> dict[str, dict]:
     out = {}
     for row in rows:
         verification, risk = card_verification(probes.get(row.id)), card_risk(reviews.get(row.id))
-        note = None
-        if row.status in ("failed", "rejected") and row.last_error:
-            note = row.last_error
+        has_result = (verification or risk) and row.status not in ("failed", "rejected")  # 실패 이유는 되돌림 1이 읽는다
+        note = None if has_result else request_note(row.kind, row.status, row.last_error, row.attempts or 0)
         if verification or risk or note or row.status:
             out[row.url] = {"verification": verification, "risk_signal": risk, "request_status": row.status, "note": note}
     return out
