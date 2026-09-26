@@ -55,6 +55,8 @@ def cleanup() -> None:
 def fake_pick(prompts: list[str]):
     """모델 순서는 두 계정 모두 같게: 가격 뉴스를 먼저, 그다음 산업 뉴스."""
     def call(role, messages, tools=None):
+        if '"groups"' in messages[0].content:  # 같은 소식 묶기(agent/same_story.py, 9/23 추가): 검수 뉴스는 서로 다른 소식
+            return AIMessage('{"groups": []}')
         prompts.append(messages[-1].content)
         payload = json.loads(re.search(r"<data>\n(.*)\n</data>", messages[-1].content, re.S).group(1))
         order = sorted(payload["news"], key=lambda n: 0 if n["topic"] == "가격·요금·한도" else 1)
@@ -93,7 +95,9 @@ def main() -> int:
             return AIMessage(json.dumps({"tools": [{"id": ids["다른 주제 도구"], "why": "검수"}, {"id": ids["노션 계열 MCP"], "why": "검수"}]},
                                         ensure_ascii=False))
 
-        related = asyncio.run(curator.pick_related(pool, mem_a, set(), Stats(), fake_related))
+        # 모델에 가는 후보는 검수용 도구만. 실제 도구 목록이 쌓이면 가중치 높은 실제 도구에 밀려 후보에서 빠진다 (9/27 확인)
+        own = [i for i in pool if i["url"].startswith(HOST)]
+        related = asyncio.run(curator.pick_related(own, mem_a, set(), Stats(), fake_related))
         with common.client() as c:
             expired = c.post("/api/feedback/link", json={"token": tokens.sign("feedback", {"u": b_id, "i": ids["노션 MCP"], "a": "관심없음"}, -1)})
         with db.get_engine().connect() as conn:

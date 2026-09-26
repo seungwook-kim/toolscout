@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-27 · agent/check_owners.py 추가(게시자 파싱·7일·하루 한 건·후보 반영·memory 창), feedback/check_appendix_c 가짜 모델이 같은 소식 묶기에 답하고 관련 카드 후보는 검수용 도구만 · 9/23 같은 소식 묶기 추가 뒤로 부록 C 검수가 깨져 있었다(실제 도구 목록이 쌓여 검수용 도구가 후보에서도 밀림) · check_owners 8·check_appendix_c 7항목 통과
+
 - 2026-09-26 · verify/check_mcp_now.py 추가(MCP만·한도·시간 예산·실패 계속·요청 먼저 저장, 요청 상태 메모, 요청 없으면 검증 안 함, 위험 신호 근거·인용 정리), check_skill_now는 pipeline/presend를 보게, run_daily --fake에 MCP 발송 전 검증 항목·가짜 설치 방법 답·요청 행 뒷정리 · MCP 발송 전 검증 · check_mcp_now 18항목 통과
 
 - 2026-09-25 · pipeline/run_daily.py: briefings 조회에 ORDER BY id, 행 하나를 UPDATE한 뒤 전후·실행 계획별 순서를 비교하는 항목 추가 · --fake 간헐 실패(ORDER BY 없는 목록 비교가 행 위치·계획에 따라 갈림, 고치기 전 이 항목으로 기존 장애 전후 비교 실패 재현) · 47항목 2회 통과

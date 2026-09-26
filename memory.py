@@ -13,6 +13,7 @@ from sqlalchemy import delete, update
 from sqlmodel import func, select
 
 import db
+from agent.owners import RECENT_DAYS
 from agent.schemas import TOPICS
 
 WEIGHT_MIN, WEIGHT_MAX = -5, 5
@@ -41,6 +42,7 @@ def read(user_id: int, today: date | None = None) -> dict:
     """사용자 기억. 사용자가 없으면 {"found": False}."""
     today = today or date.today()
     start = datetime.combine(today, time.min)
+    recent = start - timedelta(days=RECENT_DAYS)
     with db.session() as s:
         user = s.get(db.User, user_id)
         if user is None:
@@ -59,6 +61,8 @@ def read(user_id: int, today: date | None = None) -> dict:
         "used_urls": sorted(set(used)),
         "seen_urls": sorted({url for url, _ in seen}),
         "seen_today_urls": sorted({url for url, shown in seen if shown and _naive(shown) >= start}),
+        # 도구 게시자 반복 줄이기(agent/owners.py). 오늘 것은 빼서 같은 날 다시 만들 때 자기 카드에 막히지 않게
+        "seen_recent_urls": sorted({url for url, shown in seen if shown and recent <= _naive(shown) < start}),
         "questions_today": questions_today,
     }
 

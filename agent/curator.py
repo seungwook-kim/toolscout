@@ -13,7 +13,7 @@ import random
 from dataclasses import asdict
 
 import models
-from agent import headline, importance, same_story, schemas, structured, tracing
+from agent import headline, importance, owners, same_story, schemas, structured, tracing
 from agent.structured import Stats
 
 ROLE = "curator"
@@ -137,11 +137,13 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
     news_all = [item for item in fresh if item["type"] == "news"]
     tools_all = [item for item in fresh if item["type"] in TOOL_TYPES]
     news, tools = _pick_pool(news_all, tools_all, weights)
+    tools, same_owner = owners.spread(tools, memory.get("seen_recent_urls", []))
     plan = {"user_id": memory["user_id"], "news": [], "tools": [], "empty": False, "empty_reason": None,
             "failed": False, "failure_reason": None,
             "excluded": {"seen": sum(item["url"] in seen for item in selected), "weight_minus5": len(selected) - len(fresh)
                          - sum(item["url"] in seen for item in selected),
-                         "over_pick_cap": len(news_all) + len(tools_all) - len(news) - len(tools)}}
+                         "over_pick_cap": len(news_all) + len(tools_all) - len(news) - len(tools) - same_owner,
+                         "same_owner": same_owner}}
     if not news and not tools:
         return plan | {"empty": True, "empty_reason": "오늘 선별된 새 항목이 없거나 모두 이미 봤다"}
     payload = {"profile": memory["profile"], "weights": {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS},
