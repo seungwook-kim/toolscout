@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-27 · owners.py 추가, pick_for_user 도구 후보에서 최근 7일 안에 카드로 나간 GitHub 게시자는 빼고 같은 게시자는 하루 한 건(excluded.same_owner), memory.read에 seen_recent_urls(오늘 제외) · 9/24·25 같은 게시자(fuxicodex) 스킬 4장 · check_owners 8·check_same_story·check_headline·check_importance·check_topic_guide·check_appendix_c·run_daily --fake 48 통과
+
 - 2026-09-25 · 사용자 후보에서 Jev 중요도 2 이하 뉴스를 뺀다(남는 게 10건 미만이면 그대로). same_story는 시간 초과·503이면 같은 모델로 한 번 더(models.py). 큐레이터 트레이스에 큰 소식·중요도 결과를 남긴다 · 9/25 본인 뉴스 5장 중 4장이 모델 출시로 잘못 분류된 OpenAI 고객 사례였고, 9/24는 큰 소식 묶기 호출이 한 번 시간 초과로 실패해 큰 소식 칸이 빠졌다(원인을 호출 기록을 뒤져 찾음) · check_importance 14항목(3 추가)·check_headline·check_same_story·check_topic_guide·check_reject_rate·check_rollback·check_mail_layout·run_daily --fake·모델명 하드코딩 검사 통과
 
 - 2026-09-23 · importance.py 추가: 선별 통과 뉴스마다 Jev(models.JEV)에 제목·요약 300자와 영어 5단계 기준을 보내 중요도를 바꾼다(동시 4개, 실패하면 선별 모델 점수 그대로, 가짜 모델 검수에서는 안 부름). same_story는 해설가 순서를 빌리던 것을 models.SINGLE_MODEL_ROLES['same_story'](OpenRouter 유료 모델, 사용자 지정)로 바꿨다 · 선별 모델 중요도가 평범한 기업 소식에 4~5점을 줬고, 같은 소식 묶기 모델을 임의로 빌려 쓴 것을 사용자가 바로잡았다 (둘 다 2026-09-23 사용자 결정) · 골든셋 32건(한국어 18·영어 14) 같은 영어 기준 순위상관: Jev 0.94, 선별 모델 0.82. Jev 32건 비용 $0.0076. check_importance 11항목(신규)·check_same_story·check_headline·check_topic_guide·check_mail_layout·check_rollback·run_daily --fake 2회·모델명 하드코딩 검사 통과
