@@ -36,7 +36,7 @@ import memory
 import models
 from agent import curator, explainer, loop, tracing
 from agent.structured import MAX_EXAMPLES, Stats
-from pipeline import persist, presend, rollback, validate, verification
+from pipeline import persist, presend, promo, rollback, validate, verification
 from pipeline.dedupe import SOURCE_TIER, dedupe
 from pipeline.normalize import normalize
 
@@ -126,7 +126,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
         failures = []
         if items is None:
             items, failures = await asyncio.to_thread(collect_items)
-        prepared = dedupe(normalize(items))
+        prepared, promo_dropped = promo.drop(dedupe(normalize(items)))  # 행사·책 홍보 연재는 모델에 보내기 전에 뺀다
         curator_input = top_items(prepared, limit)
         sent = await asyncio.to_thread(persist.sent_user_ids, today)
         allowed = await asyncio.to_thread(target_user_ids)
@@ -205,7 +205,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
         report = {
             "date": str(today), "dev_mode": models.dev_mode(), "options": {"users": users, "limit": limit},
             "collected": len(items), "prepared": len(prepared), "curator_input": len(curator_input),
-            "source_failures": failures, "skipped_sent_users": sorted(sent), "catalog_saved": catalog_saved, "verify_saved": verify_saved, "skills_reviewed": skills_reviewed,
+            "source_failures": failures, "skipped_sent_users": sorted(sent), "catalog_saved": catalog_saved, "verify_saved": verify_saved, "skills_reviewed": skills_reviewed, "promo_dropped": promo_dropped,
             "mcps_probed": mcps_probed,
             "selected": len(curated["selected"]) if curated else 0, "verify_requests": len(curated["verify"]) if curated else 0,
             "users": results,

@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-27 · 선별 worth_today에 행사 예고·연사·등록, 책·서평, 웨비나·교육 모집, 채용 false. 해설가는 합니다체, 3인칭·호칭("사용자가"·"개발자님") 금지, 없는 관심사 지어내기 금지, why_this_card 되풀이 금지, 뉴스 장단점은 발표된 것 자체만(기사 읽는 이점·원문 못 읽음은 아님). 큐레이터 why는 프로필 무엇과 이어지는지 구체적으로 합니다체 · 9/16~9/26 발송 메일 점검 · check_promo·check_topic_guide 통과. 모델 전후 비교는 사용자 지시로 멈춤, 9/27 07:00 실행으로 확인
+
 - 2026-09-27 · owners.py 추가, pick_for_user 도구 후보에서 최근 7일 안에 카드로 나간 GitHub 게시자는 빼고 같은 게시자는 하루 한 건(excluded.same_owner), memory.read에 seen_recent_urls(오늘 제외) · 9/24·25 같은 게시자(fuxicodex) 스킬 4장 · check_owners 8·check_same_story·check_headline·check_importance·check_topic_guide·check_appendix_c·run_daily --fake 48 통과
 
 - 2026-09-25 · 사용자 후보에서 Jev 중요도 2 이하 뉴스를 뺀다(남는 게 10건 미만이면 그대로). same_story는 시간 초과·503이면 같은 모델로 한 번 더(models.py). 큐레이터 트레이스에 큰 소식·중요도 결과를 남긴다 · 9/25 본인 뉴스 5장 중 4장이 모델 출시로 잘못 분류된 OpenAI 고객 사례였고, 9/24는 큰 소식 묶기 호출이 한 번 시간 초과로 실패해 큰 소식 칸이 빠졌다(원인을 호출 기록을 뒤져 찾음) · check_importance 14항목(3 추가)·check_headline·check_same_story·check_topic_guide·check_reject_rate·check_rollback·check_mail_layout·run_daily --fake·모델명 하드코딩 검사 통과

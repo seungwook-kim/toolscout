@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-27 · promo.py 추가: 책 소개 연재·TechCrunch 자체 행사 홍보(세션·티켓·연사, 실제 발표는 남김)·웨비나 뉴스를 모델에 보내기 전에 빼고 실행 보고에 promo_dropped · 9/23 책 소개·9/26 행사 세션 예고가 뉴스 칸에 나감, 사용자 "걸러" · 9/27 0시 후보 152건에서 6건(Claude Code 판정과 일치)·오탐 0, 저장 뉴스 91건 오탐 0, check_promo·run_daily --fake 48 통과
+
 - 2026-09-26 · presend.py 추가: 스킬 발송 전 판독을 run_daily에서 옮기고(300줄 규칙), MCP 카드도 발송 전 E2B 설치 검증(4건·10분 예산). 검증 메모를 요청 상태대로("다음 날 06:00 검증 예정"·미완료 이유·요청 없으면 "검증 안 함"), 위험 신호 확인 필요 줄에 근거(판독 모델만·규칙 검사만)와 정리한 인용문 · 9/16~9/26 발송분 점검에서 MCP 카드 24장 중 10장이 요청 없이 "검증 예정"으로 나감, "모델:" 표시·마크다운이 그대로 나감 · check_mcp_now 18·check_skill_now·check_rollback·check_verifier·check_mail_layout·check_deliver·run_daily --fake 통과
 
 - 2026-09-25 · autorestart: 신호를 보낸 뒤 20초 안에 정상 종료가 끝나지 않으면 강제 종료(os._exit(3))해 런처가 다시 띄운다 · 9/25 19:58 자동 재시작 때 열린 MCP 연결 때문에 uvicorn이 'Shutting down'에서 멈춰 앱이 약 3분 꺼져 있었다(손으로 프로세스를 끝내 복구). 매일 실행도 MCP 연결을 쓰므로 같은 일이 날 수 있었다 · check_autorestart 16항목(끝나지 않는 연결을 열어 둔 실제 uvicorn이 강제 종료로 빠져나옴, 강제 종료를 끄면 멈추는 것도 확인)·check_scheduler·check_importance·run_daily --fake 통과
