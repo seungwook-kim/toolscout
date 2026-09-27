@@ -5,6 +5,8 @@
 - 관리자가 아니면: 신청 목록 API 403, /api/me에 신청 수 0, 승인 화면은 오늘 화면으로 돌려보냄
 - 관리자: /api/me에 대기 신청 수, 신청 목록에 이름·하는 일·이유, 승인하면 목록에서 빠지고 브리핑 API 통과
 - 승인된 뒤·차단된 뒤의 신청, 화면(신청 폼·승인 탭 관리자만·신청 글 이스케이프)
+- 변경 이력(status_changes): 관리자 승인·차단은 누가·무엇에서 무엇으로 남고, 같은 상태로 누르면 안 남고, 초대 코드 가입은
+  invite_code로 남고, 사용자 목록에 마지막 결정, 계정을 지우면 이력도 지워진다(계정 삭제가 막히지 않음)
 - 실제 계정: ADMIN_EMAILS에 등록된 개발자 본인 계정은 users.is_admin도 켜져 있다 (읽기만, 주소는 코드에 적지 않는다)
 검수용 사용자는 끝나면 지운다.
 """
@@ -13,7 +15,7 @@ import os
 import sys
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 
 from tests.web import common
 
@@ -21,6 +23,8 @@ import db  # noqa: E402
 from pipeline import deliver  # noqa: E402
 
 APPLICANT = "apply-user@toolscout.test"
+CODE_USER = "apply-code@toolscout.test"
+CODE = "APPLYHIS"
 ADMIN = "apply-admin@toolscout.test"
 WEB = Path(__file__).resolve().parents[2] / "web"
 FORM = {"name": "  홍길동 ", "job": "백엔드 개발자", "reason": "MCP 새 도구 소식을 매일 받아 보고 싶어요 <script>x</script>",
@@ -74,8 +78,33 @@ def main() -> int:
             checks["승인_뒤_신청은_이미_가입"] = user_c.post("/api/apply", json=FORM).json()["status"] == "approved"
             admin_c.post(f"/api/admin/users/{mine_row['id']}/status", json={"status": "blocked"})
             checks["차단되면_신청_403"] = user_c.post("/api/apply", json=FORM).status_code == 403
+            admin_c.post(f"/api/admin/users/{mine_row['id']}/status", json={"status": "blocked"})  # 같은 상태로 한 번 더
+
+            history = [h for h in admin_c.get("/api/admin/status-changes").json()["changes"] if h["email"] == APPLICANT]
+            checks["이력_관리자_승인·차단_순서대로"] = [(h["old"], h["new"], h["via"], h["by"]) for h in reversed(history)] == [
+                ("pending", "approved", "admin", ADMIN), ("approved", "blocked", "admin", ADMIN)]
+            checks["이력_같은상태는_안남음"] = len(history) == 2
+            listed = next(u for u in admin_c.get("/api/admin/users").json()["users"] if u["email"] == APPLICANT)
+            checks["사용자목록에_마지막결정"] = (listed["last_change"] or {}).get("new") == "blocked"
+            checks["로그인_안하면_이력_401·일반사용자는_403"] = common.second_client().get("/api/admin/status-changes").status_code == 401                 and user_c.get("/api/admin/status-changes").status_code == 403
+
+            with db.session() as s:
+                s.add(db.InviteCode(code=CODE, max_uses=1))
+                s.commit()
+            code_c = common.second_client()
+            common.login(code_c, CODE_USER, approve=False)
+            drop_admin(CODE_USER)
+            redeemed = code_c.post("/api/invite/redeem", json={"code": CODE})
+            coded = [h for h in admin_c.get("/api/admin/status-changes").json()["changes"] if h["email"] == CODE_USER]
+            checks["이력_초대코드_가입은_invite_code"] = redeemed.status_code == 200 and [(h["old"], h["new"], h["via"], h["by"]) for h in coded] == [
+                ("pending", "approved", "invite_code", None)]
     finally:
+        user = common.user_id(APPLICANT)
         common.cleanup_users("apply-")
+        with db.get_engine().begin() as conn:
+            conn.execute(delete(db.InviteCode).where(db.InviteCode.code == CODE))
+            left = conn.execute(select(func.count()).select_from(db.StatusChange).where(db.StatusChange.user_id == user)).scalar() if user else 0
+        checks["계정_지우면_이력도_지워짐"] = left == 0
 
     invite, admin, app = ((WEB / n).read_text(encoding="utf-8") for n in ("invite.html", "admin.html", "app.js"))
     checks["화면_신청폼·동의·초대코드_함께"] = all(k in invite for k in ('id="apply-form"', 'id="agree"', 'id="invite-form"', "/api/apply"))

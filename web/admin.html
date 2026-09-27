@@ -45,12 +45,29 @@
       <div class="sec-h"><h2>가입 상태</h2><span class="hint">승인하면 다음 하루 실행부터 브리핑을 받아요</span></div>
       <div id="users"></div>
     </section>
+
+    <section class="sec">
+      <div class="sec-h"><h2>변경 이력</h2><span class="hint">누가 언제 승인·거절했는지 최근 50건</span></div>
+      <div id="history"></div>
+    </section>
   </main>
 
   <script src="/static/app.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     const LABEL = { pending: "대기", approved: "승인", blocked: "차단" };
+    const VIA = { admin: "관리자", invite_code: "초대 코드로 본인" };
+    const when = (iso) => TS.esc((iso || "").slice(0, 16).replace("T", " "));
+
+    function changeText(c) {
+      const who = c.via === "admin" ? `관리자 ${TS.esc(c.by || "(지워진 계정)")}` : VIA[c.via] || TS.esc(c.via);
+      return `${TS.esc(LABEL[c.old] || c.old || "없음")} → ${TS.esc(LABEL[c.new] || c.new)} · ${who} · ${when(c.at)}`;
+    }
+
+    function historyRow(c) {
+      return `<article class="item"><div class="mark"><i></i></div><div>
+        <h3>${TS.esc(c.email || "(지워진 계정)")}</h3><div class="src">${changeText(c)}</div></div></article>`;
+    }
 
     function codeRow(c) {
       const left = c.unusable ? TS.esc(c.unusable) : `${c.left}회 남음`;
@@ -69,6 +86,7 @@
         <div class="topic">${TS.esc(LABEL[u.status] || u.status)}${tags ? ` · ${TS.esc(tags)}` : ""}</div>
         <h3>${TS.esc(u.email || "(이메일 없음)")}</h3>
         <div class="src">${TS.esc(u.role || "직군 미설정")} · 가입 ${TS.esc(u.created_at.slice(0, 10))}${u.invite_code_used ? ` · 코드 ${TS.esc(u.invite_code_used)}` : ""}</div>
+        ${u.last_change ? `<div class="src">마지막 결정: ${changeText(u.last_change)}</div>` : ""}
         <div class="acts">${buttons}<span class="fb"></span></div>
       </div></article>`;
     }
@@ -102,8 +120,9 @@
     }
 
     async function load() {
-      const [codes, users, apps] = await Promise.all([TS.api("/api/admin/invites"), TS.api("/api/admin/users"),
-                                                     TS.api("/api/admin/applications")]);
+      const [codes, users, apps, history] = await Promise.all([TS.api("/api/admin/invites"), TS.api("/api/admin/users"),
+                                                              TS.api("/api/admin/applications"), TS.api("/api/admin/status-changes")]);
+      $("history").innerHTML = history.changes.map(historyRow).join("") || '<div class="empty">아직 바뀐 적이 없어요</div>';
       $("applications").innerHTML = apps.applications.map(applicationRow).join("") || '<div class="empty">승인을 기다리는 신청이 없어요</div>';
       bindStatus($("applications"));
       $("codes").innerHTML = codes.codes.map(codeRow).join("") || '<div class="empty">아직 만든 코드가 없어요</div>';

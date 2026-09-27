@@ -5,7 +5,9 @@
 - 이용 신청(2026-09-27 사용자 결정): 초대 코드가 없으면 POST /api/apply {name, job, reason, source, agree}로 신청서를 낸다.
   승인 전(pending)만 낼 수 있고 다시 내면 고쳐 쓴다. GET /api/apply는 내 신청 상태. 신청 글은 모델에 보내지 않는다
 - 관리자(ADMIN_EMAILS)만: GET·POST /api/admin/invites(코드 목록·생성), GET /api/admin/users(대기·차단 목록),
-  GET /api/admin/applications(승인 대기 신청서), POST /api/admin/users/{id}/status(승인·차단·되돌리기)
+  GET /api/admin/applications(승인 대기 신청서), POST /api/admin/users/{id}/status(승인·차단·되돌리기),
+  GET /api/admin/status-changes(최근 상태 변경 이력: 누가·누구를·무엇에서 무엇으로·언제·어떻게)
+- 상태가 실제로 바뀔 때마다 status_changes에 한 줄 남긴다(관리자 변경·초대 코드 가입). 같은 상태로 누르면 남기지 않는다
 코드 값은 로그에 쓰지 않는다.
 """
 import secrets
@@ -89,9 +91,21 @@ def redeem(body: RedeemBody, user: db.User = Depends(require_user)) -> dict:
             raise HTTPException(status_code=400, detail=problem)
         code.used += 1
         member = s.get(db.User, user.id)
-        member.status, member.invite_code_used = "approved", value
+        member.invite_code_used = value
+        _record(s, member, "approved", "invite_code", None)
         s.commit()
     return {"status": "approved", "message": "가입됐어요. 내일 아침 첫 브리핑이 갑니다"}
+
+
+HISTORY_LIMIT = 50
+
+
+def _record(s, member: db.User, new: str, via: str, by: int | None) -> None:
+    """상태가 실제로 바뀔 때만 이력을 남기고 바꾼다 (같은 세션에서 커밋)."""
+    if member.status == new:
+        return
+    s.add(db.StatusChange(user_id=member.id, old_status=member.status, new_status=new, changed_by=by, via=via))
+    member.status = new
 
 
 def _application(user: db.User) -> dict | None:
@@ -151,12 +165,32 @@ def create_code(body: NewCode, admin: db.User = Depends(require_admin)) -> dict:
     return {"code": value, "max_uses": body.max_uses, "expires_at": expires.isoformat() if expires else None}
 
 
+def _history(s, limit: int | None = HISTORY_LIMIT) -> list[dict]:
+    """최근 순. 주소는 관리자 화면에만 나간다."""
+    query = select(db.StatusChange).order_by(db.StatusChange.changed_at.desc(), db.StatusChange.id.desc())
+    changes = s.exec(query.limit(limit) if limit else query).all()
+    ids = {c.user_id for c in changes} | {c.changed_by for c in changes if c.changed_by}
+    emails = {u.id: u.email for u in s.exec(select(db.User).where(db.User.id.in_(ids))).all()} if ids else {}
+    return [{"user_id": c.user_id, "email": emails.get(c.user_id), "old": c.old_status, "new": c.new_status, "via": c.via,
+             "by": emails.get(c.changed_by) if c.changed_by else None, "at": c.changed_at.isoformat()} for c in changes]
+
+
+@router.get("/api/admin/status-changes")
+def status_changes(admin: db.User = Depends(require_admin)) -> dict:
+    with db.session() as s:
+        return {"changes": _history(s)}
+
+
 @router.get("/api/admin/users")
 def list_users(admin: db.User = Depends(require_admin)) -> dict:
     with db.session() as s:
+        last = {}
+        for change in _history(s, None):  # 사용자마다 가장 최근 결정 하나
+            last.setdefault(change["user_id"], change)
         users = s.exec(select(db.User).order_by(db.User.id)).all()
         return {"users": [{"id": u.id, "email": u.email, "role": u.role, "status": u.status, "is_test": u.is_test,
                            "is_demo": u.is_demo, "invite_code_used": u.invite_code_used, "application": _application(u),
+                           "last_change": last.get(u.id),
                            "created_at": u.created_at.isoformat()} for u in users]}
 
 
@@ -168,6 +202,6 @@ def set_status(user_id: int, body: StatusBody, admin: db.User = Depends(require_
         member = s.get(db.User, user_id)
         if member is None:
             raise HTTPException(status_code=404, detail="없는 사용자예요")
-        member.status = body.status
+        _record(s, member, body.status, "admin", admin.id)
         s.commit()
     return {"id": user_id, "status": body.status}

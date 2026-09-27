@@ -13,7 +13,7 @@ from functools import lru_cache
 from typing import Any, Iterator
 from urllib.parse import parse_qsl, unquote, urlsplit
 
-from sqlalchemy import CheckConstraint, Column, String, UniqueConstraint
+from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.engine import URL, Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
@@ -72,6 +72,22 @@ class InviteCode(SQLModel, table=True):
     expires_at: datetime | None = None
     created_by: int | None = Field(default=None, foreign_key="users.id")
     created_at: datetime = Field(default_factory=utcnow)
+
+
+class StatusChange(SQLModel, table=True):
+    """가입 상태 변경 이력 (2026-09-27 사용자 요청: 누가 언제 승인·거절했는지 남긴다).
+    via: admin(관리자가 승인 탭에서) · invite_code(본인이 초대 코드로). 계정을 지우면 그 사람의 이력도 지워지고,
+    바꾼 관리자 계정이 지워지면 changed_by만 비운다 (계정 삭제가 외래 키에 막히지 않게)."""
+    __tablename__ = "status_changes"
+    __table_args__ = (CheckConstraint("via IN ('admin', 'invite_code')", name="ck_status_changes_via"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(sa_column=Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True))
+    old_status: str | None = None
+    new_status: str
+    changed_by: int | None = Field(default=None, sa_column=Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True))
+    via: str
+    changed_at: datetime = Field(default_factory=utcnow, index=True)
 
 
 class Weight(SQLModel, table=True):
@@ -236,7 +252,7 @@ class UsedToken(SQLModel, table=True):
 
 
 TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions", "used_tokens",
-          "verify_requests", "invite_codes"]
+          "verify_requests", "invite_codes", "status_changes"]
 
 
 def database_url() -> URL:

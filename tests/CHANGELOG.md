@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-28 · check_apply에 변경 이력 6항목(관리자 승인·차단 순서, 같은 상태 안 남음, 마지막 결정, 401·403, 초대 코드 가입, 계정 삭제 시 이력 삭제), check_tables 표 13개·check 제약 6개 · 승인 이력 · 24항목 통과
+
 - 2026-09-27 · access/check_apply.py 추가(신청 제출·동의·고침·승인 전 403·일반 사용자 목록 403·관리자 신청 수·목록·승인·차단·화면·실제 계정 관리자), db/check_tables JSONB 칸 10개(users.application) · 이용 신청과 승인 탭 · 18항목 통과
 
 - 2026-09-27 · check_tool_updates에 새 버전 카드가 5번째여도 먼저 확인, check_weekly에 원격 전용 제외 · 로직 점검 · 전체 오프라인 검수 46개 통과(실제 모델·E2B·실제 수집 검수 run_today·check_models 등 10개는 제외, run_dedupe는 캐시가 없으면 실제 수집을 해서 432초)
