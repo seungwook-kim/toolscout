@@ -1,0 +1,1734 @@
+{
+ "date": "2026-09-27",
+ "trace_id": "a2aef19696d82778b5f3c75f649eacfe",
+ "judgments": [
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Alan Kay: Shannon gave us a way of dealing with noisy channels [video]",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Floci - 모든 클라우드 서비스를 로컬에서 에뮬레이션",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Excel, 이제 하나의 셀에 여러 값 저장 지원",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "legwork (dbhq-uk)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "오픈AI 에이전트 무단 침입 또 드러나… 피해 전모 파악에 '수개월'",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "오픈소스는 누구를 위한 것인가?",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Coder 2.37.3",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Topcoat, Rust로 서버 애플리케이션의 경계를 넓히다",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "ai.exa/exa 3.4.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "skill",
+   "source": "anthropic_skills",
+   "title": "Update claude-api skill: link refusal billing to the docs (#1825)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "pricing",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "허리와 어깨 수술은 종종 무익한 수준을 넘어 해로움",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "For the longest time I’ve felt this sub should have a pinned section where a detailed post about each model should get featured.",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "model_release",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Lightspeed targets $250M for new India fund, focusing on early-stage AI",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "deploy (Systemorph)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "메타, AI 에이전트 '뮤즈' 보안 취약점 발견…안전 경고 강화",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "젠슨 황 \"통제 불가능한 AI 연구소, 규제 아닌 폐쇄해야\"",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "PipePipe - SponsorBlock을 구현한 NewPipe 하드 포크",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "OpenAI 에이전트가 Hugging Face를 해킹한 구체적 수법 공개",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Meta’s Muse just stole the AI spotlight from OpenAI and Anthropic",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Reactive Resume 5.3.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Ask HN: 사업 운영에 꼭 필요해서 아직도 DOS 컴퓨터를 유지하는 분이 있나요?",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "딥시크, 매출 두 달 만에 2배 껑충...\"가격 인상에도 1.4조 달성\"",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Show HN: Agentic CUDA Kernel Optimizer",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "AI 없이 보낸 한 달",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": null
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "brw (Don-Works)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "automation",
+   "importance": null
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "manual-outreach-playbook (undone0603)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": null
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Amiga 스크린 입문",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": null
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Flock 카메라 데이터 한 건이 무고한 여성을 13일간 감옥에 가둠",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "ogp-config-and-flags (cofade)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": null
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Bitbybit CAD MCP 1.3.2",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Uproar in France over award-winning author accused of using AI",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Ling Tiny 3.0 is a glimpse of the future",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "AIHawk 0.69.2",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "flightclaw 1.0.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Repomix 1.18.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Astra and Opus just passed Turing’s other test",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Ollaya - Jev 같은 의사결정 모델을 위한 Ollama",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": null
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "invisible_playwright_mcp 0.70.2",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Oracle, 데이터센터에 전력이 공급되지 않아도 투자자에게 대금 지급 의무",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "io.github.justyns/silverbullet-ai-mcp 0.9.3",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Jev Based Code Review",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "I added Qwen-Image 2.1 + LoRA support to TensorSharp (GGUF, local inference)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "구글·오픈AI·앤트로픽, 자율 규제기구 'SAFA' 연내 출범 추진",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "MCP Toolbox for Databases 1.13.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "no-sidequests (epic-coder97)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "agent_framework",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Getting stupidly good results on my 4x3060ti setup.",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Microsoft, Home/Code/Autopilot을 갖춘 새 Copilot 발표",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "The Copilot+ PC brand is dead",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "review (petronetto)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "알파 너드들의 보드게임 (2014)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "이제 OS란 대체 무엇인가?",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "독일 변전소 1313곳, 배터리 연결로 태양광 150GW 추가 수용 가능",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "앤트로픽, ‘모델 증류’ 방어선 구축...거부된 클로드 요청도 과금",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Zotero MCP 0.13.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "SeleniumBase MCP 4.54.12",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "io.github.francesco0242/matchcn 0.2.2",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "openai",
+   "title": "Proaction boosts sales 60% and saves 75+ hours with Codex",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Robin: AI-Powered Dark Web OSINT 3.0.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Firecrawl MCP Server 3.25.5",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "AI가 거의 모든 코드를 작성하면 소프트웨어 엔지니어링에는 무슨 일이 일어날까?",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "The future of local AI",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "85 GB DeepSeek-V4-Flash at ~3 tok/s on a 12 GB RTX 3060 + 64 GB DDR5 RAM - Overspill for FreeToken, inspired by Colibri",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "공쿠르상, 'AI 작성·표절 의혹' 소설 후보서 제외",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "architecture (FaultMaven)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Understanding the Impact of LLM Watermarking on AI Agent Behavior",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Ordewell - 코딩 작업을 위한 멀티 에이전트 오케스트레이터",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "모든 패키지가 이미 설치되어 있다",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Artifact Share 1.0.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "오픈AI, GPT-6 ‘프롬프트 캐싱’ 강화…“비용 90% 절감·속도 향상”",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "pricing",
+   "importance": 4
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "ogp-research-frontier (cofade)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "agent_framework",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "배심원단, Cambridge Analytica 사건에서 이용자 기만에 대한 Facebook의 책임 인정",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Lobsters: vibecoding을 llms로 바꾸는 Greasemonkey 스크립트",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "project-setup (sd0xdev)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "internlm/Intern-Decision 4B and 0.8B",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Firefox DevTools MCP 0.10.4",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "계획 모드는 죽었다",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Mica v0.1 4B got an iron pickaxe in real Minecraft without generating a single token",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "A single function Jev-like wrapper for LLMs, including vision models",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Postgres 마이그레이션은 안전할까, 안전하지 않을까?",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "상품화된 지능",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "2400cc Inference Racer: Dual RTX 3090 motors, NVLink turbo, naked 7840U ThinkPad ECU, VW Golf radiator",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Ahead of US IPO, British AI neocloud Nscale secures $3.36B in convertible financing",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "우리에게는 훨씬 더 많은 수학자가 필요할 것이다",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Langfuse MCP 0.12.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "dovetail (dbhq-uk)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Meta is putting its muscle behind Muse as the AI app takes off",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: Lowent – 함수의 서명만 읽어도 무엇을 하는지 아는 시스템 프로그래밍 언어",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "백악관, 오픈AI·앤트로픽에 \"신모델, 영국 사전 검증 거부하라\" 압박",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Qwen 3.8 flash next is based on Qwen 4 architecture, if the announced Qwen 4 27b is also the same architecture with n-grams does it mean I can actually have faster inference on a single 3090 without tweaking much?",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Meta opens early access program for new Muse features",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Just bought a second 3090 but now I don't see the benefits right now.",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: 담월 – 미래를 맞힌 척하지 않는 AI 사주 웹앱",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "호주 주요 전력시장, 재생에너지 비중 80.5% 사상 최고",
+   "ai_related": false,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "One Month Without AI",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "anymd 8.1.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "SourceHut 빌드 로그를 통한 계정 탈취 취약점, ansi2html의 XSS",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Alan Kay: Shannon은 잡음이 있는 채널을 다루는 방법을 제시했다 [영상]",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "[AI 이슈트렌드] 대통령 지지율 반등...DMZ 지뢰·아시안게임·부산 상어 출몰 주목",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Meta’s AI Tamagotchi bet is…working?",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Improved and fixed template for GPT-OSS (again). Includes preserve_thinking and fix for Unsloth-induced bug",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "review-swarm (curtisgalloway)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "MS, 에이전트·코딩 통합 새 '코파일럿' 공개…'AI 시대 업무 OS' 선언",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 4
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "post-scheduler-v2 (kingkanyini)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "vantadb-mcp (ness-e)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Classified estimates show the NSA is paying billions to test AI models",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "\"Someone just sent me an ad that features an AI version of me. What do I do?\"",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Meta의 Muse, muse-special로 표시된 OpenAI 모델을 사용하는 것으로 보임",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "비전 모델까지 지원하는 Jev 스타일 LLM 래퍼",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "LLM 시대에도 프로그래밍을 계속 즐기는 법",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "시험",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "ogp-architecture-contract (cofade)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "agent_framework",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "FTC chair suggests AI developers should be liable for conduct of agents",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "ChatGPT와 Gemini가 가짜 고객센터 번호를 안내하도록 만드는 사기 수법",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Trustabl 0.1.12",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "알렉산더 왕: 내가 Muse를 만드는 이유",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "OpenAI’s Systems Went Rogue and Meddled With U.S. Government Websites",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "미중 정상 백악관 회담...시진핑 \"AI 통제\" vs 트럼프 \"현상 유지\"",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Show HN: Doom or Bloom, map your AI worldview",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "vantadb (ness-e)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "미 항소법원 \"국방부의 앤트로픽 배제 조치는 정당\"",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Microsoft abandons personal AI chatbot race with Copilot reboot",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Show HN: Ekselio – Loveable for finance workflows (local first)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "How accessible is local AI actually, and what happens if affordable access to frontier models doesn’t last?",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Swift 1.5 27b: Swift Qwen just got faster",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "구글, 우주에서 AI 칩 첫 시험...‘선캐처 프로젝트’ 10월 본격화",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "FDE 도입 1년, 교육 수요도 급증…데이원컴퍼니, 현장 경험 제공 나서",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Some Supabase customers are publicly exposing reams of people’s data to the web",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "말 못하는 AI '제브'가 실리콘밸리 흔들었다...\"일주일 새 몸값 50배 뛰어\"",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "I created an interactive digital avatar of myself — and you can talk to it",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Splash 1.1.0 released, GGUF quants support, MLX import and more",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "CEO of Mistral: AI is software. It can be controlled",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Best open-source coding model for a laptop with 4GB VRAM?",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "brand-messaging (FaultMaven)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "보즈 오브 카시오(Boards of Casio)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Unsecured OpenAI agents posted 53 user images on the internet without the lab’s knowledge",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Too AI; Didn't Read",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "custom-deep-research (danielvogler)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "오픈AI, 신규 개발자 플랫폼·요금제 준비...앱 개발 전 과정 지원",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Johannes Doerfert를 추모하며",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "트웰브랩스, 스마트 제조·피지컬 AI로 B2B 사업 영토 대폭 확장",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Morocco communes 1.8.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "연방 판사, 텍사스에 2029년 말까지 모든 교도소 냉방 설치 명령",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Mneme Memory 0.1.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "오픈AI, 'GPT-6 사이버' 공개 임박…API 넘어 '전용 배포' 선보인다",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Run Qwen3.8+Flash-Next and tiny models on Apple Silicon up to 3x faster",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "트럼프·미 하원의장, 빅테크 수장들과 29일 AI 안전 회의 예정",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Qwen3.8-27B IQ3_XXS vs Qwen3.6-35B-A3B Q4_K_M",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "model_release",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "우리는 어떻게 걱정을 멈추고 캠퍼스 감시를 사랑하게 되었나",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "io.github.PyModel/designer-skill-mcp 0.21.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "화제가 된 Giants 영상 속 엄마입니다. 제 남편 이야기를 들려드릴게요",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "DeepPVMapper 0.1.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "data_rag",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "영국, 배터리 계통접속 대기열에 재정보증 추진…MW당 최대 4500만원",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Crusoe abandons $1.25B plan to use Boom turbines at AI data centers",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "remotion-docs (guanyang)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "break-free-model-gateway (maruthiprithivi)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Free Search 0.13.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show HN: Jev가 Pokémon Red를 플레이함",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Polymarket Paper Trader 0.4.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Chrome DevTools MCP 1.10.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "빌 게이츠 \"AI가 10억명 목숨 위협할 수도\"…정부 개입·규제법 제정 촉구",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "TesterArmy 1.0.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: 자조모임 BBS 무료 게시판/대화방",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Anthropic to pay Akamai $11.6 billion over seven years in cloud deal",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "ggml-cpu: tiled mul_mat for k-quants by jbooth · Pull Request #27851 · ggml-org/llama.cpp",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "머스크 \"연말까지 콜로서스 2 GPU 두 배 증설\"... 최대 121만개 달성",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Blabbermouth AI coding agents hate this one weird trick!",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "agent_framework",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "At Meta Connect, the company’s smart glasses were everywhere",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "늘 네트워크에 연결되어 있는 삶에 지쳤다",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Pope: AI must serve humans not become tool of domination",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "What are you doing between prompts?",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "제1원리 사고",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "급락하는 시험 성적은 서서히 진행되는 재앙이다",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "New to playing around with local ai. why are they free?",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Microsoft, Copilot 개편으로 개인용 AI 챗봇 경쟁에서 철수",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Introducing KoboldCpp Agent (and a plea for help)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "앤트로픽, IPO 앞두고 공동 창립자 7명에 의결권 50.1% 부여 추진",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "U.S. appeals court upholds designation of Anthropic as supply chain risk",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "I ran the actual break-even math on buying vs renting an H200 box, and it is not where I expected",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "pricing",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Avast Antivirus 샌드박스에 진입하고 탈출하기, 2부",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "아카마이, 앤트로픽과 16조 클라우드 계약...5% 지분 인수권도 부여",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "[내면 지도 그리기] 35 Inner Mapping: 나를 찾는 지도",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Insurers claim AI is already increasing healthcare costs",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "For months, OpenAI’s agent swarms have been attacking online databases to find obscure facts",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 4
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "SoloMD 4.14.4",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "How to keep enjoying programming in a world of LLMs",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Remembering Johannes Doerfert",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "과외 업체, 학부모에게 돈을 아끼고 “대신 AI를 쓰라”고 권고",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "중력은 홀로그래픽한 듯하다. 이는 현실에 무엇을 의미할까?",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Foremerge 0.5.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "[AI카툰] Bob, Senior IT guy - 밥, 새 AI 글라스 테스트 중",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "15년 만에 돌아보는 Apple Cards의 탄생 이야기",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Anthropic’s founders seek voting control ahead of IPO",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "pricing",
+   "importance": 4
+  }
+ ]
+}

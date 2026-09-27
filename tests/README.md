@@ -19,7 +19,7 @@
 - `mcp/list_tools.py`: 도구 6개·키 검문 / `e2b/smoke.py`: E2B 생성·폐기·차단 / `verify/`: check_probe(실제 E2B), check_skill_read(정규식·원문), check_verifier(가짜 모델로 판단·판독·상태·카드 칸), check_rollback(되돌림 1·2 발동), check_skill_now(스킬 발송 전 판독), check_mcp_now(MCP 발송 전 검증·검증 메모·위험 신호 근거), run_real(실제 5건), fixtures/ 가짜 스킬
 - `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)
 - `web/`: check_auth·check_settings·check_briefings·check_feedback·check_ask(`--live-gate`)·check_rules(API 세션·남의 데이터·디자인 기준 CSS)·check_design(run_stats·item_meta, 보충 CSS 토큰만·공통 마스트헤드·금지 사항, PWA)
-- `agent/run_loop.py`: 가짜 모델로 루프 동작 9항목 + 현재 모델표 해설가로 실제 "안녕"·도구 1개(통과 조건)
+- `golden/`: 선별 골든셋. `fetch_select.py`(그날 판정을 트레이스에서) → `score_select.py`(재현율·정밀도·신뢰구간) / `agent/run_loop.py`: 가짜 모델로 루프 동작 9항목 + 현재 모델표 해설가로 실제 "안녕"·도구 1개(통과 조건)
 - `agent/check_topic_guide.py`: 주제 경계가 선별 프롬프트에 빠짐없이·길이 상한 / `check_same_story.py`: 같은 소식 빼기 / `check_owners.py`: 게시자 반복 줄이기 / `check_card_why.py`: 카드 이유 근거 / `check_headline.py`: 오늘의 큰 소식 / `check_importance.py`: Jev 중요도 / `agent/run_curator.py`: 오늘 수집 + 가짜 프로필 2개로 큐레이터 실행 → `agent/curator_report.json`
 - `agent/run_explainer.py`: `--fake`는 가짜 모델로 카드·반려·재시도 8항목, 없으면 실제 카드 + for_me 3쌍 → `explainer_report.json` / `check_reject_rate.py`: 반려됐던 항목 재투입·대조군 반려 5항목
 

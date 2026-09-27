@@ -17,6 +17,13 @@ EMOJI = re.compile("[\U0001F000-\U0001FAFF☀-➿⬀-⯿]")
 FLOW_WORDS = ["예약", "큐레이터", "검증관", "해설가", "발송", "되돌림", "기억", "Claude Code", "공개 MCP"]
 
 
+def quality_rows(text: str) -> list[list[str]]:
+    """README "품질 지표" 표의 본문 줄(머리·구분선 제외)을 칸 목록으로."""
+    section = text.split("## 📊 품질 지표", 1)[-1].split("\n## ", 1)[0]
+    rows = [line.strip().strip("|").split("|") for line in section.splitlines() if line.strip().startswith("|")]
+    return [[c.strip() for c in r] for r in rows[2:]]
+
+
 def tree_block(text: str, marker: str) -> str | None:
     """marker 뒤 첫 번째 toolscout/ 트리 코드 블록."""
     if marker not in text:
@@ -41,7 +48,8 @@ def main() -> int:
         "뉴스·MCP_카드": "[뉴스]" in text and "[MCP]" in text and all(n in text for n in "①②③④"),
         "빠른시작_4단계": all(k in text for k in [".env.example", "docker compose up", "첫 브리핑"]),
         "MCP_설정_JSON": '"mcpServers"' in text and '"headers"' in text,
-        "품질지표_측정예정": text.count("측정예정") >= 14,
+        # 처음엔 14줄 모두 측정예정이었다. 실측이 채워지면(9/27 선별·발송·트레이스) 칸이 비지 않았는지만 본다
+        "품질지표_14줄_실측또는_측정예정": len(quality_rows(text)) >= 14 and all(len(r) == 4 and all(r) for r in quality_rows(text)),
         "스크린샷_4개": text.count("docs/img/") >= 5,
         "라이선스·설계문서·작성자": all(k in text for k in ["MIT", "docs/계획안.md", "작성자"]),
         "긴_줄표_없음": "—" not in text,
