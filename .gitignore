@@ -23,3 +23,6 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# 하루 실행이 쓰는 기록 (추적하면 매일 작업 트리가 바뀌어 자동 재시작이 멈춘다, 2026-09-27)
+tests/pipeline/format_failures.json
