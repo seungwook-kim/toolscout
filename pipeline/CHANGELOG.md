@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-27 · weekly.py 추가: 금요일 메일 맨 아래 "이번 주 요약"(7일 합계·큰 소식·많이 받은 뉴스 주제 상위 3·직접 설치해 본 MCP와 성공 수·새 버전 도구). 카드 데이터에서만 모으고 모델을 부르지 않는다. render에 weekly 인자, outbox가 사용자마다 붙임 · 추천 기능 3(따로 메일 대신 금요일 브리핑에, 사용자 "추천대로") · check_weekly 9·check_mail_layout·check_deliver·check_scheduler 통과, 9/25 실데이터 미리보기 카드 46장
+
 - 2026-09-27 · tool_updates.py 추가: 최근 30일 카드로 나간 MCP의 제목 버전과 레지스트리 최신 버전을 비교해 새 버전 카드(이유 "받아 본 도구의 새 버전 (a → b)", 원문은 GitHub 릴리스 페이지)를 사용자당 하루 1장 도구 칸 맨 앞에. 발송 전 검증은 새 버전 카드를 다시 설치. collect_items가 최신 버전 목록도 돌려준다 · 추천 기능 2("써봤음" 기록 0건이라 범위를 받아 본 도구로, 사용자 승인) · check_tool_updates 12·check_mcp_now·run_daily --fake 48 통과, 실측 본인 MCP 21개 중 4개 새 버전
 
 - 2026-09-27 · 되돌림 교체 카드의 이유를 card_why 근거로(교체 사정은 pick_why로 트레이스에만). tests/pipeline/format_failures.json을 git 추적에서 뺌(.gitignore) · 9/27 메일에 "AIHawk 설치 실패 후 … 대체합니다"가 나감. 하루 실행이 이 파일에 쓰면 작업 트리가 바뀌어 자동 재시작이 멈춘다 · check_rollback·check_autorestart·run_daily --fake 48 통과

@@ -25,7 +25,7 @@ from sqlalchemy import select, update
 import db
 import models
 from agent import tracing
-from pipeline import briefing_mail
+from pipeline import briefing_mail, weekly
 from pipeline.run_daily import today_kst
 
 log = logging.getLogger("toolscout.deliver")
@@ -133,7 +133,8 @@ def outbox(day: date, notify_until: str | None = None) -> list[dict]:
         from routes.feedback import feedback_link  # 메일 버튼은 웹앱 /f 서명 링크
 
         links = lambda card, action, uid=user_id: feedback_link(uid, card["item_id"], action)  # noqa: E731
-        mail = briefing_mail.render(day, entry["role"], entry["cards"], entry["empty_reason"], links)
+        mail = briefing_mail.render(day, entry["role"], entry["cards"], entry["empty_reason"], links,
+                                    weekly=weekly.block(user_id, day))  # 금요일만 "이번 주 요약"
         messages.append({"user_id": user_id, "to": entry["to"], "role": entry["role"], **mail,
                          "cards": len(entry["cards"]), "empty_reason": entry["empty_reason"],
                          "trace_ids": sorted(entry["trace_ids"])})
