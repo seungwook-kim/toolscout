@@ -46,8 +46,12 @@ const TS = {
   // 마스트헤드. session이 false면 메뉴·DEV 배지 없이 (로그인·메일 피드백 화면)
   async mast({ active = "", title, when = "", basis = "", pipe = "", session = true }) {
     const me = session ? await TS.api("/api/me") : null;
+    // "승인" 탭은 관리자에게만. 승인을 기다리는 이용 신청 수를 붙인다 (2026-09-27)
+    const pending = me && me.is_admin ? Number(me.pending_applications) || 0 : 0;
+    const links = [["/", "오늘"], ["/history", "지난 브리핑"], ["/settings", "설정"]]
+      .concat(me && me.is_admin ? [["/admin/invites", pending ? `승인 ${pending}` : "승인"]] : []);
     const nav = me
-      ? `<nav class="nav" aria-label="주 메뉴">${[["/", "오늘"], ["/history", "지난 브리핑"], ["/settings", "설정"]]
+      ? `<nav class="nav" aria-label="주 메뉴">${links
         .map(([href, label]) => `<a href="${href}"${href === active ? ' aria-current="page"' : ""}>${label}</a>`).join("")}<a href="/login" id="logout">로그아웃</a></nav>`
       : "";
     document.getElementById("mast").innerHTML = `<div class="in">

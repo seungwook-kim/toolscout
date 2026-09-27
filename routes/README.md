@@ -5,7 +5,7 @@
 ## 파일
 - `auth.py`: 이메일 매직링크 로그인(15분·1회용), 세션 쿠키(30일), `/api/me`, 로그인 사용자 is_test. `require_approved`는 초대 승인된
   사용자만(브리핑·검색·질문·피드백·프로필이 이 검문을 쓰고, 계정 삭제는 세션만)
-- `invite.py`: 초대 코드 사용(`/api/invite/redeem`, 1분 10회), 관리자 코드 생성·목록과 가입 승인·차단(`/api/admin/*`, ADMIN_EMAILS만)
+- `invite.py`: 초대 코드 사용(`/api/invite/redeem`, 1분 10회), 이용 신청서(`/api/apply`), 관리자 코드 생성·목록·신청 목록·승인·차단(`/api/admin/*`, ADMIN_EMAILS만)
 - `demo.py`: 공개 데모 `/demo`와 `/api/demo/briefing`. 데모 프로필(users.is_demo)의 최근 브리핑을 읽기 전용으로, IP당 분당 60회
 - `tokens.py`: SESSION_SECRET HMAC 서명 토큰(로그인·세션·피드백 링크), 1회용은 `used_tokens`에 해시로 기록
 - `pages.py`: `/` `/login` `/invite` `/settings` `/history` `/admin/invites` `/f` 화면과 `/robots.txt`. 세션 없으면 /login, 승인 전이면 /invite, 프로필 없으면 /settings, 데모 말고는 noindex

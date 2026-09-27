@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>toolscout 초대 코드</title>
+  <title>toolscout 이용 신청</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
   <link rel="stylesheet" href="/static/app.css">
@@ -16,7 +16,32 @@
   <header class="mast" id="mast"></header>
   <main>
     <section class="sec">
-      <div class="sec-h"><h2>초대 코드</h2><span class="hint">지금은 초대받은 분만 쓸 수 있어요</span></div>
+      <div class="sec-h"><h2>이용 신청</h2><span class="hint">관리자가 확인한 뒤 브리핑과 메일이 시작돼요</span></div>
+      <div class="item">
+        <div class="mark"></div>
+        <div>
+          <p class="sum" id="state" hidden></p>
+          <form id="apply-form">
+            <label class="topic" for="name">이름 또는 닉네임</label>
+            <div class="acts"><input id="name" type="text" maxlength="40" required></div>
+            <label class="topic" for="job">하는 일</label>
+            <div class="acts"><input id="job" type="text" maxlength="60" placeholder="예: 백엔드 개발자, AI 에이전트를 공부하는 학생" required></div>
+            <label class="topic" for="reason">신청 이유 (10자 이상)</label>
+            <div class="acts"><textarea id="reason" minlength="10" maxlength="500" placeholder="어떤 AI 소식·도구를 받아 보고 싶은지 적어 주세요" required></textarea></div>
+            <label class="topic" for="source">알게 된 곳 (선택)</label>
+            <div class="acts"><input id="source" type="text" maxlength="100" placeholder="예: 지인 소개, GitHub"></div>
+            <label class="topic"><input id="agree" type="checkbox" required> 브리핑 메일 수신과 신청 내용 보관(승인 판단용)에 동의해요</label>
+            <div class="acts">
+              <button class="go" type="submit" id="apply-btn">신청하기</button>
+              <span class="fb" id="apply-msg"></span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><h2>초대 코드</h2><span class="hint">코드를 받았다면 바로 가입돼요</span></div>
       <div class="item">
         <div class="mark"></div>
         <div>
@@ -28,7 +53,7 @@
               <span class="fb" id="msg"></span>
             </div>
           </form>
-          <p class="sum">코드가 없다면 <a href="/demo">읽기 전용 데모</a>를 먼저 볼 수 있어요.</p>
+          <p class="sum">먼저 둘러보고 싶다면 <a href="/demo">읽기 전용 데모</a>를 볼 수 있어요.</p>
           <div class="acts"><button class="act" type="button" id="logout">다른 계정으로 로그인</button></div>
         </div>
       </div>
@@ -37,6 +62,37 @@
   <script src="/static/app.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
+
+    function showState(application) {
+      if (!application) return;
+      const when = (application.applied_at || "").slice(0, 10);
+      $("state").hidden = false;
+      $("state").textContent = `${when}에 신청했어요. 관리자가 확인하면 브리핑이 시작돼요. 내용을 고쳐 다시 낼 수 있어요.`;
+      $("name").value = application.name || "";
+      $("job").value = application.job || "";
+      $("reason").value = application.reason || "";
+      $("source").value = application.source || "";
+      $("apply-btn").textContent = "신청 내용 고치기";
+    }
+
+    $("apply-form").onsubmit = async (event) => {
+      event.preventDefault();
+      const button = $("apply-btn");
+      button.disabled = true;
+      try {
+        const data = await TS.api("/api/apply", {
+          method: "POST",
+          body: { name: $("name").value, job: $("job").value, reason: $("reason").value,
+                  source: $("source").value, agree: $("agree").checked },
+        });
+        TS.message($("apply-msg"), data.message);
+        if (data.status === "approved") setTimeout(() => { location.href = "/settings"; }, 700);
+        else showState((await TS.api("/api/apply")).application);
+      } catch (e) {
+        TS.message($("apply-msg"), e.message, true);
+      }
+      button.disabled = false;
+    };
 
     $("invite-form").onsubmit = async (event) => {
       event.preventDefault();
@@ -59,7 +115,8 @@
       location.href = "/login";
     };
 
-    TS.mast({ session: false, title: "초대 코드 확인", basis: "코드를 넣으면 내일 아침부터 브리핑이 갑니다." });
+    TS.mast({ session: false, title: "이용 신청", basis: "신청서를 내면 관리자가 확인한 뒤 브리핑이 시작돼요. 초대 코드가 있다면 아래에 넣어 주세요." });
+    TS.api("/api/apply").then((data) => showState(data.application)).catch(() => {});
   </script>
 </body>
 </html>

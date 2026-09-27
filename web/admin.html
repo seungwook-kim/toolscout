@@ -17,6 +17,11 @@
 
   <main>
     <section class="sec">
+      <div class="sec-h"><h2>이용 신청</h2><span class="hint">승인하면 다음 하루 실행부터 브리핑과 메일을 받아요</span></div>
+      <div id="applications"></div>
+    </section>
+
+    <section class="sec">
       <div class="sec-h"><h2>초대 코드</h2><span class="hint">사용 횟수와 기한을 정해 만들어요</span></div>
       <div class="item">
         <div class="mark"></div>
@@ -68,11 +73,21 @@
       </div></article>`;
     }
 
-    async function load() {
-      const [codes, users] = await Promise.all([TS.api("/api/admin/invites"), TS.api("/api/admin/users")]);
-      $("codes").innerHTML = codes.codes.map(codeRow).join("") || '<div class="empty">아직 만든 코드가 없어요</div>';
-      $("users").innerHTML = users.users.map(userRow).join("");
-      $("users").querySelectorAll("button[data-user]").forEach((b) => {
+    // 신청 글은 사용자가 쓴 텍스트라 전부 이스케이프한다
+    function applicationRow(a) {
+      const when = TS.esc((a.applied_at || "").slice(0, 16).replace("T", " "));
+      return `<article class="item"><div class="mark"><i></i></div><div>
+        <div class="topic">승인 대기 · 신청 ${when}</div>
+        <h3>${TS.esc(a.name)} <small>${TS.esc(a.email || "")}</small></h3>
+        <div class="src">${TS.esc(a.job)}${a.source ? ` · 알게 된 곳 ${TS.esc(a.source)}` : ""}</div>
+        <p class="sum">${TS.esc(a.reason)}</p>
+        <div class="acts"><button class="go" type="button" data-user="${a.id}" data-status="approved">승인</button>
+          <button class="act" type="button" data-user="${a.id}" data-status="blocked">거절</button><span class="fb"></span></div>
+      </div></article>`;
+    }
+
+    function bindStatus(box) {
+      box.querySelectorAll("button[data-user]").forEach((b) => {
         b.onclick = async () => {
           const fb = b.closest(".acts").querySelector(".fb");
           try {
@@ -84,6 +99,16 @@
           }
         };
       });
+    }
+
+    async function load() {
+      const [codes, users, apps] = await Promise.all([TS.api("/api/admin/invites"), TS.api("/api/admin/users"),
+                                                     TS.api("/api/admin/applications")]);
+      $("applications").innerHTML = apps.applications.map(applicationRow).join("") || '<div class="empty">승인을 기다리는 신청이 없어요</div>';
+      bindStatus($("applications"));
+      $("codes").innerHTML = codes.codes.map(codeRow).join("") || '<div class="empty">아직 만든 코드가 없어요</div>';
+      $("users").innerHTML = users.users.map(userRow).join("");
+      bindStatus($("users"));
     }
 
     $("new-form").onsubmit = async (event) => {
@@ -101,7 +126,8 @@
     };
 
     (async () => {
-      await TS.mast({ title: "초대 관리", when: "관리자", basis: "코드를 만들어 전달하고, 가입 요청을 승인하거나 차단해요." });
+      await TS.mast({ active: "/admin/invites", title: "승인 관리", when: "관리자 전용",
+                      basis: "이용 신청을 승인하거나 거절하고, 초대 코드를 만들어요. 이 화면은 관리자에게만 보여요." });
       load();
     })();
   </script>
