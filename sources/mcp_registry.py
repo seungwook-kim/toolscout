@@ -56,6 +56,12 @@ def fetch(since: datetime, client: httpx.Client, *, per_publisher: int = MAX_PER
     result.stats = {"창_안_active": len(entries), "github_저장소": len(candidates), "게시자": len(by_publisher), **counts,
                     "신규_상위": len(new), "버전업_상위": len(updates), "별수_DB캐시": stars.from_db,
                     "별수_새조회": stars.fetched, "별수_DB저장": saved}
+    # 걸러내기 전 전체에서 저장소별 최신 버전. 받아 본 도구의 새 버전 알림이 쓴다 (버전 업은 별 50 이상만 수집하므로)
+    for entry, repo in sorted(candidates, key=lambda c: _published(c[0])):
+        server = entry["server"]
+        result.versions[github_stars.repo_url(repo)] = {"title": display_title(server), "version": server.get("version"),
+                                                        "summary": server.get("description", ""), "install": install_info(server),
+                                                        "published": _published(entry).isoformat()}
     for entry, repo, _ in new + updates:
         server = entry["server"]
         title = display_title(server)

@@ -36,7 +36,7 @@ import memory
 import models
 from agent import curator, explainer, loop, tracing
 from agent.structured import MAX_EXAMPLES, Stats
-from pipeline import persist, presend, promo, rollback, validate, verification
+from pipeline import persist, presend, promo, rollback, tool_updates, validate, verification
 from pipeline.dedupe import SOURCE_TIER, dedupe
 from pipeline.normalize import normalize
 
@@ -71,12 +71,14 @@ def save_catalog(today: date, selected: list[dict]) -> int:
         return 0
 
 
-def collect_items() -> tuple[list[dict], list[dict]]:
+def collect_items() -> tuple[list[dict], list[dict], dict]:
+    """반환: (항목, 실패한 소스, MCP 저장소별 최신 버전)."""
     from sources.collect import collect
 
     results = collect()
     failures = [{"source": r.source, "error": r.error} for r in results if r.error]
-    return [item for r in results for item in r.items], failures
+    versions = {url: v for r in results for url, v in r.versions.items()}
+    return [item for r in results for item in r.items], failures, versions
 
 
 def top_items(items: list[dict], limit: int | None) -> list[dict]:
@@ -113,7 +115,7 @@ def empty_reason(plan: dict, checked: dict) -> str:
 
 async def run(today: date | None = None, *, items: list[dict] | None = None, mcp_url: str = loop.DEFAULT_MCP_URL,
               model_call=None, users: int | None = None, limit: int | None = None, user_ids: list[int] | None = None,
-              related: bool | None = None) -> dict:
+              related: bool | None = None, tool_versions: dict | None = None) -> dict:
     """반환: 사용자별 저장 결과와 합계. items·model_call은 검수용 주입 (없으면 실제 수집·실제 모델). related가 None이면 월요일에만."""
     today = today or today_kst()
     with_related = related if related is not None else today.weekday() == 0
@@ -125,7 +127,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
                                                        "users": users, "limit": limit}) as root:
         failures = []
         if items is None:
-            items, failures = await asyncio.to_thread(collect_items)
+            items, failures, tool_versions = await asyncio.to_thread(collect_items)
         prepared, promo_dropped = promo.drop(dedupe(normalize(items)))  # 행사·책 홍보 연재는 모델에 보내기 전에 뺀다
         curator_input = top_items(prepared, limit)
         sent = await asyncio.to_thread(persist.sent_user_ids, today)
@@ -142,6 +144,8 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
         curated = await curator.run(curator_input, memories, model_call=model_call, related_pools=pools) if memories else None
         catalog_saved = await asyncio.to_thread(save_catalog, today, curated["selected"]) if curated else 0
         verify_saved = await asyncio.to_thread(verification.save_requests, today, curated["verify"]) if curated else 0
+        # 받아 본 MCP의 새 버전은 도구 칸 맨 앞에 (pipeline/tool_updates.py). 발송 전 검증이 새 버전을 다시 설치해 본다
+        updates_added = await asyncio.to_thread(tool_updates.add_to_plans, curated["plans"], tool_versions or {}, today) if curated else 0
         # 카드로 나갈 스킬·MCP는 여기서 바로 확인해야 오늘 카드에 결과가 붙는다. 설치 실패는 아래 되돌림 1이 받는다
         skills_reviewed = await presend.review_skills_now(curated, today, model_call, mcp_url) if curated else {"asked": 0}
         mcps_probed = await presend.probe_mcps_now(curated, today, model_call, mcp_url) if curated else {"asked": 0}
@@ -205,7 +209,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
         report = {
             "date": str(today), "dev_mode": models.dev_mode(), "options": {"users": users, "limit": limit},
             "collected": len(items), "prepared": len(prepared), "curator_input": len(curator_input),
-            "source_failures": failures, "skipped_sent_users": sorted(sent), "catalog_saved": catalog_saved, "verify_saved": verify_saved, "skills_reviewed": skills_reviewed, "promo_dropped": promo_dropped,
+            "source_failures": failures, "skipped_sent_users": sorted(sent), "catalog_saved": catalog_saved, "verify_saved": verify_saved, "skills_reviewed": skills_reviewed, "promo_dropped": promo_dropped, "tool_updates": updates_added,
             "mcps_probed": mcps_probed,
             "selected": len(curated["selected"]) if curated else 0, "verify_requests": len(curated["verify"]) if curated else 0,
             "users": results,
