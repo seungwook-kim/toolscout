@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-27 · agent/check_card_why.py 추가(관심 주제·쓰는 도구 근거, 단어 경계, 가중치 0·음수, 대체 문구, 120자, pick_why), check_rollback에 교체 카드 이유에 교체 사정 없음 · 카드 이유 근거화 · check_card_why 7·check_rollback 통과
+
 - 2026-09-27 · pipeline/check_promo.py 추가(홍보·연재 빼기와 이유, 진짜 소식·도구는 남김, 선별·해설가·큐레이터 프롬프트 기준 들어 있음) · 가치 낮은 뉴스 거르기·카드 문장 기준 · 8항목 통과
 
 - 2026-09-27 · agent/check_owners.py 추가(게시자 파싱·7일·하루 한 건·후보 반영·memory 창), feedback/check_appendix_c 가짜 모델이 같은 소식 묶기에 답하고 관련 카드 후보는 검수용 도구만 · 9/23 같은 소식 묶기 추가 뒤로 부록 C 검수가 깨져 있었다(실제 도구 목록이 쌓여 검수용 도구가 후보에서도 밀림) · check_owners 8·check_appendix_c 7항목 통과

@@ -153,7 +153,8 @@ def main() -> int:
     checks = {
         "되돌림1_실패도구를_대체항목으로": one["replace"]["tools"] == ["검수 candidate", "검수 ok"]
         and one["replace"]["events"][0]["action"] == "replace" and one["replace"]["events"][0]["replacement"] == "검수 candidate"
-        and one["replace"]["first"]["rank"] == 2 and one["replace"]["first"]["why"] == "같은 주제의 대체 도구",
+        and one["replace"]["first"]["rank"] == 2 and one["replace"]["first"]["pick_why"] == "같은 주제의 대체 도구",
+        "되돌림1_카드_이유에_교체사정_안나감": "대체" not in one["replace"]["first"]["why"] and bool(one["replace"]["first"]["why"]),
         "되돌림1_후보는_안고른·안본·실패아닌·비선호아닌_도구만": one["replace"]["calls"][0]["candidates"] == ["검수 candidate"],
         "되돌림1_실패이유를_큐레이터에_전달": one["replace"]["events"][0]["reason"] == "설치 실패",
         "되돌림1_비움_판단이면_빈자리": one["empty"]["tools"] == ["검수 ok"] and one["empty"]["events"][0]["action"] == "empty",

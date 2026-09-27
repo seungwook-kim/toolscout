@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-27 · card_why.py 추가: 카드 이유(why_this_card)를 가중치 양수인 관심 주제·제목과 설명에 나온 쓰는 도구로 만들고 모델 이유는 pick_why로 트레이스에만. 근거 없으면 모델 이유 · 9/27 메일에도 "관심 있는 개발자에게 유용한 도구입니다" 되풀이, 프롬프트 기준을 로컬 모델이 안 따름 · check_card_why 7·check_owners·check_same_story·check_headline·check_appendix_c 통과, 9/27 실제 카드 8장 적용 결과 확인
+
 - 2026-09-27 · 선별 worth_today에 행사 예고·연사·등록, 책·서평, 웨비나·교육 모집, 채용 false. 해설가는 합니다체, 3인칭·호칭("사용자가"·"개발자님") 금지, 없는 관심사 지어내기 금지, why_this_card 되풀이 금지, 뉴스 장단점은 발표된 것 자체만(기사 읽는 이점·원문 못 읽음은 아님). 큐레이터 why는 프로필 무엇과 이어지는지 구체적으로 합니다체 · 9/16~9/26 발송 메일 점검 · check_promo·check_topic_guide 통과. 모델 전후 비교는 사용자 지시로 멈춤, 9/27 07:00 실행으로 확인
 
 - 2026-09-27 · owners.py 추가, pick_for_user 도구 후보에서 최근 7일 안에 카드로 나간 GitHub 게시자는 빼고 같은 게시자는 하루 한 건(excluded.same_owner), memory.read에 seen_recent_urls(오늘 제외) · 9/24·25 같은 게시자(fuxicodex) 스킬 4장 · check_owners 8·check_same_story·check_headline·check_importance·check_topic_guide·check_appendix_c·run_daily --fake 48 통과
