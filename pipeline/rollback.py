@@ -9,7 +9,7 @@
 """
 import asyncio
 
-from agent import curator, explainer, tracing, verifier
+from agent import card_why, curator, explainer, tracing, verifier
 from agent.structured import Stats
 from pipeline import verification
 
@@ -40,7 +40,9 @@ async def verify_failed(plan: dict, selected: list[dict], memory: dict, results:
                                     "replacement": decision.get("item", {}).get("title")})
             event = {"title": item["title"], "reason": failure, "action": decision["action"], "why": decision["why"]}
             if decision["action"] == "replace":
-                replacement = decision["item"] | {"why": decision["why"], "rank": item.get("rank"), "related": item.get("related", False)}
+                # 바꿔 넣은 이유("○○ 설치 실패 후 대체")는 트레이스에만. 카드에는 이 사용자와 이어지는 근거를 적는다
+                replacement = decision["item"] | {"why": card_why.build(decision["item"], memory, None), "pick_why": decision["why"],
+                                                  "rank": item.get("rank"), "related": item.get("related", False)}
                 kept.append(replacement)
                 chosen.add(replacement["url"])
                 event["replacement"] = replacement["title"]

@@ -13,7 +13,7 @@ import random
 from dataclasses import asdict
 
 import models
-from agent import headline, importance, owners, same_story, schemas, structured, tracing
+from agent import card_why, headline, importance, owners, same_story, schemas, structured, tracing
 from agent.structured import Stats
 
 ROLE = "curator"
@@ -169,8 +169,9 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
     if parsed is None:
         return plan | {"empty": True, "empty_reason": "후보 선정 응답 형식 실패"}
     picked, plan["same_story_dropped"] = await same_story.drop([{**news[p.id - 1], "why": p.why} for p in parsed.news], stats, model_call)
-    plan["news"] = _rank_by_weight(picked, weights)
-    plan["tools"] = _rank_by_weight([{**tools[p.id - 1], "why": p.why} for p in parsed.tools], weights)
+    # 카드의 "이 카드인 이유"는 데이터 근거로, 모델이 쓴 이유는 pick_why로 트레이스에만 (agent/card_why.py)
+    plan["news"] = card_why.attach(_rank_by_weight(picked, weights), memory)
+    plan["tools"] = card_why.attach(_rank_by_weight([{**tools[p.id - 1], "why": p.why} for p in parsed.tools], weights), memory)
     plan["weights"] = {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS}  # 트레이스에 가중치가 보이게
     if not plan["news"] and not plan["tools"]:
         plan |= {"empty": True, "empty_reason": parsed.empty_reason or "프로필과 이어지는 항목이 없다"}
