@@ -30,6 +30,7 @@ class SourceResult:
     fetched: int = 0  # 창(24시간·7일) 적용 전 받은 건수
     error: str | None = None
     stats: dict = field(default_factory=dict)  # 필터 단계별 건수 (리포트용)
+    versions: dict = field(default_factory=dict)  # MCP 레지스트리만: 창 안에 갱신된 서버의 저장소별 최신 버전 (pipeline/tool_updates.py)
 
 
 def http_client(timeout: float = 20) -> httpx.Client:

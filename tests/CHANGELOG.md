@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-27 · pipeline/check_tool_updates.py 추가(제목 버전·비교·하루 1장·카드 모양·plan 맨 앞·겹침·장애·발송 전 재검증·실제 DB 30일), run_daily 검수는 collect_items 세 값에 맞춤 · 받아 본 도구의 새 버전 알림 · 12항목 통과
+
 - 2026-09-27 · golden/ 추가: select_2026-09-27.json(뉴스 141건 O/X와 기준, Claude Code 채점), run_select_2026-09-27.json(9/27 실행 판정), fetch_select.py(트레이스에서 판정 꺼내기, 모델 호출 없음), score_select.py(재현율·정밀도·윌슨 95% 구간) · 계획안 품질 지표 선별 재현율·정밀도 · 9/27 재현율 95.2%(86.9~98.4) 목표 달성, 정밀도 63.2%(53.1~72.2) 미달: 잘못 통과 35건은 에세이·의견·질문 글·개인 실험·발언 보도
 
 - 2026-09-27 · agent/check_card_why.py 추가(관심 주제·쓰는 도구 근거, 단어 경계, 가중치 0·음수, 대체 문구, 120자, pick_why), check_rollback에 교체 카드 이유에 교체 사정 없음 · 카드 이유 근거화 · check_card_why 7·check_rollback 통과

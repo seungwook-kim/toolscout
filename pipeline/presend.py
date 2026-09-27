@@ -46,7 +46,8 @@ async def _requests(curated: dict, today: date, kind: str, reason: str) -> tuple
     if not tools:
         return [], 0
     known = await asyncio.to_thread(verification.results_for, list(tools))
-    todo = [item for url, item in tools.items() if not _known(known.get(url), kind)]
+    # 새 버전 카드(update_from)는 예전 버전 결과가 있어도 다시 확인한다
+    todo = [item for url, item in tools.items() if item.get("update_from") or not _known(known.get(url), kind)]
     if not todo:
         return [], len(tools)
     depth = "read" if kind == "skill" else "full"

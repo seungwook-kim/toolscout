@@ -147,7 +147,7 @@ def unit_checks() -> dict:
     original_collect = sources.collect.collect
     sources.collect.collect = lambda: [SourceResult("aitimes", items=[fake_items()[0]]), SourceResult("hackernews", error="시간 초과")]
     try:
-        collected, source_failures = run_daily.collect_items()
+        collected, source_failures, _ = run_daily.collect_items()
     finally:
         sources.collect.collect = original_collect
     return {

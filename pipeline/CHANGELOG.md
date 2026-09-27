@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-09-27 · tool_updates.py 추가: 최근 30일 카드로 나간 MCP의 제목 버전과 레지스트리 최신 버전을 비교해 새 버전 카드(이유 "받아 본 도구의 새 버전 (a → b)", 원문은 GitHub 릴리스 페이지)를 사용자당 하루 1장 도구 칸 맨 앞에. 발송 전 검증은 새 버전 카드를 다시 설치. collect_items가 최신 버전 목록도 돌려준다 · 추천 기능 2("써봤음" 기록 0건이라 범위를 받아 본 도구로, 사용자 승인) · check_tool_updates 12·check_mcp_now·run_daily --fake 48 통과, 실측 본인 MCP 21개 중 4개 새 버전
+
 - 2026-09-27 · 되돌림 교체 카드의 이유를 card_why 근거로(교체 사정은 pick_why로 트레이스에만). tests/pipeline/format_failures.json을 git 추적에서 뺌(.gitignore) · 9/27 메일에 "AIHawk 설치 실패 후 … 대체합니다"가 나감. 하루 실행이 이 파일에 쓰면 작업 트리가 바뀌어 자동 재시작이 멈춘다 · check_rollback·check_autorestart·run_daily --fake 48 통과
 
 - 2026-09-27 · promo.py 추가: 책 소개 연재·TechCrunch 자체 행사 홍보(세션·티켓·연사, 실제 발표는 남김)·웨비나 뉴스를 모델에 보내기 전에 빼고 실행 보고에 promo_dropped · 9/23 책 소개·9/26 행사 세션 예고가 뉴스 칸에 나감, 사용자 "걸러" · 9/27 0시 후보 152건에서 6건(Claude Code 판정과 일치)·오탐 0, 저장 뉴스 91건 오탐 0, check_promo·run_daily --fake 48 통과
