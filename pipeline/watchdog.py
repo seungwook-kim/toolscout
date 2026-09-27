@@ -1,7 +1,10 @@
 """앱 바깥 감시 (2026-09-23 사용자 요청). 앱이 통째로 죽으면 앱이 보내는 실패 알림도 안 나가서, 앱과 따로 도는 확인이 필요하다.
 
 실행: uv run python -m pipeline.watchdog
-Windows 작업 `toolscout watchdog`이 매일 08:30·09:30·12:30·18:30에 부른다(놓치면 켜질 때 바로, %LOCALAPPDATA%\\toolscout\\watchdog.ps1).
+Windows 작업 `toolscout watchdog`이 10분마다 부른다(2026-09-28부터, 놓치면 켜질 때 바로, %LOCALAPPDATA%\\toolscout\\watchdog.ps1).
+그 ps1이 이 모듈보다 먼저 복구를 한다(밤낮 없이): 응답이 없으면 45초 뒤 다시 보고, 런처 작업이 꺼져 있으면 다시 시작,
+앱이 멈춰 있으면 그 프로세스를 끄고(런처가 10초 뒤 띄움), 런처만 있고 앱이 없으면 런처 작업을 다시 시작. watchdog.log에 [recover]로 남긴다.
+(9/27 23:57 런처가 Ctrl+C 이벤트로 끝나 앱이 손으로 발견할 때까지 꺼져 있었다. 이 모듈의 알림은 06:00~22:00만이라 07:00 실행을 놓칠 뻔했다)
 - 앱이 응답하는지(GET /api/health)
 - 알림 시각이 30분 넘게 지난 대상 사용자(데모 제외)에게 오늘 메일이 나갔는지(briefings.sent_at). 안 나갔으면 브리핑이 없는지(실행 문제)·있는데 안 나갔는지(발송 문제)를 나눈다
 문제가 있으면 deliver.send_alert로 ADMIN_EMAILS에 한 통. 같은 날 같은 문제는 한 번만(상태 파일 watchdog.json).
