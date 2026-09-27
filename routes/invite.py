@@ -2,8 +2,10 @@
 
 - POST /api/invite/redeem {code}: 유효하면 status=approved, invite_code_used 기록, 코드 used +1
   틀림·만료·횟수 초과는 400. 같은 사용자가 1분에 10번까지만 시도할 수 있다
+- 이용 신청(2026-09-27 사용자 결정): 초대 코드가 없으면 POST /api/apply {name, job, reason, source, agree}로 신청서를 낸다.
+  승인 전(pending)만 낼 수 있고 다시 내면 고쳐 쓴다. GET /api/apply는 내 신청 상태. 신청 글은 모델에 보내지 않는다
 - 관리자(ADMIN_EMAILS)만: GET·POST /api/admin/invites(코드 목록·생성), GET /api/admin/users(대기·차단 목록),
-  POST /api/admin/users/{id}/status(승인·차단·되돌리기)
+  GET /api/admin/applications(승인 대기 신청서), POST /api/admin/users/{id}/status(승인·차단·되돌리기)
 코드 값은 로그에 쓰지 않는다.
 """
 import secrets
@@ -36,6 +38,14 @@ class NewCode(BaseModel):
 
 class StatusBody(BaseModel):
     status: str
+
+
+class ApplyBody(BaseModel):
+    name: str = Field(min_length=1, max_length=40)
+    job: str = Field(min_length=1, max_length=60)
+    reason: str = Field(min_length=10, max_length=500)
+    source: str = Field(default="", max_length=100)
+    agree: bool
 
 
 def require_admin(request: Request) -> db.User:
@@ -84,6 +94,44 @@ def redeem(body: RedeemBody, user: db.User = Depends(require_user)) -> dict:
     return {"status": "approved", "message": "가입됐어요. 내일 아침 첫 브리핑이 갑니다"}
 
 
+def _application(user: db.User) -> dict | None:
+    if not user.applied_at:
+        return None
+    return (user.application or {}) | {"applied_at": user.applied_at.isoformat()}
+
+
+@router.post("/api/apply")
+def apply(body: ApplyBody, user: db.User = Depends(require_user)) -> dict:
+    if user.status == "blocked":
+        raise HTTPException(status_code=403, detail="이 계정은 사용할 수 없어요")
+    if user.status == "approved":
+        return {"status": "approved", "message": "이미 가입되어 있어요"}
+    if not body.agree:
+        raise HTTPException(status_code=400, detail="메일 수신과 개인정보 이용에 동의해야 신청할 수 있어요")
+    if _too_many(user.id):
+        raise HTTPException(status_code=429, detail="시도가 너무 많아요. 1분 뒤에 다시 해 주세요")
+    with db.session() as s:
+        member = s.get(db.User, user.id)
+        member.application = {k: v.strip() for k, v in body.model_dump(exclude={"agree"}).items()}
+        member.applied_at = db.utcnow()
+        s.commit()
+    return {"status": "pending", "applied": True, "message": "신청했어요. 관리자가 확인하면 브리핑이 시작돼요"}
+
+
+@router.get("/api/apply")
+def my_application(user: db.User = Depends(require_user)) -> dict:
+    return {"status": user.status, "application": _application(user)}
+
+
+@router.get("/api/admin/applications")
+def list_applications(admin: db.User = Depends(require_admin)) -> dict:
+    """승인 대기(pending)이면서 신청서를 낸 사용자. 먼저 낸 순서."""
+    with db.session() as s:
+        users = s.exec(select(db.User).where(db.User.status == "pending", db.User.applied_at.is_not(None))
+                       .order_by(db.User.applied_at)).all()
+        return {"applications": [{"id": u.id, "email": u.email, **_application(u)} for u in users]}
+
+
 @router.get("/api/admin/invites")
 def list_codes(admin: db.User = Depends(require_admin)) -> dict:
     with db.session() as s:
@@ -108,7 +156,7 @@ def list_users(admin: db.User = Depends(require_admin)) -> dict:
     with db.session() as s:
         users = s.exec(select(db.User).order_by(db.User.id)).all()
         return {"users": [{"id": u.id, "email": u.email, "role": u.role, "status": u.status, "is_test": u.is_test,
-                           "is_demo": u.is_demo, "invite_code_used": u.invite_code_used,
+                           "is_demo": u.is_demo, "invite_code_used": u.invite_code_used, "application": _application(u),
                            "created_at": u.created_at.isoformat()} for u in users]}
 
 

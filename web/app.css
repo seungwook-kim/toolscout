@@ -171,8 +171,9 @@ details.why p{margin:8px 0 0;padding-left:12px;border-left:2px solid var(--line)
 .empty p{margin:6px 0 0;color:var(--mute);font-size:14.5px}
 
 /* 설정·로그인·검색 폼: .askbar input·button과 같은 모양, 그림자는 askbar 입력창에만 */
-main input[type=text],main input[type=email],main select{flex:1;min-width:0;font:inherit;font-size:15px;padding:13px 16px;border:1px solid var(--line-2);border-radius:10px;background:var(--card);color:var(--ink)}
+main input[type=text],main input[type=email],main select,main textarea{flex:1;min-width:0;font:inherit;font-size:15px;padding:13px 16px;border:1px solid var(--line-2);border-radius:10px;background:var(--card);color:var(--ink)}
 main input[type=range]{flex:1;accent-color:var(--accent)}
+main textarea{min-height:120px;resize:vertical;line-height:1.55}
 main .go{background:var(--ink);color:#fff;padding:13px 18px;border-radius:10px;font-weight:600}
 main .go:disabled,.act:disabled{opacity:.45;cursor:default}
 .forme output{font-family:var(--mono);font-size:13px;color:var(--mute);min-width:24px;text-align:right}

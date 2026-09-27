@@ -131,7 +131,7 @@ def main() -> int:
         "표_12개(used_tokens·verify_requests·invite_codes_포함)": set(tables) == set(db.TABLES) and len(db.TABLES) == 12,
         "계획안_칸_모두_있음": not any(missing.values()),
         "postgres_DDL_컴파일": all(v is True for v in ddl.values()),
-        "JSON_칸_9개는_JSONB(run_stats·probes.tools·stages·verify_requests.install 포함)": len(json_cols) == 9,
+        "JSON_칸_10개는_JSONB(run_stats·probes.tools·stages·verify_requests.install·users.application 포함)": len(json_cols) == 10,
         "briefings_trace_id_NOT_NULL": tables["briefings"].c.trace_id.nullable is False,
         "check_제약_5개": CHECKS <= constraints,
         "sqlite_흔적_없음": "sqlite" not in (ROOT / "db.py").read_text(encoding="utf-8").lower(),

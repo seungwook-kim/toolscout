@@ -8,7 +8,7 @@
 - `env/check_env_example.py`: `.env.example` 키 목록·`.env` git 무시 / `env/check_docker.py`: GitHub Actions `ci` 4단계, compose(app 1개)·Dockerfile
 - `models/check_models.py`: 모델표, 제공자 순서 전환(429·503·529·연결·타임아웃·키 없음), 모델 장애, 옵션 전달, 호출 간격 + 개발 4역할 실제 호출
 - `models/check_local_models.py`·`check_groq.py`: 로컬 Ollama VRAM·도구 호출·한글 실측, Groq 목록 API·도구 호출·한도 → `models/local_models.json`·`groq_models.json`
-- `access/check_access.py`: 초대제(승인 전 403 6종·코드 기한·횟수·관리자 API)와 공개 데모(비로그인 200·버튼 없음·사용자 노출 없음·분당 60회·색인)
+- `access/check_apply.py`: 이용 신청·관리자 승인 탭 / `access/check_access.py`: 초대제(승인 전 403 6종·코드 기한·횟수·관리자 API)와 공개 데모(비로그인 200·버튼 없음·사용자 노출 없음·분당 60회·색인)
 - `db/check_tables.py`: 표 12개·연결 문자열 변환·is_test·briefings 빈 행 구조 + Supabase 실제 생성·개발 프로필 A·B·C
 - `sources/`: `check_fallbacks.py` 재시도·전날 결과·긱뉴스 링크 / `check_news_window.py` 창 48시간·보낸 항목·제외 규칙 / `check_catalog_title.py` 제목 규칙·upsert 갱신 / `backfill_titles.py` 기존 행 보정 / `check_skillsmp.py` 스킬 수집 / `run_today.py` 수집 건수 → `report.md`
 - `pipeline/run_dedupe.py`: 정리·중복 제거 단위 검사 + 전후 건수 / `check_promo.py`: 책 연재·행사 홍보 뉴스 빼기, 선별·해설가 문장 기준 / `check_tool_updates.py`: 받아 본 도구 새 버전 알림 / `check_weekly.py`: 금요일 이번 주 요약

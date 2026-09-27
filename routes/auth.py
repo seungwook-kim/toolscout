@@ -18,7 +18,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
-from sqlmodel import select
+from sqlmodel import func, select
 
 import db
 import models
@@ -142,8 +142,16 @@ def logout() -> JSONResponse:
     return response
 
 
+def pending_applications() -> int:
+    """승인을 기다리는 이용 신청 수 (관리자 메뉴의 "승인" 탭 숫자)."""
+    with db.session() as s:
+        return s.exec(select(func.count()).select_from(db.User)
+                      .where(db.User.status == "pending", db.User.applied_at.is_not(None))).one()
+
+
 @router.get("/api/me")
 def me(user: db.User = Depends(require_user)) -> dict:
+    admin = is_admin(user.email)
     return {"id": user.id, "email": user.email, "role": user.role, "profile_done": profile_done(user),
-            "is_admin": is_admin(user.email), "dev_mode": models.dev_mode(), "status": user.status,
-            "approved": approved(user)}
+            "is_admin": admin, "dev_mode": models.dev_mode(), "status": user.status,
+            "approved": approved(user), "pending_applications": pending_applications() if admin else 0}
