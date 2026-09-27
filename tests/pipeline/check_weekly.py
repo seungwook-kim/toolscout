@@ -15,6 +15,33 @@ from pipeline import briefing_mail, weekly
 FRIDAY, SUNDAY = date(2026, 9, 25), date(2026, 9, 27)
 
 
+def remote_only() -> bool:
+    """설치 단계가 없는 원격 MCP(status na)는 "설치해 본 수"에 넣지 않는다."""
+    import db
+    from sqlalchemy import select
+
+    original = db.get_engine
+
+    class Rows:
+        def __init__(self, rows): self.rows = rows
+        def all(self): return self.rows
+
+    class Conn:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def execute(self, *a): return Rows([
+            (FRIDAY, {"type": "mcp", "title": "원격", "url": "https://r.test", "verification": {"install": {"status": "na"}}}, "mcp_tools"),
+            (FRIDAY, {"type": "mcp", "title": "설치됨", "url": "https://i.test", "verification": {"install": {"status": "ok"}}}, "mcp_tools"),
+            (FRIDAY, {"type": "mcp", "title": "실패", "url": "https://f.test", "verification": {"install": {"status": "bad"}}}, "mcp_tools")])
+
+    db.get_engine = lambda: type("E", (), {"connect": lambda self: Conn()})()
+    try:
+        s = weekly.collect(1, FRIDAY)
+    finally:
+        db.get_engine = original
+    return s["probed"] == 2 and s["installed"] == 1 and s["installed_titles"] == ["설치됨"]
+
+
 def main() -> int:
     real = weekly.collect(45, FRIDAY)
     block = weekly.block(45, FRIDAY)
@@ -42,6 +69,7 @@ def main() -> int:
         and "이번 주 요약" not in plain["html"],
         "안전하지_않은_링크는_글자만": unsafe is not None and "javascript:" not in unsafe["html"] and 'href="https://github.com/a/one"' in unsafe["html"],
         "새버전_도구_칸": unsafe is not None and "새 버전이 나온 도구" in unsafe["text"],
+        "설치수는_원격전용(해당없음)_제외": remote_only(),
     }
     report = {"checks": checks, "real": {k: str(v) if isinstance(v, date) else v for k, v in (real or {}).items()}, "pass": all(checks.values())}
     print(json.dumps(report, ensure_ascii=False, indent=2))

@@ -28,14 +28,15 @@ def plan(uid: int, tools: list[dict], **kw) -> dict:
     return {"user_id": uid, "news": [], "tools": tools, "related": [], "failed": False, "empty": not tools, "empty_reason": None} | kw
 
 
-def presend_todo(item: dict) -> list[str]:
-    """예전 검증 결과가 있는 도구에 대해 발송 전 검증이 무엇을 다시 확인하는지."""
+def presend_todo(item: dict, plans: list[dict] | None = None) -> list[str]:
+    """예전 검증 결과가 있는 도구에 대해 발송 전 검증이 무엇을 다시 확인하는지(확인 순서대로)."""
     before = (verification.results_for, verification.save_requests, verification.item_id_for)
-    verification.results_for = lambda urls: {u: {"verification": {"install": {}}, "request_status": "done"} for u in urls}
+    verification.results_for = lambda urls: {u: {"verification": {"install": {}}, "request_status": "done"} for u in urls
+                                             if not u.startswith("https://new.test/")}
     verification.save_requests = lambda day, requests: len(requests)
     verification.item_id_for = lambda url: 1
     try:
-        requests, _ = asyncio.run(presend._requests({"plans": [plan(1, [item])]}, date(2000, 1, 1), "mcp", "검수"))
+        requests, _ = asyncio.run(presend._requests({"plans": plans or [plan(1, [item])]}, date(2000, 1, 1), "mcp", "검수"))
         return [r["url"] for r in requests]
     finally:
         (verification.results_for, verification.save_requests, verification.item_id_for) = before
@@ -67,6 +68,9 @@ def main() -> int:
         "최신목록_없으면_아무것도_안함": tool_updates.add_to_plans([plan(1, [])], {}, date(2026, 9, 27), shown_for=lambda u, t: SHOWN) == 0,
         "발송전검증_새버전은_다시확인": presend_todo(card) == ["https://github.com/b/two"]
         and presend_todo({"type": "mcp", "url": "https://github.com/b/two", "title": "Two"}) == [],
+        "발송전검증_새버전카드부터(한도에_밀리지_않게)": presend_todo({}, [
+            plan(45, [{"type": "mcp", "url": f"https://new.test/{n}", "title": f"n{n}"} for n in range(4)]),
+            plan(113, [card | {"url": "https://github.com/b/two"}])])[0] == "https://github.com/b/two",
         "실제DB_최근30일_MCP만·버전있음": isinstance(real, dict) and all(v["version"] for v in real.values()),
     }
     report = {"checks": checks, "real_shown_mcp": len(real), "pass": all(checks.values())}

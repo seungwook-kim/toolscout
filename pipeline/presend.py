@@ -48,6 +48,8 @@ async def _requests(curated: dict, today: date, kind: str, reason: str) -> tuple
     known = await asyncio.to_thread(verification.results_for, list(tools))
     # 새 버전 카드(update_from)는 예전 버전 결과가 있어도 다시 확인한다
     todo = [item for url, item in tools.items() if item.get("update_from") or not _known(known.get(url), kind)]
+    # 한 실행 한도(MCP 4건)에 밀리면 새 버전 카드에 예전 버전 결과가 붙는다. 새 버전 카드부터 확인한다
+    todo.sort(key=lambda item: not item.get("update_from"))
     if not todo:
         return [], len(tools)
     depth = "read" if kind == "skill" else "full"

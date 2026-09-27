@@ -33,8 +33,9 @@ def collect(user_id: int, day: date) -> dict | None:
         return None
     cards = [(d, card, topic) for d, card, topic in rows if card]
     unique = lambda items: list({title: (title, url) for title, url in items}.values())[:MAX_LIST]  # noqa: E731
-    probed = [(card["title"], (card["verification"].get("install") or {}).get("status")) for _, card, _ in cards
-              if card.get("type") == "mcp" and card.get("verification")]
+    # 원격 전용 MCP는 설치 단계가 없다(해당없음). 설치를 실제로 해 본 것만 센다
+    probed = [(card["title"], status) for _, card, _ in cards if card.get("type") == "mcp" and card.get("verification")
+              and (status := (card["verification"].get("install") or {}).get("status")) in ("ok", "bad")]
     return {
         "since": since, "until": day, "days": len({d for d, _, _ in cards}), "cards": len(cards),
         "headlines": unique((card["title"], card["url"]) for _, card, _ in cards if card.get("headline")),
