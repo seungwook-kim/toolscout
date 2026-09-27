@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-27 · check_tool_updates에 새 버전 카드가 5번째여도 먼저 확인, check_weekly에 원격 전용 제외 · 로직 점검 · 전체 오프라인 검수 46개 통과(실제 모델·E2B·실제 수집 검수 run_today·check_models 등 10개는 제외, run_dedupe는 캐시가 없으면 실제 수집을 해서 432초)
+
 - 2026-09-27 · pipeline/check_weekly.py 추가(금요일에만·카드 없으면 안 붙음·실제 DB 합계·주제·설치 수·맨 아래·없으면 그대로·안전한 링크·새 버전 칸) · 금요일 이번 주 요약 · 9항목 통과
 
 - 2026-09-27 · pipeline/check_tool_updates.py 추가(제목 버전·비교·하루 1장·카드 모양·plan 맨 앞·겹침·장애·발송 전 재검증·실제 DB 30일), run_daily 검수는 collect_items 세 값에 맞춤 · 받아 본 도구의 새 버전 알림 · 12항목 통과
