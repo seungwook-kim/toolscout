@@ -31,8 +31,9 @@ PLAN_COLUMNS = {
     "questions": "user_id session_date turn_no question gate answer sources_json trace_id created_at",
     "used_tokens": "token_hash purpose used_at expires_at",
     "invite_codes": "code max_uses used expires_at created_by created_at",  # 초대제 (2026-09-16)
+    "status_changes": "user_id old_status new_status changed_by via changed_at",  # 가입 상태 변경 이력 (2026-09-27)
 }
-CHECKS = {"ck_weights_range", "ck_items_type", "ck_skill_reviews_risk", "ck_questions_gate", "ck_users_status"}
+CHECKS = {"ck_weights_range", "ck_items_type", "ck_skill_reviews_risk", "ck_questions_gate", "ck_users_status", "ck_status_changes_via"}
 
 
 def ddl_compiles() -> dict:
@@ -128,12 +129,12 @@ def main() -> int:
     ddl = ddl_compiles()
     json_cols = [f"{t}.{c.name}" for t in db.TABLES for c in tables[t].columns if isinstance(c.type, postgresql.JSONB)]
     checks = {
-        "표_12개(used_tokens·verify_requests·invite_codes_포함)": set(tables) == set(db.TABLES) and len(db.TABLES) == 12,
+        "표_13개(used_tokens·verify_requests·invite_codes·status_changes_포함)": set(tables) == set(db.TABLES) and len(db.TABLES) == 13,
         "계획안_칸_모두_있음": not any(missing.values()),
         "postgres_DDL_컴파일": all(v is True for v in ddl.values()),
         "JSON_칸_10개는_JSONB(run_stats·probes.tools·stages·verify_requests.install·users.application 포함)": len(json_cols) == 10,
         "briefings_trace_id_NOT_NULL": tables["briefings"].c.trace_id.nullable is False,
-        "check_제약_5개": CHECKS <= constraints,
+        "check_제약_6개": CHECKS <= constraints,
         "sqlite_흔적_없음": "sqlite" not in (ROOT / "db.py").read_text(encoding="utf-8").lower(),
         "DATABASE_URL_없으면_명확한_에러": missing_url_raises(),
         "users_is_test_칸": "is_test" in columns["users"],
