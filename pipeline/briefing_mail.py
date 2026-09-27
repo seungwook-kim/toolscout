@@ -172,8 +172,10 @@ def _day_label(day: date) -> str:
     return f"{day.month}월 {day.day}일 {WEEKDAYS[day.weekday()]}요일"
 
 
-def render(day: date, role: str, cards: list[dict], empty_reason: str | None = None, links: Links | None = None) -> dict:
-    """반환: {subject, html, text, body}. cards는 순위 순서의 card_json. body는 머리·꼬리 없이 칸과 카드만 (combine이 쓴다)."""
+def render(day: date, role: str, cards: list[dict], empty_reason: str | None = None, links: Links | None = None,
+           weekly: dict | None = None) -> dict:
+    """반환: {subject, html, text, body}. cards는 순위 순서의 card_json. body는 머리·꼬리 없이 칸과 카드만 (combine이 쓴다).
+    weekly: 금요일 "이번 주 요약" {html, text} (pipeline/weekly.py). 있으면 맨 아래에 붙인다."""
     news = [c for c in cards if c.get("type") not in TOOL_TYPES]
     tools = [c for c in cards if c.get("type") in TOOL_TYPES and not c.get("related")]
     related = [c for c in cards if c.get("related")]
@@ -194,6 +196,8 @@ def render(day: date, role: str, cards: list[dict], empty_reason: str | None = N
                      + "\n\n[새 MCP·스킬]\n" + ("\n\n".join(_card_text(c, links) for c in tools) or NO_TOOLS)
                      + (f"\n\n[{RELATED_TITLE}]\n" + "\n\n".join(_card_text(c, links) for c in related) if related else ""))
         sub = f"{role} 기준 · 뉴스 {len(news)} · 도구 {len(tools) + len(related)}"
+    if weekly:
+        body_html, body_text = body_html + weekly["html"], f"{body_text}\n\n{weekly['text']}"
     page = _page(_masthead("TOOLSCOUT 아침 브리핑", _day_label(day), sub) + body_html)
     text = (f"toolscout 아침 브리핑\n{head}\n\n{body_text}\n\n"
             "요약은 원문을 바탕으로 AI가 썼습니다. 중요한 결정 전에는 원문 링크를 확인하세요.")
