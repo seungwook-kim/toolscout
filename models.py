@@ -73,11 +73,12 @@ PROD_MODELS: ModelTable = {
 #   지정하지 않으면 사고 토큰이 붙어 출력이 약 3배가 된다
 #   해설가·검증관 자리는 openrouter qwen/qwen3.8-27b(입력 $0.200·출력 $2.500 per 1M)를 같이 본다
 # Claude 구독 (2026-09-28 사용자 결정 "지금은 너 자체의 구독 시스템으로 돌려라"). 개발자 본인이 로그인한 Claude Code CLI를
-# claude_cli.py가 `claude -p`로 부른다. API 과금 없음, 도구 호출은 안 하므로(tools False) 도구가 필요한 호출은 다음 제공자로.
+# claude_cli.py가 `claude -p`로 부른다. API 과금 없음. 도구 호출도 구독으로(도구 목록을 글로 알려 주고 JSON 약속으로 받는다).
 # 모델 ID는 Claude Code가 받는 이름(2026-09-28 Claude Code 2.1.283 기준): 해설가·검증관 Sonnet 5, 큐레이터·게이트 Haiku 4.5.
-# 한도·로그인 문제(429)나 실패(503)면 아래 무료 제공자 순서로 넘어간다. 구독은 개인 사용 범위라 다른 사용자를 받으면 운영 모드(API)로
-CC_SONNET = {"provider": "claude_code", "model": "claude-sonnet-5", "tools": False}
-CC_HAIKU = {"provider": "claude_code", "model": "claude-haiku-4-5-20251001", "tools": False}
+# 한도·로그인 문제(529)나 실패(503)면 아래 무료 제공자 순서로 넘어간다. 구독은 개인 사용 범위이고, 배포할 때는 OpenRouter 키를
+# 넣어 운영 모드로 간다(2026-09-28 사용자 "배포할 때는 오픈라우터 키 넣을 거니까, 지금 로컬은 구독 LLM")
+CC_SONNET = {"provider": "claude_code", "model": "claude-sonnet-5"}  # 도구 호출은 글 약속으로(claude_cli.py)
+CC_HAIKU = {"provider": "claude_code", "model": "claude-haiku-4-5-20251001"}
 LOCAL_JSON_MODEL = {"provider": "ollama", "model": "gemma3:12b", "tools": False}
 GROQ_FAST = {"provider": "groq", "model": "openai/gpt-oss-20b", "reasoning": "low"}
 GROQ_KOREAN = {"provider": "groq", "model": "qwen/qwen3.8-27b", "reasoning": "none"}

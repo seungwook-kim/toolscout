@@ -3,7 +3,9 @@
 API 키 과금이 아니라 개발자 본인이 로그인해 둔 Claude Code(`claude -p`)를 한 번씩 실행해 답을 받는다.
 - 우리 시스템 프롬프트만 쓴다(--system-prompt-file). Claude Code 자체 도구는 끄고(--tools ""), 이 PC의 CLAUDE.md·스킬·MCP·훅은
   불러오지 않는다(--safe-mode, --strict-mcp-config). 세션은 남기지 않는다(--no-session-persistence)
-- 도구 호출은 지원하지 않는다(모델표 tools False). 도구가 필요한 호출(검증관 설치법 판단·질문 답)은 models.call이 다음 제공자로 넘긴다
+- 도구 호출은 글 약속으로 한다(2026-09-28 사용자 "로컬은 구독 LLM 쓰게"): 우리 도구 목록을 시스템 프롬프트 끝에 붙이고, 도구가 필요하면
+  {"tool_calls": [{"name", "args"}]}만 쓰게 한다. 그 답을 AIMessage.tool_calls로 바꿔 agent/loop.py가 MCP로 실행한다.
+  목록에 없는 도구 이름은 도구 호출로 보지 않는다(글 답으로 둔다). 도구 결과는 다음 입력에 [도구 결과 이름]으로 이어 붙인다
 - 사용 한도·로그인 문제는 529, 그 밖의 실패·시간 초과는 503으로 올려 models.call이 바로 다음 제공자(무료 모델)로 넘어가게 한다.
   429로 올리면 models.call이 60초 기다렸다 다시 부르는데, 구독 한도는 몇 시간씩 가서 호출마다 60초를 버린다.
   한도에 한 번 걸리면 BLOCK_SECONDS 동안은 CLI를 띄우지 않고 바로 넘긴다
@@ -46,6 +48,35 @@ def executable() -> str | None:
     return str(fallback) if fallback.exists() else None
 
 
+TOOL_GUIDE = """
+
+[쓸 수 있는 도구]
+{tools}
+도구가 필요하면 다른 말 없이 JSON 한 줄만 쓴다: {{"tool_calls": [{{"name": "도구 이름", "args": {{...}}}}]}}
+도구 결과는 다음 입력에 [도구 결과 이름]으로 온다. 도구가 더 필요 없으면 위 지시대로 최종 답을 쓴다."""
+FENCE = re.compile(r"^\s*```(?:json)?\s*(.*?)\s*```\s*$", re.S)
+
+
+def tool_guide(tools: list[dict]) -> str:
+    lines = [f"- {t['function']['name']}: {t['function'].get('description', '')} 인자 스키마 "
+             f"{json.dumps(t['function'].get('parameters') or {}, ensure_ascii=False)}" for t in tools]
+    return TOOL_GUIDE.format(tools="\n".join(lines))
+
+
+def tool_calls_in(text: str, names: set[str]) -> list[dict]:
+    """답이 도구 호출 약속이면 [{name, args, id, type}], 아니면 []."""
+    body = FENCE.match(text or "")
+    try:
+        data = json.loads(body.group(1) if body else (text or "").strip())
+    except ValueError:
+        return []
+    calls = data.get("tool_calls") if isinstance(data, dict) else None
+    if not isinstance(calls, list) or not calls or not all(isinstance(c, dict) and c.get("name") in names for c in calls):
+        return []
+    return [{"name": c["name"], "args": c.get("args") if isinstance(c.get("args"), dict) else {}, "id": f"cc_{n}", "type": "tool_call"}
+            for n, c in enumerate(calls)]
+
+
 def transcript(conversation: list[BaseMessage]) -> str:
     """시스템 프롬프트를 뺀 대화를 한 덩어리 글로. 형식 재시도(직전 답 + 고쳐 달라는 요청)도 순서대로 담긴다."""
     if len(conversation) == 1 and isinstance(conversation[0], HumanMessage):
@@ -55,21 +86,21 @@ def transcript(conversation: list[BaseMessage]) -> str:
         if isinstance(m, HumanMessage):
             parts.append(f"[사용자]\n{m.text}")
         elif isinstance(m, AIMessage):
-            parts.append(f"[이전 답]\n{m.text}")
+            calls = [{"name": tc["name"], "args": tc["args"]} for tc in m.tool_calls]
+            parts.append(f"[이전 답]\n{json.dumps({'tool_calls': calls}, ensure_ascii=False) if calls else m.text}")
         elif isinstance(m, ToolMessage):
             parts.append(f"[도구 결과 {m.name or 'tool'}]\n{m.text}")
     return "\n\n".join(parts) + "\n\n위 대화에 이어 지금 답만 쓴다."
 
 
 def call(model: str, messages: list[BaseMessage], tools, runner=subprocess.run, clock=time.monotonic) -> AIMessage:
-    if tools:
-        raise ClaudeCliError("claude_code는 도구 호출을 지원하지 않는다", FAIL_STATUS)
     if clock() < _blocked_until["at"]:
         raise ClaudeCliError("claude 구독 한도로 잠시 건너뜀", LIMIT_STATUS)
     exe = executable()
     if not exe:
         raise ClaudeCliError("claude CLI가 없다", FAIL_STATUS)
-    system = "\n\n".join(m.text for m in messages if isinstance(m, SystemMessage))
+    system = "\n\n".join(m.text for m in messages if isinstance(m, SystemMessage)) + (tool_guide(tools) if tools else "")
+    names = {t["function"]["name"] for t in tools or []}
     conversation = [m for m in messages if not isinstance(m, SystemMessage)]
     # API 키(과금 전환)와 바깥 Claude Code 세션 변수(CLAUDECODE·CLAUDE_CODE_* 등)는 넘기지 않는다. 앱은 작업 스케줄러에서 돌아
     # 그런 변수가 없고, 인증은 사용자 폴더의 로그인 정보로 한다
@@ -95,8 +126,11 @@ def call(model: str, messages: list[BaseMessage], tools, runner=subprocess.run, 
             _blocked_until["at"] = clock() + BLOCK_SECONDS
         raise ClaudeCliError(f"claude CLI 실패(코드 {done.returncode}): {detail.strip()[:200]}", LIMIT_STATUS if limited else FAIL_STATUS)
     usage = data.get("usage") or {}
+    text = data.get("result") or ""
+    calls = tool_calls_in(text, names) if names else []
     return AIMessage(
-        content=data.get("result") or "",
+        content="" if calls else text,
+        tool_calls=calls,
         usage_metadata={"input_tokens": int(usage.get("input_tokens") or 0), "output_tokens": int(usage.get("output_tokens") or 0),
                         "total_tokens": int(usage.get("input_tokens") or 0) + int(usage.get("output_tokens") or 0)},
         response_metadata={"provider": "claude_code", "model": model, "finish_reason": data.get("stop_reason"),

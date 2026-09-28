@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-28 · check_claude_cli에 도구 6항목(목록을 시스템 프롬프트에, 약속을 tool_calls로, 코드 블록, 모르는 이름은 글, 최종 답 그대로, 이전 호출·결과 이어붙임), check_models: 도구 필요한 호출도 구독부터(gemma3만 건너뜀) · 구독 도구 호출 · 19항목 통과, 실제 루프 1회(8.6초·2단계·도구 1번)
+
 - 2026-09-28 · models/check_claude_cli.py 추가(인자·API 키 안 넘김·새 프로세스 그룹·여러 턴·한도 529와 30분 건너뜀·503들), check_models: 개발 모델표 구독 1순위·구독 성공·한도면 기다리지 않고 전환, 전환 순서 기대값 갱신, --offline(실제 호출 건너뜀) · Claude 구독 전환 · check_claude_cli 13·check_models --offline 통과, 실제 구독 호출 1회(Haiku 3.6초, JSON)
 
 - 2026-09-28 · check_headline: 가중치 -5 주제도 큰 소식에 남음(계획안 부록 C) · 예외 처리 표 대조 · 18항목 통과
