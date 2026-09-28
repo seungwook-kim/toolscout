@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-28 · pick_related(월요일 관련 카드)에도 게시자 반복 줄이기(owners.spread)와 데이터 근거 이유(card_why) · 9/28 관련 카드 3장이 모델 이유("관심이 있어보입니다")로 나가고 fuxicodex 스킬이 또 나감. 9/27에 일반 경로에만 적용했었다 · check_card_why 8·check_appendix_c·check_owners·run_daily --fake 48 통과
+
 - 2026-09-28 · verifier.verify_one: 제공자 400 등 예상 못 한 오류도 그 항목만 미완료(다음 날 재시도)로 두고 계속. providers.gemini_contents: 다른 제공자가 만든 도구 호출·결과는 글로 바꿔 넘김(Gemini 호출은 원본 parts·서명 그대로) · 9/28 07:19 Groq 429 → Gemini 전환 때 Gemini 3가 서명 없는 도구 호출을 400으로 거절해 검증 연결이 끊김(발송 전 검증 anythingmcp). 문서 3곳에서 우회값을 찾지 못해 글로 바꾸는 방식 · check_fallback_errors 7·check_verifier·check_mcp_now·check_rollback 통과
 
 - 2026-09-27 · card_why.py 추가: 카드 이유(why_this_card)를 가중치 양수인 관심 주제·제목과 설명에 나온 쓰는 도구로 만들고 모델 이유는 pick_why로 트레이스에만. 근거 없으면 모델 이유 · 9/27 메일에도 "관심 있는 개발자에게 유용한 도구입니다" 되풀이, 프롬프트 기준을 로컬 모델이 안 따름 · check_card_why 7·check_owners·check_same_story·check_headline·check_appendix_c 통과, 9/27 실제 카드 8장 적용 결과 확인
