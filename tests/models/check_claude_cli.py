@@ -39,6 +39,7 @@ def status(fn) -> int | None:
 def main() -> int:
     claude_cli.executable = lambda: "claude"  # 설치 여부와 상관없이
     os.environ["ANTHROPIC_API_KEY"] = "검수용-가짜-키"
+    os.environ["CLAUDE_CODE_SESSION_ID"] = "검수용"
     messages = [SystemMessage("너는 검수용이다"), HumanMessage("<data>안녕</data>")]
     ok = json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": '{"ok": true}',
                      "usage": {"input_tokens": 12, "output_tokens": 5}, "total_cost_usd": 0.001, "stop_reason": "end_turn"})
@@ -65,7 +66,7 @@ def main() -> int:
         and args[args.index("--tools") + 1] == "" and all(f in args for f in ("--safe-mode", "--strict-mcp-config", "--no-session-persistence")),
         "시스템_프롬프트는_파일로_그대로": record["system"] == "너는 검수용이다",
         "새_프로세스그룹·숨은창(신호가_앱에_안닿게)": record["creationflags"] == claude_cli.NO_WINDOW and record["timeout"] == claude_cli.TIMEOUT,
-        "API키를_자식에_안넘김": "ANTHROPIC_API_KEY" not in record["env"],
+        "API키·바깥세션변수를_자식에_안넘김": not any(k.startswith(("ANTHROPIC_", "CLAUDE")) for k in record["env"]),
         "한턴은_사용자글_그대로": record["input"] == "<data>안녕</data>",
         "여러턴은_글로_이어붙임": "[이전 답]\n{끊긴" in multi["input"] and "[사용자]\n형식이 틀렸다. 다시" in multi["input"],
         "답·토큰_읽기": answer.text == '{"ok": true}' and answer.usage_metadata["input_tokens"] == 12
