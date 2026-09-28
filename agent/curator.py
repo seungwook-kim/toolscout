@@ -182,7 +182,9 @@ async def pick_related(pool: list[dict], memory: dict, exclude_urls: set[str], s
     """관련 카드 후보 최대 3개. 모델이 고른 것을 이름이 겹치는 수 > 주제 가중치 순으로 한 번 더 정렬한다 (부록 C "노션 계열 도구가 상위").
     반환 항목에는 related=True, why, summary(원문 설명)가 붙는다. 모델 장애·형식 실패면 빈 목록."""
     weights = memory.get("weights", {})
-    candidates = [item for item in pool if item["url"] not in exclude_urls][:RELATED_PICK_INPUT]
+    # 일반 도구 후보와 같은 규칙(9/28 월요일 관련 카드에 빠져 있었다): 최근 7일 본 게시자·같은 게시자 반복 빼기, 이유는 데이터 근거
+    candidates = owners.spread([item for item in pool if item["url"] not in exclude_urls],
+                               memory.get("seen_recent_urls", []))[0][:RELATED_PICK_INPUT]
     if not candidates:
         return []
     payload = {"profile": memory["profile"], "weights": {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS},
@@ -203,6 +205,7 @@ async def pick_related(pool: list[dict], memory: dict, exclude_urls: set[str], s
         return []
     picks = [{**candidates[p.id - 1], "why": p.why} for p in (parsed.tools if parsed else [])]
     picks.sort(key=lambda i: (-len(i.get("match", [])), -weights.get(i["topic"], 0)))
+    picks = card_why.attach(picks, memory)
     return [i | {"related": True, "summary": i.get("description") or "", "rank": n} for n, i in enumerate(picks, 1)]
 
 

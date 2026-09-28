@@ -35,6 +35,14 @@ def main() -> int:
 
     plan = asyncio.run(curator.pick_for_user([item("vantadb-mcp", "mcp_tools", "MCP memory server")], MEMORY, Stats(), call))
     picked = plan["tools"][0]
+
+    def related_call(role, messages, tools=None):
+        return AIMessage('{"tools": [{"id": 1, "why": "관심이 있어보입니다."}]}')
+
+    pool = [item("https://github.com/recent/x", "mcp_tools") | {"url": "https://github.com/recent/x", "description": "d"},
+            item("agent-device", "mcp_tools", "mcp device") | {"url": "https://github.com/new/agent-device", "description": "MCP device"}]
+    related = asyncio.run(curator.pick_related(pool, MEMORY | {"seen_recent_urls": ["https://github.com/recent/old"]}, set(), Stats(),
+                                               related_call))
     checks = {
         "관심주제_양수면_주제·관심도": build(item("새 모델", "model_release")) == "관심 주제 '모델 출시·성능' 관심도 5",
         "쓰는도구가_단어로_나오면_함께": build(item("vantadb-mcp", "mcp_tools", "Claude Code memory")) == (
@@ -43,6 +51,9 @@ def main() -> int:
         "가중치_0·음수는_근거_아님": build(item("가격 소식", "pricing")) == "모델 이유" and build(item("투자 소식", "industry")) == "모델 이유",
         "근거·모델이유_없으면_주제이름": card_why.build(item("x", "industry"), MEMORY, None) == "오늘 선별된 '산업·투자·기업 동향' 항목",
         "120자_상한": len(build(item("x", "industry"), "가" * 300)) == card_why.MAX_CHARS,
+        "관련카드도_이유는_근거·최근본_게시자_빠짐(9/28 월요일)": [r["url"] for r in related] == ["https://github.com/new/agent-device"]
+        and related[0]["why"].startswith("관심 주제 'MCP·도구 연동'") and related[0]["pick_why"] == "관심이 있어보입니다."
+        and related[0]["related"] is True,
         "pick_for_user_카드이유는_근거·모델이유는_pick_why": picked["why"] == "관심 주제 'MCP·도구 연동' 관심도 3 · 쓰는 도구 mcp 관련"
         and picked["pick_why"].startswith("MCP 연동에 관심 있는"),
     }
