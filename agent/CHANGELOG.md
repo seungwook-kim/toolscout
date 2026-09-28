@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-28 · headline.attach: 주제 가중치 -5여도 큰 소식에 넣는다(본 소식만 뺌) · 예외 처리 표 점검에서 계획안 부록 C "그 주제는 카드에 안 나오되 헤드라인엔 남음"과 어긋난 것을 찾음(9/23에 -5 제외를 넣었었다) · check_headline 18·check_appendix_c 통과
+
 - 2026-09-28 · pick_related(월요일 관련 카드)에도 게시자 반복 줄이기(owners.spread)와 데이터 근거 이유(card_why) · 9/28 관련 카드 3장이 모델 이유("관심이 있어보입니다")로 나가고 fuxicodex 스킬이 또 나감. 9/27에 일반 경로에만 적용했었다 · check_card_why 8·check_appendix_c·check_owners·run_daily --fake 48 통과
 
 - 2026-09-28 · verifier.verify_one: 제공자 400 등 예상 못 한 오류도 그 항목만 미완료(다음 날 재시도)로 두고 계속. providers.gemini_contents: 다른 제공자가 만든 도구 호출·결과는 글로 바꿔 넘김(Gemini 호출은 원본 parts·서명 그대로) · 9/28 07:19 Groq 429 → Gemini 전환 때 Gemini 3가 서명 없는 도구 호출을 400으로 거절해 검증 연결이 끊김(발송 전 검증 anythingmcp). 문서 3곳에서 우회값을 찾지 못해 글로 바꾸는 방식 · check_fallback_errors 7·check_verifier·check_mcp_now·check_rollback 통과
