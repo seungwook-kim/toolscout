@@ -7,7 +7,7 @@ API 키 과금이 아니라 개발자 본인이 로그인해 둔 Claude Code(`cl
 - 사용 한도·로그인 문제는 529, 그 밖의 실패·시간 초과는 503으로 올려 models.call이 바로 다음 제공자(무료 모델)로 넘어가게 한다.
   429로 올리면 models.call이 60초 기다렸다 다시 부르는데, 구독 한도는 몇 시간씩 가서 호출마다 60초를 버린다.
   한도에 한 번 걸리면 BLOCK_SECONDS 동안은 CLI를 띄우지 않고 바로 넘긴다
-- ANTHROPIC_API_KEY가 환경에 있으면 CLI가 API 과금으로 바뀌므로 자식 프로세스 환경에서 뺀다
+- ANTHROPIC_* (API 키가 있으면 CLI가 API 과금으로 바뀐다)와 CLAUDE* (바깥 Claude Code 세션 표시)는 자식 프로세스 환경에서 뺀다
 - 9/27 23:57 앱 런처가 Ctrl+C 이벤트로 죽은 적이 있어, CLI는 새 프로세스 그룹·숨은 창으로 띄워 그쪽 신호가 앱에 닿지 않게 한다
 구독 요금제는 개인 사용 범위다. 다른 사용자를 받는 운영에서는 API 키(모델표 운영 모드)로 바꾼다.
 """
@@ -71,7 +71,9 @@ def call(model: str, messages: list[BaseMessage], tools, runner=subprocess.run, 
         raise ClaudeCliError("claude CLI가 없다", FAIL_STATUS)
     system = "\n\n".join(m.text for m in messages if isinstance(m, SystemMessage))
     conversation = [m for m in messages if not isinstance(m, SystemMessage)]
-    env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
+    # API 키(과금 전환)와 바깥 Claude Code 세션 변수(CLAUDECODE·CLAUDE_CODE_* 등)는 넘기지 않는다. 앱은 작업 스케줄러에서 돌아
+    # 그런 변수가 없고, 인증은 사용자 폴더의 로그인 정보로 한다
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("ANTHROPIC_", "CLAUDE"))}
     with tempfile.TemporaryDirectory(prefix="toolscout_cc_") as work:
         system_file = Path(work) / "system.txt"
         system_file.write_text(system, encoding="utf-8")
