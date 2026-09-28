@@ -3,7 +3,7 @@
 실행: uv run python -m tests.models.check_models
 - 키 없이 도는 검사: 운영·개발 모델표, 출처, 하드코딩, 429·503·529·연결 실패·타임아웃·키 없음 전환,
   모델 장애(ModelUnavailable), DEV_MODE 전환, 옵션 전달, 호출 간격, 공급자별 변환
-- 실제 호출: 개발 모델표 4역할 첫 제공자(로컬)는 성공해야 통과. 운영 모델표는 키가 없으면 SKIP
+- 실제 호출: 개발 모델표 4역할 첫 제공자는 성공해야 통과. 운영 모델표는 키가 없으면 SKIP. --offline이면 실제 호출을 건너뛴다
 환경변수 값과 키는 출력하지 않는다.
 """
 import json
@@ -39,7 +39,7 @@ SOURCES = ["platform.claude.com/docs", "ai.google.dev/gemini-api/docs/models", "
 MODEL_NAME = re.compile(r"claude-(opus|sonnet|haiku|fable)|gemini-\d|gpt-\d|gpt-oss|gemma-?\d|qwen\d|llama\d|nemotron|:free")
 KEY_ENV = {"anthropic": "ANTHROPIC_API_KEY", "gemini": "GEMINI_API_KEY", "openai": "OPENAI_API_KEY",
            "openrouter": "OPENROUTER_API_KEY", "groq": "GROQ_API_KEY", "ollama": None}
-DEV_ORDER = ["ollama", "groq", "gemini", "openrouter"]
+DEV_ORDER = ["claude_code", "ollama", "groq", "gemini", "openrouter"]  # 2026-09-28 Claude 구독이 1순위
 TOOL = {"name": "fetch_article", "description": "기사 원문", "parameters": {"type": "object", "properties": {"url": {"type": "string"}}}}
 
 
@@ -195,12 +195,15 @@ def throttle_spacing() -> bool:
 
 
 def dev_table_rules() -> bool:
-    """선별·게이트는 ollama부터, 해설가·검증관은 로컬 모델이 도구 호출을 못 해 groq부터 (docs/local-model.md)."""
+    """모든 역할이 Claude 구독부터(2026-09-28). 그다음 선별·게이트는 ollama, 해설가·검증관은 로컬 모델이 도구 호출을 못 해 groq부터.
+    구독은 도구 호출을 안 하므로 tools False (도구가 필요한 호출은 건너뛴다)."""
     specs = [spec for chain in models.DEV_MODELS.values() for spec in chain]
     order = {role: [s["provider"] for s in chain] for role, chain in models.DEV_MODELS.items()}
     return (set(models.DEV_MODELS) == set(EXPECTED_PROD)
             and order["curator"] == order["gate"] == DEV_ORDER
-            and order["explainer"] == ["groq", "ollama", "gemini", "openrouter"] and order["verifier"] == DEV_ORDER[1:]
+            and order["explainer"] == ["claude_code", "groq", "ollama", "gemini", "openrouter"]
+            and order["verifier"] == ["claude_code", "groq", "gemini", "openrouter"]
+            and all(s.get("tools") is False for s in specs if s["provider"] == "claude_code")
             and all(s["model"].endswith(":free") for s in specs if s["provider"] == "openrouter"))
 
 
@@ -348,28 +351,37 @@ def main() -> int:
     models._sleep = waits.append  # 429 대기 60초를 실제로 기다리지 않고 기록만 한다
     cases = {code: fallback_case(int(code), None) for code in ("503", "429", "529")}
     cases |= {"400": fallback_case(400, None), "503_후_대체도_503": fallback_case(503, 503)}
-    chain_all = dev_chain_case({"ollama": httpx.ReadTimeout("느림"), "groq": providers.MissingKey("GROQ_API_KEY 비어있음"),
-                                "gemini": FakeStatus(429), "openrouter": None})
-    chain_connect = dev_chain_case({"ollama": httpx.ConnectError("꺼짐"), "groq": None})
-    chain_400 = dev_chain_case({"ollama": FakeStatus(400)})
+    limit = FakeStatus(529)  # Claude 구독 한도: 기다리지 않고 바로 다음 제공자
+    chain_all = dev_chain_case({"claude_code": limit, "ollama": httpx.ReadTimeout("느림"),
+                                "groq": providers.MissingKey("GROQ_API_KEY 비어있음"), "gemini": FakeStatus(429), "openrouter": None})
+    chain_connect = dev_chain_case({"claude_code": limit, "ollama": httpx.ConnectError("꺼짐"), "groq": None})
+    chain_400 = dev_chain_case({"claude_code": limit, "ollama": FakeStatus(400)})
     chain_dead = dev_chain_case({name: FakeStatus(429) for name in DEV_ORDER})
-    chain_429_once = dev_chain_case({"groq": [FakeStatus(429), None]}, role="explainer")
-    explainer_no_tools = dev_chain_case({"groq": FakeStatus(503)}, role="explainer")
+    chain_429_once = dev_chain_case({"claude_code": limit, "groq": [FakeStatus(429), None]}, role="explainer")
+    explainer_no_tools = dev_chain_case({"claude_code": limit, "groq": FakeStatus(503)}, role="explainer")
     explainer_tools = dev_chain_case({"groq": FakeStatus(503)}, role="explainer", tools=[TOOL])
+    sub_ok = dev_chain_case({"claude_code": None})
+    waits_before = len(waits)
+    sub_limit = dev_chain_case({"claude_code": limit, "ollama": None})
+    sub_limit_waits = len(waits) - waits_before
     originals = (providers._anthropic_client, providers._gemini_client, providers._http_client)
     ok = {"calls": 2, "slot": "fallback", "trace_id": True}
     checks = {
         "운영_모델표_CLAUDE_일치": {r: (t[0]["model"], t[1]["model"]) for r, t in models.PROD_MODELS.items()} == EXPECTED_PROD,
-        "개발_모델표_순서_ollama→groq→gemini→openrouter": dev_table_rules(),
-        "개발_타임아웃·키없음·429(재시도후)_차례로_전환": chain_all == {"calls": ["ollama", "groq", "gemini", "gemini", "openrouter"],
-                                                         "slot": "fallback3", "provider": "openrouter"},
-        "429는_60초_뒤_같은_제공자_1회_재시도": chain_429_once == {"calls": ["groq", "groq"], "slot": "primary", "provider": "groq"}
+        "개발_모델표_순서_구독→ollama→groq→gemini→openrouter": dev_table_rules(),
+        "구독이_되면_1순위로_답함": sub_ok == {"calls": ["claude_code"], "slot": "primary", "provider": "claude_code"},
+        "구독_한도(529)면_기다리지_않고_다음으로": sub_limit == {"calls": ["claude_code", "ollama"], "slot": "fallback", "provider": "ollama"}
+        and sub_limit_waits == 0,
+        "개발_타임아웃·키없음·429(재시도후)_차례로_전환": chain_all == {"calls": ["claude_code", "ollama", "groq", "gemini", "gemini", "openrouter"],
+                                                         "slot": "fallback4", "provider": "openrouter"},
+        "429는_60초_뒤_같은_제공자_1회_재시도": chain_429_once == {"calls": ["claude_code", "groq", "groq"], "slot": "fallback", "provider": "groq"}
         and 60 in waits,
-        "해설가_대체_groq→gemma3(도구없는_호출)": explainer_no_tools == {"calls": ["groq", "ollama"], "slot": "fallback", "provider": "ollama"},
-        "해설가_도구필요하면_gemma3_건너뜀": explainer_tools == {"calls": ["groq", "gemini"], "slot": "fallback2", "provider": "gemini"},
-        "개발_연결실패_다음으로": chain_connect == {"calls": ["ollama", "groq"], "slot": "fallback", "provider": "groq"},
-        "개발_400은_전환없이_모델장애": chain_400 == {"calls": ["ollama"], "unavailable": 1},
-        "개발_전부_429면_모델장애(제공자마다_2번)": chain_dead == {"calls": [n for n in DEV_ORDER for _ in (1, 2)], "unavailable": 4},
+        "해설가_대체_groq→gemma3(도구없는_호출)": explainer_no_tools == {"calls": ["claude_code", "groq", "ollama"], "slot": "fallback2",
+                                                                  "provider": "ollama"},
+        "해설가_도구필요하면_구독·gemma3_건너뜀": explainer_tools == {"calls": ["groq", "gemini"], "slot": "fallback3", "provider": "gemini"},
+        "개발_연결실패_다음으로": chain_connect == {"calls": ["claude_code", "ollama", "groq"], "slot": "fallback2", "provider": "groq"},
+        "개발_400은_전환없이_모델장애": chain_400 == {"calls": ["claude_code", "ollama"], "unavailable": 2},
+        "개발_전부_429면_모델장애(제공자마다_2번)": chain_dead == {"calls": [n for n in DEV_ORDER for _ in (1, 2)], "unavailable": 5},
         "DEV_MODE_전환_기본1": mode_switch(),
         "출처_URL_주석": all(s in text for s in SOURCES),
         "다른_파일_모델명_하드코딩_없음": not hardcoded,
@@ -385,9 +397,11 @@ def main() -> int:
         **openai_compatible_conversion(),
     }
     providers._anthropic_client, providers._gemini_client, providers._http_client = originals
-    dev_live = live_calls(models.DEV_MODELS, required=True)
-    prod_live = live_calls(models.PROD_MODELS, required=False)
-    checks["개발_모델_4역할_실제_호출_성공"] = all(v.startswith("성공") for v in dev_live.values())
+    offline = "--offline" in sys.argv  # 실제 모델 호출 없이 (작업 중 모델 호출 금지, 2026-09-27)
+    dev_live = {} if offline else live_calls(models.DEV_MODELS, required=True)
+    prod_live = {} if offline else live_calls(models.PROD_MODELS, required=False)
+    if not offline:
+        checks["개발_모델_4역할_실제_호출_성공"] = all(v.startswith("성공") for v in dev_live.values())
     report = {"dev_mode": models.dev_mode(), "checks": checks, "fallback_cases": cases, "hardcoded_files": hardcoded,
               "dev_chain_cases": {"all": chain_all, "connect": chain_connect, "400": chain_400, "dead": chain_dead},
               "live_dev": dev_live, "live_prod": prod_live, "pass": all(checks.values())}

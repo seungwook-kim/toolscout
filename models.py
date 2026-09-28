@@ -72,26 +72,32 @@ PROD_MODELS: ModelTable = {
 #   혼자 쓰면 하루 약 $0.005. reasoning은 반드시 low로 준다. none은 400(Reasoning is mandatory for this endpoint),
 #   지정하지 않으면 사고 토큰이 붙어 출력이 약 3배가 된다
 #   해설가·검증관 자리는 openrouter qwen/qwen3.8-27b(입력 $0.200·출력 $2.500 per 1M)를 같이 본다
+# Claude 구독 (2026-09-28 사용자 결정 "지금은 너 자체의 구독 시스템으로 돌려라"). 개발자 본인이 로그인한 Claude Code CLI를
+# claude_cli.py가 `claude -p`로 부른다. API 과금 없음, 도구 호출은 안 하므로(tools False) 도구가 필요한 호출은 다음 제공자로.
+# 모델 ID는 Claude Code가 받는 이름(2026-09-28 Claude Code 2.1.283 기준): 해설가·검증관 Sonnet 5, 큐레이터·게이트 Haiku 4.5.
+# 한도·로그인 문제(429)나 실패(503)면 아래 무료 제공자 순서로 넘어간다. 구독은 개인 사용 범위라 다른 사용자를 받으면 운영 모드(API)로
+CC_SONNET = {"provider": "claude_code", "model": "claude-sonnet-5", "tools": False}
+CC_HAIKU = {"provider": "claude_code", "model": "claude-haiku-4-5-20251001", "tools": False}
 LOCAL_JSON_MODEL = {"provider": "ollama", "model": "gemma3:12b", "tools": False}
 GROQ_FAST = {"provider": "groq", "model": "openai/gpt-oss-20b", "reasoning": "low"}
 GROQ_KOREAN = {"provider": "groq", "model": "qwen/qwen3.8-27b", "reasoning": "none"}
 DEV_MODELS: ModelTable = {
-    "curator": [LOCAL_JSON_MODEL, GROQ_FAST,
+    "curator": [CC_HAIKU, LOCAL_JSON_MODEL, GROQ_FAST,
                 {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
                 {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free", "reasoning": "none"}],
-    "verifier": [GROQ_KOREAN,
+    "verifier": [CC_SONNET, GROQ_KOREAN,
                  {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "low"},
                  {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free", "reasoning": "none"}],
-    "explainer": [GROQ_KOREAN, LOCAL_JSON_MODEL,
+    "explainer": [CC_SONNET, GROQ_KOREAN, LOCAL_JSON_MODEL,
                   {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "low"},
                   {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free", "reasoning": "none"}],
-    "gate": [LOCAL_JSON_MODEL, GROQ_FAST,
+    "gate": [CC_HAIKU, LOCAL_JSON_MODEL, GROQ_FAST,
              {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
              {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free", "reasoning": "none"}],
 }
 
 FALLBACK_STATUS = {429, 503, 529}  # 529는 Anthropic 과부하
-SLOT_NAMES = ["primary", "fallback", "fallback2", "fallback3"]
+SLOT_NAMES = ["primary", "fallback", "fallback2", "fallback3", "fallback4"]  # 구독 모델을 앞에 넣어 체인이 5칸까지
 # 429는 60초 기다렸다가 같은 제공자에 1회 더 보내고, 그래도 429면 다음 제공자로 (2026-09-15 사용자 결정)
 RATE_LIMIT_WAIT_SECONDS = 60
 _sleep = time.sleep  # 검수에서 기다리지 않게 바꿔 끼운다

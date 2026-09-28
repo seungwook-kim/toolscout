@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-28 · models/check_claude_cli.py 추가(인자·API 키 안 넘김·새 프로세스 그룹·여러 턴·한도 529와 30분 건너뜀·503들), check_models: 개발 모델표 구독 1순위·구독 성공·한도면 기다리지 않고 전환, 전환 순서 기대값 갱신, --offline(실제 호출 건너뜀) · Claude 구독 전환 · check_claude_cli 13·check_models --offline 통과, 실제 구독 호출 1회(Haiku 3.6초, JSON)
+
 - 2026-09-28 · check_headline: 가중치 -5 주제도 큰 소식에 남음(계획안 부록 C) · 예외 처리 표 대조 · 18항목 통과
 
 - 2026-09-28 · check_deliver: 묶음 메일 항목 대신 받는 사람·제목(본인·가짜 프로필·운영), 개발 모드도 사용자마다 한 통·한 통 실패는 그 사용자만. check_mail_layout: 묶음 항목 대신 빈 행 메일 머리·개발 모드 표시 없음 · 실전용 메일 · 통과
