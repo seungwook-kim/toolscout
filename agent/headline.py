@@ -7,7 +7,8 @@
 - 다룬 곳 3곳 이상이거나, 중요도 5를 2곳 이상이 다뤘을 때만. 없으면 그날은 칸을 비운다
 - 두 번째로 높은 소식도 8점 이상이면 같이 올린다 (9/23 GPT-6 9점·오퍼스 5.5 8점, 사용자 결정)
 - 대표 기사는 공식 발표 > 매체 > 커뮤니티 순. 같은 소식의 다른 기사는 사용자 뉴스에서 뺀다
-- 이미 본 소식(묶음의 어느 링크든 본 적 있음)이거나 그 주제 가중치가 -5면 그 사용자에게는 넣지 않는다
+- 이미 본 소식(묶음의 어느 링크든 본 적 있음)이면 그 사용자에게는 넣지 않는다. 주제 가중치가 -5여도 넣는다
+  (계획안 부록 C "그 주제는 카드에 안 나오되 헤드라인엔 남음", 9/23 "관심도와 상관없이". 9/28 예외 처리 점검에서 어긋난 것을 바로잡음)
 모델 장애·형식 실패면 칸을 비운다 (브리핑을 막지 않는다). Jev 같은 점수 전용 모델은 보류했다 (2026-09-23 사용자 결정).
 """
 from agent import same_story, schemas
@@ -51,8 +52,8 @@ def attach(plan: dict, tops: list[dict], memory: dict) -> dict:
     """사용자 plan 뉴스 맨 위에 큰 소식을 넣고 같은 소식의 다른 기사는 뺀다. 뉴스는 모두 합쳐 MAX_NEWS장."""
     if plan.get("failed"):
         return plan
-    seen, weights = set(memory.get("seen_urls", [])), memory.get("weights", {})
-    tops = [t for t in tops if not seen & set(t["group_urls"]) and weights.get(t["topic"], 0) > -5]
+    seen = set(memory.get("seen_urls", []))
+    tops = [t for t in tops if not seen & set(t["group_urls"])]
     if not tops:
         return plan
     covered = {u for t in tops for u in t["group_urls"]}

@@ -5,7 +5,7 @@
 - 3곳 미만이면 없음, 중요도 5는 2곳부터 / 중요도 3 미만은 후보 아님 / 모델 장애면 없음
 - 두 번째도 8점 이상이면 2칸, 8점 미만이면 1칸
 - 사용자 뉴스 맨 위에 고정, 같은 소식 다른 기사는 빠지고 전체 5장, rank 다시 매김, 빈 브리핑이면 비움 해제
-- 이미 본 소식이거나 주제 가중치 -5면 그 사용자에게 안 넣음 / plan 실패면 그대로
+- 이미 본 소식이면 그 사용자에게 안 넣음, 주제 가중치 -5여도 넣음(계획안 부록 C "헤드라인엔 남음") / plan 실패면 그대로
 - 선별 판정에 importance가 없으면 3 / 카드 규격 headline 칸 / 메일에 "오늘의 큰 소식" 표시
 - curator.run이 큰 소식을 사용자마다 붙이고 결과에 요약을 남긴다
 """
@@ -87,7 +87,8 @@ async def main() -> None:
     both = headline.attach(json.loads(json.dumps(plan)), two, memory)
     check("2칸이면 맨 위 둘, 나머지 3장, 같은 소식 빠짐", [i["url"] for i in both["news"][:2]] == [two[0]["url"], two[1]["url"]]
           and len(both["news"]) == 5 and not {i["url"] for i in both["news"][2:]} & {u for t in two for u in t["group_urls"]})
-    check("본 소식·가중치 -5·실패 plan에는 안 넣음", seen["news"] == plan["news"] and blocked["news"] == plan["news"] and failed["news"] == [])
+    check("본 소식·실패 plan에는 안 넣음", seen["news"] == plan["news"] and failed["news"] == [])
+    check("가중치 -5 주제여도 큰 소식에는 남음(계획안 부록 C)", blocked["news"][0]["url"] == top["url"])
 
     check("판정에 importance 없으면 3", schemas.Judgment(id=1, ai_related=True, worth_today=True, topic="industry", reason="rr").importance == 3)
     card = {"type": "news", "title": "Opus 5.5 공개", "url": "https://x.test/1", "summary_ko": "요약.", "for_me": "나한테.",
