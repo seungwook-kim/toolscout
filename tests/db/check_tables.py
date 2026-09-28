@@ -96,6 +96,8 @@ def live_create() -> dict:
         briefing_columns = {c["name"]: c for c in inspector.get_columns("briefings")}
         briefing_pk = inspector.get_pk_constraint("briefings")["constrained_columns"]
         briefing_unique = {u["name"] for u in inspector.get_unique_constraints("briefings")}
+        with db.session(engine) as s:  # 시드는 이미 있는 프로필의 상태(관리자가 막아 둔 것 등)를 바꾸면 안 된다 (9/28 사고)
+            status_before = {u.id: u.status for u in s.exec(select(db.User).where(db.User.is_test == True)).all()}  # noqa: E712
         test_ids = db.seed_test_users(engine)
         with db.session(engine) as s:
             test_users = s.exec(select(db.User).where(db.User.is_test == True)).all()  # noqa: E712
@@ -113,9 +115,12 @@ def live_create() -> dict:
             "test_users": [{"id": u.id, "role": u.role, "tools": u.profile_tools_tags} for u in test_users],
         }
         result["demo_user_id"] = db.seed_demo_user(engine)
+        with db.session(engine) as s:
+            status_after = {u.id: u.status for u in s.exec(select(db.User).where(db.User.id.in_(list(status_before)))).all()}
+        result["시드가_기존_상태를_안바꿈"] = status_after == status_before
         result["ok"] = (not result["missing_tables"] and result["users_is_test_column"] and result["users_초대제_칸"]
                         and result["items_stars_checked_at_column"] and result["briefings_empty_row_ready"]
-                        and len(test_users) >= 2)
+                        and len(test_users) >= 2 and result["시드가_기존_상태를_안바꿈"])
         return result
     except Exception as exc:
         return {"status": f"실패 {type(exc).__name__}: {config.redact(str(exc))[:200]}", "ok": False}

@@ -13,6 +13,7 @@
 동작 검증은 도구가 올바르게 동작하는지 보증하지 않고, 위험 신호는 안전 보증이 아니다.
 """
 import json
+import logging
 import re
 from collections import Counter
 from contextlib import AsyncExitStack
@@ -25,6 +26,7 @@ from agent import loop, schemas, structured, tracing
 from agent.structured import Stats
 from pipeline import verification
 
+log = logging.getLogger("toolscout.verifier")
 ROLE = "verifier"
 MAX_REQUESTS = 10
 TOOL_CALLS_PER_ITEM = 4
@@ -161,6 +163,10 @@ async def verify_one(request: dict, call_tool, stats: Stats, model_call=None, mc
             outcome = await handler(request | {"kind": kind}, call_tool, stats, model_call, mcp_url)
         except models.ModelUnavailable as exc:
             outcome = {"status": "incomplete", "reason": stats.model_failed(f"검증 {request['item_id']}", exc), "tool_calls": 0}
+        except Exception as exc:  # 제공자 400 등 예상 못 한 오류도 이 항목만 미완료로(다음 날 재시도). 9/28 07:19 Gemini 400이
+            # 루프 밖으로 나가 검증 연결 전체가 끊겼다. 06:00 W1-a는 한 연결로 여러 건을 돌려 남은 검증이 다 멈출 수 있었다
+            log.warning("검증 %s 오류로 미완료 처리 (%s)", request["item_id"], type(exc).__name__)
+            outcome = {"status": "incomplete", "reason": f"검증 오류({type(exc).__name__}), 다음 날 다시", "tool_calls": 0}
         outcome |= {"item_id": request["item_id"], "kind": kind, "title": request["title"], "trace_id": span.trace_id}
         verification.mark(request["item_id"], outcome["status"], outcome.get("reason"))
         span.update(output={k: v for k, v in outcome.items() if k != "review"} | {"risk": (outcome.get("review") or {}).get("risk_signal")},

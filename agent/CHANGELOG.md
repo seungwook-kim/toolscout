@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-28 · verifier.verify_one: 제공자 400 등 예상 못 한 오류도 그 항목만 미완료(다음 날 재시도)로 두고 계속. providers.gemini_contents: 다른 제공자가 만든 도구 호출·결과는 글로 바꿔 넘김(Gemini 호출은 원본 parts·서명 그대로) · 9/28 07:19 Groq 429 → Gemini 전환 때 Gemini 3가 서명 없는 도구 호출을 400으로 거절해 검증 연결이 끊김(발송 전 검증 anythingmcp). 문서 3곳에서 우회값을 찾지 못해 글로 바꾸는 방식 · check_fallback_errors 7·check_verifier·check_mcp_now·check_rollback 통과
+
 - 2026-09-27 · card_why.py 추가: 카드 이유(why_this_card)를 가중치 양수인 관심 주제·제목과 설명에 나온 쓰는 도구로 만들고 모델 이유는 pick_why로 트레이스에만. 근거 없으면 모델 이유 · 9/27 메일에도 "관심 있는 개발자에게 유용한 도구입니다" 되풀이, 프롬프트 기준을 로컬 모델이 안 따름 · check_card_why 7·check_owners·check_same_story·check_headline·check_appendix_c 통과, 9/27 실제 카드 8장 적용 결과 확인
 
 - 2026-09-27 · 선별 worth_today에 행사 예고·연사·등록, 책·서평, 웨비나·교육 모집, 채용 false. 해설가는 합니다체, 3인칭·호칭("사용자가"·"개발자님") 금지, 없는 관심사 지어내기 금지, why_this_card 되풀이 금지, 뉴스 장단점은 발표된 것 자체만(기사 읽는 이점·원문 못 읽음은 아님). 큐레이터 why는 프로필 무엇과 이어지는지 구체적으로 합니다체 · 9/16~9/26 발송 메일 점검 · check_promo·check_topic_guide 통과. 모델 전후 비교는 사용자 지시로 멈춤, 9/27 07:00 실행으로 확인

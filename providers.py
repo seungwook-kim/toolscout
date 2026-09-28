@@ -108,24 +108,33 @@ def _gemini_client():
     return genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 
-def _gemini(model: str, messages: list[BaseMessage], tools, temperature: float | None = None,
-            thinking: str | None = None) -> AIMessage:
-    """thinking: thinking_level (minimal·low·medium·high). 사고 토큰도 출력 한도에 들어가므로 낮춰 둔다."""
+def gemini_contents(conversation: list[BaseMessage]) -> list:
+    """대화 기록 → Gemini contents.
+
+    Gemini가 만든 도구 호출은 원본 parts(thought_signature 포함)를 그대로 보낸다. 다른 제공자가 만든 도구 호출(예: Groq가
+    README를 읽은 뒤 429로 Gemini에 넘어온 경우)은 서명이 없어 Gemini 3가 400 INVALID_ARGUMENT로 거절한다(2026-09-28 07:19,
+    검증관 anythingmcp). 그런 호출과 그 결과는 함수 호출 형식 대신 글로 바꿔 넘겨 내용은 그대로 보이게 한다.
+    """
     from google.genai import types
 
-    system, conversation = _split_system(messages)
     contents: list[types.Content] = []
+    as_text: set[str] = set()  # 글로 바꾼 도구 호출 id
     for m in conversation:
         if isinstance(m, HumanMessage):
             contents.append(types.Content(role="user", parts=[types.Part(text=m.text)]))
         elif isinstance(m, AIMessage):
             parts = m.additional_kwargs.get("gemini_parts")  # thought_signature 보존용 원본
             if not parts:
-                parts = ([types.Part(text=m.text)] if m.text else []) + [
-                    types.Part(function_call=types.FunctionCall(name=tc["name"], args=tc["args"], id=tc["id"]))
-                    for tc in m.tool_calls]
-            contents.append(types.Content(role="model", parts=parts))
+                calls = [f"[도구 호출 {tc['name']}] {json.dumps(tc['args'], ensure_ascii=False)}" for tc in m.tool_calls]
+                as_text.update(tc["id"] for tc in m.tool_calls)
+                text = "\n".join(([m.text] if m.text else []) + calls)
+                parts = [types.Part(text=text)] if text else []
+            if parts:
+                contents.append(types.Content(role="model", parts=parts))
         elif isinstance(m, ToolMessage):
+            if m.tool_call_id in as_text:
+                contents.append(types.Content(role="user", parts=[types.Part(text=f"[도구 결과 {m.name or 'tool'}] {m.text}")]))
+                continue
             part = types.Part(function_response=types.FunctionResponse(
                 name=m.name or "tool", response={"result": m.text}, id=m.tool_call_id))
             last = contents[-1] if contents else None
@@ -133,6 +142,16 @@ def _gemini(model: str, messages: list[BaseMessage], tools, temperature: float |
                 last.parts.append(part)
             else:
                 contents.append(types.Content(role="user", parts=[part]))
+    return contents
+
+
+def _gemini(model: str, messages: list[BaseMessage], tools, temperature: float | None = None,
+            thinking: str | None = None) -> AIMessage:
+    """thinking: thinking_level (minimal·low·medium·high). 사고 토큰도 출력 한도에 들어가므로 낮춰 둔다."""
+    from google.genai import types
+
+    system, conversation = _split_system(messages)
+    contents = gemini_contents(conversation)
     config_ = types.GenerateContentConfig(
         system_instruction=system or None,
         max_output_tokens=MAX_TOKENS,
