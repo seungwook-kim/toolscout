@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-28 · loop.DEV_MODE_NOTICE를 "개발 모드: Claude 구독(없으면 무료 모델), 실제 사용자 데이터 금지"로 · 개발 모드 1순위가 Claude 구독이 됨(루트 claude_cli.py·models.py) · run_explainer --fake·check_verifier·check_ask 통과
+
 - 2026-09-28 · headline.attach: 주제 가중치 -5여도 큰 소식에 넣는다(본 소식만 뺌) · 예외 처리 표 점검에서 계획안 부록 C "그 주제는 카드에 안 나오되 헤드라인엔 남음"과 어긋난 것을 찾음(9/23에 -5 제외를 넣었었다) · check_headline 18·check_appendix_c 통과
 
 - 2026-09-28 · pick_related(월요일 관련 카드)에도 게시자 반복 줄이기(owners.spread)와 데이터 근거 이유(card_why) · 9/28 관련 카드 3장이 모델 이유("관심이 있어보입니다")로 나가고 fuxicodex 스킬이 또 나감. 9/27에 일반 경로에만 적용했었다 · check_card_why 8·check_appendix_c·check_owners·run_daily --fake 48 통과

@@ -257,11 +257,17 @@ def _openai_compatible(provider: str, url: str, key_env: str | None, extra: dict
     )
 
 
+def _claude_code(model: str, messages: list[BaseMessage], tools) -> AIMessage:
+    import claude_cli  # Claude 구독(Claude Code CLI). 2026-09-28 사용자 결정, 자세한 규칙은 claude_cli.py
+
+    return claude_cli.call(model, messages, tools)
+
+
 PROVIDERS: dict[str, Callable[..., AIMessage]] = {
     "anthropic": _anthropic, "gemini": _gemini, "openai": _openai, "openrouter": _openrouter,
-    "groq": _groq, "ollama": _ollama,
+    "groq": _groq, "ollama": _ollama, "claude_code": _claude_code,
 }
 # 공급자별로 받는 선택 옵션. models._call_one이 이 목록에 있는 것만 넘긴다
 OPTIONS: dict[str, tuple[str, ...]] = {"anthropic": (), "openai": (), "gemini": ("temperature", "thinking"),
                                        "openrouter": ("temperature", "reasoning"), "groq": ("temperature", "reasoning"),
-                                       "ollama": ("temperature", "reasoning")}
+                                       "ollama": ("temperature", "reasoning"), "claude_code": ()}
