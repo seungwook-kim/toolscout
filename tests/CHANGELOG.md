@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-09-28 · models/check_fallback_errors.py 추가(다른 제공자 도구 호출·결과는 글로, Gemini 호출은 서명 그대로, 검증 한 건 오류는 미완료·다음 건 계속), db/check_tables에 시드가 기존 상태를 안 바꾸는지 · 9/28 사고 두 건 · 7항목 통과
+
 - 2026-09-28 · check_apply에 변경 이력 6항목(관리자 승인·차단 순서, 같은 상태 안 남음, 마지막 결정, 401·403, 초대 코드 가입, 계정 삭제 시 이력 삭제), check_tables 표 13개·check 제약 6개 · 승인 이력 · 24항목 통과
 
 - 2026-09-27 · access/check_apply.py 추가(신청 제출·동의·고침·승인 전 403·일반 사용자 목록 403·관리자 신청 수·목록·승인·차단·화면·실제 계정 관리자), db/check_tables JSONB 칸 10개(users.application) · 이용 신청과 승인 탭 · 18항목 통과

@@ -383,10 +383,10 @@ def seed_test_users(engine: Engine | None = None) -> list[int]:
     with Session(engine or get_engine()) as s:
         for profile in TEST_USERS:
             user = s.exec(select(User).where(User.email == profile["email"])).first()
-            if user is None:
-                user = User(**profile, is_test=True)
-                s.add(user)
-            user.is_test, user.status = True, "approved"  # 가짜 프로필은 초대 없이 승인 상태로 둔다
+            if user is None:  # 새로 만들 때만 승인 상태로 둔다(초대 없이). 이미 있으면 상태를 건드리지 않는다:
+                user = User(**profile, is_test=True, status="approved")  # 9/22에 막아 둔 A·B·C를 검수가 다시 풀어
+                s.add(user)                                              # 9/28 메일에 프로필 4개가 나갔다
+            user.is_test = True
             s.commit()
             s.refresh(user)
             ids.append(user.id)
@@ -406,10 +406,10 @@ def seed_demo_user(engine: Engine | None = None) -> int:
 
     with Session(engine or get_engine()) as s:
         user = s.exec(select(User).where(User.email == DEMO_USER["email"])).first()
-        if user is None:
-            user = User(**DEMO_USER)
+        if user is None:  # 새로 만들 때만 승인. 이미 있으면 상태는 관리자 결정대로 둔다 (seed_test_users와 같은 이유)
+            user = User(**DEMO_USER, status="approved")
             s.add(user)
-        user.is_demo, user.is_test, user.status = True, True, "approved"
+        user.is_demo, user.is_test = True, True
         s.commit()
         s.refresh(user)
         return user.id
