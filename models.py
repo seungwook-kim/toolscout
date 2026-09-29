@@ -78,7 +78,9 @@ PROD_MODELS: ModelTable = {
 # 한도·로그인 문제(529)나 실패(503)면 아래 무료 제공자 순서로 넘어간다. 구독은 개인 사용 범위이고, 배포할 때는 OpenRouter 키를
 # 넣어 운영 모드로 간다(2026-09-28 사용자 "배포할 때는 오픈라우터 키 넣을 거니까, 지금 로컬은 구독 LLM")
 CC_SONNET = {"provider": "claude_code", "model": "claude-sonnet-5"}  # 도구 호출은 글 약속으로(claude_cli.py)
-CC_HAIKU = {"provider": "claude_code", "model": "claude-haiku-4-5-20251001"}
+# 큐레이터·게이트는 형식이 정해진 판정이라 생각을 끈다(9/29 선별 19번이 생각 때문에 31분, 끄고 같은 요청이 100초 → 6초).
+# 해설가·검증관은 문장 품질·위험 판단이라 켜 둔다(9/29 해설가 21번 8.6분)
+CC_HAIKU = {"provider": "claude_code", "model": "claude-haiku-4-5-20251001", "thinking": False}
 LOCAL_JSON_MODEL = {"provider": "ollama", "model": "gemma3:12b", "tools": False}
 GROQ_FAST = {"provider": "groq", "model": "openai/gpt-oss-20b", "reasoning": "low"}
 GROQ_KOREAN = {"provider": "groq", "model": "qwen/qwen3.8-27b", "reasoning": "none"}
