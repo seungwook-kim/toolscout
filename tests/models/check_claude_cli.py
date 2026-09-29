@@ -6,6 +6,7 @@
 - 답: result·토큰 수를 AIMessage로. 대화가 여러 턴이면 글로 이어 붙인다
 - 도구: 목록을 시스템 프롬프트 끝에 붙이고, {"tool_calls": [...]} 답(코드 블록도)을 tool_calls로. 목록에 없는 이름은 글 답으로 둠.
   이전 도구 호출·결과는 다음 입력에 이어 붙임
+- 생각: thinking False면 --settings {"alwaysThinkingEnabled": false} (9/29 선별 100초 → 6초), 모델표 큐레이터·게이트만
 - 실패: 한도·로그인은 529이고 30분 동안 CLI를 띄우지 않고 바로 넘김, 그 밖의 실패·시간 초과·CLI 없음은 503
 """
 import json
@@ -48,6 +49,8 @@ def main() -> int:
     record: dict = {}
     answer = claude_cli.call("claude-sonnet-5", messages, None, runner=fake_runner(record, ok))
     args = record["args"]
+    no_think: dict = {}
+    claude_cli.call("claude-haiku-4-5-20251001", messages, None, runner=fake_runner(no_think, ok), thinking=False)
     multi: dict = {}
     claude_cli.call("claude-haiku-4-5-20251001", messages + [AIMessage("{끊긴"), HumanMessage("형식이 틀렸다. 다시")], None,
                     runner=fake_runner(multi, ok))
@@ -78,6 +81,10 @@ def main() -> int:
     checks = {
         "인자_구독_한번묻기·도구끔·설정안불러옴": args[:3] == ["claude", "-p", "--output-format"] and args[args.index("--model") + 1] == "claude-sonnet-5"
         and args[args.index("--tools") + 1] == "" and all(f in args for f in ("--safe-mode", "--strict-mcp-config", "--no-session-persistence")),
+        "생각_끄기는_설정으로(기본은_안붙임)": no_think["args"][no_think["args"].index("--settings") + 1] == '{"alwaysThinkingEnabled": false}'
+        and "--settings" not in args,
+        "모델표_큐레이터·게이트_생각끔_옵션이_구독에_전달": models._options(models.CC_HAIKU, 0) == {"thinking": False}
+        and models._options(models.CC_SONNET, 0) == {},
         "시스템_프롬프트는_파일로_그대로": record["system"] == "너는 검수용이다",
         "새_프로세스그룹·숨은창(신호가_앱에_안닿게)": record["creationflags"] == claude_cli.NO_WINDOW and record["timeout"] == claude_cli.TIMEOUT,
         "API키·바깥세션변수를_자식에_안넘김": not any(k.startswith(("ANTHROPIC_", "CLAUDE")) for k in record["env"]),

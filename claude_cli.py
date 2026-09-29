@@ -93,7 +93,9 @@ def transcript(conversation: list[BaseMessage]) -> str:
     return "\n\n".join(parts) + "\n\n위 대화에 이어 지금 답만 쓴다."
 
 
-def call(model: str, messages: list[BaseMessage], tools, runner=subprocess.run, clock=time.monotonic) -> AIMessage:
+def call(model: str, messages: list[BaseMessage], tools, runner=subprocess.run, clock=time.monotonic,
+         thinking: bool | None = None) -> AIMessage:
+    """thinking False면 Claude Code의 생각을 끈다. 9/29 선별 한 번이 생각 토큰 1만 개·95초였고, 끄면 300개·6초(같은 답 형식)."""
     if clock() < _blocked_until["at"]:
         raise ClaudeCliError("claude 구독 한도로 잠시 건너뜀", LIMIT_STATUS)
     exe = executable()
@@ -110,6 +112,8 @@ def call(model: str, messages: list[BaseMessage], tools, runner=subprocess.run, 
         system_file.write_text(system, encoding="utf-8")
         args = [exe, "-p", "--output-format", "json", "--model", model, "--system-prompt-file", str(system_file),
                 "--tools", "", "--safe-mode", "--strict-mcp-config", "--no-session-persistence"]
+        if thinking is False:
+            args += ["--settings", json.dumps({"alwaysThinkingEnabled": False})]
         try:
             done = runner(args, input=transcript(conversation), capture_output=True, text=True, encoding="utf-8",
                           timeout=TIMEOUT, cwd=work, env=env, creationflags=NO_WINDOW)
