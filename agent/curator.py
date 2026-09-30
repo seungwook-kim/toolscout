@@ -34,6 +34,8 @@ SELECT_PROMPT = f"""너는 toolscout 큐레이터다. AI 에이전트를 만드�
 - worth_today: 개발자가 오늘 알아둘 새 소식·새 도구·의미 있는 업데이트면 true. 광고, 잡담, 단순 질문 글, 오래된 재탕은 false
   행사·컨퍼런스 세션 예고와 연사 소개, 참가·등록 안내, 책·서평·신간 소개, 웨비나·강의·교육 과정 모집, 채용 공고도 false
   (행사 자리에서 새 모델·제품을 실제로 발표한 기사는 true)
+  에세이·칼럼·의견 글, 개인 사용기·비교 후기, 커뮤니티 토론 글도 false
+  AI 기업의 투자 유치·인수·실적, AI 서비스 장애·보안 사고, 신제품 발표 예고, 연구 결과 공개는 true
 - topic: 아래 주제 id 중 하나. 제목에 나온 단어가 아니라 이 글이 주로 무엇을 발표·다루는지로 정한다
   (예: 은행이 기존 모델로 상담을 자동화한 사례는 model_release가 아니라 industry, 새 AI 칩 발표는 coding_tools가 아니라 industry)
   agent_framework·mcp_tools·coding_tools는 개발 방법·도구 자체를 다룰 때만 쓴다. 제품 출시·기업 소식은 industry, 사고·규제·사회 문제는 safety_policy

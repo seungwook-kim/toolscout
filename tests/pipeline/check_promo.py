@@ -33,6 +33,8 @@ def main() -> int:
         "진짜_소식은_남음(개최·행사장_발표)": [k["title"] for k in kept if k["type"] == "news"] == real,
         "도구는_규칙_대상_아님": any(k["type"] == "skill" for k in kept),
         "선별_기준에_행사·책·웨비나·채용": all(w in curator.SELECT_PROMPT for w in ("행사·컨퍼런스 세션 예고", "책·서평·신간", "웨비나", "채용 공고")),
+        "선별_기준에_에세이·사용기_false·투자·장애·예고_true(9/30 골든셋)": all(w in curator.SELECT_PROMPT for w in (
+            "에세이·칼럼·의견 글", "개인 사용기", "투자 유치", "서비스 장애", "신제품 발표 예고")),
         "해설가_합니다체·3인칭금지·지어내기금지": all(w in explainer.PROMPT for w in ('"~합니다"체', "3인칭·호칭", "지어내지 않는다")),
         "해설가_뉴스_장단점_기준": "기사를 읽는 이점" in explainer.PROMPT,
         "큐레이터_why_구체·합니다체": "골랐습니다" in curator.PICK_PROMPT and "어느 항목에나 붙는 말" in curator.PICK_PROMPT,
