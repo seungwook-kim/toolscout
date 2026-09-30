@@ -1,5 +1,7 @@
 # agent/ CHANGELOG
 
+- 2026-09-30 · 선별 worth_today: 에세이·칼럼·의견 글, 개인 사용기·비교 후기, 커뮤니티 토론 글 false / AI 기업 투자 유치·인수·실적, AI 서비스 장애·보안 사고, 신제품 발표 예고, 연구 결과 공개 true · 9/30 골든셋에서 놓친 11건이 투자·장애·예고, 잘못 통과 26건이 에세이·사용기 · check_promo·check_topic_guide(1,795자) 통과, 효과는 10/1 채점
+
 - 2026-09-28 · loop.DEV_MODE_NOTICE를 "개발 모드: Claude 구독(없으면 무료 모델), 실제 사용자 데이터 금지"로 · 개발 모드 1순위가 Claude 구독이 됨(루트 claude_cli.py·models.py) · run_explainer --fake·check_verifier·check_ask 통과
 
 - 2026-09-28 · headline.attach: 주제 가중치 -5여도 큰 소식에 넣는다(본 소식만 뺌) · 예외 처리 표 점검에서 계획안 부록 C "그 주제는 카드에 안 나오되 헤드라인엔 남음"과 어긋난 것을 찾음(9/23에 -5 제외를 넣었었다) · check_headline 18·check_appendix_c 통과

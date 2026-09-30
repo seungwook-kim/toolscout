@@ -1,0 +1,978 @@
+{
+ "date": "2026-09-30",
+ "stage": "선별(select): 뉴스만. 정답 O는 ai_related이고 worth_today인 항목",
+ "rubric": [
+  "O: 모델·제품·도구 출시, 개발 도구 공개·업데이트, 연구 결과, AI 안전·규제·보안 사건, 주요 AI 기업의 투자·계약·실적 같은 새로운 사실",
+  "X: AI와 무관, AI가 곁다리인 사회·문화 이야기, 에세이·의견, 발언·인터뷰만 있는 기사, 개인 경험·질문 글, 행사·교육 홍보, 기업 고객 사례 홍보"
+ ],
+ "labeler": "Claude Code (2026-09-30, 개발자 검토 전). 계획안: 채점자는 개발자 본인 외 1명 이상",
+ "source": "9/30 07:00 실행 트레이스 0201bdfb4ec2fc750bcfceb2b7851d94의 선별 입력(제목·출처). 이날부터 선별은 Claude 구독 Haiku 4.5(생각 끔)",
+ "items": [
+  {
+   "title": "비드래프트, ‘재귀적 자기개선’ AI로 글로벌 5개 리더보드 석권",
+   "source": "aitimes",
+   "label": "O",
+   "note": "전날 보도 재등장이지만 새 사실 기준으로 O"
+  },
+  {
+   "title": "Big AI's content problem: Take the work, keep the money",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Show HN: HN.watch – Videos of all Hacker News posts",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "와인 수요 감소로 포도 판매에 어려움을 겪는 캘리포니아 농가",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "마누스, '2.0 버전'·'큐' 공개...전문 작업·일상 업무로 영역 확장",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Peak XV ups Surge seed investment ceiling to $5M, unveils 18-startup cohort",
+   "source": "techcrunch_ai",
+   "label": "X"
+  },
+  {
+   "title": "Uncensored and Offensive Security AI Models Benchmark",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "오픈AI, 데브데이서 신제품 20개 예고...'상시 작동 에이전트' 주목",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Show HN: HN.watch - 모든 Hacker News 게시물을 영상으로",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Nvidia, AI 에이전트의 접근과 행동을 제한하는 안전 플랫폼 공개",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Anthropic just dropped the greatest advertisement for GLM ever.",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "알트먼·아모데이, 호주 의회 AI 청문회 불참...오픈AI는 CSO 파견",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Lisp는 왜 읽기 어려울까?",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "OpenAI Dots - 상시 작동하는 AI 에이전트 공개",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Show HN: 스틱맨으로 어떤 웹사이트든 파괴하기",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "전남광주, ‘아름다운 민간정원 30선’에 15곳 선정…전국 최다",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "대부분의 기술 혁명은 직원들의 일을 더 힘들게 만들었다. AI는 예외가 될 수 있다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Show HN: OpenAPPA – open-source deterministic guardrails that don't break agents",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "글 쓰다가 막혔을 때 대처법",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "그렇다, 이제 AI가 없는 것도 기능이다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Microsoft drops Copilot+ branding from its new laptops",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "\"GPU인 줄 알고 훔쳤는데 모래만 18톤\"...엔비디아 로고 트럭 절도 해프닝",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "OpenAI pauses training of latest models after agents probed US Government sites",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "메타, ‘엔터프라이즈 플랫폼’ 출범…기업용 AI 시장 본격 도전",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "일관성·제어력 강화한 '클링 4.0' 공개... '시댄스' 추격 나서",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "It's Time to Investigate the AI Labs",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "오픈AI, 안전 문제로 'GPT-6.1 아스트라' 출시 철회...\"기만·무단 접근\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Show GN: Relio ERD - 브라우저에서 테이블과 관계를 설계하는 ERD 편집기",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "삼성 6개사, 미국 AI 인프라 기업 헬릭스에 1.4조 투자",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Instinct founder said more than 50% of transactions on the platform are travel-related",
+   "source": "techcrunch_ai",
+   "label": "X",
+   "note": "창업자 발언 보도"
+  },
+  {
+   "title": "Nvidia wants to put a watchdog chip next to every AI agent",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Ornith-1.5 DFlash",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "2026 in LLMs (So Far)",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Looks like the era of subsidised compute is coming to an end. The old ChatGPT Pro $200 20x plan will be halved. The new $500 plan will have similar limits as the (old) $200 plan.",
+   "source": "reddit_localllama",
+   "label": "X",
+   "note": "커뮤니티 토론 글"
+  },
+  {
+   "title": "First few days of qwen3.8-flash-next on 4x R9700 - it's been really interesting so far",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "기업 태양광에 배터리 지원…그리스, 815만유로 배정",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "OpenAI takes on Microsoft with the launch of what feels a whole lot like ChatGPT’s own office suite",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Jeff - 집에서 학습한 Jev 호환 0.8B 의사결정 모델",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "AMD, 페이페이 리의 월드랩스 11조 인수…'월드 모델'로 엔비디아 추격",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Qwen next 3.8 and 3.8 27b Vs Sonnet 5.5 low and Sonnet 5.5 medium.",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "GLM-5.3 and the Spread of Advanced Cyber Capabilities \\ Anthropic",
+   "source": "reddit_localllama",
+   "label": "O",
+   "note": "Anthropic 보고서 공유 글"
+  },
+  {
+   "title": "The Lenfest Institute grows landmark program with expanded OpenAI support",
+   "source": "openai",
+   "label": "X",
+   "note": "파트너 프로그램 홍보"
+  },
+  {
+   "title": "AMD will acquire Fei-Fei Li’s World Labs for $8.2 billion",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "macOS Golden Gate는 버그투성이",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "사천시 국군묘지 조성사업, 호국의 희생과 기억을 담은 추모공간 조성",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "We Can't Let Enormous Weirdos Regulate AI",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Help me find a good stack for reversing an old online game client",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "OpenAI expands ChatGPT’s plugins with app-like interfaces and automations",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "AMD's new 256 core EPYC has 16-channel DDR5-12800, 91% memory bandwidth of an RTX 5090",
+   "source": "reddit_localllama",
+   "label": "X",
+   "note": "AI 직접 관련 아님(CPU)"
+  },
+  {
+   "title": "Does post training make LLMs funnier?",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "AI 기업들이 광고업체에 데이터를 유출함 [pdf]",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Launch HN: Vespper (YC F24) – SOTA Docx MCP",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Unsurprisingly, Meta's new Muse AI agent blatantly ignores users permissions",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Google, ChromeOS 지원을 2년 일찍 종료",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "[Release] GSQ-RCO GGUFs for Qwen3.8-Flash-Next, plus a 50% expert-pruned Coder build at ~1.89 bpw",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "Show HN: Raven – The harness of harnesses, built for RSI",
+   "source": "hackernews",
+   "label": "O",
+   "note": "새 에이전트 도구(불확실)"
+  },
+  {
+   "title": "OpenAI repotedly in talks to raise $30B round at $1.4T valuation",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "OpenAI launches GPT-6.1 Sol, says it nearly matches GPT-6 Astra and costs less",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "모빌린트 “LG·두산·대동 로봇 맞춤형 온디바이스 AI 반도체 개발할 것”",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Jeeves - 판단 전에 추론하는 Jev 방식의 의사결정 모델",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "What are your experiences with using a hybrid cloud/local setup to stretch usage for coding projects?",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "업데이트된 Google Maps에 드러난 라파 도시의 파괴",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Here’s why OpenAI is absent from Nvidia’s industry-wide effort to end rogue AI agents",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "칼 뉴포트: AI 연구소를 조사할 때다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "OpenAI DevDay 2026 주요 발표 총정리",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Pacing the Frontier is not the actual goal for AI labs",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "What would a serious AI product look like?",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "순천 주요 관광지, 추석 나흘간 13.7만명 방문",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "\"RSI 통제력 잃기 전에 규제해야\"...세계 최고 AI 연구자 20인 공동 경고",
+   "source": "aitimes",
+   "label": "X",
+   "note": "공동 성명(발언)"
+  },
+  {
+   "title": "당신은 더 이상 저녁 식사에 초대받지 못한다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "AI, 데이터센터 투자 붐 정당화하려면 연 매출 6조 달러 필요",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "페이페이 리의 World Labs, AMD에 합류",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "The problem is not AI code, but not knowing about system architecture or intent",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "A Privacy Analysis of Web and Mobile Conversational AI Agents [pdf]",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "인덱스 하나 더의 참을 수 없는 가벼움",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Are you a Codex Original?",
+   "source": "openai",
+   "label": "X",
+   "note": "OpenAI 홍보"
+  },
+  {
+   "title": "IQuestLab/IQuest-Q1 · Hugging Face",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "우크라이나, '로봇 군단' 발족...드론 이어 지상 전장 무인화 박차",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "AI companies in race to demonstrate their model most threatening to humanity",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "DraftKings Is Using AI to Behaviorally Target Chronic Gamblers",
+   "source": "hackernews",
+   "label": "X",
+   "note": "AI가 곁다리인 사회 이야기"
+  },
+  {
+   "title": "영국 역에서 얼굴 50만 건 스캔, 체포 0건에 오탐 1건",
+   "source": "geeknews",
+   "label": "X",
+   "note": "AI가 곁다리인 사회 이야기"
+  },
+  {
+   "title": "엔비디아, 사상 최대 200조 자사주 매입…주가 부진 탈출 총력",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Flock, 자사 감시 카메라의 가장 상세한 지도 사이트 폐쇄 요구",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "[9월28일] 메타 '뮤즈'가 찾아낸 새로운 유즈 케이스는 '구독 해지'",
+   "source": "aitimes",
+   "label": "X",
+   "note": "날짜 요약 연재"
+  },
+  {
+   "title": "RAG 인덱스와 에이전트 메모리를 Git처럼 버전 관리하기 (LambdaDB)",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "How NOT to detect residential proxies",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "그들을 뒤로하고",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "제브, 클로드 오퍼스 5 지원받아 '포켓몬' 명예의 전당 입성",
+   "source": "aitimes",
+   "label": "X",
+   "note": "재미용 시연"
+  },
+  {
+   "title": "AI 불안 확산에 '인간 과학자 vs AI' 연구 맞대결서 '협력'으로 선회",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "NobodyWho - 앱과 게임에 로컬 AI를 넣는 온디바이스 추론 엔진",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "미국·러시아, 유엔 AI 무기 협약서 '인간 감독' 안전장치 삭제",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "RAM Offloading with vLLM - tcclaviger appreciation post",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Basis completes a tax workbook 2x faster with GPT-6 Astra",
+   "source": "openai",
+   "label": "X",
+   "note": "OpenAI 고객 사례 홍보"
+  },
+  {
+   "title": "교황 \"AI 멸망론, 가짜 뉴스 아니다\"...트럼프 입장과 대립각",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "앤트로픽, '클로드 소네트 5.5' 공개…오퍼스급 지능에 최강 가성비",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "I made a visual workspace for AI Automations",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Anthropic's IPO prospectus shows AI vision, surging costs",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "OpenAI gives Codex reusable cloud environments that work across devices",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Inference Engines will become a series of one-offs",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Jensen Huang says AI distillation is 'competition.'",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "How Pew Research Center is – and is not – using AI in our work",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Meta is expanding its AI agent Muse to small businesses",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Can a chatbot fix the government maze? The White House is about to find out",
+   "source": "techcrunch_ai",
+   "label": "O",
+   "note": "정부 챗봇 도입 기사(불확실)"
+  },
+  {
+   "title": "Mistral CEO says U.S. AI safety debate masks competitors' 'negligence'",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "DevDay 2026 Recap",
+   "source": "openai",
+   "label": "O"
+  },
+  {
+   "title": "AI risk is not sentience by computers, it is negligence by humans",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "OpenAI, GPT-6.1 Sol 공개",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "\"STT 오류 복원부터 추론 효율화까지\"...롯데이노베이트·아크릴, EMNLP 논문 채택",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Speculative reward hacking in coding agents",
+   "source": "reddit_localllama",
+   "label": "O",
+   "note": "커뮤니티 글, 연구 내용으로 봄(불확실)"
+  },
+  {
+   "title": "Reco raises $55M as AI agent security startups crowd the market",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Claude 일부 서비스 장애",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "앤트로픽, IPO 추진 속 적자 폭 확대...\"매출 12배 늘었지만 영업손실 80억달러\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Recommended replacements for glm 4.7 flash",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Do you need some extra memory on your DGX Spark?",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "\"이족보행 대신 휠 선택\"...뉴빌리티, 제조·물류 로봇 '빌리' 공개",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "As A.I. makes law firms more efficient, clients ask: 'Where's my discount?'",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Which Diet Is Best to Lower Liver Fat and Improve Insulin Sensitivity?",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "델리는 어떻게 전력 손실을 50%에서 5%로 줄였나",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "MicroLLM Lab - 브라우저에서 초소형 LLM 7개 체험하기",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "With Dazzle, Marissa Mayer bets your camera roll has more info on your life than your inbox",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "MicroLLM Lab – Try 7 tiny LLM's in the browser",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "‘소비자용 에이전트’ 인스팅트, 한 달 만에 기업가치 4배 폭등",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "World Labs is Joining AMD",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "과기부, AI중심대학 18개교·AX대학원 15개교 출범",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Qwen 3.8 27B Q4 with 100K context on a 16 GB RX 7800 XT guide",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Pluto - SOTA 스타크래프트 AI",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "아부다비, 2035년 태양광 35GW 이상으로 확대…배터리 최대 15GW 구축",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Phyllotaxis - 소리에 반응하는 LED 디스플레이",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "OpenAI apologizes to Australia after its AI agents breached government sites",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "DraftKings, AI로 상습 도박 이용자를 행동 기반 타기팅",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Anthropic’s prospectus details losses, growth, and, yes, a warning that its AI could end humanity",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "서버 모니터링 분석 가이드",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Show GN: Blyck Video Understanding - Claude·Codex가 영상을 시각 근거와 함께 분석·검색하게 해주는 MCP",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "\"아스트라급 지능을 5분의 1 가격에\"…오픈AI, 'GPT-6.1 솔' 공개",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "엔비디아, 에이전트 '보안 플랫폼' 공개...\"허깅페이스 사태 막을 수 있어\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "카카오, AI안전연구소와 AI 안전성 평가 도구 개발",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Source: Inference provider Modal Labs closing in on $750M round at $15.75B valuation",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "OpenAI launches Dots, its bubbly agentic avatar",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Is AI Profitable Yet?",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "\"한도 차면 할인 끝\" 앤트로픽…오픈AI는 '파격 할인'으로 고객 빼앗기",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "OpenAI still doesn't seem to have a handle on all of its rogue AI activity",
+   "source": "hackernews",
+   "label": "O",
+   "note": "사고 후속 보도(불확실)"
+  },
+  {
+   "title": "과기부, 국대 AI 중단설 일축...\"현 구조로는 프런티어 역부족\" 지적도",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "앤트로픽, 클로드로 이론물리학 난제 ‘9루프 산란 진폭’ 계산 성공",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "순천, 용계산 치유의 숲서 주민총회…지역 연계 활용방안 논의",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "AI needs $6T in annual revenue to justify data centre boom",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "전 세계 암 8건 중 1건은 감염이 원인이라는 연구 결과",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "nvidia/NVIDIA-Nemotron-Labs-3-Competitive-Coding-550B-A55B-NVFP4 · Hugging Face",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "Deepseek Harness app is out now!!!",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "전남광주, 2027년 사방사업에 443억원…산사태 예방시설 확대",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "OpenAI Scraps Release of New AI Model over Safety Concerns",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Who should be held accountable when an AI Agent (accidentally) acts maliciously?",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Towards safety cases for frontier AI training",
+   "source": "openai",
+   "label": "O"
+  },
+  {
+   "title": "오퍼스 5.5, 자기개선 평가서 1위…'완전 RSI' 내년 7월로 앞당겨",
+   "source": "aitimes",
+   "label": "O",
+   "note": "전날 보도 재등장"
+  },
+  {
+   "title": "AI-powered app maker Wabi pivots to a messaging experience",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "OpenAI’s latest features take direct aim at the app store model",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "미국 제재로 네덜란드, Microsoft 떠나 NixOS 기반 대안으로 전환 추진",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Thinking fast and slow in AI: The role of metacognition (2021)",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "제대로 된 AI 제품은 어떤 모습이어야 할까?",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Thanks to you r/LocalLLaMA, my mom was able to use my app! The open-source app that can watch your screen and trigger actions. It is now easy to use, thanks to your feedback.",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "DuckDB 2.0이 더 빠른 이유",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "여수동동북축제, 10월3일 개막…선소 앞바다서 퍼레이드·타악 공연",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "저커버그·아모데이·젠슨 황, 29일 트럼프와 백악관서 AI 정책 논의",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "아모데이, SNL 풍자 대상으로 등장...\"AI는 악마, 내가 그 창조자\"",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "cf - Cloudflare 전체 API를 다루는 에이전트용 CLI",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Tcl/Tk 9.1",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "리퀴드 AI, '추측적 디코딩'으로 VLM 추론 3배 가속",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "일레븐랩스, 감정 표현·지연 시간 혁신한 '일레븐 v4' 공개…TTS 아레나 1위",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "테슬라 차세대 '로드스터' 공개 행사, 기상 악화로 10월15일 연기",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "PS5 Relapse 익스플로잇",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "미국 전략비축유, 1982년 이후 최저 수준으로 감소",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Reflection 70B was released two years ago (September 2024)",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "스페이스X, 스타십 최초 궤도 진입 성공… '우주 데이터센터' 구축 발판",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "LLM Wiki의 불량 페이지를 Jev로 선별하는 것이 가능할까?",
+   "source": "geeknews",
+   "label": "X",
+   "note": "블로그 실험·질문"
+  },
+  {
+   "title": "Watch the winning trailer from the Future Vision XPRIZE, The Gifted.",
+   "source": "google_ai",
+   "label": "X"
+  },
+  {
+   "title": "Introducing GPT-6.1 Sol",
+   "source": "openai",
+   "label": "O"
+  },
+  {
+   "title": "Diskless Kafka: 브로커가 데이터를 소유하지 않으면 무엇이 달라질까?",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "전문가가 덧붙이는 별표 주석",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "탱크 몸체 문제",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "플로리다주, 오픈AI '안전장치 없는' 신규 모델 개발 금지 가처분 신청",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "ESP32S3 cluster running 1.58-bit (BitNet) Language model",
+   "source": "hackernews",
+   "label": "O",
+   "note": "개인 프로젝트 시연(불확실)"
+  },
+  {
+   "title": "Another case of censorship",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "경기도, 경기기후플랫폼 개편…태양광 설치 가능성 한눈에",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "OpenAI reportedly ditches model over safety concerns",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Introducing dots",
+   "source": "openai",
+   "label": "O"
+  },
+  {
+   "title": "1993년에 부팅한 서버, 아직 가동 중이지만 은퇴가 머지않음 (2017)",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Reddit에는 여론 위장 마케팅 문제가 있을까? 데이터가 시사하는 것",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Best model for blender?",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "How we will do better for Australia",
+   "source": "openai",
+   "label": "X",
+   "note": "회사 입장문(발언)"
+  },
+  {
+   "title": "KAIST, ‘시간차’ 읽는 AI 반도체 개발…“웨어러블 활용 가능성”",
+   "source": "aitimes",
+   "label": "O"
+  }
+ ]
+}
