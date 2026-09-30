@@ -1,6 +1,6 @@
 # tests/ CHANGELOG
 
-- 2026-09-30 · golden/select_2026-09-30.json(뉴스 189건 O/X, Claude Code 채점)·run_select_2026-09-30.json, check_promo에 새 선별 기준 문구 · 9/30 재현율 87.5%(79.0~92.9)·정밀도 74.8%(65.6~82.2), 9/27(gemma3) 대비 정밀도 ↑ 재현율 ↓
+- 2026-09-30 · golden/select_2026-09-30.json(뉴스 189건 O/X, Claude Code 채점)·run_select_2026-09-30.json, check_promo에 새 선별 기준 문구 · 선별 모델을 Claude Haiku(생각 끔)로 바꾼 뒤 첫 채점 · 9/30 재현율 87.5%(79.0~92.9)·정밀도 74.8%(65.6~82.2), 9/27(gemma3) 대비 정밀도 ↑ 재현율 ↓
 
 - 2026-09-29 · check_claude_cli에 생각 끄기 2항목(--settings, 모델표 큐레이터·게이트만 옵션 전달) · 9/29 첫 구독 실행 50분 중 선별 31분 · 21항목 통과
 
