@@ -287,9 +287,14 @@ def normalize_database_url(raw: str) -> URL:
                       query=dict(parse_qsl(parts.query)))
 
 
+# 연결이 소리 없이 끊기면 Windows 기본 keepalive(2시간)까지 답을 기다린다. 10/1 07:13 하루 실행이 DB 쓰기에서 2시간 멈췄다가
+# 09:13 "server closed the connection"으로 끝났다. 30초 쉬면 확인 신호를 보내 1~2분 안에 오류로 끝내고, 접속은 10초까지만 기다린다
+CONNECT_ARGS = {"connect_timeout": 10, "keepalives": 1, "keepalives_idle": 30, "keepalives_interval": 10, "keepalives_count": 3}
+
+
 @lru_cache
 def get_engine(url: URL | None = None) -> Engine:
-    return create_engine(url or database_url(), pool_pre_ping=True)
+    return create_engine(url or database_url(), pool_pre_ping=True, connect_args=CONNECT_ARGS)
 
 
 # 표를 만든 뒤에 추가한 칸. create_all은 이미 있는 표에 칸을 더하지 않으므로 없을 때만 추가한다
