@@ -147,6 +147,11 @@ class Scheduler:
                 attempts += 1
                 error = (result.get("error") or "").split(":")[0] or None
                 missing = await self.missing_users(today)
+                # 실행이 늦게 끝나 이미 지나간 발송 시각이 있으면 다음 시각을 기다리지 않고 바로 보낸다 (10/1: 재시도가 10시에
+                # 끝났는데 08·09시 발송은 빈 채로 지나가 12:00에야 나갔다). 발송은 sent_at 없는 사용자만이라 다시 불러도 안전하다
+                done = self.state["sent_slots"].get(today, set())
+                if any(slot in done for slot in SEND_SLOTS):
+                    self.state["late_send"] = today
         except Exception as exc:  # DB 연결 실패 등. 예약 루프가 1분마다 같은 오류를 내지 않게 재시도 간격을 둔다
             log.exception("하루 실행 확인 실패")
             attempts, error, missing = attempts + 1, type(exc).__name__, None
@@ -188,6 +193,9 @@ class Scheduler:
             if slot <= now.time() < CATCH_UP_UNTIL and slot not in done:
                 await self.send_now(today, slot.strftime("%H:%M"))
                 done.add(slot)
+        if self.state.get("late_send") == today:
+            self.state["late_send"] = None
+            await self.send_now(today, max(s for s in SEND_SLOTS if s in done).strftime("%H:%M"))
 
     async def _merge(self, today: date) -> None:
         try:

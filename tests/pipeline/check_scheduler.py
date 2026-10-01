@@ -8,6 +8,7 @@
 - 발송 실패 사용자는 10분 간격으로 2번 더, 끝내 실패하면 실패 알림 한 통(같은 시각 두 번째는 알림 안 함), 메일 설정이 없으면 재시도·알림 안 함
 - 하루 실행 실패는 30분 간격으로 2번 더 → 그래도 실패면 실패 알림 한 통, 그날 더 시도 안 함
 - 일부 사용자만 빠지면 그 사용자만 다시 / DB 연결 실패도 30분 뒤 다시(1분마다 반복 안 함) / "지금 만들기"가 돌고 있으면 끝난 뒤 다시(시도 횟수에 안 셈)
+- 실행이 늦게 끝나 이미 지나간 발송 시각이 있으면 다음 시각을 기다리지 않고 바로 보낸다 (10/1: 재시도가 10:03에 끝났는데 12:00에 발송)
 - 월요일은 예열 뒤·하루 실행 전에 주간 기억 합치기 한 번, 늦게 켜져도 실행 전에, 합치기가 실패해도 실행은 돈다. 다른 요일은 안 함
 DB·모델·메일을 쓰지 않는다.
 """
@@ -39,7 +40,7 @@ class Clock:
 
 def make(clock: Clock, *, needs: bool = True, gate: asyncio.Event | None = None, send_results: list[dict] | None = None,
          run_outcomes: list[dict] | None = None, db_errors: int = 0, merge_fails: bool = False, verify_fails: bool = False):
-    """run_outcomes: 실행마다 {"raise": True} 또는 {"leave": [끝나고도 브리핑 없는 사용자]}. 기본은 전원 성공."""
+    """run_outcomes: 실행마다 {"raise": True} 또는 {"leave": [끝나고도 브리핑 없는 사용자]}, "takes": 걸리는 초. 기본은 전원 성공."""
     log: list[str] = []
     results = list(send_results or [])
     outcomes = list(run_outcomes or [])
@@ -52,6 +53,8 @@ def make(clock: Clock, *, needs: bool = True, gate: asyncio.Event | None = None,
             await gate.wait()
             log.append("run_done")
         outcome = outcomes.pop(0) if outcomes else {}
+        if outcome.get("takes"):  # 실행이 시간을 쓰는 동안 시계가 간다 (10/1: 2시간 13분 걸려 실패)
+            await clock.sleep(outcome["takes"])
         if outcome.get("raise"):
             raise RuntimeError("검수용 실행 실패")
         fake["missing"] = list(outcome.get("leave", []))
@@ -225,6 +228,9 @@ async def main_async() -> dict:
     await s_merge_fail.tick()
 
     run_entries = lambda log: [x for x in log if x.startswith(("run@", "alert@", "db_error@"))]  # noqa: E731
+    late_clock = Clock(7, 0)
+    s_late, log_late_send, _ = make(late_clock, run_outcomes=[{"raise": True, "takes": 2 * 3600 + 13 * 60}, {"takes": 20 * 60}])
+    await drive(s_late, late_clock, at(12, 30))
     checks = {
         "06:50엔_다음예정_06:55": day["before"] == at(6, 55),
         "06:55_예열·DB깨우기_07:00_실행_알림시각마다_발송": day["log"] == ["warm@06:55", "wake@06:55", "run@07:00", "send@08:00",
@@ -265,6 +271,8 @@ async def main_async() -> dict:
         and log_monday_late.count("merge@08:30") == 1,
         "합치기_실패해도_실행은_돔": log_merge_fail == ["merge@07:00", "run@07:00"]
         and s_merge_fail.state["last_merge"]["error"] == "RuntimeError",
+        "늦은_재시도가_끝나면_바로_발송(12시까지_안기다림)": log_late_send[0] == "run@07:00" and log_late_send[3:5] == ["run@09:43", "send@10:03"]
+        and log_late_send.count("send@12:00") == 1,
         "다른_요일은_합치기_안함": not any(x.startswith("merge") for x in day["log"] + log_late + log_fail),
         "알림에_설정값·오류원문_없음": all("검수용" not in line for alert in fake_fail["alerts"] + fake_retry["alerts"]
                                      for line in alert["lines"]),
