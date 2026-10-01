@@ -1,0 +1,914 @@
+{
+ "date": "2026-10-01",
+ "stage": "선별(select): 뉴스만. 정답 O는 ai_related이고 worth_today인 항목",
+ "rubric": [
+  "O: 모델·제품·도구 출시, 개발 도구 공개·업데이트, 연구 결과, AI 안전·규제·보안 사건, 주요 AI 기업의 투자·계약·실적 같은 새로운 사실",
+  "X: AI와 무관, AI가 곁다리인 사회·문화 이야기, 에세이·의견, 발언·인터뷰만 있는 기사, 개인 경험·질문 글, 행사·교육 홍보, 기업 고객 사례 홍보"
+ ],
+ "labeler": "Claude Code (2026-10-01, 개발자 검토 전). 계획안: 채점자는 개발자 본인 외 1명 이상",
+ "source": "10/1 09:43 재시도 실행 트레이스 04e2e0f03a5f1361f743ff6ec0badfd6의 선별 입력(제목·출처). 9/30 저녁 보강한 선별 기준이 처음 적용된 날",
+ "items": [
+  {
+   "title": "뻐꾸기의 알",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "메타, ‘엔터프라이즈 플랫폼’ 출범…기업용 AI 시장 본격 도전",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Firebase SDK로 오늘 아침부터 모든 iOS 앱이 충돌하고 있음",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "인도 양면형 태양광, 단면형보다 발전량 최대 27.1% 증가",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Gemini 4 Argon (High): Intelligence, Performance and Price Analysis",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Helping small businesses put AI to work",
+   "source": "openai",
+   "label": "X",
+   "note": "OpenAI 홍보"
+  },
+  {
+   "title": "AI voice startup ElevenLabs doubles valuation to $22B",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "GLM-5.3 and the spread of advanced cyber capabilities",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "구글, AI 답변 기여도에 따라 디지털 출판사 100여곳에 비용 지급",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "가정용 배터리로 발전소를 대체하는 버몬트주",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "메타, 소상공인용 AI 에이전트 출시…‘뮤즈’로 B2B 시장 확대",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Show GN: herdr web ui - 폰이나 브라우저에서 herdr 사용하는 플러그인",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "AI models keep posting screenshots showing sensitive data from inside companies",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Here’s why OpenAI is absent from Nvidia’s industry-wide effort to end rogue AI agents",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "LinkedIn에서 생산적인 척하는 역할극 극대화하기",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "What was the mafia meeting of the tech criminals about at the White House?",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "광양경자청 하동사무소, 이차전지 및 첨단소재 기업 투자 유치 박차",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "카카오, 'AI 국민비서'로 국민연금 조회·신청까지 확대",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Show GN: 레몬캐스트, 해외 팟캐스트를 진행자 목소리 느낌 그대로 한국어로 듣는 앱",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "딥시크, 화웨이 '어센드'용 핵심 소프트웨어 공개… ‘탈엔비디아’ 동맹 가속",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Sam Altman은 왜 자유의 몸인가?",
+   "source": "geeknews",
+   "label": "X",
+   "note": "의견 글"
+  },
+  {
+   "title": "Stupid Over-Reliance on Palantir AI Helped Lead to US Bombing of Iranian School",
+   "source": "hackernews",
+   "label": "X",
+   "note": "AI가 곁다리인 사회 이야기(9/30과 같은 기준)"
+  },
+  {
+   "title": "SPA 자동화 테스트를 작성한 경험",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "\"한국판 코어위브 넘는다\"...'1조 몸값' 엘리스그룹, 코스닥 도전",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "알리바바, 대화 타이밍까지 판단하는 음성 AI ‘큐원-오디오-3.1-리얼타임’ 공개",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Bloomberg Terminal의 간략한 역사",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "[게시판] 최수연 네이버 대표, UNGC이사회 참석 등 단신",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "텍스트 분류를 위한 언어 모델: Bag-of-Words에서 Jev까지",
+   "source": "geeknews",
+   "label": "X",
+   "note": "튜토리얼 글"
+  },
+  {
+   "title": "OpenAI’s Jev clone could help the frontier lab stop its swarming agents",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "앤트로픽, IPO 추진 속 적자 폭 확대...\"매출 12배 늘었지만 영업손실 80억달러\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "AI risk is not sentience by computers, it is negligence by humans",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Show HN: 소행성 52만 6천 개와 추적되는 모든 위성을 담은 실시간 태양계",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "AIIA, 국내 AI 기업 발굴·성장 지원 위해 한국평가데이터와 협력",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "구글, “안드로이드·검색 데이터 개방 안 돼”...EU 시정 명령에 취소 소송",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "메타·네이버, AI 안경에 네이버지도 도보 길안내 연내 도입",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "'스마트 링' 오우라, 시장 불확실성에 IPO 연기",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "McDonald's Is Using AI to Dynamically Price Its Burgers",
+   "source": "hackernews",
+   "label": "X",
+   "note": "AI가 곁다리인 사회 이야기"
+  },
+  {
+   "title": "SQL 쿼리 빌더의 두 가지 유형",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "광주미식주간, 음식·골목·문화 잇는다…10일간 운영",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Two open-weights releases: Victoria (Qwen3.8-Flash-Next with 44% of experts cut, 70% Terminal-Bench 2.1, GGUF included) and Maple (a Canada-first fine-tune)",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "AI needs $6T in annual revenue to justify data centre boom",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Reddit is putting more limits on old.reddit.com",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Pledge signed by President Trump and top AI leaders misspells the United States",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Thank You, Mradermacher.",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "DeepSeek now trained on Ascend 950",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "구글, '제미나이 4 아르곤' 공개…성능 1위 탈환에도 \"일반 사용 제한\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "우리는 어둠이 어떤 느낌인지 잊어가고 있다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Councilmember, residents push back on AI 'blight scores' given to homes",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "스페인 연구진, 태양광발전소 맹금류 행동 추적…사냥·휴식 공간 활용",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Anthropic just dropped the greatest advertisement for GLM ever.",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Muse.ai gets me kicked off fb marketplace",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Responsible Release of AI-Generated Mathematics",
+   "source": "hackernews",
+   "label": "X",
+   "note": "제안 에세이(불확실)"
+  },
+  {
+   "title": "교황 레오 14세, 젠슨 황 공개 비판...\"AI 위험성 경고 경시해선 안 돼\"",
+   "source": "aitimes",
+   "label": "X",
+   "note": "발언 보도"
+  },
+  {
+   "title": "AI 경쟁이 난처해졌다",
+   "source": "geeknews",
+   "label": "X",
+   "note": "분석 에세이"
+  },
+  {
+   "title": "OpenAI, Jev와 경쟁할 Luna 기반 Decision API 공개",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Show GN: 내일쓰기 - 글 없이 감정과 깊이만 골라도 기록할 수 있는 감정 일기 앱",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "McDonald's push to have AI price your Big Mac",
+   "source": "hackernews",
+   "label": "X",
+   "note": "AI가 곁다리인 사회 이야기"
+  },
+  {
+   "title": "BAAI/AREX-2 - 27B - Agent model based on Qwen3.8 27B",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "Unsurprisingly, Meta's new Muse AI agent blatantly ignores users permissions",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "싱가포르 정부 데이팅 앱, Gale-Shapley 안정 결혼 알고리듬 사용",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "유가가 급등하면 그 돈은 어디로 갈까?",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Pi: MCP는 지원하지 않는다더니!",
+   "source": "geeknews",
+   "label": "O",
+   "note": "도구 소식 블로그(불확실)"
+  },
+  {
+   "title": "엔비디아, 사상 최대 200조 자사주 매입…주가 부진 탈출 총력",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "트럼프, 빅테크 대거 소집해 '규제 불가' 재확인…업계 자발적 서약에 그쳐",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "You can now run Qwen 3.8 27B on AMD NPUs via FastFlowLM (at a killer 1 tps decode)",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "Factorio 품질 문제 풀기",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "앤트로픽, IPO 신청서에 \"AI의 실존적 위험\" 공식 경고",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "구글, AI 모델 재학습 없이 ‘하네스’ 스스로 개선하는 ‘RRSI’ 공개",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "허풍 없는 지속 가능한 에너지(2008)",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "과기부, AI중심대학 18개교·AX대학원 15개교 출범",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "오픈AI 추가 투자 유치 목표는 '1900조 가치'...연 매출은 95조 육박",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Backblaze의 2026년 2분기 드라이브 통계",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "NSL - Linux용 WSL",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Traycer - 여러 코딩 에이전트의 문맥과 협업을 한곳에서 관리",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "알트먼·아모데이, 호주 의회 AI 청문회 불참...오픈AI는 CSO 파견",
+   "source": "aitimes",
+   "label": "O",
+   "note": "9/30과 같은 기준"
+  },
+  {
+   "title": "Show HN: Lathoa, a math app for kids where the AI is wrong on purpose",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "알트먼 \"기업공개 압박 없이 AI 안전 확보가 우선\"",
+   "source": "aitimes",
+   "label": "X",
+   "note": "발언 보도"
+  },
+  {
+   "title": "peculiar-ragdoll's Dirk-Qwen 3.8-27B vs. UkisAI Swift-1.5 Qwen3.8-27B",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Show HN: Raven – The harness of harnesses, built for RSI",
+   "source": "hackernews",
+   "label": "O",
+   "note": "9/30과 같은 기준(불확실)"
+  },
+  {
+   "title": "ESP32-S3 7대 클러스터로 1.58비트(BitNet) 언어 모델 실행하기",
+   "source": "geeknews",
+   "label": "O",
+   "note": "9/30과 같은 기준(불확실)"
+  },
+  {
+   "title": "‘소비자용 에이전트’ 인스팅트, 한 달 만에 기업가치 4배 폭등",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "S2W, 온톨로지 기반 기술 고도화…’엔터프라이즈 AX’ 공략 가속",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Microsoft의 내부 데이터 17조 건에 접근할 수 있었던 이유",
+   "source": "geeknews",
+   "label": "O",
+   "note": "보안 사례(불확실)"
+  },
+  {
+   "title": "Google releases Gemini 4 Argon, called its most powerful model yet",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Destro AI’s secret sauce is getting robots and humans on the same page",
+   "source": "techcrunch_ai",
+   "label": "X"
+  },
+  {
+   "title": "Livenerf - Opus 5.5는 벌써 성능이 하향됐을까?",
+   "source": "geeknews",
+   "label": "O",
+   "note": "모델 성능 추적 도구(불확실)"
+  },
+  {
+   "title": "EDG C++ 프런트엔드 소스 공개",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "2026년 9월: 한 폴란드인이 바라본 오늘의 세계",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "FTC opens probe into AI giants including Anthropic and OpenAI",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "We just open-sourced the world's fastest WebGPU kernels for local AI on Hugging Face",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "AI중심대학 18곳 출범, 전교생 AI 기초교육 의무화",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Anthropic의 IPO 투자설명서에 담긴 AI 비전과 급증하는 비용",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Disrupting a coordinated model-distillation campaign",
+   "source": "openai",
+   "label": "O"
+  },
+  {
+   "title": "DraftKings is using AI to behaviorally target chronic gamblers",
+   "source": "hackernews",
+   "label": "X",
+   "note": "AI가 곁다리인 사회 이야기"
+  },
+  {
+   "title": "Nicholas Polson, 2026년 들어 지금까지 학술 논문 258편 작성",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Qwen3.8-27B-pi: Effort-Ordered Reasoning for Agentic Coding",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "RSS Feeds for Last.fm",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "\"Apple engineer\" builds GitHub AI torture chamber to inflict \"pain\" on models",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Show GN: Algorithm Addict - 이산수학·알고리즘을 단원별 문제로 푸는 안드로이드 퀴즈 앱",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Show GN: KeyHue — 타이핑하기 전에, 지금 한글인지 영문인지 화면 하단에 색으로 알려주는 macOS 메뉴바 앱",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "일관성·제어력 강화한 '클링 4.0' 공개... '시댄스' 추격 나서",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Show GN: Conn - AI와 함께 쓰고, 언제든 내가 끼어드는 터미널",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Best local model for Blender and game dev?",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Update: Yandex/AliceAI 80B-A3B fine tune progress",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "\"인류 멸종 확률 50%\"...AI 연구원 22인 '경고 인터뷰' 공개",
+   "source": "aitimes",
+   "label": "X",
+   "note": "경고 인터뷰(발언)"
+  },
+  {
+   "title": "A Privacy Analysis of Web and Mobile Conversational AI Agents [pdf]",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Mistral CEO says U.S. AI safety debate masks competitors' 'negligence'",
+   "source": "hackernews",
+   "label": "X",
+   "note": "발언 보도"
+  },
+  {
+   "title": "Update: Strix Halo + R9700 with llama-halo-hybrid - now beats DGX Spark",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "리퀴드 AI, 의사결정 모델 ‘d1’ 출시...\"기존 1위 제브 제쳤다\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "The AI Race Just Got Awkward",
+   "source": "hackernews",
+   "label": "X",
+   "note": "분석 에세이"
+  },
+  {
+   "title": "[9월29일] AI가 수학 문제를 풀었다…수학자들이 진짜 걱정하는 것은 ‘정답 이후’",
+   "source": "aitimes",
+   "label": "X",
+   "note": "날짜 요약 연재"
+  },
+  {
+   "title": "Index-Translate: 150 text languages, plus document translation, multilingual subtitles and dubbing",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "배경훈 장관 “독파모 계속된다…SPC 프론티어 AI 도전과 병행”",
+   "source": "aitimes",
+   "label": "X",
+   "note": "발언 보도"
+  },
+  {
+   "title": "OpenAI’s latest features take direct aim at the app store model",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Least to most expensive (Somewhat modern) GPU's with 32gb of vram (Under $1600) Based on ebay listings",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "add GLM-5.3-Flash (GLM5-Next) support (#27773) · ggml-org/llama.cpp@649dcb1",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "놀랍지도 않게, Meta의 새 Muse AI 에이전트가 사용자 권한 설정을 노골적으로 무시함",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Preorder for new AMD Ryzen™ AI Max 400 Series 192GB from framework just started",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "How smart is the IQ3 family of Qwen 3.8 Flash Next for coding tasks?",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Show GN: Barracks - macOS에서 여러 Claude/ChatGPT 앱 돌리기",
+   "source": "geeknews",
+   "label": "O",
+   "note": "AI 앱 보조 도구(불확실)"
+  },
+  {
+   "title": "America.gov gets really weird when you ask it about Minecraft, but it’s not a glitch",
+   "source": "techcrunch_ai",
+   "label": "O",
+   "note": "9/30 정부 챗봇과 같은 기준(불확실)"
+  },
+  {
+   "title": "Airbnb adds AI search, more social features",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Gemini 4 Argon",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "지난번 우리 가족이 기술로 대체되었을 때",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "NASA, SR-71A 비밀 재가동 위해 전직 담당자 여러 명에게 도움 요청",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Open source inference engine (like LM Studio or Unsloth Desktop) that optimizes itself for your exact hardware. Compiles and tunes its kernels on your device, so open models run up to 2x faster than llama.cpp. Works on Apple Silicon, NVIDIA, AMD or nothing but a CPU.",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "마누스, '2.0 버전'·'큐' 공개...전문 작업·일상 업무로 영역 확장",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "DoorDash launches an AI agent you can text to order food",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Introducing GPT-6.1 Sol",
+   "source": "openai",
+   "label": "O"
+  },
+  {
+   "title": "Launch HN: Magnitude (YC S25) – Self-optimizing inference engine for agents",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "\"아스트라급 지능을 5분의 1 가격에\"…오픈AI, 'GPT-6.1 솔' 공개",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Oído: speech recognition that beats Whisper-tiny, running on a $5 microcontroller (open source)",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "Godot에서 원하는 C++ 라이브러리 사용하기",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "LatticeDB - 그래프, 벡터, 전문 검색을 한 파일에 담는 임베디드 DB",
+   "source": "geeknews",
+   "label": "O",
+   "note": "벡터 검색 포함 DB(불확실)"
+  },
+  {
+   "title": "What's going on with DGX Spark? Price up $2k in 1 week?",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "DevDay 2026 Recap",
+   "source": "openai",
+   "label": "O"
+  },
+  {
+   "title": "오픈AI, 호주 정부망 무단 접근 사과...\"재발 방지·특별 조사팀 구성\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "OpenAI reportedly in talks to raise $30B round at $1.4T valuation",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Google, Gemini 4 Argon 발표",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "미국 우편수사 당국, 위조 우편요금 라벨 판매 웹사이트 폐쇄",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Instinct’s new product recommendations are giving some users the ick",
+   "source": "techcrunch_ai",
+   "label": "X"
+  },
+  {
+   "title": "Restate lands $20M as the need for durable infrastructure increases with AI agents",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Meta disputes claim that Muse read a user’s private messages without permission",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "add GLM-5.3-Flash (GLM5-Next) support by timkhronos · Pull Request #27773 · ggml-org/llama.cpp",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "일레븐랩스, 감정 표현·지연 시간 혁신한 '일레븐 v4' 공개…TTS 아레나 1위",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Rust에서 Arc 다운캐스팅을 갈망하며",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "리사 수 AMD CEO, 10월8일 방한…국내 NPU 기업과 인프라 협력 구체화",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "이 대통령이 꺼낸 ‘태양광 농사’…패널 아래서도 쌀농사 될까",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "AI CEO Interviews (2026)",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "순천, 2029년까지 우·오수 분류화 2071가구 확대…1084억원 투입",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "테슬라 차세대 '로드스터' 공개 행사, 기상 악화로 10월15일 연기",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Another Ling model comes out, same receipt, 2 weeks free to use, then open source. Chinese labs do contribute a lot to open source community",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "1+1이 필요했는데 함수형 프로그래밍 언어를 만들었다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "CS240 AI Cheating Retrospective",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "구글·MS, AI 데이터 표준 '아파치 오시' 합류…'폐쇄 생태계' 연다",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "플로리다주, 오픈AI '안전장치 없는' 신규 모델 개발 금지 가처분 신청",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "AWS, 서울 리전서 최신 '클로드' 모델 제공...\"데이터 국경 안 넘는다\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "AI tools generated nearly $1B in extra costs, Blue Cross insurers say",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Reddit is killing RSS feeds and ending public API access because of AI bots",
+   "source": "techcrunch_ai",
+   "label": "O",
+   "note": "AI 봇 때문에 API 정책 변경"
+  },
+  {
+   "title": "Tesla, 적자에 가까워지며 약 45조원 신용한도 확보",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Aho-Corasick 알고리듬",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Valor, Atreides, and Sequoia back AI startup Flow Engineering at $750M valuation",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "\"이족보행 대신 휠 선택\"...뉴빌리티, 제조·물류 로봇 '빌리' 공개",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "오픈AI, 24시간 자율 에이전트 '닷츠' 공개…소비자용 아닌 B2B 승부수",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "If one hour of AI is costing me 0.12€ is paying for frontier a cheaper option?",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "대다수 데이터센터, 물과 전력 사용량 공개 거부",
+   "source": "geeknews",
+   "label": "X",
+   "note": "AI가 곁다리(데이터센터 환경)"
+  },
+  {
+   "title": "The ugly economics of consumer AI",
+   "source": "techcrunch_ai",
+   "label": "X"
+  },
+  {
+   "title": "여수, 여순10·19사건 78주년 추념 음악회…청소년·어린이 무대",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "GPT-6.1 Sol replaces GPT-6 Sol after just 7 days, with near-Astra intelligence",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "NYT \"오픈AI, 직원·외부 연구원 AI 보안 경고 묵살\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Meta's new AI agent built lists of people in vulnerable groups on request",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "The internet is convinced Elon Musk’s xAI trolled OpenAI’s ‘Dots’ launch",
+   "source": "techcrunch_ai",
+   "label": "X"
+  },
+  {
+   "title": "Ask HN: 요즘 무엇을 읽고 있나요?",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Uncensored and Offensive Security AI Models Benchmark",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "\"한도 차면 할인 끝\" 앤트로픽…오픈AI는 '파격 할인'으로 고객 빼앗기",
+   "source": "aitimes",
+   "label": "O"
+  }
+ ]
+}
