@@ -1,0 +1,1932 @@
+{
+ "date": "2026-10-04",
+ "trace_id": "08dc555ff3ecd1593e5a611bdc8d3787",
+ "judgments": [
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Dual Radeon MI50 benchmarks",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "open_local",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Mystery Function",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "model_release",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: 5달러 시계에 Claude·Codex 사용량을 띄워봤습니다",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "automation",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Qwen3.8-27B-Humanlike-Chat 2.0: texts like a human, now with tool calls and better instruction following",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Benzi 0.1.3",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "GitDiagram 1.0.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "[AI카툰] Bob, Senior IT guy - 밥, AI가 못 들어가는 틈새시장 개발자",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "automation",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "중국의 사회적 현실에 관하여",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "'나만의 클로드 코드' 만든다...앤트로픽, 커스텀 확장 기능 '모드' 출시",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "three.ws Home 0.1.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Show HN: Made an open-source Lego AI generator",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "open_local",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Two ~300B MoE models, each on ONE 128 GB mini PC (AMD Strix Halo): GLM-5.3-Flash at ~580 tok/s prefill, MiMo-V2.6-Flash up to 44 tok/s decode. EXL3 weights + open ROCm engine",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "\"수익성 불투명한 10조달러 투자\"...월가, AI 거품 붕괴 경고",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "CRW Web Scraper 0.37.2",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: LibreDB Studio - 드라이버 18개로 엔진 46개에 붙는 셀프호스팅 브라우저 DB IDE",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Pope Leo XIV is not a fan of AI-generated art",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Apple, macOS ‘전체 디스크 접근’ 권한 통제 강화 예고",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "암을 유발한다는 것들",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "모든 SaaS 비즈니스는 모델을 둘러싼 하네스가 될 것",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "automation",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "ar-io-gateway-operator (ar-io)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Arc UI 1.0.0",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "아마존, 에이전트 전용 의사결정 모델 ‘스트랜즈 디사이더 2B’ 오픈 공개",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "전남광주, 3일부터 토요 문화공연…5개 자치구 찾아간다",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "World Monitor 1.26.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "버블쉐어, AI 검색 성과 분석 솔루션 공개…”단순 노출보다 정확한 인용이 핵심”",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "AI godfather Yann LeCun: Anthropic CEO deluded, doesn't understand cybersecurity",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "“반도체 성능 지표 ‘K-Perf’, 실험실 벗어나 실제 현장서 실증”",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Desktop Commander 0.2.52",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "모두가 짐을 싸고 있다",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Anyworld, a self-hosted multiplayer text RPG where a local LLM is the Dungeon Master",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "US killer's sentence quashed because of AI video of victim shown in court",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Has anyone noticed this trend toward writing/speaking style among newer models (both open and closed models). They are trending toward information density and expanded vocabulary. It's not quite 'caveman speak' but trending that way.",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "model_release",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Unbrowse 12.1.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "리눅스 커널 개발자 Greg Kroah-Hartman, LLM 시대의 보안 [영상]",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Audionaut 0.3.0",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Our Project Suncatcher prototype satellite is in orbit",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "From the creator of Redis; run LLM locally with ds4",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "메타, 오픈소스 '뮤즈 가젯' 공개...AI 에이전트 하드웨어 이식 본격화",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "The Rise of Overfit Inference Engines",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "여수, 17일 선천성 소아심장질환 무료 진료…세브란스 의료진 참여",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Embody - MCP Server for TouchDesigner 6.2.67",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Replacing vector databases with SQLite and SIMD hypervectors in under 1.2GB VRAM (Hillock)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "data_rag",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "tmux를 OS로 만들자",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: ALPS Writer·ADR Writer - Claude Code와 Codex용 제품 명세·설계 결정 관리 플러그인",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "플리토, 첫 브랜드 ‘보글’로 글로벌 통역 시장 조준…\"매출 상승 이어갈 것\"",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "디젤 대신 태양광…사하라 이남 아프리카 독립형 시장 확대 전망",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "pmndrs docs 4.15.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Cloudflare OHTTP 게이트웨이",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "[내면 지도 그리기] 36 Inner Mapping: 나를 찾는 지도",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Call it AI, call it Super Intelligence, only 2% of consumers are buying it",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Zig v0.17.0",
+   "ai_related": false,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "머스크, 미 국방부 '미래 전쟁' 자문으로 공직 복귀...AI·드론 중심 미래전 대비",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "ru (Dicklesworthstone)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "캘리포니아, AI만으로 직원 해고·징계 못한다…뉴섬 주지사 법안 서명",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "three.ws Herald 0.1.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "딥시크, 데스크톱 앱 '딥시크 하네스' 출시...\"챗·코딩·문서 통합\"",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "브록먼 오픈AI 사장, 사내 반발에 '친AI' 정치 단체 340억 추가 기부 철회",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "llm-security (jiayaoqijia)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Linux 및 Windows용 Orion 개발 현황 안내",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "AWS, AI 데이터센터 반발 정면 돌파…지역사회에 1.4조 추가 투입",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Inbox Zero 0.1.0",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "I tried building a small RAG search node for Qwen3.8 27B using a fake AliExpress Mini PC... and Intel sent me back to 2018.",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show HN: 독일의 새로운 소버린 AI 모델 Kolibri",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "순천 매곡동, 외국인 대상 생활 한국어교실…10주 과정 운영",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Anyone sitting on a lot of slow system memory and a modest GPU.. try Strata + Qwen3.8 Next.",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Greg Kroah-Hartman – Security in the LLM Age [video]",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "OpenAI safety employee resigns, claiming the company’s ‘culture is broken’",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: soom - 바탕화면 깔끔한 척 정리하는 macOS 앱",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "엔비디아, 4999달러짜리 ‘DGX 스파크’ 출시...메모리 대란에 가격 낮췄다",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Netdata 2.12.0",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "plan-normal (MaxInGaussian)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "agent_framework",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "officeimo-conversion-operator (EvotecIT)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "PicoMQ - S3 기반 실시간 데이터 스트림 서버",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "data_rag",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "llmwiki 1.4.1",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "GLM 5.3 Flash로 한 달간 코딩하기",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 3
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "officeimo-website-wasm (EvotecIT)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "SeleniumBase MCP 4.55.0",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "\"콜센터 AI 말 끊어도 알아듣는다\"...포지큐브, 차세대 AICC 개발",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "백악관에 모인 AI 수장들…젠슨 황·저커버그, 아모데이에 '질문 세례'",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Muse Gadgets - Meta의 AI 에이전트를 직접 만든 기기에 연결하기",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "ICE, 시위 참가자 사진을 Palantir 데이터베이스에 쌓아 와",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "DBCode 1.0.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Sopro V2 Turbo 2610: cleaner cloned voices, same 120M model, same CPU speed",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Aweb – Communication for AI Agents",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Come let your LLMs play World of Warcraft",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show HN: 오픈소스 LEGO AI 생성기를 만들었습니다",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Our AI Midwife",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Waterfox 6.7.5, 내장 피드 리더 추가",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "[AI 이슈트렌드] 계속된 DMZ 논란 속 트럼프 LNG 협박·청주 흉기 성폭행 화제",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Flash next rig born from mining parts.",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Running Qwen3.8 Flash Next 176B on a 16GB RTX 3080 Laptop + 32GB RAM + SSD",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "blueprint-docs-workspace (receptron)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "에이전트 코딩의 묵시록 4기사",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "잘 잊어버리는 CPU(M4에서 Linux 구동하기)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "ChatGPT Sites - 대화로 웹사이트와 앱을 만들고 게시하기",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "automation",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "FTL, 클라우드를 위한 새로운 운영체제",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "\"잘 가라 02\"…슈워제네거 '터미네이터 2' 오마주한 휴머노이드 해체 화제",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "ds4, DeepSeek 전용에서 Qwen·GLM도 실행하는 로컬 추론 엔진으로",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Opus 5.5에게 가상 캔버스를 주고 그림을 그리게 해봤다",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Meta wants your next gadget to be Muse-infused",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "업스테이지 ‘솔라 프로 4’, 다음 포털 금융 서비스에 전면 적용",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "skill",
+   "source": "anthropic_skills",
+   "title": "Update claude-api skill: Claude Opus 5.5 default, Claude Sonnet 5.5, build-eval and hillclimb guides (#1930)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "AI Makes Me Sad",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Power approval set to delay Oracle's Wisconsin AI datacenter",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Yes bots we get it, Strata is good now please stop",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "open_local",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Anthropic tried to persuade Pope that AI could be conscious being",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "paper-navigator (EvoScientist)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Benchmarking retrieval for agents on messy real-world company knowledge",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "data_rag",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Show HN: Pi pod – Run your pi coding agent in sandboxes on your own server",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "coding_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "openai",
+   "title": "A model guide for the GPT-6 family",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 5
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "invisible_playwright_mcp 0.70.9",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "PyMemoryEditor 3.0.2",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "세포 정체성 상실이 인간 노화를 이끈다: 새로운 논문 두 편",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "model_release",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Hole Punch - 중력장을 이용해 우주선을 날리는 게임",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "model_release",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "google_ai",
+   "title": "The latest AI news we announced in September 2026",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 4
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "robotcode (robotcodedev)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "앤트로픽, 중국 'GLM-5.3' 해킹 위험성 경고...\"클로드 미소스와 맞먹는 능력\"",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "All the AI agents that can live in your text messages",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "구글 딥마인드, AI가 만든 단백질·유전체 추적하는 워터마크 기술 공개",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "에티오피아 전쟁의 격화",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Circuit Breaker Labs hopes to make AI safer for your kids (and you)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "오픈AI, '불량 에이전트' 무단 활동 100여곳 조직에 통보",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Exa Search 1.0.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "FFmpeg 1.0.0",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "qwen4exp : halve the indexer score memory by ServeurpersoCom · Pull Request #29825 · ggml-org/llama.cpp",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "prisma-postgres-setup (prisma)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "기상청, 태양광·풍력 발전량 예측 돕는다…1km 단위 기상자료 제공",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Pop!_OS bans AI-generated code from much of its codebase",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "업스테이지, 판단 전용 AI ‘솔라 디사이드’ 출시…“제브보다 빠르고 정확”",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Buying RTX 5090 At Micro Center Reportedly Now Requires Paperwork, Including A No-Export Declaration",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Front-End Checklist 2.0.0",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "setup (7xuanlu)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Kolibri 출시: 주권형 오픈웨이트 모델",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "AI '생각의 사슬' 무력화되나…'순환 깊이' 기술이 부른 불투명성 우려",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "three.ws Knock 0.1.0",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Memanto 0.1.3",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Apple Pass Designer - 애플 지갑용 티켓·카드 디자인 도구",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Decision models like Jev don't beat LLM-as-a-judge or traditional classifiers",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "model_release",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "회계 업무서 AI '완벽' 단계 도달…인간 '37%' 역전",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "오픈AI, 내부 기밀 유출 혐의로 정렬·안전팀 연구원 3명 해고",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "베네치아의 콘스탄티노폴리스 원정 실패가 최초의 채권시장으로 이어지다",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "NFL 감독 마이크 톰린이 12년에 걸쳐 만든 Minecraft 도시",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: OP!Amp - macOS 시스템 오디오 이퀄라이저",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "[게시판] KT, 소상공인 플랫폼 ‘사장이지’에 AI면접 서비스 출시 등 단신",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "[게시판] LG유플러스, 옵트에이아이와 AI 모델 경량화 협력 등 단신",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "앤트로픽, '클로드 프론티어 아카데미' 출범... 1300억 투입해 FDE 1만명 양성",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "mcp-debugger 0.25.1",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "비드래프트, 중국 모델스코프서 '연구기관' 인증…AX-RAY 기반 중국 진출 추진",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "정보 대부분이 숨겨진 게임 Stratego, 이제야 AI가 벽을 넘었다",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "GrapheneOS, Android 17 QPR1 커널 성능 저하 문제 수정",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "Audio 2.10.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "I built Ninfer 4080 for 16GB class GPUs",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Mozilla shutting down Solo AI website creator",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Your Big Mac might cost more if McDonald's AI thinks people nearby can afford it",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "세계 태양광, 지난해 직류 기준 690GW 추가…중국이 60%",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "The ultimate guide to multi-harness RL",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Sean Parker is rebuilding Stability AI around music",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Extra Big Ass Intelligence - 엄청나게 거대한 지능",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "구글 \"우주 데이터센터 실현 위해 스타십 최소 1800회 발사 필요\"",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: 가격 — 클립당 10원 최고의 쇼츠 편집 에이전트 쇼츠존",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "philidor-api-handoff (jiayaoqijia)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "오퍼스 5.5 ‘이것은 중요합니다’ 남발…습관 못 버린 AI 글쓰기",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "별과 그 주위를 도는 네 행성을 12년에 걸쳐 촬영한 망원경 연속 이미지",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "model_release",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "GitHub 1.13.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: Piano: Soloist - 악보 파일(MusicXML)을 올리면 악보와 건반으로 재생해 주는 웹 피아노 비주얼라이저",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "philidor-mcp (jiayaoqijia)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Don't be fooled–LLMs don't reason",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "hyperframes-audio (knpwrs)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "OpenWork MCP Gateway 1.0.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Aleph Alpha Kolibri: How the sovereign German LLM works",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "I made my iPhone a second GPU for my 24 GB MacBook: Qwen 3.8 27B prefills 29–44% faster & my holds part of the CTX window.",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "open_local",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "io.github.usekaneo/kaneo 0.1.12",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "나주 영산동, 암·희귀난치성 질환자 20명에 영양 꾸러미 지원",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "bc-extrequest-implement (microsoft)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "plan-with-refs (MaxInGaussian)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "agent_framework",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "niblet (PyModel)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "\"다섯 손가락 필요 없다\"...보스턴 다이내믹스, 네 손가락 로봇 손 공개",
+   "ai_related": false,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "It’s not AI anymore, it’s ‘super intelligence’ (according to the White House)",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Amazon responds to data center backlash, says it no longer uses NDAs",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "캘리포니아주, '불량 에이전트' 관련 오픈AI에 수사 소환장 발부",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "에스티엔인포텍, 크레도와 한국 시장 총판 계약 체결",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "With most information hidden, the game Stratego had stumped AI until now",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "openai",
+   "title": "Chatham scales its capital markets expertise with OpenAI",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Tiny Brutalism - 콘크리트 건축물을 자유롭게 만드는 작은 샌드박스 게임",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Muse Gadgets",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "[AI 모델 신작] MS 음성인식 'MAI-트랜스크라이브-2-스트리밍' 등 6종",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "I'm pretty close to the middle thanks to you all",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "An AI agent emailed researchers for help. It told us why",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "agent_framework",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Frog and Toad and the Increasingly Capable Machines",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "엔비디아·소프트뱅크, 오픈AI 투자 잔여분 27조 최종 집행",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 5
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Show GN: 당신이 직접 관계를 고르는 AI 컴패니언, Inanna",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "blueprint-polish-survey (receptron)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "agent_framework",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Newgrounds - 게임·애니메이션·음악·그림을 공유하는 창작 커뮤니티",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "ADHD, 자폐증, 아니면 복합 트라우마인가? [PDF]",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "safety_policy",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "Audionaut - AI 에이전트로 편집할 수 있는 오픈소스 멀티트랙 오디오 편집기",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "비둘기로 전송한 실제 인터넷 RFC 1149 패킷, 크리스티 경매에 출품",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Aleph-Alpha/Kolibri-1 · Hugging Face - 78B parameters. 3.46B active. Up to 1M tokens of context - Apache 2.0",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "model_release",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "F.02 Decommission",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "도시 건설 게임에는 영혼이 부족하다, 2부",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "I built a code knowledge graph tool that's actually MIT licensed (fully local, no cloud)",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "우라늄 큐브가 드러낸 사실, 나치 독일에는 원자폭탄을 만들 가망이 없었다",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "애플, AI 에이전트 공격 대비해 맥OS '전체 디스크 접근' 제어 강화",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "'AI 반감' 가리는 귀여운 캐릭터…'뮤즈' 흥행 이끈 알렉산드르 왕",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "industry",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "텐센트, 오라클서 AI 칩 10만개 임대…규제 피하려 동남아로",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 3
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Arex-2 vs swift vs qwen3.8 27b",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "hackernews",
+   "title": "Ask HN: Is anybody producing good code with coding agents?",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "techcrunch_ai",
+   "title": "Apple says it’s tightening macOS ‘Full Disk Access’ controls due to new risks from AI agents",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 4
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "[10월2일] \"뜻밖의 주인공은 로그인과 플러그인\"…알트먼이 보여준 챗GPT의 다음 무대",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "mcp_tools",
+   "importance": 4
+  },
+  {
+   "type": "skill",
+   "source": "skillsmp",
+   "title": "zuke-setup (zuke-build)",
+   "ai_related": false,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "aitimes",
+   "title": "앤트로픽, 14일 투자자 행사 개최...11월 추수감사절 전 상장 목표",
+   "ai_related": true,
+   "worth_today": true,
+   "topic": "industry",
+   "importance": 5
+  },
+  {
+   "type": "news",
+   "source": "geeknews",
+   "title": "내가 표적이 됐다: git post-checkout 훅으로 자격 증명 탈취를 노린 시도",
+   "ai_related": false,
+   "worth_today": true,
+   "topic": "safety_policy",
+   "importance": 3
+  },
+  {
+   "type": "mcp",
+   "source": "mcp_registry",
+   "title": "com.apify/apify-mcp-server 0.17.1",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "mcp_tools",
+   "importance": 2
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Two local Qwen ( 3.8 27b unsloth Q6 and Qwen flash next strata coder ) models vs Claude Opus 4.6 on the same 3 coding tasks. One of them tied it. Not here to start a fight, just sharing numbers",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "coding_tools",
+   "importance": 1
+  },
+  {
+   "type": "news",
+   "source": "reddit_localllama",
+   "title": "Qwen3.8-Flash-Next 177B running at 11–15 tok/s on a single RTX 5070 12GB + 32GB RAM DDR4",
+   "ai_related": true,
+   "worth_today": false,
+   "topic": "open_local",
+   "importance": 1
+  }
+ ]
+}
