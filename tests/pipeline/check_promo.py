@@ -3,11 +3,14 @@
 실행: uv run python -m tests.pipeline.check_promo
 - 규칙(pipeline/promo.py): 9/23 책 소개 연재·TechCrunch 자체 행사 홍보(세션·티켓·연사)는 빠지고,
   진짜 소식(행사 자리 발표·회의 개최 기사)과 도구는 남는다. 9/27 0시 후보 152건에서 사람(Claude Code) 판정 6건과 일치, 오탐 0
+- 10/5 제목 규칙: [게시판] 단신·[기고] 의견 글·[영상] 강연·지난해 이전 연도를 단 예전 자료·OpenAI 블로그 고객 사례. 골든셋 정답 O는 안 걸림
 - 선별 프롬프트 worth_today에 행사·책·웨비나·채용 기준, 해설가·큐레이터 프롬프트에 문장 기준이 들어 있다
 선별·해설가 프롬프트 효과는 로컬·Groq 모델로 전후 비교하지 않았다(2026-09-27 사용자 지시로 작업 중 모델 호출 중단). 9/27 07:00 실행 결과로 본다.
 """
 import json
 import sys
+from datetime import date
+from pathlib import Path
 
 from agent import curator, explainer
 from pipeline import promo
@@ -15,6 +18,26 @@ from pipeline import promo
 
 def news(title: str) -> dict:
     return {"type": "news", "title": title}
+
+
+def title_rules() -> dict:
+    """10/5 추가: 단신 묶음·기고·강연 영상·예전 자료·OpenAI 고객 사례. 정답 파일(tests/golden/select_*.json)의 O는 하나도 안 걸려야 한다."""
+    this_year = date.today().year
+    cases = {"[게시판] KT, AI면접 서비스 출시 등 단신": "단신 묶음", "[기고] AI판 빅맥지수가 비춘 그림자": "칼럼·기고",
+             "Greg Kroah-Hartman – Security in the LLM Age [video]": "강연 영상", f"Identity Management for Agentic AI [pdf] ({this_year - 1})": "예전 자료",
+             f"올해 나온 에이전트 논문 ({this_year})": None, "게시판 기능을 AI로 바꾼 오픈소스 공개": None}
+    customer = [({"type": "news", "source": "openai", "title": t}, want) for t, want in (
+        ("How Albertsons Companies is reimagining retail from the inside out", "고객 사례"),
+        ("Chatham scales its capital markets expertise with OpenAI", "고객 사례"), ("A model guide for the GPT-6 family", None),
+        ("Disrupting a coordinated model-distillation campaign", None))]
+    customer.append(({"type": "news", "source": "techcrunch", "title": "How startups are using OpenAI models"}, None))
+    golden = [i for path in sorted(Path("tests/golden").glob("select_*.json")) for i in json.loads(path.read_text(encoding="utf-8"))["items"]]
+    caught = [(i["label"], promo.reason({"type": "news", **i})) for i in golden]
+    return {
+        "단신·기고·강연·예전자료_제목은_빠짐(올해_연도·일반_단어는_남음)": all(promo.reason(news(t)) == want for t, want in cases.items()),
+        "고객_사례는_OpenAI_블로그만": all(promo.reason(item) == want for item, want in customer),
+        "정답_O는_하나도_안걸림(골든셋_전체)": not [r for label, r in caught if r and label == "O"] and sum(1 for _, r in caught if r) >= 21,
+    }
 
 
 def main() -> int:
@@ -32,6 +55,7 @@ def main() -> int:
         "빠진_이유_기록": [d["reason"] for d in dropped] == ["책 소개 연재", "행사 홍보", "행사 홍보", "책 소개 연재", "웨비나 안내", "행사 홍보", "행사 홍보"],
         "진짜_소식은_남음(개최·행사장_발표)": [k["title"] for k in kept if k["type"] == "news"] == real,
         "도구는_규칙_대상_아님": any(k["type"] == "skill" for k in kept),
+        **title_rules(),
         "선별_기준에_행사·책·웨비나·채용": all(w in curator.SELECT_PROMPT for w in ("행사·컨퍼런스 세션 예고", "책·서평·신간", "웨비나", "채용 공고")),
         "선별_기준에_에세이·사용기_false·투자·장애·예고_true(9/30 골든셋)": all(w in curator.SELECT_PROMPT for w in (
             "에세이·칼럼·의견 글", "개인 사용기", "투자 유치", "서비스 장애", "신제품 발표 예고")),

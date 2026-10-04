@@ -1,0 +1,832 @@
+{
+ "date": "2026-10-04",
+ "stage": "선별(select): 뉴스만. 정답 O는 ai_related이고 worth_today인 항목",
+ "rubric": [
+  "O: 모델·제품·도구 출시, 개발 도구 공개·업데이트, 연구 결과, AI 안전·규제·보안 사건, 주요 AI 기업의 투자·계약·실적 같은 새로운 사실",
+  "X: AI와 무관, AI가 곁다리인 사회·문화 이야기, 에세이·의견, 발언·인터뷰만 있는 기사, 개인 경험·질문 글, 행사·교육 홍보, 기업 고객 사례 홍보"
+ ],
+ "labeler": "Claude Code (2026-10-05, 모델 판정을 보지 않고 제목·출처만으로, 개발자 검토 전). 계획안: 채점자는 개발자 본인 외 1명 이상",
+ "source": "10/4 07:00 실행 트레이스 08dc555ff3ecd1593e5a611bdc8d3787의 선별 입력(제목·출처)",
+ "items": [
+  {
+   "title": "Dual Radeon MI50 benchmarks",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Mystery Function",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Show GN: 5달러 시계에 Claude·Codex 사용량을 띄워봤습니다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Qwen3.8-27B-Humanlike-Chat 2.0: texts like a human, now with tool calls and better instruction following",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "[AI카툰] Bob, Senior IT guy - 밥, AI가 못 들어가는 틈새시장 개발자",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "중국의 사회적 현실에 관하여",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "'나만의 클로드 코드' 만든다...앤트로픽, 커스텀 확장 기능 '모드' 출시",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Show HN: Made an open-source Lego AI generator",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Two ~300B MoE models, each on ONE 128 GB mini PC (AMD Strix Halo): GLM-5.3-Flash at ~580 tok/s prefill, MiMo-V2.6-Flash up to 44 tok/s decode. EXL3 weights + open ROCm engine",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "\"수익성 불투명한 10조달러 투자\"...월가, AI 거품 붕괴 경고",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Show GN: LibreDB Studio - 드라이버 18개로 엔진 46개에 붙는 셀프호스팅 브라우저 DB IDE",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Pope Leo XIV is not a fan of AI-generated art",
+   "source": "techcrunch_ai",
+   "label": "X"
+  },
+  {
+   "title": "Apple, macOS ‘전체 디스크 접근’ 권한 통제 강화 예고",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "암을 유발한다는 것들",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "모든 SaaS 비즈니스는 모델을 둘러싼 하네스가 될 것",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "아마존, 에이전트 전용 의사결정 모델 ‘스트랜즈 디사이더 2B’ 오픈 공개",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "전남광주, 3일부터 토요 문화공연…5개 자치구 찾아간다",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "버블쉐어, AI 검색 성과 분석 솔루션 공개…”단순 노출보다 정확한 인용이 핵심”",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "AI godfather Yann LeCun: Anthropic CEO deluded, doesn't understand cybersecurity",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "“반도체 성능 지표 ‘K-Perf’, 실험실 벗어나 실제 현장서 실증”",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "모두가 짐을 싸고 있다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Anyworld, a self-hosted multiplayer text RPG where a local LLM is the Dungeon Master",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "US killer's sentence quashed because of AI video of victim shown in court",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Has anyone noticed this trend toward writing/speaking style among newer models (both open and closed models). They are trending toward information density and expanded vocabulary. It's not quite 'caveman speak' but trending that way.",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "리눅스 커널 개발자 Greg Kroah-Hartman, LLM 시대의 보안 [영상]",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Our Project Suncatcher prototype satellite is in orbit",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "From the creator of Redis; run LLM locally with ds4",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "메타, 오픈소스 '뮤즈 가젯' 공개...AI 에이전트 하드웨어 이식 본격화",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "The Rise of Overfit Inference Engines",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "여수, 17일 선천성 소아심장질환 무료 진료…세브란스 의료진 참여",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Replacing vector databases with SQLite and SIMD hypervectors in under 1.2GB VRAM (Hillock)",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "tmux를 OS로 만들자",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Show GN: ALPS Writer·ADR Writer - Claude Code와 Codex용 제품 명세·설계 결정 관리 플러그인",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "플리토, 첫 브랜드 ‘보글’로 글로벌 통역 시장 조준…\"매출 상승 이어갈 것\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "디젤 대신 태양광…사하라 이남 아프리카 독립형 시장 확대 전망",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Cloudflare OHTTP 게이트웨이",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "[내면 지도 그리기] 36 Inner Mapping: 나를 찾는 지도",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Call it AI, call it Super Intelligence, only 2% of consumers are buying it",
+   "source": "techcrunch_ai",
+   "label": "X"
+  },
+  {
+   "title": "Zig v0.17.0",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "머스크, 미 국방부 '미래 전쟁' 자문으로 공직 복귀...AI·드론 중심 미래전 대비",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "캘리포니아, AI만으로 직원 해고·징계 못한다…뉴섬 주지사 법안 서명",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "딥시크, 데스크톱 앱 '딥시크 하네스' 출시...\"챗·코딩·문서 통합\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "브록먼 오픈AI 사장, 사내 반발에 '친AI' 정치 단체 340억 추가 기부 철회",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Linux 및 Windows용 Orion 개발 현황 안내",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "AWS, AI 데이터센터 반발 정면 돌파…지역사회에 1.4조 추가 투입",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "I tried building a small RAG search node for Qwen3.8 27B using a fake AliExpress Mini PC... and Intel sent me back to 2018.",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Show HN: 독일의 새로운 소버린 AI 모델 Kolibri",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "순천 매곡동, 외국인 대상 생활 한국어교실…10주 과정 운영",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Anyone sitting on a lot of slow system memory and a modest GPU.. try Strata + Qwen3.8 Next.",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Greg Kroah-Hartman – Security in the LLM Age [video]",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "OpenAI safety employee resigns, claiming the company’s ‘culture is broken’",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Show GN: soom - 바탕화면 깔끔한 척 정리하는 macOS 앱",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "엔비디아, 4999달러짜리 ‘DGX 스파크’ 출시...메모리 대란에 가격 낮췄다",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "PicoMQ - S3 기반 실시간 데이터 스트림 서버",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "GLM 5.3 Flash로 한 달간 코딩하기",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "\"콜센터 AI 말 끊어도 알아듣는다\"...포지큐브, 차세대 AICC 개발",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "백악관에 모인 AI 수장들…젠슨 황·저커버그, 아모데이에 '질문 세례'",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Muse Gadgets - Meta의 AI 에이전트를 직접 만든 기기에 연결하기",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "ICE, 시위 참가자 사진을 Palantir 데이터베이스에 쌓아 와",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Sopro V2 Turbo 2610: cleaner cloned voices, same 120M model, same CPU speed",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "Aweb – Communication for AI Agents",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Come let your LLMs play World of Warcraft",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Show HN: 오픈소스 LEGO AI 생성기를 만들었습니다",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Our AI Midwife",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Waterfox 6.7.5, 내장 피드 리더 추가",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "[AI 이슈트렌드] 계속된 DMZ 논란 속 트럼프 LNG 협박·청주 흉기 성폭행 화제",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Flash next rig born from mining parts.",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Running Qwen3.8 Flash Next 176B on a 16GB RTX 3080 Laptop + 32GB RAM + SSD",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "에이전트 코딩의 묵시록 4기사",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "잘 잊어버리는 CPU(M4에서 Linux 구동하기)",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "ChatGPT Sites - 대화로 웹사이트와 앱을 만들고 게시하기",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "FTL, 클라우드를 위한 새로운 운영체제",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "\"잘 가라 02\"…슈워제네거 '터미네이터 2' 오마주한 휴머노이드 해체 화제",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "ds4, DeepSeek 전용에서 Qwen·GLM도 실행하는 로컬 추론 엔진으로",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Opus 5.5에게 가상 캔버스를 주고 그림을 그리게 해봤다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Meta wants your next gadget to be Muse-infused",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "업스테이지 ‘솔라 프로 4’, 다음 포털 금융 서비스에 전면 적용",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "AI Makes Me Sad",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Power approval set to delay Oracle's Wisconsin AI datacenter",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Yes bots we get it, Strata is good now please stop",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Anthropic tried to persuade Pope that AI could be conscious being",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Benchmarking retrieval for agents on messy real-world company knowledge",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Show HN: Pi pod – Run your pi coding agent in sandboxes on your own server",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "A model guide for the GPT-6 family",
+   "source": "openai",
+   "label": "O"
+  },
+  {
+   "title": "세포 정체성 상실이 인간 노화를 이끈다: 새로운 논문 두 편",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Hole Punch - 중력장을 이용해 우주선을 날리는 게임",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "The latest AI news we announced in September 2026",
+   "source": "google_ai",
+   "label": "X"
+  },
+  {
+   "title": "앤트로픽, 중국 'GLM-5.3' 해킹 위험성 경고...\"클로드 미소스와 맞먹는 능력\"",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "All the AI agents that can live in your text messages",
+   "source": "techcrunch_ai",
+   "label": "X"
+  },
+  {
+   "title": "구글 딥마인드, AI가 만든 단백질·유전체 추적하는 워터마크 기술 공개",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "에티오피아 전쟁의 격화",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Circuit Breaker Labs hopes to make AI safer for your kids (and you)",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "오픈AI, '불량 에이전트' 무단 활동 100여곳 조직에 통보",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "qwen4exp : halve the indexer score memory by ServeurpersoCom · Pull Request #29825 · ggml-org/llama.cpp",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "기상청, 태양광·풍력 발전량 예측 돕는다…1km 단위 기상자료 제공",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Pop!_OS bans AI-generated code from much of its codebase",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "업스테이지, 판단 전용 AI ‘솔라 디사이드’ 출시…“제브보다 빠르고 정확”",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Buying RTX 5090 At Micro Center Reportedly Now Requires Paperwork, Including A No-Export Declaration",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Kolibri 출시: 주권형 오픈웨이트 모델",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "AI '생각의 사슬' 무력화되나…'순환 깊이' 기술이 부른 불투명성 우려",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Apple Pass Designer - 애플 지갑용 티켓·카드 디자인 도구",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Decision models like Jev don't beat LLM-as-a-judge or traditional classifiers",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "회계 업무서 AI '완벽' 단계 도달…인간 '37%' 역전",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "오픈AI, 내부 기밀 유출 혐의로 정렬·안전팀 연구원 3명 해고",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "베네치아의 콘스탄티노폴리스 원정 실패가 최초의 채권시장으로 이어지다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "NFL 감독 마이크 톰린이 12년에 걸쳐 만든 Minecraft 도시",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Show GN: OP!Amp - macOS 시스템 오디오 이퀄라이저",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "[게시판] KT, 소상공인 플랫폼 ‘사장이지’에 AI면접 서비스 출시 등 단신",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "[게시판] LG유플러스, 옵트에이아이와 AI 모델 경량화 협력 등 단신",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "앤트로픽, '클로드 프론티어 아카데미' 출범... 1300억 투입해 FDE 1만명 양성",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "비드래프트, 중국 모델스코프서 '연구기관' 인증…AX-RAY 기반 중국 진출 추진",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "정보 대부분이 숨겨진 게임 Stratego, 이제야 AI가 벽을 넘었다",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "GrapheneOS, Android 17 QPR1 커널 성능 저하 문제 수정",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "I built Ninfer 4080 for 16GB class GPUs",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Mozilla shutting down Solo AI website creator",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Your Big Mac might cost more if McDonald's AI thinks people nearby can afford it",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "세계 태양광, 지난해 직류 기준 690GW 추가…중국이 60%",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "The ultimate guide to multi-harness RL",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Sean Parker is rebuilding Stability AI around music",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "Extra Big Ass Intelligence - 엄청나게 거대한 지능",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "구글 \"우주 데이터센터 실현 위해 스타십 최소 1800회 발사 필요\"",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "Show GN: 가격 — 클립당 10원 최고의 쇼츠 편집 에이전트 쇼츠존",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "오퍼스 5.5 ‘이것은 중요합니다’ 남발…습관 못 버린 AI 글쓰기",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "별과 그 주위를 도는 네 행성을 12년에 걸쳐 촬영한 망원경 연속 이미지",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Show GN: Piano: Soloist - 악보 파일(MusicXML)을 올리면 악보와 건반으로 재생해 주는 웹 피아노 비주얼라이저",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Don't be fooled–LLMs don't reason",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Aleph Alpha Kolibri: How the sovereign German LLM works",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "I made my iPhone a second GPU for my 24 GB MacBook: Qwen 3.8 27B prefills 29–44% faster & my holds part of the CTX window.",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "나주 영산동, 암·희귀난치성 질환자 20명에 영양 꾸러미 지원",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "\"다섯 손가락 필요 없다\"...보스턴 다이내믹스, 네 손가락 로봇 손 공개",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "It’s not AI anymore, it’s ‘super intelligence’ (according to the White House)",
+   "source": "techcrunch_ai",
+   "label": "X"
+  },
+  {
+   "title": "Amazon responds to data center backlash, says it no longer uses NDAs",
+   "source": "techcrunch_ai",
+   "label": "X"
+  },
+  {
+   "title": "캘리포니아주, '불량 에이전트' 관련 오픈AI에 수사 소환장 발부",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "에스티엔인포텍, 크레도와 한국 시장 총판 계약 체결",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "With most information hidden, the game Stratego had stumped AI until now",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Chatham scales its capital markets expertise with OpenAI",
+   "source": "openai",
+   "label": "X"
+  },
+  {
+   "title": "Tiny Brutalism - 콘크리트 건축물을 자유롭게 만드는 작은 샌드박스 게임",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Muse Gadgets",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "[AI 모델 신작] MS 음성인식 'MAI-트랜스크라이브-2-스트리밍' 등 6종",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "I'm pretty close to the middle thanks to you all",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "An AI agent emailed researchers for help. It told us why",
+   "source": "hackernews",
+   "label": "O"
+  },
+  {
+   "title": "Frog and Toad and the Increasingly Capable Machines",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "엔비디아·소프트뱅크, 오픈AI 투자 잔여분 27조 최종 집행",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Show GN: 당신이 직접 관계를 고르는 AI 컴패니언, Inanna",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "Newgrounds - 게임·애니메이션·음악·그림을 공유하는 창작 커뮤니티",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "ADHD, 자폐증, 아니면 복합 트라우마인가? [PDF]",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Audionaut - AI 에이전트로 편집할 수 있는 오픈소스 멀티트랙 오디오 편집기",
+   "source": "geeknews",
+   "label": "O"
+  },
+  {
+   "title": "비둘기로 전송한 실제 인터넷 RFC 1149 패킷, 크리스티 경매에 출품",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Aleph-Alpha/Kolibri-1 · Hugging Face - 78B parameters. 3.46B active. Up to 1M tokens of context - Apache 2.0",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "F.02 Decommission",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "도시 건설 게임에는 영혼이 부족하다, 2부",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "I built a code knowledge graph tool that's actually MIT licensed (fully local, no cloud)",
+   "source": "reddit_localllama",
+   "label": "O"
+  },
+  {
+   "title": "우라늄 큐브가 드러낸 사실, 나치 독일에는 원자폭탄을 만들 가망이 없었다",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "애플, AI 에이전트 공격 대비해 맥OS '전체 디스크 접근' 제어 강화",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "'AI 반감' 가리는 귀여운 캐릭터…'뮤즈' 흥행 이끈 알렉산드르 왕",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "텐센트, 오라클서 AI 칩 10만개 임대…규제 피하려 동남아로",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "Arex-2 vs swift vs qwen3.8 27b",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Ask HN: Is anybody producing good code with coding agents?",
+   "source": "hackernews",
+   "label": "X"
+  },
+  {
+   "title": "Apple says it’s tightening macOS ‘Full Disk Access’ controls due to new risks from AI agents",
+   "source": "techcrunch_ai",
+   "label": "O"
+  },
+  {
+   "title": "[10월2일] \"뜻밖의 주인공은 로그인과 플러그인\"…알트먼이 보여준 챗GPT의 다음 무대",
+   "source": "aitimes",
+   "label": "X"
+  },
+  {
+   "title": "앤트로픽, 14일 투자자 행사 개최...11월 추수감사절 전 상장 목표",
+   "source": "aitimes",
+   "label": "O"
+  },
+  {
+   "title": "내가 표적이 됐다: git post-checkout 훅으로 자격 증명 탈취를 노린 시도",
+   "source": "geeknews",
+   "label": "X"
+  },
+  {
+   "title": "Two local Qwen ( 3.8 27b unsloth Q6 and Qwen flash next strata coder ) models vs Claude Opus 4.6 on the same 3 coding tasks. One of them tied it. Not here to start a fight, just sharing numbers",
+   "source": "reddit_localllama",
+   "label": "X"
+  },
+  {
+   "title": "Qwen3.8-Flash-Next 177B running at 11–15 tok/s on a single RTX 5070 12GB + 32GB RAM DDR4",
+   "source": "reddit_localllama",
+   "label": "X"
+  }
+ ]
+}
