@@ -83,7 +83,7 @@ const Cards = {
         <div class="steps">${Cards.STEPS.map((s) => `<span class="step na"><i></i>${s}</span>`).join("")}</div>
         <div class="note">검증관이 샌드박스에서 설치·실행·도구 목록·인증 요구를 확인해 여기에 표시합니다. ${Cards.MCP_SCOPE}</div></div>`;
     }
-    const cls = { ok: "ok", success: "ok", auth: "warn", warn: "warn", fail: "bad", error: "bad", na: "na" };
+    const cls = { ok: "ok", success: "ok", auth: "warn", warn: "warn", fail: "bad", bad: "bad", error: "bad", na: "na" };
     const steps = ["install", "run", "tools_list", "auth_required"].map((key, n) => {
       const value = v[key] || {};
       const state = typeof value === "object" ? value.status : value;

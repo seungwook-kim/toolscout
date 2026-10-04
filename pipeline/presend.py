@@ -9,6 +9,7 @@
 """
 import asyncio
 import logging
+import re
 import time
 from datetime import date
 
@@ -40,16 +41,24 @@ def _known(found: dict | None, kind: str) -> bool:
     return bool(found.get("verification")) or found.get("request_status") in DONE_STATUSES
 
 
+def _stale(item: dict, found: dict | None) -> bool:
+    """레지스트리 버전 업 항목인데 실측은 예전 버전이면 다시 확인한다 (10/2 anymd 8.3.0 카드에 9/26 8.0.0 결과가 붙음)."""
+    versions = [p["version"] for p in (item.get("install") or {}).get("packages") or [] if p.get("version")]
+    command = (found or {}).get("probe_command") or ""
+    return bool(versions and command) and not any(re.search(rf"[@=]{re.escape(v)}(\s|$)", command) for v in versions)
+
+
 async def _requests(curated: dict, today: date, kind: str, reason: str) -> tuple[list[dict], int]:
     """아직 결과가 없는 카드 도구를 요청 표에 넣고 검증관 요청 모양으로. 반환: (요청, 건너뛴 수)."""
     tools = planned(curated, kind)
     if not tools:
         return [], 0
     known = await asyncio.to_thread(verification.results_for, list(tools))
-    # 새 버전 카드(update_from)는 예전 버전 결과가 있어도 다시 확인한다
-    todo = [item for url, item in tools.items() if item.get("update_from") or not _known(known.get(url), kind)]
-    # 한 실행 한도(MCP 4건)에 밀리면 새 버전 카드에 예전 버전 결과가 붙는다. 새 버전 카드부터 확인한다
-    todo.sort(key=lambda item: not item.get("update_from"))
+    # 새 버전 카드(update_from)와 버전 업 항목은 예전 버전 결과가 있어도 다시 확인한다
+    newer = {url for url, item in tools.items() if item.get("update_from") or (kind == "mcp" and _stale(item, known.get(url)))}
+    todo = [item for url, item in tools.items() if url in newer or not _known(known.get(url), kind)]
+    # 한 실행 한도(MCP 4건)에 밀리면 새 버전 카드에 예전 버전 결과가 붙는다. 새 버전부터 확인한다
+    todo.sort(key=lambda item: item["url"] not in newer)
     if not todo:
         return [], len(tools)
     depth = "read" if kind == "skill" else "full"
