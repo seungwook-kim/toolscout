@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-10-04 · verification 카드 칸: 키가 없어 못 띄운 실행·도구 목록은 "실패" 대신 "미확인(키 필요)" 경고. presend: 레지스트리 버전과 실측 명령의 버전이 다르면 다시 실측(새 버전 카드처럼 먼저) · 10/3 Memanto(MOORCHEH_API_KEY)가 "실행 실패"로, 10/2 anymd 8.3.0 카드에 9/26 8.0.0 실측이 붙어 나감 · check_probe_labels·check_mcp_now·check_rollback·check_tool_updates·check_weekly 통과
+- 2026-10-04 · 앱 런처·감시 작업(저장소 밖 Windows 작업)을 conhost.exe --headless로 띄움 · 9/27 23:57·10/2 22:1x 런처가 앱과 함께 꺼진 원인: 기본 터미널이 Windows Terminal이라 숨긴 PowerShell도 Windows Terminal 탭(OpenConsole -Embedding)으로 열렸고, 그 창이 닫히거나 Ctrl+C를 받으면 그때 열린 런처와 감시 탭이 함께 끝났다(10/2는 22:10 감시 기록도 같이 끊김) · 감시 작업 직접 실행 결과 기록, 새 Windows Terminal 탭 0, 런처 재시작 뒤 /api/health 200
 - 2026-10-01 · scheduler: 실행·재시도가 늦게 끝나 이미 지나간 발송 시각이 있으면 다음 시각을 기다리지 않고 바로 발송(late_send). 루트 db.get_engine에 접속 10초·keepalive 30초(CONNECT_ARGS) · 10/1 07:13 DB 쓰기에서 연결이 소리 없이 끊겨 Windows 기본 keepalive 2시간을 기다린 뒤 09:13 실패, 재시도는 10시쯤 끝났는데 08·09시 발송이 빈 채로 지나 12:00에 발송 · check_scheduler(10/1 재현: 재시도 10:03 끝 → 10:03 발송)·check_watchdog·check_deliver·check_tables 통과, 실제 DB 접속 확인
 
 - 2026-09-28 · 개발 모드 묶음 메일([개발 모드] 제목·"가짜·테스트 프로필 N개" 목차) 없앰. 모든 모드에서 사용자마다 한 통, 운영과 같은 제목·모양. 개발 모드의 가짜 테스트 프로필은 ADMIN_EMAILS로 가고 제목 앞에 [테스트 프로필 직군](deliver.addressed), 한 통 실패는 그 사용자만 미발송 · 사용자 "실전으로 갈 거라 메일도 다 수정해" · check_deliver·check_mail_layout 통과

@@ -1,7 +1,8 @@
 """probe_mcp 구현 (계획안 5장 도구 가드, 부록 D, 작업 규칙 조정: 설치 90초·실행 30초). E2B 샌드박스에서 MCP 동작 검증 4단계.
 
 - 입력: 설치 명령(npx·npm install·uvx·pipx run·pip install), 종류(npm|pypi|remote), 원격이면 URL
-- ① 설치: 네트워크 허용, 90초 ② 실행: 네트워크 차단 뒤 표준입력을 열어 둔 채 몇 초 살아 있는지, 30초
+- ① 설치: 네트워크 허용, 90초 ② 실행: 네트워크 차단 뒤 표준입력을 열어 둔 채 몇 초 살아 있는지, 30초.
+  도움말만 찍고 끝나면 도움말의 MCP 하위 명령(serve·mcp 등)으로 1회 더, 없으면 실패가 아니라 미확인
   ③ 도구 목록: 네트워크 차단 상태에서 mcp/sandbox_probe.py로 initialize·tools/list ④ 인증 필요: 환경변수·토큰 요구 에러 패턴
 - 원격 전용: ①② 해당없음, ③은 엔드포인트 GET 응답 + streamable HTTP initialize·tools/list, 401·403이면 ④ 인증 필요
 - 가드: 명령에 curl·wget·sh -c·bash -c나 셸 메타문자가 있으면 샌드박스를 만들지 않고 거부. 자동 검증은 하루 30건
@@ -26,7 +27,7 @@ ALIVE_SECONDS = 6  # 실행 단계: 이만큼 살아 있으면 기동 성공으�
 SANDBOX_LIFETIME = 300
 DAILY_AUTO_LIMIT = 30
 LOG_CHARS = 2000
-OK, FAIL, NA = "성공", "실패", "해당없음"
+OK, FAIL, NA, UNSURE = "성공", "실패", "해당없음", "미확인"
 PROBE_SCRIPT = Path(__file__).resolve().parents[1] / "mcp" / "sandbox_probe.py"
 
 FORBIDDEN = re.compile(r"curl|wget|\bsh\s+-c\b|\bbash\s+-c\b", re.I)
@@ -37,6 +38,8 @@ ARG = re.compile(r"^[\w@./:=,+%-]+$")
 ENV_NAME = re.compile(r"\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*_(?:API_KEY|KEY|TOKEN|SECRET|PASSWORD|PAT|CREDENTIALS?|ACCESS_KEY(?:_ID)?|URL|ID)\b")
 AUTH_HINT = re.compile(r"api[ _-]?key|token|secret|credential|password|unauthori[sz]ed|authenticat|environment variable|env var"
                        r"|is required|must be (set|provided)|not (set|provided|found)|missing", re.I)
+HELP = re.compile(r"^\s*(usage:|commands:|options:)", re.I | re.M)
+SUBCOMMAND = re.compile(r"^\s{1,8}(mcp|stdio|serve|server)(?=\s|\[|$)([^\n]*)$", re.I | re.M)
 
 
 class ProbeRejected(ValueError):
@@ -158,6 +161,26 @@ def _install_pypi(sandbox, spec: str) -> tuple[dict, list[str] | None]:
     return stage, [f"/tmp/venv/bin/{chosen}"]
 
 
+def mcp_subcommand(help_text: str) -> str | None:
+    """도움말이면 하위 명령 목록에서 stdio MCP 서버를 켜는 것. mcp·stdio는 이름만으로, serve·server는 설명에 MCP가 있을 때. HTTP·SSE는 뺀다."""
+    found = SUBCOMMAND.finditer(help_text or "") if HELP.search(help_text or "") else ()
+    return next((m.group(1) for m in found if not re.search(r"\b(HTTP|SSE)\b", m.group(2), re.I)
+                 and (m.group(1).lower() in ("mcp", "stdio") or re.search(r"\bMCP\b", m.group(2), re.I))), None)
+
+
+def _alive(sandbox, launch: list[str]) -> tuple[dict, str]:
+    """② 실행: 표준입력을 열어 둔 채 ALIVE_SECONDS 살아 있으면 성공. 반환: (단계, 에러·출력 끝부분)."""
+    quoted = " ".join(shlex.quote(p) for p in launch)
+    t0 = time.perf_counter()
+    code, out, _ = _run(sandbox, f"cd /tmp && (sleep {ALIVE_SECONDS + 4}) | timeout {ALIVE_SECONDS} {quoted} "
+                                 ">/tmp/run.out 2>/tmp/run.err; echo EXIT=$?", RUN_TIMEOUT)
+    exit_code = int(m.group(1)) if (m := re.search(r"EXIT=(\d+)", out or "")) else code
+    _, run_err, _ = _run(sandbox, "tail -c 8000 /tmp/run.err; tail -c 8000 /tmp/run.out", 10)  # 긴 도움말도 머리(Usage)까지
+    alive = exit_code == 124  # timeout이 끊었다 = 입력을 기다리며 살아 있었다
+    return {"status": OK if alive else FAIL, "ms": int((time.perf_counter() - t0) * 1000),
+            "note": "" if alive else f"종료 코드 {exit_code}: {_tail(run_err)}"}, run_err
+
+
 def _probe_json(stdout: str) -> dict:
     for line in reversed((stdout or "").strip().splitlines()):
         if line.startswith("{"):
@@ -220,15 +243,14 @@ def run(command: str = "", kind: str = "", url: str = "", item_id: int | None = 
             if launch:
                 launch += parsed["args"]
                 sandbox.update_network({"deny_out": ["0.0.0.0/0"]})  # 설치 단계만 네트워크 허용
+                stages["run"], run_err = _alive(sandbox, launch)
+                # 도움말만 찍고 끝나는 CLI는 MCP 서버를 켜는 하위 명령으로 한 번 더 (10/2 llm-wiki-compiler serve)
+                if stages["run"]["status"] == FAIL and not parsed["args"] and (sub := mcp_subcommand(run_err)):
+                    launch, command = launch + [sub], f"{command} {sub}"
+                    stages["run"], run_err = _alive(sandbox, launch)
+                if help_only := stages["run"]["status"] == FAIL and bool(HELP.search(run_err)):  # 못 띄워 본 것이지 고장이 아니다
+                    stages["run"] |= {"status": UNSURE, "note": "도움말만 출력하고 끝남(MCP 서버 시작 명령을 찾지 못함)"}
                 quoted = " ".join(shlex.quote(p) for p in launch)
-                t0 = time.perf_counter()
-                code, out, _ = _run(sandbox, f"cd /tmp && (sleep {ALIVE_SECONDS + 4}) | timeout {ALIVE_SECONDS} {quoted} "
-                                             ">/tmp/run.out 2>/tmp/run.err; echo EXIT=$?", RUN_TIMEOUT)
-                exit_code = int(m.group(1)) if (m := re.search(r"EXIT=(\d+)", out or "")) else code
-                _, run_err, _ = _run(sandbox, "tail -c 2000 /tmp/run.err; tail -c 500 /tmp/run.out", 10)
-                alive = exit_code == 124  # timeout이 끊었다 = 입력을 기다리며 살아 있었다
-                stages["run"] = {"status": OK if alive else FAIL, "ms": int((time.perf_counter() - t0) * 1000),
-                                 "note": "" if alive else f"종료 코드 {exit_code}: {_tail(run_err)}"}
                 t0 = time.perf_counter()
                 _, out, err = _run(sandbox, f"cd /tmp && python3 /tmp/sandbox_probe.py --timeout {TOOLS_TIMEOUT} -- {quoted}",
                                    TOOLS_TIMEOUT + 15)
@@ -238,12 +260,14 @@ def run(command: str = "", kind: str = "", url: str = "", item_id: int | None = 
                 stages["tools_list"] = {"status": OK if ok else FAIL, "ms": int((time.perf_counter() - t0) * 1000), "count": len(tools),
                                         "note": _tail(result.get("error") or "")}
                 requirements, hinted = auth_requirements(run_err, result.get("stderr_tail") or "", result.get("error") or "")
-                if requirements or (hinted and not ok):
+                if help_only and not ok:  # 도움말 문장의 "missing"·"token" 같은 낱말을 인증 요구로 보지 않는다
+                    stages["tools_list"]["status"], stages["auth"], requirements = UNSURE, {"status": UNSURE}, []
+                elif requirements or (hinted and not ok):
                     stages["auth"] = {"status": "필요", "requirements": requirements}
                 elif ok:
                     stages["auth"] = {"status": "불필요"}
                 else:
-                    stages["auth"] = {"status": "미확인"}
+                    stages["auth"] = {"status": UNSURE}
             else:
                 notes.append(install_stage.get("note", ""))
     except Exception as exc:  # 샌드박스 명령 시간 초과·연결 끊김: 미완료, 내일 재시도

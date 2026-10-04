@@ -96,12 +96,15 @@ def card_verification(row) -> dict | None:
     seconds = lambda stage: f" {ms / 1000:.1f}s" if (ms := (stages.get(stage) or {}).get("ms")) else ""  # noqa: E731
     auth = (stages.get("auth") or {}).get("status")
     endpoint = (stages.get("tools_list") or {}).get("endpoint")
+    # 키가 없어 못 띄운 것은 도구 고장이 아니다. "실패" 대신 미확인(키 필요)으로 (10/3 Memanto MOORCHEH_API_KEY)
+    keyed = lambda value: ("warn", "미확인(키 필요)") if value == FAIL and auth == "필요" else (chip.get(value, "na"), value)  # noqa: E731
+    (run_chip, run_word), (list_chip, list_word) = keyed(row.run), keyed(row.tools_list)
     return {
         "install": {"status": chip.get(row.install, "na"), "label": "설치 해당없음" if remote else f"설치 {row.install}{seconds('install')}"},
-        "run": {"status": chip.get(row.run, "na"), "label": "실행 해당없음" if remote else f"실행 {row.run}"},
-        "tools_list": {"status": chip.get(row.tools_list, "na"),
+        "run": {"status": run_chip, "label": "실행 해당없음" if remote else f"실행 {run_word}"},
+        "tools_list": {"status": list_chip,
                        "label": f"도구 {len(row.tools or [])}개" if row.tools_list == OK
-                       else f"엔드포인트 {endpoint}" if remote and endpoint else f"도구 목록 {row.tools_list}"},
+                       else f"엔드포인트 {endpoint}" if remote and endpoint else f"도구 목록 {list_word}"},
         "auth_required": {"status": "warn" if auth == "필요" else "ok" if auth == "불필요" else "na",
                           "label": f"{', '.join(row.requirements)} 필요" if auth == "필요" and row.requirements
                           else "인증 필요" if auth == "필요" else "인증 불필요" if auth == "불필요" else "인증 미확인"},
@@ -144,7 +147,7 @@ def request_note(kind: str | None, status: str | None, error: str | None, attemp
 
 
 def results_for(urls: list[str]) -> dict[str, dict]:
-    """카드 링크별 검증 결과. {url: {verification, risk_signal, request_status, note}}. 요청만 있고 결과가 없으면 note만."""
+    """카드 링크별 검증 결과. {url: {verification, risk_signal, request_status, note, probe_command}}. 요청만 있고 결과가 없으면 note만."""
     if not urls:
         return {}
     with db.get_engine().connect() as conn:
@@ -160,5 +163,6 @@ def results_for(urls: list[str]) -> dict[str, dict]:
         has_result = (verification or risk) and row.status not in ("failed", "rejected")  # 실패 이유는 되돌림 1이 읽는다
         note = None if has_result else request_note(row.kind, row.status, row.last_error, row.attempts or 0)
         if verification or risk or note or row.status:
-            out[row.url] = {"verification": verification, "risk_signal": risk, "request_status": row.status, "note": note}
+            out[row.url] = {"verification": verification, "risk_signal": risk, "request_status": row.status, "note": note,
+                            "probe_command": getattr(probes.get(row.id), "command", None)}
     return out
