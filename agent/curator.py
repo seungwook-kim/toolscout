@@ -11,6 +11,7 @@
 """
 import random
 from dataclasses import asdict
+from urllib.parse import urlsplit
 
 import models
 from agent import card_why, headline, importance, owners, same_story, schemas, structured, tracing
@@ -82,8 +83,8 @@ def _ask(prompt, payload, schema, stats: Stats, check=None, label: str = "", mod
 
 
 def _brief(item: dict, n: int) -> dict:
-    return {"id": n, "type": item["type"], "source": item["source"], "title": item["title"],
-            "summary": item.get("summary", "")[:SUMMARY_CHARS]}
+    site = (urlsplit(item.get("url") or "").hostname or "").removeprefix("www.") if item["type"] == "news" and not item.get("summary") else ""  # 10/5 승인
+    return {"id": n, "type": item["type"], "source": item["source"], "title": item["title"], "summary": item.get("summary", "")[:SUMMARY_CHARS]} | ({"link_site": site} if site else {})
 
 
 async def select(items: list[dict], stats: Stats, rng: random.Random, model_call=None) -> list[dict]:
