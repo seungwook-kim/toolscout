@@ -56,6 +56,10 @@ def main() -> int:
         "진짜_소식은_남음(개최·행사장_발표)": [k["title"] for k in kept if k["type"] == "news"] == real,
         "도구는_규칙_대상_아님": any(k["type"] == "skill" for k in kept),
         **title_rules(),
+        "요약_빈_뉴스는_선별_입력에_링크_사이트(10/5)": curator._brief({"type": "news", "source": "hackernews", "title": "Muse Gadgets",
+                                                              "url": "https://www.about.meta.com/a", "summary": ""}, 1).get("link_site") == "about.meta.com"
+        and "link_site" not in curator._brief({"type": "news", "source": "aitimes", "title": "t", "url": "https://a.test/x", "summary": "요약"}, 2)
+        and "link_site" not in curator._brief({"type": "mcp", "source": "mcp_registry", "title": "t", "url": "https://github.com/a/b", "summary": ""}, 3),
         "선별_기준에_행사·책·웨비나·채용": all(w in curator.SELECT_PROMPT for w in ("행사·컨퍼런스 세션 예고", "책·서평·신간", "웨비나", "채용 공고")),
         "선별_기준에_에세이·사용기_false·투자·장애·예고_true(9/30 골든셋)": all(w in curator.SELECT_PROMPT for w in (
             "에세이·칼럼·의견 글", "개인 사용기", "투자 유치", "서비스 장애", "신제품 발표 예고")),

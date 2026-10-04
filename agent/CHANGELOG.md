@@ -1,5 +1,6 @@
 # agent/ CHANGELOG
 
+- 2026-10-05 · curator 선별 입력: 요약이 빈 뉴스(해커뉴스 링크 글)에 link_site(링크 도메인, 예: blog.google)를 더함. 수집·저장 요약은 그대로 · 해커뉴스 링크 글은 story_text가 없어 제목만으로 판정돼 Muse Gadgets·구글 Suncatcher 위성을 AI 무관으로 놓침(10/3·10/4, 사용자 승인) · check_promo 13·check_topic_guide 6·run_daily --fake 통과. 효과는 다음 실행 골든셋으로 본다
 - 2026-10-04 · probe: 도움말만 찍고 끝나는 CLI는 도움말의 stdio MCP 하위 명령(serve·mcp, HTTP·SSE 서버는 빼고)으로 1회 더 실행, 그래도 도움말이면 실행·도구 목록·인증을 실패가 아니라 미확인으로(도움말 낱말을 인증 요구로 안 봄). 출력 끝부분을 8,000바이트까지 읽는다 · 10/3 카드의 llm-wiki-compiler·gflow-cli가 서버 시작 명령 없이 돌아 "실행 실패"로 나감 · check_probe_labels 10(신규)·check_probe(실제 E2B) 통과, 실제 재실측 llm-wiki-compiler 실행 성공·도구 16개, gflow-cli 미확인
 - 2026-09-30 · 선별 worth_today: 에세이·칼럼·의견 글, 개인 사용기·비교 후기, 커뮤니티 토론 글 false / AI 기업 투자 유치·인수·실적, AI 서비스 장애·보안 사고, 신제품 발표 예고, 연구 결과 공개 true · 9/30 골든셋에서 놓친 11건이 투자·장애·예고, 잘못 통과 26건이 에세이·사용기 · check_promo·check_topic_guide(1,795자) 통과, 효과는 10/1 채점
 
