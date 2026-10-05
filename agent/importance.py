@@ -7,15 +7,21 @@ Jev는 문서 하나와 단계 기준을 받아 단계별 확률과 가중 점�
 - 공개 뉴스만 보낸다. 사용자 프로필·질문은 보내지 않는다 (작업 규칙 7, 이 사이트의 학습 사용 정책은 공개돼 있지 않다)
 - 키 없음·오류·시간 초과면 그 기사는 선별 모델 점수를 그대로 둔다 (브리핑을 막지 않는다). 동시 호출 4개
 호출 주소와 키 이름은 models.JEV (사용자가 산 키가 jevtypesafeai.com 것이라 그 사이트 주소로 부른다).
+
+개발 모드는 Jev 대신 Claude 구독(models "importance" 역할)으로 매긴다 (2026-10-05 사용자 결정 "전부 구독으로").
+같은 5단계 기준으로 20건 묶음마다 한 번 부르고, 선별이 매긴 원래 점수는 importance_select에 남긴다.
+묶음이 모델 장애·형식 실패면 그 묶음은 선별 점수를 그대로 둔다. 운영 모드는 위 Jev 그대로다.
 """
 import asyncio
 import logging
 import os
+from urllib.parse import urlsplit
 
 import httpx
 
 import models
-from agent import tracing
+from agent import schemas, structured, tracing
+from agent.structured import Stats
 
 log = logging.getLogger("toolscout.importance")
 
@@ -26,6 +32,14 @@ LEVELS = ["1: Unrelated to AI development, local/municipal news, or a tiny perso
           "5: Major lab launches a new flagship model or platform that the whole industry will cover the same day"]
 INSTRUCTIONS = "How big is this news for developers who build AI agents, across the whole industry?"
 SUMMARY_CHARS, CONCURRENCY, TIMEOUT = 300, 4, 20.0
+MODEL_ROLE, BATCH = "importance", 20
+PROMPT = f"""너는 toolscout 편집자다. 뉴스마다 AI 에이전트를 만드는 개발자 업계 전체에게 얼마나 큰 소식인지 1~5점을 매긴다.
+질문: {INSTRUCTIONS}
+단계:
+{chr(10).join(f"- {level}" for level in LEVELS)}
+- 제목과 요약(요약이 비면 link_site 도메인)만 보고 매긴다
+- 입력의 모든 id에 한 번씩 점수를 준다
+출력은 JSON 객체 하나만 쓴다. 설명 문장이나 코드 블록을 붙이지 않는다. 형식: {{"scores": [{{"id": 1, "importance": 3}}]}}"""
 
 
 def _request(item: dict) -> dict:
@@ -39,9 +53,52 @@ def _score(answer: dict) -> float:
     return answer["score"] + (1 if probs and min(int(k) for k in probs) == 0 else 0)
 
 
-async def rescore(selected: list[dict], post=None) -> dict:
-    """selected 뉴스의 importance를 Jev 점수로 바꾼다(제자리). 반환: {scored, failed, skipped, cost_usd}."""
+def _brief(item: dict, n: int) -> dict:
+    site = "" if item.get("summary") else (urlsplit(item.get("url") or "").hostname or "").removeprefix("www.")
+    return {"id": n, "title": item["title"], "summary": (item.get("summary") or "")[:SUMMARY_CHARS]} | ({"link_site": site} if site else {})
+
+
+async def _rescore_by_model(news: list[dict], model_call=None) -> dict:
+    """개발 모드: 구독 모델로 20건 묶음마다 점수를 받아 importance를 바꾼다(제자리). 반환 모양은 Jev와 같다."""
+    report = {"scored": 0, "failed": 0, "skipped": 0, "cost_usd": 0.0}
+    stats = Stats()
+    call = model_call or (lambda _role, messages, tools=None: models.call(MODEL_ROLE, messages, tools, temperature=0))
+    with tracing.span("importance", kind="chain", model=models.active_models()[MODEL_ROLE][0]["model"],
+                      input={"news": len(news)}) as span:
+        for start in range(0, len(news), BATCH):
+            batch = news[start:start + BATCH]
+
+            def ids_complete(parsed: schemas.ImportanceBatch, size=len(batch)):
+                ids = sorted(s.id for s in parsed.scores)
+                if ids != list(range(1, size + 1)):
+                    raise ValueError(f"id가 1~{size}를 한 번씩 덮지 않음 (받은 {len(ids)}건)")
+
+            label = f"중요도 {start // BATCH + 1}묶음"
+            try:
+                parsed = await structured.ask_json("curator", PROMPT, [_brief(item, n) for n, item in enumerate(batch, 1)],
+                                                   schemas.ImportanceBatch, stats, ids_complete, label, call)
+            except models.ModelUnavailable as exc:
+                stats.model_failed(label, exc)
+                parsed = None
+            if parsed is None:  # 이 묶음은 선별 모델 점수를 그대로 쓴다
+                report["failed"] += len(batch)
+                continue
+            for score in parsed.scores:
+                item = batch[score.id - 1]
+                item["importance_select"], item["importance"] = item.get("importance"), score.importance
+            report["scored"] += len(batch)
+        span.update(output=report | {"model_failures": stats.model_failures[:3], "format_failures": stats.format_failures})
+    if report["failed"]:
+        log.warning("구독 중요도 %d건 실패, 선별 모델 점수를 그대로 씀", report["failed"])
+    return report
+
+
+async def rescore(selected: list[dict], post=None, model_call=None) -> dict:
+    """selected 뉴스의 importance를 Jev 점수로 바꾼다(제자리). 반환: {scored, failed, skipped, cost_usd}.
+    개발 모드는 Jev 대신 구독 모델로 매긴다(post를 주면 Jev 경로 검수라 모드와 상관없이 Jev 경로)."""
     news = [i for i in selected if i.get("type") == "news"]
+    if models.dev_mode() and post is None:
+        return await _rescore_by_model(news, model_call) if news else {"scored": 0, "failed": 0, "skipped": 0, "cost_usd": 0.0}
     key = os.environ.get(models.JEV["key_env"], "")
     if not news or (not key and post is None):
         return {"scored": 0, "failed": 0, "skipped": len(news), "cost_usd": 0.0}

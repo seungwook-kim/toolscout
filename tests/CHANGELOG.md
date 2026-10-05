@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-05 · check_models: 개발 모드 6역할(4역할·same_story·importance) 구독만·같은 모델 두 칸, 503이면 같은 구독 1회 더·529면 기다리지 않고 건너뜀·400은 바로 장애, 가짜 제공자를 전부 바꿔 구독 밖 호출을 잡음, 표에서 뺀 제공자 옵션 변환 유지, 실제 호출은 6역할 구독 · check_importance: 운영(Jev) 항목은 DEV_MODE=0으로, 개발 구독 경로 8항목 추가 · check_groq는 남겨 둔 GROQ 정의로 · 사용자 결정 "다 구독으로"
 - 2026-10-05 · check_models: 개발 모델표 순서를 구독 → groq → gemini → openrouter로(Ollama 없음 항목 추가), 예열이 Ollama 없으면 아무것도 안 부르는지, 전환 시나리오 기대값 갱신, 가짜 제공자 시나리오에서 무료 등급 간격을 기다리지 않게(5분 넘던 것 3초) · 사용자 결정 "올라마로 돌리지 말고 로컬도 구독 모델로" · check_models --offline·check_scheduler·check_claude_cli·check_fallback_errors 통과
 - 2026-10-05 · check_promo에 선별 입력 link_site 항목(요약 빈 뉴스만, 도구·요약 있는 뉴스는 없음) · 해커뉴스 링크 글이 제목만으로 판정되던 것 · 통과
 - 2026-10-05 · golden/score_select.py에 new_only(앞선 날짜 판정 파일에 나온 제목을 뺀 정밀도·재현율), check_score_select.py(4항목, 임시 폴더 가짜 파일) · 수집 창이 48시간이라 전날 기사가 다시 채점돼 같은 기사를 놓친 것이 이틀 오답으로 세짐(10/4 정답 O 63건 중 28건 재등장) · 처음 본 것만 재현율 10/1 92.2%·10/2 84.8%·10/3 83.8%·10/4 82.9%, 정밀도 75.6%·70.9%·62.0%·60.4%. check_score_select 통과

@@ -1,22 +1,43 @@
-"""Jev 중요도 검수 (2026-09-23). 가짜 응답으로 확인한다. Jev·네트워크를 부르지 않는다.
+"""중요도 검수 (Jev 2026-09-23, 개발 모드 구독 2026-10-05). 가짜 응답으로 확인한다. Jev·모델·네트워크를 부르지 않는다.
 
 실행: uv run python -m tests.agent.check_importance
+운영 모드(Jev 경로, DEV_MODE=0으로 확인)
 - 뉴스만 보내고 도구는 안 보냄 / 요청에는 제목·요약 300자와 5단계 영어 기준만 (사용자 정보 없음)
 - 점수 반올림해 importance, 원래 값·confidence는 따로 / 단계 번호가 0부터면 1을 더함 / 1~5 밖으로 안 나감
 - 실패한 기사는 선별 모델 점수 그대로, 나머지는 반영 / 키 없으면 아무것도 안 보냄 / 비용 합산
 - 모델표: same_story는 OpenRouter gpt-4o-mini 단일 모델, 역할표 4개는 그대로 / Jev 주소는 models.JEV
-- curator.run은 가짜 모델(검수)일 때 Jev를 부르지 않는다
-- same_story 시간 초과면 같은 모델로 한 번 더 / 중요도 2 이하 뉴스는 사용자 후보에서 빠짐(남는 게 10건 미만이면 그대로)
+- same_story 시간 초과면 같은 모델로 한 번 더
+개발 모드(구독 경로)
+- Jev 대신 "importance" 역할 모델로, 20건 묶음마다 한 번 / 입력은 번호·제목·요약 300자(요약이 비면 link_site)만, 기준은 같은 5단계
+- 받은 점수로 importance를 바꾸고 선별 점수는 importance_select에 / 도구는 손대지 않음
+- 번호가 빠진 답은 1회 다시 묻고 그래도 틀리면, 모델 장애면 그 묶음은 선별 점수 그대로
+공통
+- curator.run은 가짜 모델(검수)일 때 중요도 모델·Jev를 부르지 않는다
+- 중요도 2 이하 뉴스는 사용자 후보에서 빠짐(남는 게 10건 미만이면 그대로)
 """
 import asyncio
 import json
 import os
 import sys
+from contextlib import contextmanager
 
 import models
 from agent import curator, importance
 
 results: list[tuple[str, bool]] = []
+
+
+@contextmanager
+def mode(value: str):
+    saved = os.environ.get("DEV_MODE")
+    os.environ["DEV_MODE"] = value
+    try:
+        yield
+    finally:
+        if saved is None:
+            os.environ.pop("DEV_MODE", None)
+        else:
+            os.environ["DEV_MODE"] = saved
 
 
 def check(name: str, ok: bool) -> None:
@@ -50,6 +71,67 @@ def items():
             {"type": "mcp", "title": "도구", "summary": "s", "url": "u4", "importance": 3}]
 
 
+def scorer(answers=None, broken=()):
+    """가짜 중요도 모델. 받은 번호마다 answers(제목→점수, 없으면 2)를 돌려준다. 첫 제목이 broken에 든 묶음은 번호 하나를 빼고 답한다."""
+    from langchain_core.messages import AIMessage
+    seen: list[dict] = []
+
+    def call(role, messages, tools=None):
+        payload = json.loads(messages[-1].content.split("<data>\n", 1)[1].rsplit("\n</data>", 1)[0])
+        seen.append({"role": role, "system": messages[0].content, "input": payload, "retry": "규격에 맞지 않았다" in messages[0].content})
+        scores = [{"id": p["id"], "importance": (answers or {}).get(p["title"], 2)} for p in payload]
+        if payload[0]["title"] in broken:
+            scores = scores[1:]
+        return AIMessage(json.dumps({"scores": scores}), usage_metadata={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2})
+    return call, seen
+
+
+async def dev_checks() -> None:
+    from langchain_core.messages import AIMessage
+
+    data = items() + [{"type": "news", "title": "요약 빈 글", "summary": "", "url": "https://www.example.com/a", "importance": 3}]
+    call, seen = scorer({"Opus 5.5": 5, "구글북": 1})
+    with mode("1"):
+        report = await importance.rescore(data, model_call=call)
+    by = {i["url"]: i for i in data}
+    sent = seen[0]["input"]
+    check("개발: Jev 대신 모델로 매기고 선별 점수는 importance_select에", by["u1"]["importance"] == 5 and by["u1"]["importance_select"] == 3
+          and by["u2"]["importance"] == 1 and by["u2"]["importance_select"] == 5 and "importance_jev" not in by["u1"])
+    check("개발: 도구는 손대지 않고 뉴스만 보냄", by["u4"]["importance"] == 3 and "importance_select" not in by["u4"]
+          and [p["title"] for p in sent] == ["Opus 5.5", "구글북", "실패할 기사", "요약 빈 글"])
+    check("개발: 입력은 번호·제목·요약 300자, 요약이 비면 link_site", all(set(p) <= {"id", "title", "summary", "link_site"} for p in sent)
+          and len(sent[0]["summary"]) == 300 and sent[3].get("link_site") == "example.com" and "link_site" not in sent[0])
+    check("개발: 같은 5단계 기준이 프롬프트에", all(level in seen[0]["system"] for level in importance.LEVELS))
+    check("개발: 보고 성공 4·실패 0", report == {"scored": 4, "failed": 0, "skipped": 0, "cost_usd": 0.0})
+
+    many = [{"type": "news", "title": f"n{n}", "url": f"m{n}", "importance": 4} for n in range(25)]
+    call, seen = scorer(broken={"n20"})
+    with mode("1"):
+        report = await importance.rescore(many, model_call=call)
+    first, second = [s for s in seen if not s["retry"]], [s for s in seen if s["retry"]]
+    check("개발: 20건 묶음마다 한 번 (25건 → 2묶음)", [len(s["input"]) for s in first] == [20, 5])
+    check("개발: 번호 빠진 묶음은 1회 다시 묻고, 그래도 틀리면 선별 점수 그대로", len(second) == 1
+          and all(i["importance"] == 2 for i in many[:20]) and all(i["importance"] == 4 for i in many[20:])
+          and report["scored"] == 20 and report["failed"] == 5)
+
+    def down(role, messages, tools=None):
+        raise models.ModelUnavailable("importance", ["claude_code 529", "claude_code 529"])
+    kept = [{"type": "news", "title": "a", "url": "a", "importance": 4}]
+    with mode("1"):
+        report = await importance.rescore(kept, model_call=down)
+    check("개발: 모델 장애면 선별 점수 그대로", kept[0]["importance"] == 4 and report["failed"] == 1 and report["scored"] == 0)
+
+    roles, original = [], models.call
+    models.call = lambda role, messages, tools=None, **kw: roles.append(role) or AIMessage(
+        '{"scores": [{"id": 1, "importance": 3}]}', usage_metadata={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2})
+    try:
+        with mode("1"):
+            await importance.rescore([{"type": "news", "title": "a", "url": "a"}])
+    finally:
+        models.call = original
+    check("개발: 기본 모델은 importance 역할(키가 있어도 Jev 안 부름)", roles == ["importance"])
+
+
 async def main() -> None:
     sent = []
     replies = {"Opus 5.5": answer(3.9), "구글북": answer(1.6), "실패할 기사": Resp({}, 500)}
@@ -78,14 +160,18 @@ async def main() -> None:
     check("1~5 밖으로 안 나감 (5.0+1→5)", edge[0]["importance"] == 5)
     saved = os.environ.pop(models.JEV["key_env"], None)
     try:
-        none = await importance.rescore(items())
+        with mode("0"):
+            none = await importance.rescore(items())
     finally:
         if saved is not None:
             os.environ[models.JEV["key_env"]] = saved
-    check("키 없으면 아무것도 안 보냄", none == {"scored": 0, "failed": 0, "skipped": 3, "cost_usd": 0.0})
-    check("모델표: same_story는 gpt-4o-mini 하나를 두 번(같은 모델 재시도), 역할표 4개 그대로",
-          models.active_models()["same_story"] == [{"provider": "openrouter", "model": "openai/gpt-4o-mini"}] * 2
+    check("운영: 키 없으면 아무것도 안 보냄", none == {"scored": 0, "failed": 0, "skipped": 3, "cost_usd": 0.0})
+    with mode("0"):
+        prod_same_story = models.active_models()["same_story"]
+    check("운영 모델표: same_story는 gpt-4o-mini 하나를 두 번(같은 모델 재시도), 역할표 4개 그대로",
+          prod_same_story == [{"provider": "openrouter", "model": "openai/gpt-4o-mini"}] * 2
           and set(models.DEV_MODELS) == set(models.PROD_MODELS) == {"curator", "verifier", "explainer", "gate"})
+    await dev_checks()
     check("Jev 주소는 models.JEV", models.JEV["url"].endswith("/api/v1/decide") and models.JEV["key_env"] == "JEV_API_KEY")
 
     import httpx
@@ -101,11 +187,12 @@ async def main() -> None:
     models.PROVIDERS["openrouter"] = flaky
     models.FREE_TIER_MIN_INTERVAL.clear()
     try:
-        reply = models.call("same_story", [HumanMessage("x")])
+        with mode("0"):
+            reply = models.call("same_story", [HumanMessage("x")])
     finally:
         models.PROVIDERS["openrouter"] = saved_adapter
         models.FREE_TIER_MIN_INTERVAL.update(saved_interval)
-    check("same_story 시간 초과면 같은 모델로 한 번 더", len(seen_models) == 2 and len(set(seen_models)) == 1 and reply.text == '{"groups": []}')
+    check("운영: same_story 시간 초과면 같은 모델로 한 번 더", len(seen_models) == 2 and len(set(seen_models)) == 1 and reply.text == '{"groups": []}')
 
     def news_item(n, imp):
         return {"type": "news", "title": f"n{n}", "url": f"u{n}", "source": "openai", "topic": "model_release", "importance": imp}

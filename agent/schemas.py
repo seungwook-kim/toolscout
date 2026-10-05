@@ -70,6 +70,16 @@ class SameStory(BaseModel):
     groups: list[list[int]] = Field(default_factory=list)
 
 
+class ImportanceScore(BaseModel):
+    id: int
+    importance: int = Field(ge=1, le=5)
+
+
+class ImportanceBatch(BaseModel):
+    """개발 모드 뉴스 중요도(agent/importance.py, Jev 자리). id는 입력 번호, 점수는 Jev와 같은 5단계 (2026-10-05)."""
+    scores: list[ImportanceScore]
+
+
 class RelatedPicks(BaseModel):
     """관련 카드(F3-b) 선택. 날짜 무관 도구 목록에서 고른다."""
     tools: list[Pick] = Field(default_factory=list, max_length=MAX_RELATED)

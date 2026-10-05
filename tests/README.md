@@ -6,7 +6,7 @@
 - `docs/check_folder_docs.py`: 폴더 README 30줄·할 일·CHANGELOG 형식·긴 줄표 / `docs/check_readme.py`: 루트 README 사양·부록 F 트리
 - `env/check_env.py`: pip check, langgraph·langchain 미설치, 필수 import → `env/check_env.json` / `env/check_config.py`: .env 로더·값 비출력
 - `env/check_env_example.py`: `.env.example` 키 목록·`.env` git 무시 / `env/check_docker.py`: GitHub Actions `ci` 4단계, compose(app 1개)·Dockerfile
-- `models/check_claude_cli.py`: Claude 구독 공급자(가짜 실행기) / `models/check_fallback_errors.py`: 제공자 전환 중 도구 기록 변환·검증 한 건 오류 격리 / `models/check_models.py`: 모델표, 제공자 순서 전환(429·503·529·연결·타임아웃·키 없음), 모델 장애, 옵션 전달, 호출 간격 + 개발 4역할 실제 호출
+- `models/check_claude_cli.py`: Claude 구독 공급자(가짜 실행기) / `models/check_fallback_errors.py`: 제공자 전환 중 도구 기록 변환·검증 한 건 오류 격리 / `models/check_models.py`: 모델표, 운영 제공자 전환(429·503·529·연결·타임아웃·키 없음), 개발 구독만(503 1회 더·529 건너뜀), 모델 장애, 옵션 전달, 호출 간격 + 개발 6역할 실제 구독 호출
 - `models/check_local_models.py`·`check_groq.py`: 로컬 Ollama VRAM·도구 호출·한글 실측, Groq 목록 API·도구 호출·한도 → `models/local_models.json`·`groq_models.json`
 - `access/check_apply.py`: 이용 신청·관리자 승인 탭 / `access/check_access.py`: 초대제(승인 전 403 6종·코드 기한·횟수·관리자 API)와 공개 데모(비로그인 200·버튼 없음·사용자 노출 없음·분당 60회·색인)
 - `db/check_tables.py`: 표 12개·연결 문자열 변환·is_test·briefings 빈 행 구조 + Supabase 실제 생성·개발 프로필 A·B·C
@@ -20,11 +20,11 @@
 - `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)
 - `web/`: check_auth·check_settings·check_briefings·check_feedback·check_ask(`--live-gate`)·check_rules(API 세션·남의 데이터·디자인 기준 CSS)·check_design(run_stats·item_meta, 보충 CSS 토큰만·공통 마스트헤드·금지 사항, PWA)
 - `golden/`: 선별 골든셋. `fetch_select.py`(그날 판정을 트레이스에서) → `score_select.py`(재현율·정밀도·신뢰구간, 앞선 날짜에 나온 기사를 뺀 new_only도), check_score_select / `agent/run_loop.py`: 가짜 모델로 루프 동작 9항목 + 현재 모델표 해설가로 실제 "안녕"·도구 1개(통과 조건)
-- `agent/check_topic_guide.py`: 주제 경계가 선별 프롬프트에 빠짐없이·길이 상한 / `check_same_story.py`: 같은 소식 빼기 / `check_owners.py`: 게시자 반복 줄이기 / `check_card_why.py`: 카드 이유 근거 / `check_headline.py`: 오늘의 큰 소식 / `check_importance.py`: Jev 중요도 / `agent/run_curator.py`: 오늘 수집 + 가짜 프로필 2개로 큐레이터 실행 → `agent/curator_report.json`
+- `agent/check_topic_guide.py`: 주제 경계가 선별 프롬프트에 빠짐없이·길이 상한 / `check_same_story.py`: 같은 소식 빼기 / `check_owners.py`: 게시자 반복 줄이기 / `check_card_why.py`: 카드 이유 근거 / `check_headline.py`: 오늘의 큰 소식 / `check_importance.py`: 중요도(운영 Jev·개발 구독) / `agent/run_curator.py`: 오늘 수집 + 가짜 프로필 2개로 큐레이터 실행 → `agent/curator_report.json`
 - `agent/run_explainer.py`: `--fake`는 가짜 모델로 카드·반려·재시도 8항목, 없으면 실제 카드 + for_me 3쌍 → `explainer_report.json` / `check_reject_rate.py`: 반려됐던 항목 재투입·대조군 반려 5항목
 
 ## 들어오고 나가는 데이터 / 관련
 - 들어옴: 각 폴더 코드, 실제 외부 응답 / 나감: 검수 결과 JSON (값은 출력하지 않음). 모든 주요 폴더와 관련
 
 ## 할 일
-- [ ] 원격 무료 한도(Gemini 하루 20회, OpenRouter 하루 50회)는 로컬 모델이 먼저 받으므로 전량 실행만 하루 한 번
+- [ ] 개발 모드는 구독만이라(2026-10-05) 구독 한도에 걸리면 그 묶음·카드가 빠진다. 실제 실행 검수는 디버깅 `--users 1 --limit 40`, 전량은 하루 한 번

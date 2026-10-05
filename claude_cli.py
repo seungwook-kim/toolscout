@@ -6,9 +6,10 @@ API 키 과금이 아니라 개발자 본인이 로그인해 둔 Claude Code(`cl
 - 도구 호출은 글 약속으로 한다(2026-09-28 사용자 "로컬은 구독 LLM 쓰게"): 우리 도구 목록을 시스템 프롬프트 끝에 붙이고, 도구가 필요하면
   {"tool_calls": [{"name", "args"}]}만 쓰게 한다. 그 답을 AIMessage.tool_calls로 바꿔 agent/loop.py가 MCP로 실행한다.
   목록에 없는 도구 이름은 도구 호출로 보지 않는다(글 답으로 둔다). 도구 결과는 다음 입력에 [도구 결과 이름]으로 이어 붙인다
-- 사용 한도·로그인 문제는 529, 그 밖의 실패·시간 초과는 503으로 올려 models.call이 바로 다음 제공자(무료 모델)로 넘어가게 한다.
+- 사용 한도·로그인 문제는 529, 그 밖의 실패·시간 초과는 503으로 올린다. 개발 모델표는 2026-10-05부터 구독만(같은 모델 두 칸)이라
+  503이면 같은 구독으로 한 번 더, 529면 두 번째 칸도 바로 529가 되어 models.call이 ModelUnavailable로 그 묶음·카드를 건너뛴다.
   429로 올리면 models.call이 60초 기다렸다 다시 부르는데, 구독 한도는 몇 시간씩 가서 호출마다 60초를 버린다.
-  한도에 한 번 걸리면 BLOCK_SECONDS 동안은 CLI를 띄우지 않고 바로 넘긴다
+  한도에 한 번 걸리면 BLOCK_SECONDS 동안은 CLI를 띄우지 않고 바로 529를 낸다
 - ANTHROPIC_* (API 키가 있으면 CLI가 API 과금으로 바뀐다)와 CLAUDE* (바깥 Claude Code 세션 표시)는 자식 프로세스 환경에서 뺀다
 - 9/27 23:57 앱 런처가 Ctrl+C 이벤트로 죽은 적이 있어, CLI는 새 프로세스 그룹·숨은 창으로 띄워 그쪽 신호가 앱에 닿지 않게 한다
 구독 요금제는 개인 사용 범위다. 다른 사용자를 받는 운영에서는 API 키(모델표 운영 모드)로 바꾼다.
@@ -24,7 +25,7 @@ from pathlib import Path
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 
-TIMEOUT = 240  # 해설가 원문 포함 한 번의 답. 넘으면 503으로 다음 제공자
+TIMEOUT = 240  # 해설가 원문 포함 한 번의 답. 넘으면 503(같은 구독으로 한 번 더)
 BLOCK_SECONDS = 30 * 60
 LIMIT_STATUS, FAIL_STATUS = 529, 503
 _blocked_until = {"at": 0.0}

@@ -1,7 +1,7 @@
 """Groq 무료 모델 확인: 목록 API에 있는지, 실제 도구 호출·한글 한 줄·JSON이 되는지, 한도 헤더.
 
 실행: uv run python -m tests.models.check_groq
-- 후보는 models.py 개발 모델표의 groq 모델 + 도구 호출 지원 문서(https://console.groq.com/docs/tool-use)의 비교 후보
+- 후보는 models.py에 남겨 둔 groq 정의(GROQ_FAST·GROQ_KOREAN, 2026-10-05 개발 모델표에서 뺌) + 도구 호출 지원 문서(https://console.groq.com/docs/tool-use)의 비교 후보
 - 키 값은 출력하지 않는다. 한도 헤더는 숫자만 남긴다
 결과: tests/models/groq_models.json
 """
@@ -61,7 +61,7 @@ def check(client: httpx.Client, spec: dict) -> dict:
 
 def main() -> int:
     headers = {"Authorization": f"Bearer {os.environ.get('GROQ_API_KEY', '')}"}
-    table_specs = {s["model"]: s for chain in models.DEV_MODELS.values() for s in chain if s["provider"] == "groq"}
+    table_specs = {s["model"]: s for s in (models.GROQ_FAST, models.GROQ_KOREAN)}
     specs = list(table_specs.values()) + [{"model": m} for m in COMPARE if m not in table_specs]
     with httpx.Client(headers=headers, timeout=60) as client:
         listed = client.get(MODELS_URL)
