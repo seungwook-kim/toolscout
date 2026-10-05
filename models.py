@@ -1,6 +1,6 @@
 """역할별 모델표와 call() (모델표). 모델명은 이 파일에서만 관리한다. 공급자별 호출은 providers.py.
 
-DEV_MODE(기본 1)면 개발 모델표(로컬·무료), 0이면 운영 모델표를 쓴다. 호출부는 role만 넘기므로 전환에 코드 변경이 없다.
+DEV_MODE(기본 1)면 개발 모델표(Claude 구독만, 2026-10-05부터), 0이면 운영 모델표를 쓴다. 호출부는 role만 넘기므로 전환에 코드 변경이 없다.
 개발 모델표에는 is_test 가짜 프로필과 공개 뉴스만 보낸다. 실제 사용자 텍스트는 보내지 않는다 (작업 규칙 7).
 
 모델 ID 출처
@@ -56,8 +56,10 @@ PROD_MODELS: ModelTable = {
     ],
 }
 
-# 개발 모드 제공자 순서: Claude 구독 → groq(무료) → gemini(무료) → openrouter(무료). ollama는 2026-10-05에 뺐다(아래 LOCAL_JSON_MODEL 주석)
-# 아래 로컬 모델 설명은 2026-09-14~10-04 표에 있던 때의 기록이다
+# 개발 모드는 Claude 구독만 쓴다 (2026-10-05 사용자 결정 "올라마 끄고 다 로컬에 도구모델 기반으로", 구독이 실패하면 "구독만, 실패하면 건너뜀").
+# 역할마다 같은 구독 모델을 두 칸 둔다. 503(시간 초과·CLI 실패)이면 한 번 더 부르고, 529(한도·로그인)면 claude_cli가 30분 동안 CLI를
+# 띄우지 않아 두 번째 칸도 바로 529 → ModelUnavailable로 호출부가 그 묶음·카드를 건너뛴다. 무료 원격(groq·gemini·openrouter)은 부르지 않는다
+# 아래 로컬·무료 모델 설명은 표에 있던 때(Ollama 2026-09-14~10-04, 무료 원격 ~10-05)의 기록이다
 # - 로컬 모델은 VRAM 8~9GB 안에서 가장 큰 모델을 실측으로 골랐다: gemma3:12b Q4_K_M, num_ctx 8192에서 8.96GiB (docs/local-model.md)
 #   gemma3:12b는 도구 호출을 지원하지 않아(tools False) 큐레이터·게이트는 첫 제공자, 해설가는 groq 다음 대체로 둔다.
 #   해설가는 모델에 도구를 주지 않으므로 대체로 쓸 수 있고, 도구가 필요한 호출이면 건너뛴다 (2026-09-15 사용자 결정)
@@ -76,30 +78,21 @@ PROD_MODELS: ModelTable = {
 # Claude 구독 (2026-09-28 사용자 결정 "지금은 너 자체의 구독 시스템으로 돌려라"). 개발자 본인이 로그인한 Claude Code CLI를
 # claude_cli.py가 `claude -p`로 부른다. API 과금 없음. 도구 호출도 구독으로(도구 목록을 글로 알려 주고 JSON 약속으로 받는다).
 # 모델 ID는 Claude Code가 받는 이름(2026-09-28 Claude Code 2.1.283 기준): 해설가·검증관 Sonnet 5, 큐레이터·게이트 Haiku 4.5.
-# 한도·로그인 문제(529)나 실패(503)면 아래 무료 제공자 순서로 넘어간다. 구독은 개인 사용 범위이고, 배포할 때는 OpenRouter 키를
+# 한도·로그인 문제(529)나 실패(503)의 처리는 위 개발 모드 설명을 따른다. 구독은 개인 사용 범위이고, 배포할 때는 OpenRouter 키를
 # 넣어 운영 모드로 간다(2026-09-28 사용자 "배포할 때는 오픈라우터 키 넣을 거니까, 지금 로컬은 구독 LLM")
 CC_SONNET = {"provider": "claude_code", "model": "claude-sonnet-5"}  # 도구 호출은 글 약속으로(claude_cli.py)
 # 큐레이터·게이트는 형식이 정해진 판정이라 생각을 끈다(9/29 선별 19번이 생각 때문에 31분, 끄고 같은 요청이 100초 → 6초).
 # 해설가·검증관은 문장 품질·위험 판단이라 켜 둔다(9/29 해설가 21번 8.6분)
 CC_HAIKU = {"provider": "claude_code", "model": "claude-haiku-4-5-20251001", "thinking": False}
-# 2026-10-05 사용자 결정 "올라마로 돌리지 말고 로컬도 구독 모델로": 개발 모드 표에서 Ollama를 뺐다. 구독이 실패하면 바로 무료 원격 순서로.
-# 표에 Ollama가 없으니 06:55 예열(warm_local)도 Ollama를 부르지 않는다. 아래 정의와 providers._ollama는 다시 넣을 때를 위해 둔다
+# 표에 Ollama가 없으니 06:55 예열(warm_local)도 Ollama를 부르지 않는다. 표에서 뺀 Ollama·Groq 정의와 providers 변환은 다시 넣을 때를 위해 둔다
 LOCAL_JSON_MODEL = {"provider": "ollama", "model": "gemma3:12b", "tools": False}
 GROQ_FAST = {"provider": "groq", "model": "openai/gpt-oss-20b", "reasoning": "low"}
 GROQ_KOREAN = {"provider": "groq", "model": "qwen/qwen3.8-27b", "reasoning": "none"}
 DEV_MODELS: ModelTable = {
-    "curator": [CC_HAIKU, GROQ_FAST,
-                {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
-                {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free", "reasoning": "none"}],
-    "verifier": [CC_SONNET, GROQ_KOREAN,
-                 {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "low"},
-                 {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free", "reasoning": "none"}],
-    "explainer": [CC_SONNET, GROQ_KOREAN,
-                  {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "low"},
-                  {"provider": "openrouter", "model": "nex-agi/nex-n2.5-pro:free", "reasoning": "none"}],
-    "gate": [CC_HAIKU, GROQ_FAST,
-             {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
-             {"provider": "openrouter", "model": "nex-agi/nex-n2.5-mini:free", "reasoning": "none"}],
+    "curator": [CC_HAIKU, CC_HAIKU],
+    "verifier": [CC_SONNET, CC_SONNET],
+    "explainer": [CC_SONNET, CC_SONNET],
+    "gate": [CC_HAIKU, CC_HAIKU],
 }
 
 FALLBACK_STATUS = {429, 503, 529}  # 529는 Anthropic 과부하
@@ -131,7 +124,7 @@ def dev_mode() -> bool:
     return os.environ.get("DEV_MODE", "1").strip() != "0"
 
 
-# 역할표 밖 단일 모델 (2026-09-23 사용자 결정). 개발·운영 모드 공통, 다른 모델로 대체하지 않는다(끝내 실패하면 ModelUnavailable → 호출부가 건너뜀)
+# 역할표 밖 단일 모델 (2026-09-23 사용자 결정). 운영 모드용(개발 모드는 아래 DEV_SINGLE_MODEL_ROLES), 다른 모델로 대체하지 않는다(끝내 실패하면 ModelUnavailable → 호출부가 건너뜀)
 # - same_story: 같은 소식 묶기·큰 소식 묶기(agent/same_story.py). 유료 OpenRouter 키, 사용자가 정한 모델이다.
 #   9/23 시험 7세트 중 5세트 정답, 2세트에서 다른 소식을 뺐다. 다른 OpenRouter 모델로 바꾸거나 시험하지 않는다 (사용자 결정)
 #   출처: https://openrouter.ai/api/v1/models (2026-09-23 조회, 입력 $0.15·출력 $0.60 per 1M)
@@ -144,10 +137,19 @@ SINGLE_MODEL_ROLES: ModelTable = {
 # TypeSafe 공식 API(api.typesafe.ai)에서는 이 키가 401이다. 이 사이트는 "TypeSafe AI와 관계없는 독립 플랫폼"이라고 밝힌다.
 # 9/23 실측: 호출 1회 약 460토큰 $0.0002, 골든셋 32건 순위상관 0.94 (qwen 0.98·gemma 0.82·gpt-4o-mini 0.82)
 JEV = {"url": "https://jevtypesafeai.com/api/v1/decide", "key_env": "JEV_API_KEY", "model": "jev-1.13.0"}
+# 개발 모드에서는 역할표 밖 호출도 구독으로 (2026-10-05 사용자 결정 "전부 구독으로"). 운영 모드는 위 same_story·Jev 그대로
+# - same_story: 다른 소식을 잘못 묶으면 카드가 빠져(gemma3는 5건 중 3건) 판단 품질이 중요하고, 하루 2번 남짓이라 Sonnet 5
+# - importance: Jev 자리(Jev는 10/1~10/5 매일 연결 실패). 선별 통과 뉴스 20건 묶음마다 1~5점, 형식이 정해진 판정이라 Haiku 4.5(생각 끔)
+DEV_SINGLE_MODEL_ROLES: ModelTable = {
+    "same_story": [CC_SONNET, CC_SONNET],
+    "importance": [CC_HAIKU, CC_HAIKU],
+}
 
 
 def active_models() -> ModelTable:
-    return {**(DEV_MODELS if dev_mode() else PROD_MODELS), **SINGLE_MODEL_ROLES}
+    if dev_mode():
+        return {**DEV_MODELS, **DEV_SINGLE_MODEL_ROLES}
+    return {**PROD_MODELS, **SINGLE_MODEL_ROLES}
 
 
 def call(role: str, messages: list[BaseMessage], tools: list[Any] | None = None, *,
