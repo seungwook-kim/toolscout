@@ -137,9 +137,10 @@ SINGLE_MODEL_ROLES: ModelTable = {
 # TypeSafe 공식 API(api.typesafe.ai)에서는 이 키가 401이다. 이 사이트는 "TypeSafe AI와 관계없는 독립 플랫폼"이라고 밝힌다.
 # 9/23 실측: 호출 1회 약 460토큰 $0.0002, 골든셋 32건 순위상관 0.94 (qwen 0.98·gemma 0.82·gpt-4o-mini 0.82)
 JEV = {"url": "https://jevtypesafeai.com/api/v1/decide", "key_env": "JEV_API_KEY", "model": "jev-1.13.0"}
-# 개발 모드에서는 역할표 밖 호출도 구독으로 (2026-10-05 사용자 결정 "전부 구독으로"). 운영 모드는 위 same_story·Jev 그대로
+# 개발 모드에서는 역할표 밖 모델 호출도 구독으로 (2026-10-05 사용자 결정 "전부 구독으로"). 운영 모드는 위 same_story·Jev 그대로
 # - same_story: 다른 소식을 잘못 묶으면 카드가 빠져(gemma3는 5건 중 3건) 판단 품질이 중요하고, 하루 2번 남짓이라 Sonnet 5
-# - importance: Jev 자리(Jev는 10/1~10/5 매일 연결 실패). 선별 통과 뉴스 20건 묶음마다 1~5점, 형식이 정해진 판정이라 Haiku 4.5(생각 끔)
+# - importance: Jev가 못 매긴 기사만의 대체(2026-10-06 사용자 결정 "JEV로 돌려", 개발 모드도 Jev가 먼저). Jev의 10/1~10/5 매일
+#   연결 실패는 이 PC의 안랩 차단이었다(바깥에서는 정상). 20건 묶음마다 1~5점, 형식이 정해진 판정이라 Haiku 4.5(생각 끔)
 DEV_SINGLE_MODEL_ROLES: ModelTable = {
     "same_story": [CC_SONNET, CC_SONNET],
     "importance": [CC_HAIKU, CC_HAIKU],

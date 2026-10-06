@@ -1,14 +1,15 @@
-"""중요도 검수 (Jev 2026-09-23, 개발 모드 구독 2026-10-05). 가짜 응답으로 확인한다. Jev·모델·네트워크를 부르지 않는다.
+"""중요도 검수 (Jev 2026-09-23, 개발 모드 구독 대체 2026-10-05·10-06). 가짜 응답으로 확인한다. Jev·모델·네트워크를 부르지 않는다.
 
 실행: uv run python -m tests.agent.check_importance
-운영 모드(Jev 경로, DEV_MODE=0으로 확인)
+운영 모드(Jev만, DEV_MODE=0으로 확인)
 - 뉴스만 보내고 도구는 안 보냄 / 요청에는 제목·요약 300자와 5단계 영어 기준만 (사용자 정보 없음)
 - 점수 반올림해 importance, 원래 값·confidence는 따로 / 단계 번호가 0부터면 1을 더함 / 1~5 밖으로 안 나감
 - 실패한 기사는 선별 모델 점수 그대로, 나머지는 반영 / 키 없으면 아무것도 안 보냄 / 비용 합산
 - 모델표: same_story는 OpenRouter gpt-4o-mini 단일 모델, 역할표 4개는 그대로 / Jev 주소는 models.JEV
 - same_story 시간 초과면 같은 모델로 한 번 더
-개발 모드(구독 경로)
-- Jev 대신 "importance" 역할 모델로, 20건 묶음마다 한 번 / 입력은 번호·제목·요약 300자(요약이 비면 link_site)만, 기준은 같은 5단계
+개발 모드(2026-10-06 "JEV로 돌려": Jev가 먼저, 못 매긴 기사만 구독 대체)
+- Jev가 다 매기면 구독 모델을 부르지 않음 / Jev가 실패한 기사만 "importance" 역할 모델로, 키가 없으면 전부
+- 대체는 20건 묶음마다 한 번 / 입력은 번호·제목·요약 300자(요약이 비면 link_site)만, 기준은 같은 5단계
 - 받은 점수로 importance를 바꾸고 선별 점수는 importance_select에 / 도구는 손대지 않음
 - 번호가 빠진 답은 1회 다시 묻고 그래도 틀리면, 모델 장애면 그 묶음은 선별 점수 그대로
 공통
@@ -86,50 +87,84 @@ def scorer(answers=None, broken=()):
     return call, seen
 
 
+def blocked(body):
+    import httpx
+    raise httpx.ConnectError("연결 끊김")  # 10/1~10/5 안랩 차단 때와 같은 실패
+
+
+@contextmanager
+def no_key():
+    saved = os.environ.pop(models.JEV["key_env"], None)
+    try:
+        yield
+    finally:
+        if saved is not None:
+            os.environ[models.JEV["key_env"]] = saved
+
+
 async def dev_checks() -> None:
     from langchain_core.messages import AIMessage
+
+    def never(role, messages, tools=None):
+        raise AssertionError("Jev가 다 매겼는데 구독 모델을 불렀다")
+    data = items()
+    with mode("1"):
+        report = await importance.rescore(data, post=lambda b: answer(3.0), model_call=never)
+    check("개발: Jev가 다 매기면 구독 모델 안 부름", report["scored"] == 3 and "fallback" not in report
+          and all(i["importance"] == 4 for i in data if i["type"] == "news"))
+
+    data = items()
+    call, seen = scorer({"구글북": 1, "실패할 기사": 2})
+    with mode("1"):
+        report = await importance.rescore(data, post=lambda b: answer(3.0) if b["state"]["title"] == "Opus 5.5" else blocked(b),
+                                          model_call=call)
+    by = {i["url"]: i for i in data}
+    check("개발: Jev가 실패한 기사만 구독으로 다시 매김", [p["title"] for p in seen[0]["input"]] == ["구글북", "실패할 기사"]
+          and by["u1"]["importance"] == 4 and "importance_select" not in by["u1"]
+          and by["u2"]["importance"] == 1 and by["u2"]["importance_select"] == 5 and by["u3"]["importance"] == 2
+          and report["scored"] == 1 and report["failed"] == 2 and report["fallback"]["scored"] == 2)
 
     data = items() + [{"type": "news", "title": "요약 빈 글", "summary": "", "url": "https://www.example.com/a", "importance": 3}]
     call, seen = scorer({"Opus 5.5": 5, "구글북": 1})
     with mode("1"):
-        report = await importance.rescore(data, model_call=call)
+        report = await importance.rescore(data, post=blocked, model_call=call)
     by = {i["url"]: i for i in data}
     sent = seen[0]["input"]
-    check("개발: Jev 대신 모델로 매기고 선별 점수는 importance_select에", by["u1"]["importance"] == 5 and by["u1"]["importance_select"] == 3
-          and by["u2"]["importance"] == 1 and by["u2"]["importance_select"] == 5 and "importance_jev" not in by["u1"])
+    check("개발: Jev가 전부 막히면 전부 구독으로, 선별 점수는 importance_select에", by["u1"]["importance"] == 5
+          and by["u1"]["importance_select"] == 3 and by["u2"]["importance"] == 1 and "importance_jev" not in by["u1"])
     check("개발: 도구는 손대지 않고 뉴스만 보냄", by["u4"]["importance"] == 3 and "importance_select" not in by["u4"]
           and [p["title"] for p in sent] == ["Opus 5.5", "구글북", "실패할 기사", "요약 빈 글"])
     check("개발: 입력은 번호·제목·요약 300자, 요약이 비면 link_site", all(set(p) <= {"id", "title", "summary", "link_site"} for p in sent)
           and len(sent[0]["summary"]) == 300 and sent[3].get("link_site") == "example.com" and "link_site" not in sent[0])
     check("개발: 같은 5단계 기준이 프롬프트에", all(level in seen[0]["system"] for level in importance.LEVELS))
-    check("개발: 보고 성공 4·실패 0", report == {"scored": 4, "failed": 0, "skipped": 0, "cost_usd": 0.0})
+    check("개발: 보고 Jev 실패 4·대체 성공 4", report["failed"] == 4 and report["fallback"] == {"scored": 4, "failed": 0, "skipped": 0, "cost_usd": 0.0})
 
     many = [{"type": "news", "title": f"n{n}", "url": f"m{n}", "importance": 4} for n in range(25)]
     call, seen = scorer(broken={"n20"})
-    with mode("1"):
+    with mode("1"), no_key():
         report = await importance.rescore(many, model_call=call)
     first, second = [s for s in seen if not s["retry"]], [s for s in seen if s["retry"]]
-    check("개발: 20건 묶음마다 한 번 (25건 → 2묶음)", [len(s["input"]) for s in first] == [20, 5])
+    check("개발: 키가 없으면 전부 구독, 20건 묶음마다 한 번 (25건 → 2묶음)", report["skipped"] == 25 and [len(s["input"]) for s in first] == [20, 5])
     check("개발: 번호 빠진 묶음은 1회 다시 묻고, 그래도 틀리면 선별 점수 그대로", len(second) == 1
           and all(i["importance"] == 2 for i in many[:20]) and all(i["importance"] == 4 for i in many[20:])
-          and report["scored"] == 20 and report["failed"] == 5)
+          and report["fallback"]["scored"] == 20 and report["fallback"]["failed"] == 5)
 
     def down(role, messages, tools=None):
         raise models.ModelUnavailable("importance", ["claude_code 529", "claude_code 529"])
     kept = [{"type": "news", "title": "a", "url": "a", "importance": 4}]
     with mode("1"):
-        report = await importance.rescore(kept, model_call=down)
-    check("개발: 모델 장애면 선별 점수 그대로", kept[0]["importance"] == 4 and report["failed"] == 1 and report["scored"] == 0)
+        report = await importance.rescore(kept, post=blocked, model_call=down)
+    check("개발: Jev도 구독도 실패하면 선별 점수 그대로", kept[0]["importance"] == 4 and report["fallback"]["failed"] == 1)
 
     roles, original = [], models.call
     models.call = lambda role, messages, tools=None, **kw: roles.append(role) or AIMessage(
         '{"scores": [{"id": 1, "importance": 3}]}', usage_metadata={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2})
     try:
-        with mode("1"):
+        with mode("1"), no_key():
             await importance.rescore([{"type": "news", "title": "a", "url": "a"}])
     finally:
         models.call = original
-    check("개발: 기본 모델은 importance 역할(키가 있어도 Jev 안 부름)", roles == ["importance"])
+    check("개발: 대체의 기본 모델은 importance 역할", roles == ["importance"])
 
 
 async def main() -> None:
@@ -140,7 +175,8 @@ async def main() -> None:
         sent.append(body)
         return replies[body["state"]["title"]]
     data = items()
-    report = await importance.rescore(data, post=post)
+    with mode("0"):  # 운영 모드: Jev만. 개발 모드는 실패한 기사를 구독 모델로 다시 매긴다(dev_checks)
+        report = await importance.rescore(data, post=post)
     by = {i["url"]: i for i in data}
     check("뉴스만 보냄", sorted(b["state"]["title"] for b in sent) == sorted(["Opus 5.5", "구글북", "실패할 기사"]))
     body = sent[0]
@@ -153,18 +189,15 @@ async def main() -> None:
           and "importance_jev" not in by["u4"])
     check("보고: 성공 2·실패 1·비용 합산", report["scored"] == 2 and report["failed"] == 1 and abs(report["cost_usd"] - 0.0004) < 1e-9)
     one = [{"type": "news", "title": "a", "url": "a", "importance": 3}]
-    await importance.rescore(one, post=lambda b: answer(4.2, zero_based=False))
+    with mode("0"):
+        await importance.rescore(one, post=lambda b: answer(4.2, zero_based=False))
     check("1부터 단계면 그대로 (4.2→4)", one[0]["importance"] == 4)
     edge = [{"type": "news", "title": "a", "url": "a"}]
-    await importance.rescore(edge, post=lambda b: answer(5.0))
+    with mode("0"):
+        await importance.rescore(edge, post=lambda b: answer(5.0))
     check("1~5 밖으로 안 나감 (5.0+1→5)", edge[0]["importance"] == 5)
-    saved = os.environ.pop(models.JEV["key_env"], None)
-    try:
-        with mode("0"):
-            none = await importance.rescore(items())
-    finally:
-        if saved is not None:
-            os.environ[models.JEV["key_env"]] = saved
+    with mode("0"), no_key():
+        none = await importance.rescore(items())
     check("운영: 키 없으면 아무것도 안 보냄", none == {"scored": 0, "failed": 0, "skipped": 3, "cost_usd": 0.0})
     with mode("0"):
         prod_same_story = models.active_models()["same_story"]

@@ -1,5 +1,6 @@
 # agent/ CHANGELOG
 
+- 2026-10-06 · importance: 개발 모드도 Jev가 먼저, Jev가 못 매긴 기사(키 없음·연결 실패)만 구독 Haiku로 다시 매기고(span importance_fallback, 보고 fallback), 그것도 실패하면 선별 점수 · 사용자 결정 "JEV로 돌려". Jev의 10/1~10/5 ConnectError는 사이트 장애가 아니라 이 PC의 안랩 차단이었다(check-host.net 바깥 노드는 200, 10/6 10:44부터 이 PC도 접속됨) · check_importance 25 통과
 - 2026-10-05 · importance: 개발 모드는 Jev 대신 구독 모델("importance" 역할, Haiku 4.5 생각 끔)로 20건 묶음마다 같은 5단계 점수, 선별 점수는 importance_select에, 묶음 실패면 선별 점수 그대로 · loop.DEV_MODE_NOTICE를 "개발 모드: Claude 구독만, 실제 사용자 데이터 금지"로 · 사용자 결정 "다 로컬에 도구모델(Claude 구독) 기반으로, 구독만·실패하면 건너뜀", Jev는 10/1~10/5 매일 ConnectError · check_importance 23·check_same_story 8 통과
 - 2026-10-05 · curator 선별 입력: 요약이 빈 뉴스(해커뉴스 링크 글)에 link_site(링크 도메인, 예: blog.google)를 더함. 수집·저장 요약은 그대로 · 해커뉴스 링크 글은 story_text가 없어 제목만으로 판정돼 Muse Gadgets·구글 Suncatcher 위성을 AI 무관으로 놓침(10/3·10/4, 사용자 승인) · check_promo 13·check_topic_guide 6·run_daily --fake 통과. 효과는 다음 실행 골든셋으로 본다
 - 2026-10-04 · probe: 도움말만 찍고 끝나는 CLI는 도움말의 stdio MCP 하위 명령(serve·mcp, HTTP·SSE 서버는 빼고)으로 1회 더 실행, 그래도 도움말이면 실행·도구 목록·인증을 실패가 아니라 미확인으로(도움말 낱말을 인증 요구로 안 봄). 출력 끝부분을 8,000바이트까지 읽는다 · 10/3 카드의 llm-wiki-compiler·gflow-cli가 서버 시작 명령 없이 돌아 "실행 실패"로 나감 · check_probe_labels 10(신규)·check_probe(실제 E2B) 통과, 실제 재실측 llm-wiki-compiler 실행 성공·도구 16개, gflow-cli 미확인
