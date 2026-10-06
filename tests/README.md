@@ -20,7 +20,7 @@
 - `app/check_main.py`: uvicorn main:app 기동, /, /api/health, /mcp 확인. `start()`는 다른 검수도 쓴다(서버 출력은 임시 폴더 로그)
 - `web/`: check_auth·check_settings·check_briefings·check_feedback·check_ask(`--live-gate`)·check_rules(API 세션·남의 데이터·디자인 기준 CSS)·check_design(run_stats·item_meta, 보충 CSS 토큰만·공통 마스트헤드·금지 사항, PWA)
 - `golden/`: 선별 골든셋. `fetch_select.py`(그날 판정을 트레이스에서) → `score_select.py`(재현율·정밀도·신뢰구간, 앞선 날짜에 나온 기사를 뺀 new_only도), check_score_select / `agent/run_loop.py`: 가짜 모델로 루프 동작 9항목 + 현재 모델표 해설가로 실제 "안녕"·도구 1개(통과 조건)
-- `agent/check_topic_guide.py`: 주제 경계가 선별 프롬프트에 빠짐없이·길이 상한 / `check_same_story.py`: 같은 소식 빼기 / `check_owners.py`: 게시자 반복 줄이기 / `check_card_why.py`: 카드 이유 근거 / `check_headline.py`: 오늘의 큰 소식 / `check_importance.py`: 중요도(운영 Jev·개발 구독) / `agent/run_curator.py`: 오늘 수집 + 가짜 프로필 2개로 큐레이터 실행 → `agent/curator_report.json`
+- `agent/check_topic_guide.py`: 주제 경계가 선별 프롬프트에 빠짐없이·길이 상한 / `check_same_story.py`: 같은 소식 빼기 / `check_owners.py`: 게시자 반복 줄이기 / `check_card_why.py`: 카드 이유 근거 / `check_headline.py`: 오늘의 큰 소식 / `check_importance.py`: 중요도(Jev, 개발 모드는 Jev 실패분만 구독 대체) / `agent/run_curator.py`: 오늘 수집 + 가짜 프로필 2개로 큐레이터 실행 → `agent/curator_report.json`
 - `agent/run_explainer.py`: `--fake`는 가짜 모델로 카드·반려·재시도 8항목, 없으면 실제 카드 + for_me 3쌍 → `explainer_report.json` / `check_reject_rate.py`: 반려됐던 항목 재투입·대조군 반려 5항목
 
 ## 들어오고 나가는 데이터 / 관련
