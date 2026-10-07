@@ -38,3 +38,6 @@ railway up --service <크론 서비스> --detach   # 크론 (처음 한 번 rail
 2. 이 PC 앱의 예약을 끈다(`SCHEDULER_ENABLED=0`으로 앱을 다시 띄우거나 작업 `toolscout app` 중지). 둘 다 켜 두면 먼저 돈 쪽이 보내고
    다른 쪽은 건너뛰지만(발송은 sent_at 기준 멱등) 하루 실행이 두 번 돈다
 3. 되돌리기: Railway 크론 서비스를 멈추고 이 PC 앱 예약을 다시 켠다
+
+## 남은 일
+- Railway가 `railway.json`(Config as Code)을 2026-12-01까지만 받는다고 알린다(2026-10-07 `railway add` 경고). 그 전에 `.railway/railway.ts`(Infrastructure as Code)로 옮긴다 (`railway config migrate`)

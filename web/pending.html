@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>toolscout 승인 대기</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <meta name="theme-color" content="#15181E">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+</head>
+<body>
+  <!-- 승인 대기 (2026-10-08 사용자 결정: 가입 뒤 관리자 승인). 승인되면 /로 간다 -->
+  <header class="mast" id="mast"></header>
+  <main>
+    <section class="sec">
+      <div class="sec-h"><h2 id="title">가입 신청이 접수됐어요</h2></div>
+      <div class="item">
+        <div class="mark"></div>
+        <div>
+          <p id="body">관리자가 확인하면 브리핑이 시작돼요. 승인되면 이 화면에서 바로 넘어가요.</p>
+          <div class="acts">
+            <a class="act" href="/demo">기다리는 동안 예시 보기</a>
+            <a class="act" href="/login" id="logout">로그아웃</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+  <script>
+    (async () => {
+      await TS.mast({ session: false, title: "승인 대기" });
+      const me = await TS.api("/api/me");
+      if (me.approved) { location.href = "/"; return; }
+      if (me.status === "blocked") {
+        document.getElementById("title").textContent = "이 계정은 사용할 수 없어요";
+        document.getElementById("body").textContent = "문의가 필요하면 관리자에게 연락해 주세요.";
+      }
+      document.getElementById("logout").onclick = async (event) => {
+        event.preventDefault();
+        await TS.api("/api/auth/logout", { method: "POST", allow401: true });
+        location.href = "/login";
+      };
+    })();
+  </script>
+</body>
+</html>

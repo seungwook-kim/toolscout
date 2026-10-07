@@ -1,9 +1,9 @@
 """웹 검수 공통: 앱을 프로세스 안에서 띄우고(TestClient), 메일은 폴더로 받고, 검수용 사용자를 만들고 지운다.
 
 - 예약은 끄고(SCHEDULER_ENABLED=0), 메일은 MAIL_FAKE_DIR로 보낸다 (실제 발송 없음)
-- 검수용 사용자 주소는 web-*@toolscout.test. ADMIN_EMAILS에 넣어 개발 모드 로그인 링크를 받게 한다
+- 검수용 사용자 주소는 web-*@toolscout.test. ADMIN_EMAILS에 넣어 개발 모드 회원가입 인증번호를 받게 한다(2026-10-08)
 - 끝나면 검수용 사용자와 그 사람의 weights·seen·feedback·questions·briefings를 지운다
-- 로그인한 검수용 사용자는 승인(status approved) 상태로 둔다. 초대 대기 상태가 필요하면 login(..., approve=False)
+- 로그인한 검수용 사용자는 승인(status approved) 상태로 둔다. 승인 대기 상태가 필요하면 login(..., approve=False)
 """
 import json
 import os
@@ -59,27 +59,47 @@ def last_link(to: str) -> str:
     return ""
 
 
+TEST_PASSWORD = "web-test-pass-1234"
+
+
+def last_code(to: str) -> str:
+    """가장 최근 회원가입 인증번호 메일의 6자리."""
+    for mail in reversed(mails()):
+        if to in mail["to"]:
+            match = re.search(r"인증번호: (\d{6})", mail["text"])
+            if match:
+                return match.group(1)
+    return ""
+
+
 def login(c: TestClient, email: str, approve: bool = True) -> None:
-    """메일 링크를 받아 눌러 세션을 만든다. 가입은 초대제라 새 사용자는 pending이므로 기본으로 승인해 둔다 (2026-09-16).
-    초대 검수(tests/access)만 approve=False로 대기 상태를 그대로 본다."""
+    """회원가입(인증번호 받기 → 확인 → 비밀번호)으로 세션을 만든다. 이미 비밀번호가 있으면 비밀번호로 로그인 (2026-10-08).
+    개발 모드는 관리자 주소만 가입할 수 있어 ADMIN_EMAILS에 넣는다. 관리자 가입은 바로 승인되므로 users 상태는 여기서 다시 맞춘다:
+    기본은 승인, 승인 대기 검수(tests/access)만 approve=False. users.is_admin은 끈다(관리자 여부는 ADMIN_EMAILS로 본다)."""
     admin_emails(email)
-    from routes import auth
+    if c.post("/api/auth/login", json={"email": email, "password": TEST_PASSWORD}).status_code != 200:
+        with db.get_engine().begin() as conn:  # 같은 주소를 다시 받을 때 60초 제한에 걸리지 않게
+            conn.execute(delete(db.EmailCode).where(db.EmailCode.email == email))
+        sent = c.post("/api/auth/signup/code", json={"email": email})
+        assert sent.status_code == 200, sent.text
+        verified = c.post("/api/auth/signup/verify", json={"email": email, "code": last_code(email)})
+        assert verified.status_code == 200, verified.text
+        done = c.post("/api/auth/signup/complete", json={"signup_token": verified.json()["signup_token"], "password": TEST_PASSWORD})
+        assert done.status_code == 200, done.text
+    set_user(email, status="approved" if approve else "pending")
 
-    auth._last_request.pop(email, None)
-    response = c.post("/api/auth/request", json={"email": email})
-    assert response.status_code == 200, response.text
-    c.get(f"/auth/verify?token={last_link(email)}", follow_redirects=False)
-    if approve:
-        approve_user(email)
 
-
-def approve_user(email: str) -> None:
-    """검수용 사용자를 승인 상태로 (초대 코드 없이)."""
+def set_user(email: str, status: str) -> None:
     with db.session() as s:
         user = s.exec(select(db.User).where(db.User.email == email)).scalars().first()
         if user is not None:
-            user.status = "approved"
+            user.status, user.is_admin = status, False
             s.commit()
+
+
+def approve_user(email: str) -> None:
+    """검수용 사용자를 승인 상태로."""
+    set_user(email, "approved")
 
 
 def user_id(email: str) -> int | None:
@@ -95,4 +115,5 @@ def cleanup_users(prefix: str = "web-") -> int:
             for table in (db.Weight, db.Seen, db.Feedback, db.Question, db.Briefing):
                 conn.execute(delete(table).where(table.user_id.in_(ids)))
             conn.execute(delete(db.User).where(db.User.id.in_(ids)))
+        conn.execute(delete(db.EmailCode).where(db.EmailCode.email.like(f"{prefix}%{TEST_DOMAIN}")))
     return len(ids)

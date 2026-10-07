@@ -1,53 +1,25 @@
-"""초대제 가입 (계획안 7장 사용자 흐름, 2026-09-16 사용자 결정). 로그인은 누구나 하지만 코드를 넣어야 승인된다.
+"""가입 승인과 사용자 관리 (관리자 전용). 2026-10-08 사용자 결정: 가입은 이메일(인증번호)·구글로 누구나 하고, 관리자가 승인해야
+브리핑을 받는다. 예전 초대 코드 입력·이용 신청서는 뺐다(invite_codes 표와 users.application 칸은 기록으로 남는다).
 
-- POST /api/invite/redeem {code}: 유효하면 status=approved, invite_code_used 기록, 코드 used +1
-  틀림·만료·횟수 초과는 400. 같은 사용자가 1분에 10번까지만 시도할 수 있다
-- 이용 신청(2026-09-27 사용자 결정): 초대 코드가 없으면 POST /api/apply {name, job, reason, source, agree}로 신청서를 낸다.
-  승인 전(pending)만 낼 수 있고 다시 내면 고쳐 쓴다. GET /api/apply는 내 신청 상태. 신청 글은 모델에 보내지 않는다
-- 관리자(ADMIN_EMAILS)만: GET·POST /api/admin/invites(코드 목록·생성), GET /api/admin/users(대기·차단 목록),
-  GET /api/admin/applications(승인 대기 신청서), POST /api/admin/users/{id}/status(승인·차단·되돌리기),
+- 관리자(ADMIN_EMAILS)만: GET /api/admin/applications(승인 대기 가입: 먼저 가입한 순서, 가입 방법),
+  GET /api/admin/users(전체 사용자와 마지막 결정), POST /api/admin/users/{id}/status(승인·차단·되돌리기),
   GET /api/admin/status-changes(최근 상태 변경 이력: 누가·누구를·무엇에서 무엇으로·언제·어떻게)
-- 상태가 실제로 바뀔 때마다 status_changes에 한 줄 남긴다(관리자 변경·초대 코드 가입). 같은 상태로 누르면 남기지 않는다
-코드 값은 로그에 쓰지 않는다.
+- 상태가 실제로 바뀔 때마다 status_changes에 한 줄 남긴다. 같은 상태로 누르면 남기지 않는다
 """
-import secrets
-import time
-from datetime import datetime, timedelta, timezone
-
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlmodel import select
 
 import db
 from routes.auth import is_admin, require_user
 
 router = APIRouter()
-CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # 헷갈리는 글자(I·O·0·1) 제외
-CODE_LENGTH = 8
-TRY_WINDOW, TRY_LIMIT = 60.0, 10
 STATUSES = ("pending", "approved", "blocked")
-_tries: dict[int, list[float]] = {}
-
-
-class RedeemBody(BaseModel):
-    code: str
-
-
-class NewCode(BaseModel):
-    max_uses: int = Field(default=1, ge=1, le=100)
-    expires_days: int | None = Field(default=30, ge=1, le=365)
+HISTORY_LIMIT = 50
 
 
 class StatusBody(BaseModel):
     status: str
-
-
-class ApplyBody(BaseModel):
-    name: str = Field(min_length=1, max_length=40)
-    job: str = Field(min_length=1, max_length=60)
-    reason: str = Field(min_length=10, max_length=500)
-    source: str = Field(default="", max_length=100)
-    agree: bool
 
 
 def require_admin(request: Request) -> db.User:
@@ -55,49 +27,6 @@ def require_admin(request: Request) -> db.User:
     if not is_admin(user.email):
         raise HTTPException(status_code=403, detail="관리자만 쓸 수 있어요")
     return user
-
-
-def _too_many(user_id: int) -> bool:
-    now = time.monotonic()
-    tries = [t for t in _tries.get(user_id, []) if now - t < TRY_WINDOW]
-    _tries[user_id] = tries + [now]
-    return len(tries) >= TRY_LIMIT
-
-
-def _valid(code: db.InviteCode) -> str | None:
-    """못 쓰는 이유. 쓸 수 있으면 None."""
-    if code.expires_at and code.expires_at.replace(tzinfo=code.expires_at.tzinfo or timezone.utc) < db.utcnow():
-        return "기한이 지난 코드예요"
-    if code.used >= code.max_uses:
-        return "이미 다 쓴 코드예요"
-    return None
-
-
-@router.post("/api/invite/redeem")
-def redeem(body: RedeemBody, user: db.User = Depends(require_user)) -> dict:
-    if user.status == "blocked":
-        raise HTTPException(status_code=403, detail="이 계정은 사용할 수 없어요")
-    if user.status == "approved":
-        return {"status": "approved", "message": "이미 가입되어 있어요"}
-    if _too_many(user.id):
-        raise HTTPException(status_code=429, detail="시도가 너무 많아요. 1분 뒤에 다시 해 주세요")
-    value = body.code.strip().upper()
-    with db.session() as s:
-        code = s.exec(select(db.InviteCode).where(db.InviteCode.code == value)).first()
-        if code is None:
-            raise HTTPException(status_code=400, detail="없는 코드예요")
-        problem = _valid(code)
-        if problem:
-            raise HTTPException(status_code=400, detail=problem)
-        code.used += 1
-        member = s.get(db.User, user.id)
-        member.invite_code_used = value
-        _record(s, member, "approved", "invite_code", None)
-        s.commit()
-    return {"status": "approved", "message": "가입됐어요. 내일 아침 첫 브리핑이 갑니다"}
-
-
-HISTORY_LIMIT = 50
 
 
 def _record(s, member: db.User, new: str, via: str, by: int | None) -> None:
@@ -108,61 +37,18 @@ def _record(s, member: db.User, new: str, via: str, by: int | None) -> None:
     member.status = new
 
 
-def _application(user: db.User) -> dict | None:
-    if not user.applied_at:
-        return None
-    return (user.application or {}) | {"applied_at": user.applied_at.isoformat()}
-
-
-@router.post("/api/apply")
-def apply(body: ApplyBody, user: db.User = Depends(require_user)) -> dict:
-    if user.status == "blocked":
-        raise HTTPException(status_code=403, detail="이 계정은 사용할 수 없어요")
-    if user.status == "approved":
-        return {"status": "approved", "message": "이미 가입되어 있어요"}
-    if not body.agree:
-        raise HTTPException(status_code=400, detail="메일 수신과 개인정보 이용에 동의해야 신청할 수 있어요")
-    if _too_many(user.id):
-        raise HTTPException(status_code=429, detail="시도가 너무 많아요. 1분 뒤에 다시 해 주세요")
-    with db.session() as s:
-        member = s.get(db.User, user.id)
-        member.application = {k: v.strip() for k, v in body.model_dump(exclude={"agree"}).items()}
-        member.applied_at = db.utcnow()
-        s.commit()
-    return {"status": "pending", "applied": True, "message": "신청했어요. 관리자가 확인하면 브리핑이 시작돼요"}
-
-
-@router.get("/api/apply")
-def my_application(user: db.User = Depends(require_user)) -> dict:
-    return {"status": user.status, "application": _application(user)}
+def signup_via(user: db.User) -> str:
+    return "google" if user.google_sub else ("email" if user.password_hash else "link")
 
 
 @router.get("/api/admin/applications")
 def list_applications(admin: db.User = Depends(require_admin)) -> dict:
-    """승인 대기(pending)이면서 신청서를 낸 사용자. 먼저 낸 순서."""
+    """승인 대기(pending) 가입. 먼저 가입한 순서. 데모 프로필은 뺀다."""
     with db.session() as s:
-        users = s.exec(select(db.User).where(db.User.status == "pending", db.User.applied_at.is_not(None))
-                       .order_by(db.User.applied_at)).all()
-        return {"applications": [{"id": u.id, "email": u.email, **_application(u)} for u in users]}
-
-
-@router.get("/api/admin/invites")
-def list_codes(admin: db.User = Depends(require_admin)) -> dict:
-    with db.session() as s:
-        codes = s.exec(select(db.InviteCode).order_by(db.InviteCode.id.desc())).all()
-        return {"codes": [{"code": c.code, "max_uses": c.max_uses, "used": c.used,
-                           "expires_at": c.expires_at.isoformat() if c.expires_at else None,
-                           "left": max(c.max_uses - c.used, 0), "unusable": _valid(c)} for c in codes]}
-
-
-@router.post("/api/admin/invites")
-def create_code(body: NewCode, admin: db.User = Depends(require_admin)) -> dict:
-    value = "".join(secrets.choice(CODE_CHARS) for _ in range(CODE_LENGTH))
-    expires = datetime.now(timezone.utc) + timedelta(days=body.expires_days) if body.expires_days else None
-    with db.session() as s:
-        s.add(db.InviteCode(code=value, max_uses=body.max_uses, expires_at=expires, created_by=admin.id))
-        s.commit()
-    return {"code": value, "max_uses": body.max_uses, "expires_at": expires.isoformat() if expires else None}
+        users = s.exec(select(db.User).where(db.User.status == "pending", db.User.is_demo == False)  # noqa: E712
+                       .order_by(db.User.created_at)).all()
+        return {"applications": [{"id": u.id, "email": u.email, "via": signup_via(u), "applied_at": (u.applied_at or u.created_at).isoformat()}
+                                 for u in users]}
 
 
 def _history(s, limit: int | None = HISTORY_LIMIT) -> list[dict]:
@@ -189,8 +75,7 @@ def list_users(admin: db.User = Depends(require_admin)) -> dict:
             last.setdefault(change["user_id"], change)
         users = s.exec(select(db.User).order_by(db.User.id)).all()
         return {"users": [{"id": u.id, "email": u.email, "role": u.role, "status": u.status, "is_test": u.is_test,
-                           "is_demo": u.is_demo, "invite_code_used": u.invite_code_used, "application": _application(u),
-                           "last_change": last.get(u.id),
+                           "is_demo": u.is_demo, "via": signup_via(u), "last_change": last.get(u.id),
                            "created_at": u.created_at.isoformat()} for u in users]}
 
 

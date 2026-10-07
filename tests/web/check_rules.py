@@ -27,11 +27,15 @@ DAY = date(2000, 1, 9)
 # 세션 없이 열리는 API와 그 이유
 OPEN = {
     "/api/health": "상태 확인",
-    "/api/auth/request": "로그인 링크 요청",
+    "/api/auth/options": "첫 화면 구글 버튼 표시 여부",
+    "/api/auth/signup/code": "회원가입 인증번호 받기 (주소당 60초·1시간 5번)",
+    "/api/auth/signup/verify": "인증번호 확인 (번호당 5번)",
+    "/api/auth/signup/complete": "가입 마치기 (1회용 가입 토큰)",
+    "/api/auth/login": "이메일·비밀번호 로그인 (5번 틀리면 15분 잠금)",
     "/api/auth/logout": "쿠키 지우기",
     "/api/feedback/link": "메일 버튼 서명 링크(24시간·1회용)",
     "/api/feedback/link/note": "메일 링크 이상함 사유(1시간 서명)",
-    "/api/demo/briefing": "공개 데모 (읽기 전용, 데모 프로필 하나. IP당 분당 60회)",
+    "/api/demo/briefing": "공개 데모 (고정 예시, DB 없음. IP당 분당 60회)",
 }
 SERVICE_KEY = ("/api/w1/",)  # X-Service-Key
 

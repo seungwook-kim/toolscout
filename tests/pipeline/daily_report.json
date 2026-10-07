@@ -1,19 +1,14 @@
 {
-  "date": "2000-01-06",
-  "dev_mode": true,
+  "date": "2000-01-09",
+  "dev_mode": false,
   "options": {
     "users": 1,
     "limit": 40
   },
-  "collected": 194,
-  "prepared": 190,
+  "collected": 240,
+  "prepared": 228,
   "curator_input": 40,
-  "source_failures": [
-    {
-      "source": "mcp_registry",
-      "error": "ReadTimeout: The read operation timed out"
-    }
-  ],
+  "source_failures": [],
   "skipped_sent_users": [],
   "catalog_saved": 0,
   "verify_saved": 0,
@@ -24,20 +19,40 @@
   },
   "promo_dropped": [
     {
-      "title": "[AI리더의 서가] AI 루프를 설계하라",
+      "title": "How Jump Trading is scaling quant research with ChatGPT",
+      "reason": "고객 사례"
+    },
+    {
+      "title": "[게시판] 딥엑스-두산로보틱스, 원전 제조 ‘AI 용접 솔루션’ 공동개발 협력 등 단신",
+      "reason": "단신 묶음"
+    },
+    {
+      "title": "[게시판] 두산로보틱스, 989억 규모 피지컬 AI 국책과제 2건 선정 등 단신",
+      "reason": "단신 묶음"
+    },
+    {
+      "title": "Get all your questions answered at TechCrunch Disrupt 2026: The full breakout session agenda revealed",
+      "reason": "행사 홍보"
+    },
+    {
+      "title": "[AI리더의 서가] SQL부터 AI까지 데이터 분석 with 클로드 코드",
       "reason": "책 소개 연재"
     },
     {
-      "title": "How to scale intent, quality, and artistry with AI [video]",
-      "reason": "강연 영상"
+      "title": "[게시판] SKT, 독파모 'A.X K2'로 순우리말 선정·글꼴 제작 등 단신",
+      "reason": "단신 묶음"
     },
     {
-      "title": "Homa: The end of TCP for AI clusters [video]",
-      "reason": "강연 영상"
+      "title": "6 days to TechCrunch Disrupt 2026: Save on your pass before doors open",
+      "reason": "행사 홍보"
     },
     {
-      "title": "AI로 의도, 품질, 예술성을 확장하는 법 [영상]",
-      "reason": "강연 영상"
+      "title": "Get hands-on: The full lineup of interactive roundtables at TechCrunch Disrupt 2026",
+      "reason": "행사 홍보"
+    },
+    {
+      "title": "노트북 도둑과 함께 일했던 때 (2025)",
+      "reason": "예전 자료"
     }
   ],
   "tool_updates": 0,
@@ -48,26 +63,25 @@
     "deferred": 0,
     "seconds": 0.0
   },
-  "selected": 17,
+  "selected": 13,
   "verify_requests": 0,
   "users": [
     {
       "user_id": 45,
       "role": "개발자",
-      "planned": 5,
+      "planned": 4,
       "related_planned": 0,
       "rejected": [],
       "excluded": [],
-      "retried": 5,
+      "retried": 0,
       "fixed": [],
       "format_failed": [],
       "model_failed": [],
       "titles": [
-        "GPT-6 아스트라, 217년 된 나폴레옹 암호 6시간 만에 해독",
-        "클로드, 18개 분야 36편 논문 원고 작성… 앤트로픽이 조명한 AI 과학 연구",
-        "앤트로픽, 10월6일까지 '음성 인터뷰어' 가동…대화록 공개·음성 학습 수집 결합",
-        "MIT·사카나, 자가 진화 AI 에이전트 'SIFT' 발표...'검증 비용 병목' 해결",
-        "KAIST, 데이터 변화해도 검색 정확도 유지하는 ‘CONDA’ 기술 개발"
+        "구글, ‘나노 바나나 2.1’ 공개...성능 높이고 비용은 반값으로",
+        "Sharing AI progress in mathematics",
+        "How AI decision models could change content moderation",
+        "\"결정 피로 줄인다\"…오픈AI, 코덱스 2일차 업데이트로 ‘오토리뷰’ 전면 무료화"
       ],
       "related_titles": [],
       "rollbacks": {
@@ -75,7 +89,7 @@
         "evidence_short": []
       },
       "status": "saved",
-      "cards": 5,
+      "cards": 4,
       "empty_reason": null,
       "duplicates": []
     }
@@ -85,28 +99,58 @@
     "briefings": 1,
     "empty_users": 0,
     "failed_users": 0,
-    "cards": 5,
+    "cards": 4,
     "rejected": 0,
     "excluded": 0,
-    "calls": 15,
-    "input_tokens": 3327,
-    "output_tokens": 47579,
-    "format_failures": 0,
-    "unrecovered": 0
+    "calls": 11,
+    "input_tokens": 29379,
+    "output_tokens": 4408,
+    "format_failures": 3,
+    "unrecovered": 1
   },
   "all_users_failed": false,
   "providers": {
-    "claude_code:claude-haiku-4-5-20251001": 4,
-    "claude_code:claude-sonnet-5": 12
+    "openrouter:openai/gpt-4o-mini": 11
   },
   "failovers": {},
   "rate_limits_429": {},
   "model_failures": [],
-  "failure_examples": [],
+  "failure_examples": [
+    {
+      "label": "선별 1묶음",
+      "attempt": 1,
+      "error": "judgments.4.topic: Input should be 'model_release', 'agent_framework', 'mcp_tools', 'coding_tools', 'pricing', 'open_local', 'data_rag', 'safety_policy', 'automation' or 'industry'; judgments.8.topic: Input should be 'model_release', 'agent_framework', 'mcp_tools', 'coding_tools', 'pricing', 'open_l",
+      "provider": "openrouter",
+      "model": "openai/gpt-4o-mini",
+      "raw_head": "{\"judgments\":[{\"id\":1,\"ai_related\":true,\"worth_today\":true,\"topic\":\"industry\",\"importance\":3,\"reason\":\"구글 제미나이의 개인 통화 대행 기능 확대 가능성을 다룸.\"},{\"id\":2,\"ai_related\":true,\"worth_today\":true,\"topic\":\"data_rag\",\"importance\":3,\"reason\":\"Musubi의 실시간 콘텐츠 조정 모델 발표.\"},{\"id\":3,\"ai_related\":true,\"worth_today\":false",
+      "raw_tail": "lassian과 OpenAI의 파트너십 확장 발표.\"},{\"id\":20,\"ai_related\":true,\"worth_today\":true,\"topic\":\"automation\",\"importance\":4,\"reason\":\"오픈AI의 '오토리뷰' 기능 무료화 발표.\"}]}",
+      "trace_id": "af93e246c96c32bef833962fd2f677ab"
+    },
+    {
+      "label": "선별 2묶음",
+      "attempt": 1,
+      "error": "judgments.6.topic: Input should be 'model_release', 'agent_framework', 'mcp_tools', 'coding_tools', 'pricing', 'open_local', 'data_rag', 'safety_policy', 'automation' or 'industry'; judgments.7.topic: Input should be 'model_release', 'agent_framework', 'mcp_tools', 'coding_tools', 'pricing', 'open_l",
+      "provider": "openrouter",
+      "model": "openai/gpt-4o-mini",
+      "raw_head": "{\"judgments\":[{\"id\":1,\"ai_related\":true,\"worth_today\":true,\"topic\":\"industry\",\"importance\":3,\"reason\":\"앤트로픽이 스타트업 지원 프로그램을 확대해 AI 생태계 선점 전략을 발표했다.\"},{\"id\":2,\"ai_related\":true,\"worth_today\":true,\"topic\":\"safety_policy\",\"importance\":4,\"reason\":\"앤트로픽이 사이버 보안 전문가를 위한 AI 모델 접근 체계를 개편했다.\"},{\"id\":3,\"ai_rel",
+      "raw_tail": "I 생성 미디어를 식별할 수 있는 웹사이트를 출시했다.\"},{\"id\":20,\"ai_related\":false,\"worth_today\":false,\"topic\":\"\",\"importance\":1,\"reason\":\"사우디의 태양광 발전소 관련 소식은 AI와 무관하다.\"}]}",
+      "trace_id": "af93e246c96c32bef833962fd2f677ab"
+    },
+    {
+      "label": "선별 2묶음",
+      "attempt": 2,
+      "error": "judgments.6.topic: Input should be 'model_release', 'agent_framework', 'mcp_tools', 'coding_tools', 'pricing', 'open_local', 'data_rag', 'safety_policy', 'automation' or 'industry'; judgments.7.topic: Input should be 'model_release', 'agent_framework', 'mcp_tools', 'coding_tools', 'pricing', 'open_l",
+      "provider": "openrouter",
+      "model": "openai/gpt-4o-mini",
+      "raw_head": "{\"judgments\":[{\"id\":1,\"ai_related\":true,\"worth_today\":true,\"topic\":\"industry\",\"importance\":3,\"reason\":\"앤트로픽의 스타트업 지원 프로그램 확대 소식은 AI 생태계에 영향.\"},{\"id\":2,\"ai_related\":true,\"worth_today\":true,\"topic\":\"safety_policy\",\"importance\":4,\"reason\":\"사이버 보안 전문가의 AI 모델 접근 확대는 보안 정책에 중요한 변화.\"},{\"id\":3,\"ai_related\":",
+      "raw_tail": "성 미디어 식별 사이트 출시는 데이터 관리에 중요.\"},{\"id\":20,\"ai_related\":false,\"worth_today\":false,\"topic\":\"\",\"importance\":1,\"reason\":\"사우디의 태양광 발전소 관련 소식으로 AI와 관련 없음.\"}]}",
+      "trace_id": "af93e246c96c32bef833962fd2f677ab"
+    }
+  ],
   "format_failures_recorded": 0,
-  "trace_id": "a181574ca8d10909a14c2680d9572d18",
-  "seconds": 858.4,
-  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/a181574ca8d10909a14c2680d9572d18",
+  "trace_id": "af93e246c96c32bef833962fd2f677ab",
+  "seconds": 2134.4,
+  "trace_url": "https://us.cloud.langfuse.com/project/cmu0jv4a1000iad0doj6r99it/traces/af93e246c96c32bef833962fd2f677ab",
   "checks": {
     "대상_사용자_모두_브리핑_저장": true,
     "모델장애_사용자_없음": true,
@@ -114,9 +158,9 @@
     "저장_행마다_trace_id·sent_at_null": true
   },
   "cleanup": {
-    "date": "2000-01-06",
-    "briefings_deleted": 5,
-    "seen_deleted": 5
+    "date": "2000-01-09",
+    "briefings_deleted": 4,
+    "seen_deleted": 4
   },
   "pass": true
 }

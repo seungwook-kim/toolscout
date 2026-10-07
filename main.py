@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 import mcp_server
 from agent import tracing
 from pipeline import scheduler
-from routes import ask, auth, briefings, demo, feedback, invite, pages, settings, w1
+from routes import ask, auth, briefings, demo, feedback, google, invite, pages, settings, signup, w1
 
 WEB = Path(__file__).parent / "web"
 
@@ -39,14 +39,16 @@ def health() -> dict:
     return {"status": "ok", "service": "toolscout"}
 
 
-app.include_router(auth.router)  # 로그인·세션
-app.include_router(pages.router)  # 화면 (/, /login, /settings, /history, /f)
+app.include_router(auth.router)  # 세션·로그아웃·내 정보
+app.include_router(signup.router)  # 이메일 회원가입(인증번호)·비밀번호 로그인
+app.include_router(google.router)  # 구글 로그인
+app.include_router(pages.router)  # 화면 (/login 첫 화면, /signup, /pending, /, /settings, /history, /f)
 app.include_router(settings.router)  # 프로필·기억 지우기·계정 삭제·오늘 브리핑 지금 만들기
 app.include_router(briefings.router)  # 오늘·날짜별 브리핑, 날짜 목록, 키워드 검색
 app.include_router(feedback.router)  # 피드백 버튼(W3): 웹 세션, 메일 서명 링크
 app.include_router(ask.router)  # 질문창(W2): 게이트·키워드 검색·해설가 답
-app.include_router(invite.router)  # 초대 코드 사용, 관리자 코드·가입 관리
-app.include_router(demo.router)  # 공개 데모 /demo (로그인 없음, 읽기 전용)
+app.include_router(invite.router)  # 관리자 가입 승인·사용자 관리
+app.include_router(demo.router)  # 공개 데모 /demo (로그인 없음, 고정 예시 뉴스)
 app.include_router(w1.router)  # 아침 브리핑 작업을 직접 부르는 API (실행·발송·상태)
 app.mount("/static", StaticFiles(directory=WEB), name="static")
 app.mount("/mcp", mcp_app)
