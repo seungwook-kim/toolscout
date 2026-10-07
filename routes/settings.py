@@ -4,6 +4,7 @@
 - POST /api/profile: 직군(필수)·주제 관심도(-5~+5)·쓰는 도구 태그·자유 한 줄·알림 채널·시간 저장, 가중치 초기값 반영
 - POST /api/memory/forget: weights·seen·feedback 삭제 / POST /api/account/delete: 계정과 기록 전부 삭제, 세션 끝
 - POST /api/briefing/now: 이 사용자만 오늘 브리핑을 지금 만든다(백그라운드) / GET /api/briefing/now: 진행 상태
+  JOBS_EXTERNAL=1(Vercel)이면 요청만 DB에 남기고 Railway 크론(pipeline/cron.py)이 30분 안에 만든다. 상태도 DB로 본다
 """
 import asyncio
 
@@ -16,6 +17,7 @@ import memory
 import models
 from agent.schemas import TOPICS
 from pipeline import persist, run_daily
+from pipeline import scheduler as jobs
 from pipeline.scheduler import scheduler
 from routes.auth import SESSION_COOKIE, profile_done, require_approved, require_user
 
@@ -80,6 +82,9 @@ async def make_now(user: db.User = Depends(require_approved)) -> dict:
     today = run_daily.today_kst()
     if user.id in await asyncio.to_thread(persist.sent_user_ids, today):
         raise HTTPException(status_code=409, detail="오늘 브리핑은 이미 보냈어요")
+    if jobs.external():  # 웹이 Vercel에 있으면 Railway 크론이 30분 안에 이어받는다
+        await asyncio.to_thread(persist.request_briefing, user.id)
+        return {"started": True, "message": "오늘 브리핑을 만들 차례에 넣었어요. 30분 안에 만들어 메일로 보내요"}
     if scheduler.running():
         raise HTTPException(status_code=409, detail="지금 다른 브리핑을 만드는 중이에요. 잠시 뒤 다시 눌러 주세요")
     _runs[user.id] = {"status": "running"}
@@ -91,4 +96,8 @@ async def make_now(user: db.User = Depends(require_approved)) -> dict:
 
 @router.get("/api/briefing/now")
 def make_now_status(user: db.User = Depends(require_approved)) -> dict:
+    if jobs.external():  # 상태를 프로세스 메모리에 둘 수 없어 DB로 본다. 크론이 만들고 나면 요청을 지운다
+        if user.id in persist.requested_user_ids():
+            return {"status": "running"}
+        return {"status": "done"} if user.id in persist.users_with_briefings(run_daily.today_kst()) else {"status": "idle"}
     return _runs.get(user.id, {"status": "idle"})

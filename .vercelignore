@@ -1,0 +1,10 @@
+# Vercel(웹)에 올리지 않는 것. 배포는 git에 올린 파일만 내보낸 폴더에서 한다(docs/deploy.md)
+.env*
+.venv
+tests
+docs
+Dockerfile
+docker-compose.yml
+railway.json
+.github
+*.log

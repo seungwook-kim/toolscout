@@ -58,6 +58,9 @@ class User(SQLModel, table=True):
     applied_at: datetime | None = None
     mcp_key_hash: str | None = Field(default=None, unique=True)
     notify_time: str = "08:00"  # 메일 받을 시각 (08:00·09:00·12:00·18:00)
+    # "오늘 브리핑 지금 만들기"를 누른 시각. 웹이 하루 실행을 직접 못 돌리는 배포(Vercel, JOBS_EXTERNAL=1)에서
+    # Railway 크론(pipeline/cron.py)이 다음 차례에 이 사용자만 만든다 (2026-10-07)
+    briefing_requested_at: datetime | None = None
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -308,7 +311,8 @@ ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE"), (
                  ("skill_reviews", "source_url", "VARCHAR"), ("skill_reviews", "llm_signal", "VARCHAR"),
                  ("skill_reviews", "status", "VARCHAR"), ("skill_reviews", "reviewed_at", "TIMESTAMP WITHOUT TIME ZONE"),
                  ("users", "is_demo", "BOOLEAN NOT NULL DEFAULT FALSE"), ("users", "invite_code_used", "VARCHAR"),
-                 ("users", "application", "JSONB"), ("users", "applied_at", "TIMESTAMP WITHOUT TIME ZONE")]
+                 ("users", "application", "JSONB"), ("users", "applied_at", "TIMESTAMP WITHOUT TIME ZONE"),
+                 ("users", "briefing_requested_at", "TIMESTAMP WITHOUT TIME ZONE")]
 
 # 초대제 이전에 있던 사용자는 approved로 두고, 그 뒤에 새로 만들어지는 행만 pending으로 시작한다 (2026-09-16). 여러 번 돌려도 같다
 USERS_MIGRATION = [

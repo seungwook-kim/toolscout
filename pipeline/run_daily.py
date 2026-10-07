@@ -53,13 +53,14 @@ def today_kst() -> date:
 
 
 def target_user_ids() -> list[int]:
-    """승인된 사용자만 (2026-09-16 초대제). 개발 모드는 is_test 프로필, 운영 모드는 실제 사용자 + 데모 프로필."""
+    """승인된 사용자만 (2026-09-16 초대제). 개발 모드는 is_test 프로필, 운영 모드는 실제 사용자 + 데모 프로필 + 관리자.
+    관리자(개발자 본인)는 개발 모드에서도 받도록 is_test로 둔 실제 계정이라 운영 모드(서버 배포, 2026-10-07)에서도 받는다."""
     with db.session() as s:
         query = select(db.User.id).where(db.User.status == "approved")
         if models.dev_mode():
             query = query.where(db.User.is_test == True)  # noqa: E712
         else:
-            query = query.where(or_(db.User.is_test == False, db.User.is_demo == True))  # noqa: E712
+            query = query.where(or_(db.User.is_test == False, db.User.is_demo == True, db.User.is_admin == True))  # noqa: E712
         return list(s.exec(query.order_by(db.User.id)))
 
 

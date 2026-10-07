@@ -1,5 +1,6 @@
 # routes/ CHANGELOG
 
+- 2026-10-07 · settings: JOBS_EXTERNAL=1(Vercel)이면 지금 만들기는 DB에 요청만 남기고 상태도 DB로 · w1: 같은 모드에서 실행·발송 409 · 사용자 결정 "vercel + railway" · check_cron 통과
 - 2026-09-28 · invite.py: 상태가 실제로 바뀔 때마다 status_changes에 이력(관리자 변경은 admin·바꾼 관리자, 초대 코드 가입은 invite_code), GET /api/admin/status-changes(최근 50건), 사용자 목록에 마지막 결정. db.py status_changes 표(계정 삭제 시 이력 CASCADE, 바꾼 관리자 삭제 시 SET NULL) · 사용자 요청 "누가 언제 승인했는지" · check_apply 24·check_tables·check_access·check_settings 통과
 
 - 2026-09-27 · invite.py에 이용 신청(POST·GET /api/apply, 동의 필수·이유 10자 이상·승인 전만·다시 내면 고침)과 관리자 신청 목록(GET /api/admin/applications), 사용자 목록에 신청 내용. auth /api/me에 관리자만 대기 신청 수. users에 application·applied_at 칸, 개발자 본인 계정 users.is_admin 켬(권한 판단은 계속 ADMIN_EMAILS) · 사용자 요청(로그인해도 승인 전에는 메일 없음, 신청서, 관리자만 보는 승인 탭) · check_apply 18·check_access·check_tables 통과

@@ -11,7 +11,7 @@
 import re
 from datetime import date, datetime, timezone
 
-from sqlalchemy import case, delete, func, literal, or_, select
+from sqlalchemy import case, delete, func, literal, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 import db
@@ -38,6 +38,36 @@ def users_with_briefings(today: date) -> set[int]:
     with db.get_engine().connect() as connection:
         rows = connection.execute(select(db.Briefing.user_id).where(db.Briefing.date == today).distinct())
         return {row[0] for row in rows}
+
+
+# "지금 만들기" 요청 (웹이 하루 실행을 직접 못 돌리는 배포에서 Railway 크론이 이어받는다, 2026-10-07)
+def request_briefing(user_id: int) -> None:
+    with db.get_engine().begin() as connection:
+        connection.execute(update(db.User).where(db.User.id == user_id).values(briefing_requested_at=db.utcnow()))
+
+
+def requested_user_ids() -> set[int]:
+    with db.get_engine().connect() as connection:
+        rows = connection.execute(select(db.User.id).where(db.User.briefing_requested_at.is_not(None)))
+        return {row[0] for row in rows}
+
+
+def delete_day(day: date, user_ids: list[int], since: datetime) -> dict:
+    """검수용 날짜로 실제 실행한 뒤 그 날짜 브리핑과 이번 실행(since 뒤)이 만든 seen만 지운다 (실제 날짜의 기억을 건드리지 않게)."""
+    with db.get_engine().begin() as c:
+        item_ids = [r[0] for r in c.execute(select(db.Briefing.item_id).where(
+            db.Briefing.date == day, db.Briefing.user_id.in_(user_ids), db.Briefing.item_id.is_not(None)))]
+        seen = c.execute(delete(db.Seen).where(db.Seen.user_id.in_(user_ids), db.Seen.item_id.in_(item_ids),
+                                               db.Seen.shown_at >= since)).rowcount
+        briefings = c.execute(delete(db.Briefing).where(db.Briefing.date == day, db.Briefing.user_id.in_(user_ids))).rowcount
+    return {"date": str(day), "briefings_deleted": briefings, "seen_deleted": seen}
+
+
+def clear_requests(user_ids: list[int]) -> None:
+    if not user_ids:
+        return
+    with db.get_engine().begin() as connection:
+        connection.execute(update(db.User).where(db.User.id.in_(user_ids)).values(briefing_requested_at=None))
 
 
 def pending_urls(user_id: int, today: date) -> set[str]:
