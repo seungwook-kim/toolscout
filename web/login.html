@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>toolscout 로그인</title>
+  <title>toolscout</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
   <link rel="stylesheet" href="/static/app.css">
@@ -13,21 +13,27 @@
   <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
 </head>
 <body>
+  <!-- 첫 화면 (2026-10-08 사용자 결정): 이메일 로그인 / 회원가입 / 구글 로그인 중 하나, 가입 없이 예시 보기. 디자인은 목업 확정 뒤 다시 -->
   <header class="mast" id="mast"></header>
   <main>
     <section class="sec">
-      <div class="sec-h"><h2>이메일로 로그인</h2><span class="hint">링크는 15분 동안 한 번만 쓸 수 있어요</span></div>
+      <div class="sec-h"><h2>로그인</h2><span class="hint">아이디는 가입한 이메일이에요</span></div>
       <div class="item">
         <div class="mark"></div>
         <div>
           <form id="login-form">
             <div class="acts">
-              <input id="email" type="email" autocomplete="email" placeholder="me@example.com" required>
-              <button class="go" type="submit">로그인 링크 받기</button>
+              <input id="email" type="email" autocomplete="username" placeholder="이메일" required>
+              <input id="password" type="password" autocomplete="current-password" placeholder="비밀번호" required>
+              <button class="go" type="submit">로그인</button>
               <span class="fb" id="msg"></span>
             </div>
           </form>
-          <div class="acts"><button class="act" type="button" disabled title="준비 중">카카오로 로그인 (준비 중)</button></div>
+          <div class="acts">
+            <a class="act" href="/signup" id="signup">회원가입</a>
+            <a class="act" href="/auth/google" id="google" hidden>구글로 계속하기</a>
+          </div>
+          <div class="acts"><a class="act" href="/demo" id="demo">가입 없이 예시 보기</a></div>
         </div>
       </div>
     </section>
@@ -35,17 +41,26 @@
   <script src="/static/app.js"></script>
   <script>
     (async () => {
-      await TS.mast({ session: false, title: "로그인", basis: "매일 아침 AI 소식과 새 MCP·스킬을 내 기준으로 골라 한글로 해설합니다." });
+      await TS.mast({ session: false, title: "toolscout", basis: "매일 아침 AI 소식과 새 MCP·스킬을 내 기준으로 골라 한글로 해설합니다." });
       const msg = document.getElementById("msg");
-      const errors = { expired: "링크가 만료됐어요. 다시 요청해 주세요", used: "이미 쓴 링크예요. 다시 요청해 주세요", invalid: "링크가 올바르지 않아요. 다시 요청해 주세요" };
+      const errors = {
+        google_off: "구글 로그인은 아직 준비 중이에요", google_failed: "구글 로그인을 마치지 못했어요. 다시 시도해 주세요",
+        dev_only: "개발 모드에서는 관리자 계정만 로그인할 수 있어요", blocked: "이 계정은 사용할 수 없어요",
+        expired: "링크가 만료됐어요", used: "이미 쓴 링크예요", invalid: "링크가 올바르지 않아요",
+      };
       const error = new URLSearchParams(location.search).get("error");
       if (error) TS.message(msg, errors[error] || errors.invalid, true);
+      try {
+        const options = await TS.api("/api/auth/options", { allow401: true });
+        document.getElementById("google").hidden = !options.google;
+      } catch (e) { /* 구글 버튼은 숨긴 채로 */ }
       document.getElementById("login-form").onsubmit = async (event) => {
         event.preventDefault();
-        TS.message(msg, "보내는 중이에요");
+        TS.message(msg, "확인하는 중이에요");
         try {
-          const data = await TS.api("/api/auth/request", { method: "POST", body: { email: document.getElementById("email").value }, allow401: true });
-          TS.message(msg, data.message);
+          const data = await TS.api("/api/auth/login", { method: "POST", allow401: true, body: {
+            email: document.getElementById("email").value, password: document.getElementById("password").value } });
+          location.href = data.next;
         } catch (e) {
           TS.message(msg, e.message, true);
         }

@@ -68,9 +68,9 @@ def read(user_id: int, today: date | None = None) -> dict:
 
 
 def test_user_ids() -> list[int]:
-    """개발 모드에서 쓰는 is_test 사용자 id."""
+    """개발 모드에서 쓰는 is_test 사용자 id. 데모 프로필은 뺀다(2026-10-08부터 /demo가 고정 예시라 하루 실행 대상이 아니다)."""
     with db.session() as s:
-        return list(s.exec(select(db.User.id).where(db.User.is_test == True).order_by(db.User.id)))  # noqa: E712
+        return list(s.exec(select(db.User.id).where(db.User.is_test == True, db.User.is_demo == False).order_by(db.User.id)))  # noqa: E712
 
 
 def profile(user_id: int) -> dict:

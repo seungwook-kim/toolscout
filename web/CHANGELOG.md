@@ -1,5 +1,6 @@
 # web/ CHANGELOG
 
+- 2026-10-08 · login.html 첫 화면(로그인·회원가입·구글·예시 보기), signup.html·pending.html(신규), invite.html 삭제, admin.html 초대 코드 칸 제거, demo_sample.json(가상 예시)·demo.html 예시 안내 · 사용자 결정 "회원가입 버튼 + 구글 로그인, 가입 안 하면 가짜 뉴스 데모", 디자인은 전문가 회의 목업 뒤 다시 · check_auth·check_access 통과
 - 2026-10-04 · cards.js 검증 칩 색 표에 서버 값 bad를 더함 · 실패(bad)가 표에 없어 설치·실행 실패가 회색(해당없음 색)으로 보였다 · check_probe_labels 통과
 - 2026-09-28 · admin.html에 변경 이력 칸(이전 → 새 상태·누가·언제)과 사용자마다 마지막 결정 · 승인 이력 · check_apply·check_design 통과
 - 2026-09-27 · invite.html에 이용 신청서(이름·하는 일·이유·알게 된 곳·동의, 낸 뒤 상태·고치기), admin.html 맨 위에 이용 신청 목록(승인·거절, 신청 글 이스케이프), app.js 메뉴에 관리자만 "승인 N" 탭, app.css textarea(토큰만) · 사용자 요청 · check_apply·check_design·check_access 통과

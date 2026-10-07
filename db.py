@@ -58,6 +58,14 @@ class User(SQLModel, table=True):
     applied_at: datetime | None = None
     mcp_key_hash: str | None = Field(default=None, unique=True)
     notify_time: str = "08:00"  # 메일 받을 시각 (08:00·09:00·12:00·18:00)
+    # "오늘 브리핑 지금 만들기"를 누른 시각. 웹이 하루 실행을 직접 못 돌리는 배포(Vercel, JOBS_EXTERNAL=1)에서
+    # Railway 크론(pipeline/cron.py)이 다음 차례에 이 사용자만 만든다 (2026-10-07)
+    briefing_requested_at: datetime | None = None
+    # 회원가입·로그인 (2026-10-08 사용자 결정: 아이디 = 이메일 + 비밀번호, 또는 구글 로그인. routes/signup.py·google.py)
+    password_hash: str | None = None  # scrypt. 구글로만 가입했거나 예전 로그인 링크로 만든 계정은 비어 있다
+    google_sub: str | None = Field(default=None, unique=True)  # 구글 계정 고유 번호
+    login_failures: int = 0  # 비밀번호 연속 실패. 5번이면 15분 잠금
+    login_locked_until: datetime | None = None
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -251,8 +259,22 @@ class UsedToken(SQLModel, table=True):
     expires_at: datetime
 
 
+class EmailCode(SQLModel, table=True):
+    """회원가입 인증번호 (2026-10-08 사용자 결정 "인증키를 보내어 맞으면 회원가입"). 번호 원문은 저장하지 않고 HMAC만 둔다.
+    10분 동안, 번호 하나에 5번까지 틀릴 수 있다. 서버리스(Vercel)라 보낸 횟수·시각도 여기서 센다 (routes/signup.py)."""
+    __tablename__ = "email_codes"
+
+    id: int | None = Field(default=None, primary_key=True)
+    email: str = Field(index=True)
+    code_hash: str
+    attempts: int = 0
+    created_at: datetime = Field(default_factory=utcnow)
+    expires_at: datetime
+    verified_at: datetime | None = None
+
+
 TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions", "used_tokens",
-          "verify_requests", "invite_codes", "status_changes"]
+          "verify_requests", "invite_codes", "status_changes", "email_codes"]
 
 
 def database_url() -> URL:
@@ -308,7 +330,10 @@ ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE"), (
                  ("skill_reviews", "source_url", "VARCHAR"), ("skill_reviews", "llm_signal", "VARCHAR"),
                  ("skill_reviews", "status", "VARCHAR"), ("skill_reviews", "reviewed_at", "TIMESTAMP WITHOUT TIME ZONE"),
                  ("users", "is_demo", "BOOLEAN NOT NULL DEFAULT FALSE"), ("users", "invite_code_used", "VARCHAR"),
-                 ("users", "application", "JSONB"), ("users", "applied_at", "TIMESTAMP WITHOUT TIME ZONE")]
+                 ("users", "application", "JSONB"), ("users", "applied_at", "TIMESTAMP WITHOUT TIME ZONE"),
+                 ("users", "briefing_requested_at", "TIMESTAMP WITHOUT TIME ZONE"),
+                 ("users", "password_hash", "VARCHAR"), ("users", "google_sub", "VARCHAR"),
+                 ("users", "login_failures", "INTEGER NOT NULL DEFAULT 0"), ("users", "login_locked_until", "TIMESTAMP WITHOUT TIME ZONE")]
 
 # 초대제 이전에 있던 사용자는 approved로 두고, 그 뒤에 새로 만들어지는 행만 pending으로 시작한다 (2026-09-16). 여러 번 돌려도 같다
 USERS_MIGRATION = [
@@ -316,6 +341,7 @@ USERS_MIGRATION = [
     "ALTER TABLE users ALTER COLUMN status SET DEFAULT 'pending'",
     "CREATE INDEX IF NOT EXISTS ix_users_status ON users (status)",
     "CREATE INDEX IF NOT EXISTS ix_users_is_demo ON users (is_demo)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_google_sub ON users (google_sub)",
     """DO $$ BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ck_users_status') THEN
         ALTER TABLE users ADD CONSTRAINT ck_users_status CHECK (status IN ('pending', 'approved', 'blocked'));

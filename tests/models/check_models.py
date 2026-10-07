@@ -30,12 +30,8 @@ import config  # noqa: E402
 import models  # noqa: E402
 import providers  # noqa: E402
 
-EXPECTED_PROD = {
-    "curator": ("gemini-3.6-flash", "claude-haiku-4-5-20251001"),
-    "verifier": ("claude-opus-5", "claude-sonnet-5"),
-    "explainer": ("claude-sonnet-5", "gpt-5.6-terra"),
-    "gate": ("claude-haiku-4-5-20251001", "gemini-3.6-flash"),
-}
+MINI = "openai/gpt-4o-mini"  # 2026-10-07 사용자 결정 "mini-4o로 진행해": 서버(운영 모드)는 네 역할 모두 OpenRouter 이 모델 두 칸
+EXPECTED_PROD = {"curator": (MINI, MINI), "verifier": (MINI, MINI), "explainer": (MINI, MINI), "gate": (MINI, MINI)}
 SOURCES = ["platform.claude.com/docs", "ai.google.dev/gemini-api/docs/models", "developers.openai.com/api/docs/models",
            "openrouter.ai/api/v1/models", "console.groq.com/docs", "ollama.com/library"]
 MODEL_NAME = re.compile(r"claude-(opus|sonnet|haiku|fable)|gemini-\d|gpt-\d|gpt-oss|gemma-?\d|qwen\d|llama\d|nemotron|:free")
@@ -80,9 +76,10 @@ def no_hardcoding() -> list[str]:
 
 
 def fallback_case(primary_status: int | None, fallback_status: int | None) -> dict:
-    """운영 모델표 해설가(기본 anthropic, 대체 openai)로 전환 규칙을 확인한다."""
+    """운영 모드 두 칸 표(기본·대체)로 전환 규칙을 확인한다. 운영 표는 2026-10-07부터 같은 모델 두 칸이라, 검수용으로 칸마다
+    다른 가짜 제공자를 둔 표로 바꿔 끼운다."""
     calls: list[str] = []
-    original = dict(models.PROVIDERS)
+    original, original_table = dict(models.PROVIDERS), models.PROD_MODELS["explainer"]
 
     def fake(status: int | None):
         def adapter(model, messages, tools, **_options):
@@ -92,9 +89,9 @@ def fallback_case(primary_status: int | None, fallback_status: int | None) -> di
             return AIMessage(content=f"ok:{model}")
         return adapter
 
-    table = models.PROD_MODELS["explainer"]
-    models.PROVIDERS[table[0]["provider"]] = fake(primary_status)
-    models.PROVIDERS[table[1]["provider"]] = fake(fallback_status)
+    models.PROD_MODELS["explainer"] = [{"provider": "anthropic", "model": "primary"}, {"provider": "openai", "model": "fallback"}]
+    models.PROVIDERS["anthropic"] = fake(primary_status)
+    models.PROVIDERS["openai"] = fake(fallback_status)
     try:
         with dev_mode("0"):
             result = models.call("explainer", [HumanMessage("안녕")])
@@ -103,6 +100,7 @@ def fallback_case(primary_status: int | None, fallback_status: int | None) -> di
         outcome = {"raised": models.status_code(exc.__cause__)}
     finally:
         models.PROVIDERS.update(original)
+        models.PROD_MODELS["explainer"] = original_table
     return {"calls": len(calls), **outcome}
 
 
@@ -173,15 +171,17 @@ def option_routing() -> bool:
         models.PROVIDERS[name] = recorder(name)
     try:
         with dev_mode("0"):
-            models.call("verifier", [HumanMessage("x")], temperature=0)  # anthropic
+            models.call("verifier", [HumanMessage("x")], temperature=0)  # 운영 표: OpenRouter gpt-4o-mini (reasoning 없음)
+            prod_seen = seen.pop("openrouter", None)
         with dev_mode("1"):
             removed = [models.GROQ_FAST, models.LOCAL_JSON_MODEL, {"provider": "gemini", "model": "g", "thinking": "minimal"},
-                       {"provider": "openrouter", "model": "o:free", "reasoning": "none"}]
+                       {"provider": "openrouter", "model": "o:free", "reasoning": "none"}, {"provider": "anthropic", "model": "a"}]
             for index, spec in enumerate(models.DEV_MODELS["curator"][:1] + removed):
-                models._call_one("curator", models.SLOT_NAMES[index], spec, [HumanMessage("x")], None, 0)
+                models._call_one("curator", models.SLOT_NAMES[index % len(models.SLOT_NAMES)], spec, [HumanMessage("x")], None, 0)
     finally:
         models.PROVIDERS.update(original)
-    return (seen.get("anthropic") == {} and seen.get("openrouter") == {"temperature": 0, "reasoning": "none"}
+    return (prod_seen == {"temperature": 0} and seen.get("anthropic") == {}
+            and seen.get("openrouter") == {"temperature": 0, "reasoning": "none"}
             and seen.get("gemini") == {"temperature": 0, "thinking": "minimal"}
             and seen.get("ollama") == {"temperature": 0}
             and seen.get("groq") == {"temperature": 0, "reasoning": "low"}

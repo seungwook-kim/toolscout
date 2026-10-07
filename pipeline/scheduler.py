@@ -36,6 +36,12 @@ SEND_RETRIES, RETRY_WAIT_SECONDS, MAX_NAP_SECONDS = 2, 600, 60
 RUN_RETRIES, RUN_RETRY_WAIT_SECONDS = 2, 1800  # 하루 실행 재시도 (2026-09-15 기본값, 계획안에 횟수 없음)
 
 
+def external() -> bool:
+    """JOBS_EXTERNAL=1이면 예약 작업이 앱 밖(Railway 크론, pipeline/cron.py)에서 돈다. 웹(Vercel)은 하루 실행을 직접 돌리지 않고
+    "지금 만들기"는 요청만 남기며, /api/w1 실행·발송은 409로 막는다 (2026-10-07 사용자 결정 "vercel + railway")."""
+    return os.environ.get("JOBS_EXTERNAL", "0").strip() == "1"
+
+
 def enabled() -> bool:
     return os.environ.get("SCHEDULER_ENABLED", "1").strip() != "0"
 

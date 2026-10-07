@@ -121,14 +121,8 @@ def cleanup() -> None:
 
 
 def cleanup_date(day: date, user_ids: list[int], started: datetime) -> dict:
-    """검수용 날짜로 실제 실행한 뒤 그 날짜 브리핑과 이번 실행이 만든 seen만 지운다 (실제 날짜의 기억을 건드리지 않게)."""
-    with db.get_engine().begin() as c:
-        item_ids = [r[0] for r in c.execute(select(db.Briefing.item_id).where(
-            db.Briefing.date == day, db.Briefing.user_id.in_(user_ids), db.Briefing.item_id.is_not(None)))]
-        seen = c.execute(delete(db.Seen).where(db.Seen.user_id.in_(user_ids), db.Seen.item_id.in_(item_ids),
-                                               db.Seen.shown_at >= started)).rowcount
-        briefings = c.execute(delete(db.Briefing).where(db.Briefing.date == day, db.Briefing.user_id.in_(user_ids))).rowcount
-    return {"date": str(day), "briefings_deleted": briefings, "seen_deleted": seen}
+    """검수용 날짜로 실제 실행한 뒤 그 날짜 브리핑과 이번 실행이 만든 seen만 지운다 (persist.delete_day, Railway 크론 점검도 같이 쓴다)."""
+    return persist.delete_day(day, user_ids, started)
 
 
 def unit_checks() -> dict:

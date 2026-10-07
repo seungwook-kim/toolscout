@@ -1,27 +1,23 @@
-"""공개 데모 /demo (2026-09-16 사용자 결정). 로그인 없이 데모 프로필의 최근 브리핑을 읽기 전용으로 보여 준다.
+"""공개 데모 /demo (2026-09-16 사용자 결정, 2026-10-08 고정 예시로 바꿈). 로그인 없이 읽기 전용으로 본다.
 
-- GET /demo: 화면. 버튼·질문창·설정 링크 없음, 마스트헤드에 읽기 전용 안내와 로그인 링크. 검색엔진 색인 허용
-- GET /api/demo/briefing: 데모 프로필(users.is_demo)의 가장 최근 브리핑. 파이프라인 숫자(큐레이터·검증관·해설가)는 그대로 보여 준다
-- 실제 사용자 프로필·카드는 절대 나가지 않는다. 데모 프로필은 우리가 만든 가짜 하나뿐이다 (db.DEMO_USER)
+2026-10-08 사용자 결정 "회원가입을 원치 않는 사람은 데모버전을 눈으로 볼 수 있는 가짜 뉴스화면": DB·모델 없이 web/demo_sample.json의
+고정 예시 카드(가상의 회사·제품, 제목에 [예시], 링크는 example.com)를 보여 준다. 실제 사용자 프로필·카드는 절대 나가지 않는다.
+- GET /demo: 화면. 버튼·질문창·설정 링크 없음, 마스트헤드에 예시 안내와 로그인 링크. 검색엔진 색인 허용
+- GET /api/demo/briefing: 고정 예시 브리핑 (오늘 화면과 같은 모양)
 - IP당 분당 60회. 넘으면 429 (프록시 뒤에서는 X-Forwarded-For 첫 주소를 본다)
-데모 프로필은 하루 실행에 들어가 매일 갱신되고 메일은 받지 않는다 (가짜 주소라 deliver.outbox에서 뺀다).
 """
+import json
 import time
 from collections import defaultdict
-from datetime import date
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
-from sqlalchemy import func, select
-
-import db
-from routes import briefings
 
 router = APIRouter()
 WEB = Path(__file__).resolve().parents[1] / "web"
 RATE_WINDOW, RATE_LIMIT = 60.0, 60
-NOTICE = "읽기 전용 데모입니다. 실제 서비스는 초대제로 운영합니다"
+NOTICE = "가입 없이 보는 예시 화면이에요. 회사·제품·기사는 모두 가상의 예시예요"
 _hits: dict[str, list[float]] = defaultdict(list)
 
 
@@ -40,14 +36,11 @@ def rate_limit(request: Request) -> None:
     _hits[ip] = recent + [now]
 
 
-def demo_user() -> db.User | None:
-    with db.session() as s:
-        return s.exec(select(db.User).where(db.User.is_demo == True).order_by(db.User.id)).scalars().first()  # noqa: E712
-
-
-def latest_day(user_id: int) -> date | None:
-    with db.get_engine().connect() as conn:
-        return conn.execute(select(func.max(db.Briefing.date)).where(db.Briefing.user_id == user_id)).scalar()
+def sample() -> dict:
+    data = json.loads((WEB / "demo_sample.json").read_text(encoding="utf-8"))
+    for card in data["cards"]:
+        card["feedback"] = {"actions": [], "reason": None, "memo": None, "ids": {}}
+    return data
 
 
 @router.get("/demo", include_in_schema=False)
@@ -59,17 +52,4 @@ def demo_page(request: Request) -> FileResponse:
 @router.get("/api/demo/briefing")
 def demo_briefing(request: Request) -> dict:
     rate_limit(request)
-    user = demo_user()
-    if user is None:
-        return {"demo": True, "notice": NOTICE, "exists": False, "cards": [], "count": 0, "date": str(date.today()),
-                "profile_line": "", "empty_reason": "데모 브리핑이 아직 없어요"}
-    day = latest_day(user.id)
-    if day is None:
-        return {"demo": True, "notice": NOTICE, "exists": False, "cards": [], "count": 0, "date": str(date.today()),
-                "profile_line": briefings.profile_line(user), "empty_reason": "데모 브리핑이 아직 없어요"}
-    data = briefings.briefing_for(user, day)
-    data.pop("is_admin", None)  # 트레이스 링크는 데모에 없다
-    for card in data["cards"]:
-        card.pop("trace_url", None)
-        card["feedback"] = {"actions": [], "reason": None, "memo": None, "ids": {}}
-    return {"demo": True, "notice": NOTICE, **data}
+    return {"demo": True, "notice": NOTICE, **sample()}

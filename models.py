@@ -37,23 +37,16 @@ log = logging.getLogger("toolscout.models")
 
 ModelTable = dict[str, list[dict[str, Any]]]
 
+# 운영 모델표 = 서버 배포(Railway 크론·Vercel 웹, DEV_MODE=0). 2026-10-07 사용자 결정 "mini-4o로 진행해": 네 역할 모두 OpenRouter
+# openai/gpt-4o-mini (입력 $0.15·출력 $0.60 per 1M, 도구 호출·JSON 지원, 2026-10-07 https://openrouter.ai/api/v1/models 조회).
+# 제공자가 하나라 대체 칸도 같은 모델이다(타임아웃·503이면 한 번 더, same_story와 같은 방식). 키는 OPENROUTER_API_KEY 하나.
+# 예전 계획 표(Gemini·Anthropic·OpenAI 직접 키: 선별 Gemini 3.6 Flash, 검증관 Opus 5, 해설가 Sonnet 5, 게이트 Haiku 4.5)는 쓰지 않는다
+OPENROUTER_MINI = {"provider": "openrouter", "model": "openai/gpt-4o-mini"}
 PROD_MODELS: ModelTable = {
-    "curator": [  # 큐레이터 선별
-        {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
-        {"provider": "anthropic", "model": "claude-haiku-4-5-20251001"},
-    ],
-    "verifier": [  # 검증관
-        {"provider": "anthropic", "model": "claude-opus-5"},
-        {"provider": "anthropic", "model": "claude-sonnet-5"},
-    ],
-    "explainer": [  # 해설가
-        {"provider": "anthropic", "model": "claude-sonnet-5"},
-        {"provider": "openai", "model": "gpt-5.6-terra"},
-    ],
-    "gate": [  # 게이트
-        {"provider": "anthropic", "model": "claude-haiku-4-5-20251001"},
-        {"provider": "gemini", "model": "gemini-3.6-flash", "thinking": "minimal"},
-    ],
+    "curator": [OPENROUTER_MINI, OPENROUTER_MINI],  # 큐레이터 선별
+    "verifier": [OPENROUTER_MINI, OPENROUTER_MINI],  # 검증관
+    "explainer": [OPENROUTER_MINI, OPENROUTER_MINI],  # 해설가
+    "gate": [OPENROUTER_MINI, OPENROUTER_MINI],  # 게이트
 }
 
 # 개발 모드는 Claude 구독만 쓴다 (2026-10-05 사용자 결정 "올라마 끄고 다 로컬에 도구모델 기반으로", 구독이 실패하면 "구독만, 실패하면 건너뜀").

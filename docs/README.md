@@ -6,6 +6,7 @@
 - `계획안.md`: 전체 설계의 유일한 기준 (v3.2). 작업 규칙과 충돌하면 이 문서가 이긴다. 폴더 구조는 부록 F
 - `design-reference.html`: 웹앱 디자인의 유일한 기준(토큰·마크업 구조). `web/app.css` 앞부분이 이 파일 style 그대로
 - `local-model.md`: 개발용 로컬 모델(Ollama) VRAM·도구 호출·한글 실측표와 선택 근거(2026-10-05부터 모델표에서 뺌, 기록용). 모델 배정 자체는 루트 `models.py`
+- `deploy.md`: 배포 구조(Vercel 웹 + Railway 크론, 2026-10-07), 플랫폼별 환경변수, git에 올린 파일만 내보내 올리는 방법, 첫 점검·이 PC 앱에서 넘어가기
 - `img/`: 스크린샷. `today-desktop.png`·`today-mobile.png`(디자인 기준 적용), `pwa-standalone.png`, 예전 `web_cards.png` 등
 
 ## 들어오고 나가는 데이터

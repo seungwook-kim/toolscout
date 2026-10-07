@@ -1,5 +1,6 @@
 # agent/ CHANGELOG
 
+- 2026-10-07 · loop: MCP_URL=inproc이면 같은 프로세스의 mcp_server.mcp에 메모리로 붙는다 · Vercel 웹은 자기 /mcp를 HTTP로 못 부르고 Railway 크론은 서버를 띄우지 않는다(사용자 결정 "vercel + railway") · github.com fetch_article 실측 3,064자, check_cron 통과
 - 2026-10-06 · importance: 개발 모드도 Jev가 먼저, Jev가 못 매긴 기사(키 없음·연결 실패)만 구독 Haiku로 다시 매기고(span importance_fallback, 보고 fallback), 그것도 실패하면 선별 점수 · 사용자 결정 "JEV로 돌려". Jev의 10/1~10/5 ConnectError는 사이트 장애가 아니라 이 PC의 안랩 차단이었다(check-host.net 바깥 노드는 200, 10/6 10:44부터 이 PC도 접속됨) · check_importance 25 통과
 - 2026-10-05 · importance: 개발 모드는 Jev 대신 구독 모델("importance" 역할, Haiku 4.5 생각 끔)로 20건 묶음마다 같은 5단계 점수, 선별 점수는 importance_select에, 묶음 실패면 선별 점수 그대로 · loop.DEV_MODE_NOTICE를 "개발 모드: Claude 구독만, 실제 사용자 데이터 금지"로 · 사용자 결정 "다 로컬에 도구모델(Claude 구독) 기반으로, 구독만·실패하면 건너뜀", Jev는 10/1~10/5 매일 ConnectError · check_importance 23·check_same_story 8 통과
 - 2026-10-05 · curator 선별 입력: 요약이 빈 뉴스(해커뉴스 링크 글)에 link_site(링크 도메인, 예: blog.google)를 더함. 수집·저장 요약은 그대로 · 해커뉴스 링크 글은 story_text가 없어 제목만으로 판정돼 Muse Gadgets·구글 Suncatcher 위성을 AI 무관으로 놓침(10/3·10/4, 사용자 승인) · check_promo 13·check_topic_guide 6·run_daily --fake 통과. 효과는 다음 실행 골든셋으로 본다
