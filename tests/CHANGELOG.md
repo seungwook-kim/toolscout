@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-08 · web/check_auth 다시 씀(가입·인증번호·비밀번호 잠금·예전 링크 계정·운영 모드 승인 대기·관리자 알림·가짜 구글 OAuth, 32항목), access/check_access·check_apply 새 구조로, common.login은 회원가입 흐름으로, check_rules 열린 API 목록 갱신 · 가입·로그인 개편(사용자 결정 2026-10-08) · 세 검수 통과
 - 2026-10-07 · pipeline/check_cron.py(신규, 19항목): 크론 차례별 할 일·발송 재시도와 알림 한 번·지금 만들기 요청·--rehearse 정리·웹 외부 작업 모드·MCP inproc 기본 · check_models: 운영 표 기대값을 gpt-4o-mini 두 칸으로, 전환 규칙 검수는 가짜 두 칸 표로, 옵션 전달에 운영 OpenRouter · run_daily의 cleanup_date는 persist.delete_day로
 - 2026-10-06 · check_importance: 개발 모드 Jev 먼저 항목(다 매기면 구독 안 부름·실패한 기사만 구독·전부 막히면 전부 구독·키 없으면 전부 구독·둘 다 실패면 선별 점수), Jev 경로 항목은 DEV_MODE=0으로 · 사용자 결정 "JEV로 돌려" · 25항목 통과
 - 2026-10-05 · check_models: 개발 모드 6역할(4역할·same_story·importance) 구독만·같은 모델 두 칸, 503이면 같은 구독 1회 더·529면 기다리지 않고 건너뜀·400은 바로 장애, 가짜 제공자를 전부 바꿔 구독 밖 호출을 잡음, 표에서 뺀 제공자 옵션 변환 유지, 실제 호출은 6역할 구독 · check_importance: 운영(Jev) 항목은 DEV_MODE=0으로, 개발 구독 경로 8항목 추가 · check_groq는 남겨 둔 GROQ 정의로 · 사용자 결정 "다 구독으로"

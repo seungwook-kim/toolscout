@@ -91,6 +91,14 @@
   - 바로잡음: Jev의 10/1~10/5 ConnectError는 사이트 장애가 아니라 이 PC의 안랩(Safe Transaction) 차단이었다(사용자 "안랩에서 자꾸 막는데").
     check-host.net 바깥 노드에서는 홈 200·API 405, 이 PC는 jevtypesafeai.com 이름으로만 연결이 끊김(같은 Cloudflare 주소에 다른 이름은 정상).
     10/6 10:44부터 이 PC도 접속됨. 결정(사용자, 10/6): "JEV로 돌려" → 개발 모드도 Jev가 먼저, Jev가 못 매긴 기사만 구독 Haiku로
+  - 결정(사용자, 10/7): "vercel + railway 방향으로 진행" — 웹은 Vercel(접속할 때만), 아침 작업은 Railway 크론(정해진 시각에 켜졌다 꺼짐).
+    서버 모델 "mini-4o"(OpenRouter gpt-4o-mini 네 역할), 운영 모드 + 승인제, 서버 첫 발송 확인 뒤 이 PC 예약 끄기. pipeline/cron.py·MCP_URL=inproc·
+    JOBS_EXTERNAL·운영 대상에 관리자 포함·docs/deploy.md. Vercel https://toolscout-five.vercel.app 배포(framework fastapi, bom1), Railway 프로젝트·
+    크론 서비스·변수만 만들고 실행은 아직. 이 PC에서 운영 모드 실제 실행: gpt-4o-mini 11번·전환 0·카드 4, 35분(MCP 레지스트리가 느림)
+  - 결정(사용자, 10/8): "로그인쪽과 사용하는쪽 방향성이 틀렸다" → 첫 화면은 회원가입 버튼 + 구글 로그인 중 하나, 아이디 = 이메일, 인증번호를 보내
+    맞으면 가입(인증번호 확인 버튼), 가입하지 않는 사람은 고정 예시 뉴스 데모. 질문 답: 이메일+비밀번호 로그인, 관리자 승인 뒤 사용, 데모는 고정 예시.
+    routes/signup.py·google.py(신규), 초대 코드·이용 신청서·로그인 링크 요청 제거, users에 password_hash·google_sub·로그인 잠금, email_codes 표.
+    구글은 GOOGLE_CLIENT_ID·SECRET이 들어오면 켜진다. 디자인은 "기능 구현만, 로그인 뒤 화면은 메일처럼 보일 필요 없다, 디자인 전문가 서브에이전트 회의로 목업"
   - 결정(사용자, 9/27): 작업 중 판정·검토는 Claude Code 모델이 한다. 로컬 Ollama·Groq로 돌리던 프롬프트 전후 비교는 멈췄다.
     그래서 프롬프트 효과는 모델로 재지 않았고 9/27 07:00 실행 결과를 Claude Code가 읽어 판단한다
   - 다음 시작점: 9/27 07:00이 MCP 발송 전 검증·홍보 거르기·문장 기준 첫 실행. app.log에서 실행 끝 시각(08:00 전인지), 보고의 mcps_probed,
