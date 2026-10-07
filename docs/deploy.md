@@ -5,7 +5,7 @@
 ## 구조
 | 어디 | 무엇 | 어떻게 |
 |---|---|---|
-| Vercel (Hobby, 프로젝트 `toolscout`, 지역 bom1 = DB와 같은 뭄바이) | `main.py` FastAPI 전체(화면·로그인·설정·피드백·질문창·/demo) | 요청이 올 때만. 함수 최대 300초 |
+| Vercel (Hobby, 프로젝트 `toolscout`, https://toolscout-five.vercel.app, 지역 bom1 = DB와 같은 뭄바이, framework fastapi) | `main.py` FastAPI 전체(화면·로그인·설정·피드백·질문창·/demo) | 요청이 올 때만. 함수 최대 300초 |
 | Railway (크론 서비스) | `python -m pipeline.cron` | KST 06:00~21:30 30분마다 켜져서 할 일만 하고 종료 (`railway.json`, 일정은 UTC `0,30 21-23,0-12 * * *`) |
 | Supabase | DB | 둘이 같이 쓴다 |
 
