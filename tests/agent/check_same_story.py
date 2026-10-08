@@ -40,11 +40,33 @@ def fake(*answers):
 PICKS = [{"title": t, "url": f"u{n}"} for n, t in enumerate(["GPT-6 공개", "Opus 5.5", "GPT-6 한국어 기사", "Muse", "Opus 한국어"], 1)]
 
 
+async def explainer_gets_also(item: dict) -> None:
+    """해설가 입력에 같은 소식 다른 기사가 들어가고, 프롬프트가 그 사실을 담으라고 한다."""
+    from agent import explainer
+    seen = []
+
+    def call(role, messages, tools=None):
+        seen.append(messages)
+        return AIMessage(content=json.dumps({"reject": False, "reject_reason": None, "relevance": 4, "summary_ko": "새 모델이 나왔습니다.",
+                                             "for_me": "참고할 만합니다.", "pros": [], "cons": [], "install_cmd": None}, ensure_ascii=False),
+                         usage_metadata={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2})
+    memory = {"user_id": 1, "profile": {"role": "개발자", "tools_tags": [], "free_text": None}}
+    await explainer.explain_item(item | {"type": "news", "source": "aitimes", "why": "모델 소식", "summary": "s", "url": "https://example.test/u1"},
+                                 memory, None, Stats(), call)
+    text = seen[0][1].content if seen else ""  # 루프가 같은 목록에 답을 덧붙이므로 두 번째(입력)를 본다
+    check("해설가 입력에 also_reported·프롬프트에 담으라는 규칙", "also_reported" in text and "GPT-6 한국어 기사" in text
+          and "also_reported가 있으면" in seen[0][0].content)
+
+
 async def main() -> None:
     call, seen = fake('{"groups": [[1, 3], [2, 5]]}')
     kept, n = await same_story.drop(PICKS, Stats(), call)
     check("묶음마다 앞 하나만, 순서 그대로, 채우지 않음", [k["url"] for k in kept] == ["u1", "u2", "u4"] and n == 2)
     check("모델에는 제목만 감", "u1" not in seen[0] and "GPT-6 공개" in seen[0])
+    check("남긴 기사에 뺀 기사 제목·요약을 also_reported로 (2026-10-08)",
+          [a["title"] for a in kept[0]["also_reported"]] == ["GPT-6 한국어 기사"] and [a["title"] for a in kept[1]["also_reported"]] == ["Opus 한국어"]
+          and "also_reported" not in kept[2] and all("also_reported" not in p for p in PICKS))
+    await explainer_gets_also(kept[0])
     call, _ = fake('{"groups": []}')
     kept, n = await same_story.drop(PICKS, Stats(), call)
     check("겹침 없으면 그대로", kept == PICKS and n == 0)

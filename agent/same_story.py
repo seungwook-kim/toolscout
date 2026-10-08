@@ -39,10 +39,18 @@ async def groups(items: list[dict], stats: Stats, model_call=None, label: str = 
     return [sorted(g) for g in parsed.groups if len(g) > 1] if parsed else None
 
 
+ALSO_SUMMARY_CHARS = 300
+
+
 async def drop(picks: list[dict], stats: Stats, model_call=None) -> tuple[list[dict], int]:
-    """picks(중요 순)에서 같은 소식을 묶어 묶음마다 앞 하나만 남긴다. 반환: (남긴 뉴스, 뺀 건수)."""
+    """picks(중요 순)에서 같은 소식을 묶어 묶음마다 앞 하나만 남긴다. 반환: (남긴 뉴스, 뺀 건수).
+    남긴 기사에는 뺀 기사의 제목·출처·요약을 also_reported로 붙인다. 해설가가 남긴 기사에 없는 사실을 한 줄 더하게 한다
+    (2026-10-08: 크레딧이 적힌 GeekNews 기사가 빠지고 AI Times 기사만 남아 "Max·Team 월 API 크레딧"이 메일에서 사라졌다)."""
     if len(picks) < 2:
         return picks, 0
-    found = await groups(picks, stats, model_call)
-    later = {i for group in found or [] for i in group[1:]}  # 묶음에서 앞 번호 하나만 남긴다
-    return [item for n, item in enumerate(picks, 1) if n not in later], len(later)
+    found = await groups(picks, stats, model_call) or []
+    later = {i for group in found for i in group[1:]}  # 묶음에서 앞 번호 하나만 남긴다
+    also = {group[0]: [{"title": picks[i - 1]["title"], "source": picks[i - 1].get("source"),
+                        "summary": (picks[i - 1].get("summary") or "")[:ALSO_SUMMARY_CHARS]} for i in group[1:]] for group in found}
+    kept = [(item | {"also_reported": also[n]}) if n in also else item for n, item in enumerate(picks, 1) if n not in later]
+    return kept, len(later)

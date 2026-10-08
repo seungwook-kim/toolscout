@@ -1,5 +1,6 @@
 # agent/ CHANGELOG
 
+- 2026-10-08 · same_story.drop: 남긴 기사에 뺀 기사 제목·출처·요약을 also_reported로 붙이고 해설가가 남긴 기사에 없는 사실(요금·크레딧·한도)을 summary_ko·for_me에 담게 함, headline 후보 30 → 80건(자른 뒤 묶어서 다룬 곳 수가 적게 세어지던 것) · 10/8 크레딧이 적힌 GeekNews 기사가 같은 소식으로 빠지고 AI Times 기사만 남음, 큰 소식 후보 30건 밖으로 GeekNews가 잘림 · check_same_story 10·check_headline 18·run_explainer --fake 통과
 - 2026-10-07 · loop: MCP_URL=inproc이면 같은 프로세스의 mcp_server.mcp에 메모리로 붙는다 · Vercel 웹은 자기 /mcp를 HTTP로 못 부르고 Railway 크론은 서버를 띄우지 않는다(사용자 결정 "vercel + railway") · github.com fetch_article 실측 3,064자, check_cron 통과
 - 2026-10-06 · importance: 개발 모드도 Jev가 먼저, Jev가 못 매긴 기사(키 없음·연결 실패)만 구독 Haiku로 다시 매기고(span importance_fallback, 보고 fallback), 그것도 실패하면 선별 점수 · 사용자 결정 "JEV로 돌려". Jev의 10/1~10/5 ConnectError는 사이트 장애가 아니라 이 PC의 안랩 차단이었다(check-host.net 바깥 노드는 200, 10/6 10:44부터 이 PC도 접속됨) · check_importance 25 통과
 - 2026-10-05 · importance: 개발 모드는 Jev 대신 구독 모델("importance" 역할, Haiku 4.5 생각 끔)로 20건 묶음마다 같은 5단계 점수, 선별 점수는 importance_select에, 묶음 실패면 선별 점수 그대로 · loop.DEV_MODE_NOTICE를 "개발 모드: Claude 구독만, 실제 사용자 데이터 금지"로 · 사용자 결정 "다 로컬에 도구모델(Claude 구독) 기반으로, 구독만·실패하면 건너뜀", Jev는 10/1~10/5 매일 ConnectError · check_importance 23·check_same_story 8 통과

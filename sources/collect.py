@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent.schemas import COLLECTION_STALE
-from sources import anthropic_skills, hackernews, mcp_registry, skillsmp
+from sources import anthropic_skills, claude_notes, hackernews, mcp_registry, skillsmp
 from sources.common import KST, SourceResult, error_text, http_client
 from sources.rss import FEEDS, fetch_feed
 
@@ -84,6 +84,8 @@ def collect(now: datetime | None = None, *, mcp_per_publisher: int = mcp_registr
     jobs = [(feed.name, lambda c, f=feed: fetch_feed(f, news_since, c)) for feed in FEEDS]
     jobs += [
         ("hackernews", lambda c: hackernews.fetch(news_since, c, min_points=hn_min_points)),
+        # Claude 공식 릴리스 노트: Anthropic 발표(모델·요금·크레딧)를 원문으로 (2026-10-08, sources/claude_notes.py)
+        (claude_notes.NAME, lambda c: claude_notes.fetch(news_since, c)),
         ("anthropic_skills", lambda c: anthropic_skills.fetch(tool_since, c)),
         # SkillsMP는 갱신 시각을 믿을 수 없어 창 대신 "아직 안 본 것"으로 고른다 (sources/skillsmp.py)
         ("skillsmp", lambda c: skillsmp.fetch(c)),

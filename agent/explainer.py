@@ -48,6 +48,8 @@ PROMPT = f"""너는 toolscout 해설가다. 한 사용자에게 보여줄 카드
 - 입력의 항목은 큐레이터가 이 사용자의 프로필을 보고 고른 것이다. 고른 이유가 납득되면 살린다.
   직군·쓰는 도구·자유 한 줄·관심 주제 어느 것과도 이어 볼 수 없을 때만 reject를 true로 하고 reject_reason에 이유를 한 줄로 쓴다
 - 원문을 못 읽었으면 항목 요약만으로 쓰고, 확인되지 않은 내용은 쓰지 않는다
+- also_reported가 있으면 같은 소식을 다룬 다른 기사의 제목·요약이다. 이 기사에 없는 중요한 사실(요금·크레딧·한도·제공 범위 같은)이
+  거기 있으면 summary_ko나 for_me에 짧게 담는다. 그 기사의 링크는 근거(evidence_url)로 쓰지 않는다
 용어 표기는 아래 용어집을 따른다.
 {GLOSSARY}
 출력은 JSON 객체 하나만 쓴다. 설명 문장이나 코드 블록을 붙이지 않는다. 형식:
@@ -74,6 +76,7 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
                      "summary": item.get("summary", "")[:SUMMARY_ONLY_CHARS if item.get("skip_fetch") else SUMMARY_CHARS]},
             "article": source.get("text") if checked else None,
             "verification": item.get("verification"), "risk_signal": item.get("risk_signal"),  # 검증관 결과가 있으면 (세션 8)
+            "also_reported": item.get("also_reported") or None,  # 같은 소식을 다룬 다른 기사 (agent/same_story.drop, 2026-10-08)
             "article_status": "ok" if checked else f"못 읽음 ({source.get('reason') or source.get('status')})",
         }
 
