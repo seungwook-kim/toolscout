@@ -1,5 +1,7 @@
 # docs/ CHANGELOG
 
+- 2026-10-09 · 리디자인 마무리 검수(문서 규칙·README 폴더 문서 점검) · 새 공통 체계 반영 · check_folder_docs·check_readme 통과
+- 2026-10-09 · design-reference.html을 새 공통 체계 견본으로 다시 씀(app.css 링크, 배치만 자체 style) · 리디자인 회의 합의 · check_design 통과
 - 2026-10-07 · deploy.md(신규): Vercel 웹 + Railway 크론 구조·환경변수·올리는 방법·넘어가기, README에 줄 추가 · 사용자 결정 "vercel + railway", 서버 모델 "mini-4o" · check_folder_docs 통과
 - 2026-10-05 · README의 local-model.md 설명에 "모델표에서 뺌, 기록용" · 사용자 결정으로 개발 모드 모델표에서 Ollama를 뺌(models.py) · check_folder_docs 통과
 - 2026-09-16 · 계획안 6장 범위에 초대제 가입과 읽기 전용 데모 /demo 추가 · 2026-09-16 사용자 결정 반영 · check_folder_docs·check_readme 통과

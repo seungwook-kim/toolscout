@@ -29,6 +29,7 @@ def main() -> int:
             common.login(c, A)
             uid = common.user_id(A)
             before = c.get("/api/profile").json()
+            first = {path: c.get(path, follow_redirects=False) for path in ("/", "/history", "/settings", "/onboarding")}
             now_without_profile = c.post("/api/briefing/now")
             bad_role = c.post("/api/profile", json={"role": "우주비행사"})
             weights = dict(before["presets"]["개발자"]) | {"pricing": -9, "mcp_tools": 9}
@@ -36,6 +37,8 @@ def main() -> int:
                                                  "free_text": "AI 에이전트를 공부한다", "weights": weights, "notify_time": "09:00"})
             after = c.get("/api/profile").json()
             root = c.get("/", follow_redirects=False)
+            onboarding_after = c.get("/onboarding", follow_redirects=False)
+            settings_after = c.get("/settings", follow_redirects=False)
             now = c.post("/api/briefing/now")
             status = c.get("/api/briefing/now").json()
             with db.get_engine().begin() as conn:  # 기억 지우기 대상 행을 하나씩 만든다
@@ -60,6 +63,9 @@ def main() -> int:
         "가중치_초기값_반영·-5~+5_고정": after["profile"]["weights"]["pricing"] == -5 and after["profile"]["weights"]["mcp_tools"] == 5
         and after["profile"]["has_weights"] is True,
         "프로필_저장후_오늘화면_열림": root.status_code == 200,
+        "프로필_비면_오늘·지난·설정은_첫설정으로": all(first[p].status_code == 303 and first[p].headers["location"] == "/onboarding" for p in ("/", "/history", "/settings"))
+        and first["/onboarding"].status_code == 200,
+        "프로필_차면_첫설정은_오늘로·설정_열림": onboarding_after.headers["location"] == "/" and settings_after.status_code == 200,
         "지금만들기_본인만_실행": now.status_code == 202 and calls == [[uid]] and status["status"] in ("running", "done"),
         "기억지우기_weights·seen·feedback_삭제": forgot["deleted"]["weights"] == 10 and forgot["deleted"]["seen"] == 1
         and forgot["deleted"]["feedback"] == 1 and after_forget["profile"]["has_weights"] is False,

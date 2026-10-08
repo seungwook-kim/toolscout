@@ -1,0 +1,57 @@
+/* toolscout 프로필 입력 부품: 직군 칩, 관심 주제 슬라이더, 쓰는 도구 태그 입력. 설정(settings.html)과 첫 설정(onboarding.html)이 같이 쓴다. 색은 토큰만 */
+.rchips{display:flex;flex-wrap:wrap;gap:8px;border:0;padding:0;margin:0;min-width:0}
+.rchip{position:relative;display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line-input);background:var(--surface);font-size:.8125rem;font-weight:600;color:var(--ink-2);cursor:pointer}
+.rchip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.rchip:has(input:checked){background:var(--blaze-wash);border-color:var(--blaze);color:var(--blaze-ink)}
+.rchip:has(input:focus-visible){outline:2px solid var(--blaze);outline-offset:2px}
+@media (pointer:coarse),(max-width:767px){.rchip{min-height:44px}}
+.wscale{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8125rem;color:var(--mute)}
+.wscale .mono{font-size:.8125rem;color:var(--ink-2)}
+.wrow{display:grid;grid-template-columns:168px minmax(0,1fr) 44px 72px;grid-template-areas:"name range val def" "help help help help";align-items:center;column-gap:12px;min-height:52px;border-top:1px solid var(--line)}
+.wname{grid-area:name;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px;font-size:.8125rem;font-weight:600;line-height:1.35;color:var(--ink);min-width:0}
+.chg{font-size:.8125rem;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.wrange{grid-area:range;position:relative;min-width:0}
+.wrange::before{content:"";position:absolute;left:calc(12px + (100% - 24px) * .5 - 1px);top:calc(50% - 6px);width:2px;height:12px;border-radius:1px;background:var(--ink-2);pointer-events:none}
+.wrange .notch{position:absolute;left:calc(12px + (100% - 24px) * var(--d,.5) - 1px);top:calc(50% + 7px);width:2px;height:6px;border-radius:1px;background:var(--ink-2);pointer-events:none}
+.wval{grid-area:val;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.9375rem;font-weight:500;text-align:right;color:var(--ink);letter-spacing:0}
+.wval.pos{color:var(--blaze-ink)}
+.wval.zero{color:var(--mute)}
+.wdef{grid-area:def;font-size:.8125rem;color:var(--mute);white-space:nowrap}
+.wdef .mono{font-size:.8125rem}
+.whelp{grid-area:help;display:flex;align-items:center;gap:6px;padding-bottom:8px;font-size:.8125rem;color:var(--ink-2)}
+.whelp .ic{color:var(--ink-2)}
+.range{--a:.5;--b:.5;--fill:var(--blaze);-webkit-appearance:none;appearance:none;display:block;width:100%;height:44px;margin:0;background:transparent;cursor:pointer;position:relative}
+.range:focus{outline:none}
+.range::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--tick-empty) 0 calc(12px + (100% - 24px) * var(--a)),var(--fill) 0 calc(12px + (100% - 24px) * var(--b)),var(--tick-empty) 0)}
+.range::-moz-range-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--tick-empty) 0 calc(12px + (100% - 24px) * var(--a)),var(--fill) 0 calc(12px + (100% - 24px) * var(--b)),var(--tick-empty) 0)}
+.range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;margin-top:-10px;border-radius:50%;background:var(--surface);border:2px solid var(--ink)}
+.range::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--surface);border:2px solid var(--ink)}
+.range:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--blaze)}
+.range:focus-visible::-moz-range-thumb{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--blaze)}
+@media (max-width:767px){
+  .wrow{grid-template-columns:minmax(0,1fr) auto 44px;grid-template-areas:"name def val" "range range range" "help help help";padding-top:10px;min-height:0}
+}
+/* 쓰는 도구 태그 입력 */
+.tagbox{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:48px;padding:6px 8px;border:1px solid var(--line-input);border-radius:var(--r-ctl);background:var(--surface);cursor:text;min-width:0}
+.tagbox:focus-within{outline:2px solid var(--blaze);outline-offset:1px}
+.tagbox[aria-invalid="true"]{border-color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad)}
+.tags{display:contents}
+.tagchip{display:inline-flex;align-items:center;gap:2px;height:28px;padding:0 2px 0 10px;border-radius:var(--r-chip);background:var(--surface-2);font-size:.8125rem;font-weight:600;color:var(--ink);max-width:100%}
+.tagchip .tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tagchip button{position:relative;width:24px;height:24px;flex:none;display:grid;place-items:center;border:0;border-radius:4px;background:none;color:var(--ink-2)}
+.tagchip button::after{content:"";position:absolute;inset:-10px}
+.tagchip button:hover{color:var(--ink);background:var(--line)}
+.tagbox input{flex:1 1 8ch;min-width:8ch;height:34px;border:0;outline:0;background:transparent;font-size:1rem;color:var(--ink);padding:0 4px}
+.tagbox input::placeholder{color:var(--mute)}
+.frow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px}
+.ctr{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.75rem;color:var(--mute);letter-spacing:0;margin-left:auto}
+
+.rchips.role .rchip{min-height:36px}
+.rchips[aria-invalid="true"] .rchip{border-color:var(--bad)}
+.fs-legend{font-size:.8125rem;font-weight:600;color:var(--ink);padding:0;margin-bottom:8px}
+.req-mark{font-weight:500;color:var(--mute)}
+.time-chips .rchip{font-family:var(--mono);font-size:.875rem;font-weight:500;min-height:40px;padding:0 14px}
+.wt{display:grid;border-bottom:1px solid var(--line)}
+.wrow:first-child{border-top:0}
+.wrange{--fill:var(--blaze)}
+.neg .range{--fill:var(--mute)}

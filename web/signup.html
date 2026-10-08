@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>toolscout 회원가입</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
@@ -10,84 +10,337 @@
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#15181E">
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+  <style>
+    /* 가입: 가운데 한 열, 세 단계 (합의 목업 signup). 색은 토큰만 쓴다 */
+    .back{display:inline-flex;align-items:center;gap:6px;min-height:44px;width:max-content;font-size:.875rem;font-weight:600;color:var(--ink-2);text-decoration:none;margin-block:-8px}
+    .back:hover{color:var(--ink)}
+    .su-head{display:grid;gap:6px}
+    .su-head h1{font-size:1.5rem;font-weight:700}
+    .su-panel{display:grid;gap:0;padding-block:8px}
+    .su-panel > *,.su-sec > *,.sec-body > *,.otp-part > *{min-width:0}
+    .su-panel > .alert{margin-block:16px 4px}
+    .su-sec{display:grid;gap:14px;padding-block:20px;border-top:1px solid var(--line)}
+    .su-panel > .su-sec:first-of-type{border-top:0}
+    .su-sec > h2{display:flex;align-items:center;gap:10px;font-size:1.0625rem;font-weight:700;letter-spacing:-.01em}
+    .su-sec > h2:focus{outline:none}
+    .sec-n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:600;background:var(--surface-2);color:var(--ink-2);flex:none}
+    .su-sec.todo > h2{color:var(--mute);font-weight:600}
+    .su-sec.todo .sec-n{background:transparent;border:1px solid var(--line-input);color:var(--mute)}
+    .su-sec.active .sec-n{background:var(--blaze-wash);color:var(--blaze-ink);box-shadow:inset 0 0 0 2px var(--blaze)}
+    .su-sec.done .sec-n{background:var(--ink);color:var(--on-ink)}
+    .sec-body{display:grid;gap:14px}
+    .sec-body[hidden],.otp-part[hidden],.sum-line[hidden],.change-line[hidden]{display:none}
+    .sum-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.875rem;color:var(--ink-2)}
+    .sum-line .ic{color:var(--ok)}
+    .sum-line .mono{font-size:.8125rem;color:var(--ink);overflow-wrap:anywhere}
+    .link-btn{border:0;background:none;padding:0 4px;min-height:44px;font-size:.875rem;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+    .row{display:flex;gap:8px;align-items:flex-end}
+    .row .field{flex:1}
+    @media (max-width:767px){.row{flex-direction:column;align-items:stretch}.row .btn{width:100%}}
+    .change-line{margin-top:-10px}
+    .otp-part{display:grid;gap:14px}
+    .sent{display:flex;gap:8px;align-items:flex-start;font-size:.8125rem;color:var(--ink-2);background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px}
+    .sent .ic{margin-top:2px;flex:none}
+    .sent .mono{font-size:.75rem;color:var(--ink);overflow-wrap:anywhere}
+    /* 인증번호: 실제 입력은 하나, 6칸은 장식 */
+    .otp{--cw:44px;--cg:8px;position:relative;width:calc(6 * var(--cw) + 5 * var(--cg));max-width:100%;height:52px;overflow:hidden}
+    @media (max-width:360px){.otp{--cw:34px;--cg:5px}}
+    .otp .cells{position:absolute;inset:0;display:grid;grid-template-columns:repeat(6,var(--cw));gap:var(--cg);pointer-events:none}
+    .otp .cells span{border:1px solid var(--line-input);border-radius:8px;background:var(--surface)}
+    .otp:focus-within .cells span.cur{border:2px solid var(--blaze)}
+    .otp.invalid .cells span{border-color:var(--bad)}
+    .otp input{position:relative;display:block;width:calc(100% + 60px);height:100%;margin:0;border:0;background:transparent;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.5rem;font-weight:500;letter-spacing:calc(var(--cw) + var(--cg) - 1ch);padding:0 0 0 calc((var(--cw) - 1ch) / 2);caret-color:var(--blaze)}
+    .otp input:focus{outline:none}
+    .otp-actions{display:flex;flex-wrap:wrap;gap:8px}
+    @media (max-width:767px){.otp-actions{display:grid}.otp-actions .btn{width:100%}}
+    .rules{display:grid;gap:6px;font-size:.8125rem;color:var(--ink-2)}
+    .rules li{display:flex;align-items:center;gap:8px}
+    .rules .st{margin-left:auto;font-size:.8125rem;color:var(--mute)}
+    .rules li.met .ic{color:var(--ok)}
+    .rules li.met .st{color:var(--ok);font-weight:600}
+  </style>
 </head>
-<body>
+<body class="page-signup">
   <!-- 회원가입 (2026-10-08 사용자 결정): 아이디 = 이메일 → 인증번호 보내기 → 인증번호 확인 → 비밀번호 → 가입. 가입 뒤 관리자 승인 -->
-  <header class="mast" id="mast"></header>
-  <main>
-    <section class="sec">
-      <div class="sec-h"><h2>회원가입</h2><span class="hint">아이디는 이메일이에요. 가입하면 관리자 승인 뒤 브리핑이 시작돼요</span></div>
-      <div class="item">
-        <div class="mark"></div>
-        <div>
-          <!-- 다른 길(구글 가입·예시 보기)은 두지 않는다 (2026-10-08 사용자: "다른길 유도는 필요 없을 듯"). 구글은 첫 화면에서만 -->
-          <div class="acts"><a class="act" href="/login">← 로그인으로</a></div>
-          <div class="acts">
-            <input id="email" type="email" autocomplete="email" placeholder="이메일 (아이디)" required>
-            <button class="go" type="button" id="send">인증번호 보내기</button>
-          </div>
-          <div class="acts">
-            <input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="인증번호 6자리" disabled>
-            <button class="go" type="button" id="verify" disabled>인증번호 확인</button>
-          </div>
-          <form id="password-form" hidden>
-            <div class="acts">
-              <input id="password" type="password" autocomplete="new-password" placeholder="비밀번호 (8자 이상, 영문·숫자)" required>
-              <input id="password2" type="password" autocomplete="new-password" placeholder="비밀번호 확인" required>
-              <button class="go" type="submit">가입하기</button>
-            </div>
-          </form>
-          <div class="acts"><span class="fb" id="msg"></span></div>
-        </div>
+  <header id="appbar"></header>
+
+  <main id="main" class="narrow">
+    <!-- 다른 길(구글 가입·예시 보기)은 두지 않는다 (2026-10-08 사용자: "다른길 유도는 필요 없을 듯"). 그래서 상단 바에도 링크를 두지 않는다. 구글은 첫 화면에서만 -->
+    <a class="back" href="/login"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>로그인으로</a>
+    <div class="su-head">
+      <h1>이메일로 가입</h1>
+      <p class="help">가입하면 관리자 승인 뒤 브리핑이 시작돼요. 보통 하루 안에 확인해요.</p>
+    </div>
+
+    <ol class="stepper" aria-label="가입 단계">
+      <li id="st1" class="current" aria-current="step"><span class="st-dot" aria-hidden="true">1</span>이메일 인증</li>
+      <li id="st2"><span class="st-dot" aria-hidden="true">2</span>비밀번호</li>
+      <li id="st3"><span class="st-dot" aria-hidden="true">3</span>승인 대기</li>
+    </ol>
+    <p class="sr-only" id="step-text" role="status">3단계 중 1단계 · 이메일 인증</p>
+
+    <div class="panel su-panel">
+      <div id="su-alert" class="alert alert-bad" role="alert" hidden>
+        <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+        <div class="body"><span id="su-alert-text"></span><a id="su-alert-action" class="btn btn-sm" href="/login" hidden>로그인으로</a></div>
       </div>
-    </section>
+
+      <section class="su-sec active" id="sec1" aria-labelledby="sec1-h">
+        <h2 id="sec1-h" tabindex="-1"><span class="sec-n mono" aria-hidden="true">1</span>이메일 인증</h2>
+        <p class="sum-line" id="sum1" hidden>
+          <svg class="ic" aria-hidden="true"><use href="#i-ok"/></svg>
+          <span class="mono" id="sum-email"></span><span>인증됨</span>
+          <button type="button" class="link-btn" data-restart>바꾸기</button>
+        </p>
+        <div class="sec-body" id="body1">
+          <div class="row">
+            <div class="field">
+              <label class="label" for="email">이메일</label>
+              <input class="input" id="email" type="email" autocomplete="email" inputmode="email" enterkeyhint="send" aria-describedby="email-err">
+            </div>
+            <button class="btn btn-lg btn-primary" type="button" id="send">인증번호 보내기</button>
+          </div>
+          <p class="msg msg-bad" id="email-err" hidden></p>
+          <p class="change-line" id="change-line" hidden><button type="button" class="link-btn" data-restart>이메일 바꾸기</button></p>
+
+          <div class="otp-part" id="otp-part" hidden>
+            <p class="sent"><svg class="ic" aria-hidden="true"><use href="#i-mail"/></svg><span><span class="mono" id="sent-email"></span>로 6자리를 보냈어요. 남은 시간 <span class="mono" id="expiry">10:00</span></span></p>
+            <div class="field">
+              <label class="label" for="code">인증번호 6자리</label>
+              <div class="otp" id="otp-box">
+                <div class="cells" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" enterkeyhint="done" aria-describedby="otp-err otp-hint">
+              </div>
+              <p class="help" id="otp-hint">메일이 안 보이면 스팸함도 확인해 주세요.</p>
+              <p class="msg msg-bad" id="otp-err" hidden></p>
+            </div>
+            <div class="otp-actions">
+              <button class="btn btn-lg btn-primary" type="button" id="verify" disabled>인증번호 확인</button>
+              <button class="btn btn-lg btn-quiet" type="button" id="resend" disabled>다시 보내기 <span class="mono" id="resend-t"></span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="su-sec todo" id="sec2" aria-labelledby="sec2-h">
+        <h2 id="sec2-h" tabindex="-1"><span class="sec-n mono" aria-hidden="true">2</span>비밀번호 정하기</h2>
+        <form class="sec-body" id="password-form" hidden novalidate>
+          <div class="field">
+            <label class="label" for="password">비밀번호</label>
+            <div class="pw">
+              <input class="input" id="password" type="password" autocomplete="new-password" enterkeyhint="next" aria-describedby="rules">
+              <button type="button" class="reveal" data-reveal="password password2" aria-pressed="false" aria-label="비밀번호 보기"><svg class="ic ic-18" aria-hidden="true"><use href="#i-eye"/></svg></button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label" for="password2">비밀번호 확인</label>
+            <input class="input" id="password2" type="password" autocomplete="new-password" enterkeyhint="done">
+          </div>
+          <ul class="rules" id="rules" aria-label="비밀번호 규칙">
+            <li data-rule="len"><svg class="ic" aria-hidden="true"><use href="#i-na"/></svg><span>8자 이상</span><span class="st">미충족</span></li>
+            <li data-rule="mix"><svg class="ic" aria-hidden="true"><use href="#i-na"/></svg><span>영문과 숫자 섞기</span><span class="st">미충족</span></li>
+            <li data-rule="same"><svg class="ic" aria-hidden="true"><use href="#i-na"/></svg><span>두 칸이 같음</span><span class="st">미충족</span></li>
+          </ul>
+          <p class="msg msg-bad" id="pw-err" hidden></p>
+          <button class="btn btn-lg btn-primary btn-block" type="submit" id="join">가입하기</button>
+        </form>
+      </section>
+
+      <section class="su-sec todo" aria-labelledby="sec3-h">
+        <h2 id="sec3-h"><span class="sec-n mono" aria-hidden="true">3</span>승인 대기</h2>
+        <p class="help">관리자가 확인하면 첫 설정을 거쳐 브리핑을 받아요.</p>
+      </section>
+    </div>
   </main>
+
   <script src="/static/app.js"></script>
   <script>
-    (async () => {
-      await TS.mast({ session: false, title: "회원가입" });
+    (() => {
       const $ = (id) => document.getElementById(id);
-      const msg = $("msg");
-      let signupToken = null;
-      $("send").onclick = async () => {
-        TS.message(msg, "보내는 중이에요");
+      TS.bare();  // 가입 화면에는 다른 길 링크를 두지 않는다
+
+      let signupToken = null, expiryTimer = null, resendTimer = null;
+      const show = (el, text) => { if (text !== undefined) el.textContent = text; el.hidden = false; };
+      const clearErrors = () => { ["email-err", "otp-err", "pw-err"].forEach((id) => { $(id).hidden = true; }); $("su-alert").hidden = true; $("otp-box").classList.remove("invalid"); };
+      const alertBox = (text, loginLink = false) => { $("su-alert-text").textContent = text; $("su-alert-action").hidden = !loginLink; $("su-alert").hidden = false; };
+      const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+      // 단계 표시: 1 이메일 인증 / 2 비밀번호
+      function setStep(n) {
+        const labels = ["이메일 인증", "비밀번호", "승인 대기"];
+        [1, 2, 3].forEach((i) => {
+          const li = $(`st${i}`), dot = li.querySelector(".st-dot");
+          li.className = i < n ? "done" : i === n ? "current" : "";
+          i === n ? li.setAttribute("aria-current", "step") : li.removeAttribute("aria-current");
+          dot.innerHTML = i < n ? '<svg class="ic" aria-hidden="true"><use href="#i-tried"/></svg>' : String(i);
+        });
+        $("sec1").className = `su-sec ${n === 1 ? "active" : "done"}`;
+        $("sec2").className = `su-sec ${n === 2 ? "active" : "todo"}`;
+        $("step-text").textContent = `3단계 중 ${n}단계 · ${labels[n - 1]}`;
+      }
+
+      function countdown(el, seconds, onEnd) {
+        let left = seconds;
+        el.textContent = mmss(left);
+        const timer = setInterval(() => {
+          left -= 1;
+          el.textContent = mmss(Math.max(left, 0));
+          if (left <= 0) { clearInterval(timer); if (onEnd) onEnd(); }
+        }, 1000);
+        return timer;
+      }
+
+      function startResend() {
+        clearInterval(resendTimer);
+        $("resend").disabled = true;
+        resendTimer = countdown($("resend-t"), 60, () => { $("resend").disabled = false; $("resend-t").textContent = ""; });
+      }
+
+      async function send() {
+        clearErrors();
+        const email = $("email").value.trim();
+        if (!email) { show($("email-err"), "이메일을 넣어 주세요."); $("email").focus(); return; }
+        $("send").disabled = true;
         try {
-          const data = await TS.api("/api/auth/signup/code", { method: "POST", allow401: true, body: { email: $("email").value } });
-          TS.message(msg, data.message);
-          $("code").disabled = false;
-          $("verify").disabled = false;
+          const data = await TS.api("/api/auth/signup/code", { method: "POST", allow401: true, body: { email } });
+          TS.say(data.message);
+          $("email").readOnly = true;
+          $("send").hidden = true;
+          $("change-line").hidden = false;
+          $("sent-email").textContent = email;
+          $("otp-part").hidden = false;
+          clearInterval(expiryTimer);
+          expiryTimer = countdown($("expiry"), 600, () => show($("otp-err"), "인증번호 시간이 지났어요. 다시 보내 주세요."));
+          startResend();
+          $("code").value = "";
+          $("code").dispatchEvent(new Event("input"));
           $("code").focus();
         } catch (e) {
-          TS.message(msg, e.message, true);
+          $("send").disabled = false;
+          if (/이미 가입/.test(e.message)) alertBox(e.message, true); else show($("email-err"), e.message);
+          if (/1분|1시간/.test(e.message) && !$("otp-part").hidden) $("code").focus();
+        }
+      }
+      $("send").onclick = send;
+      $("email").addEventListener("keydown", (e) => { if (e.key === "Enter" && !$("send").hidden) { e.preventDefault(); send(); } });
+
+      $("resend").onclick = async () => {
+        clearErrors();
+        $("resend").disabled = true;
+        try {
+          const data = await TS.api("/api/auth/signup/code", { method: "POST", allow401: true, body: { email: $("email").value.trim() } });
+          TS.say(data.message);
+          clearInterval(expiryTimer);
+          expiryTimer = countdown($("expiry"), 600, () => show($("otp-err"), "인증번호 시간이 지났어요. 다시 보내 주세요."));
+          startResend();
+          $("code").value = "";
+          $("code").dispatchEvent(new Event("input"));
+          $("code").focus();
+        } catch (e) {
+          show($("otp-err"), e.message);
+          startResend();
         }
       };
+
+      // 인증번호 6칸: 숫자만, 칸 표시 갱신, 6자리면 확인 버튼 켜기
+      $("code").addEventListener("input", () => {
+        const input = $("code");
+        input.value = input.value.replace(/\D/g, "").slice(0, 6);
+        $("otp-box").classList.remove("invalid");
+        $("otp-box").querySelectorAll(".cells span").forEach((cell, i) => cell.classList.toggle("cur", i === Math.min(input.value.length, 5)));
+        $("verify").disabled = input.value.length !== 6;
+      });
+      $("code").addEventListener("keydown", (e) => { if (e.key === "Enter" && !$("verify").disabled) { e.preventDefault(); $("verify").click(); } });
+
       $("verify").onclick = async () => {
+        clearErrors();
+        $("verify").disabled = true;
         try {
-          const data = await TS.api("/api/auth/signup/verify", { method: "POST", allow401: true,
-            body: { email: $("email").value, code: $("code").value } });
+          const data = await TS.api("/api/auth/signup/verify", { method: "POST", allow401: true, body: { email: $("email").value.trim(), code: $("code").value } });
           signupToken = data.signup_token;
-          TS.message(msg, data.message);
-          $("email").readOnly = true;
-          $("code").disabled = $("verify").disabled = $("send").disabled = true;
+          TS.say(data.message);
+          clearInterval(expiryTimer);
+          clearInterval(resendTimer);
+          $("sum-email").textContent = $("email").value.trim();
+          $("body1").hidden = true;
+          $("sum1").hidden = false;
           $("password-form").hidden = false;
+          setStep(2);
           $("password").focus();
         } catch (e) {
-          TS.message(msg, e.message, true);
+          show($("otp-err"), e.message);
+          $("otp-box").classList.add("invalid");
+          $("verify").disabled = $("code").value.length !== 6;
+          $("code").focus();
         }
       };
+
+      // 이메일 바꾸기: 처음 단계로
+      document.addEventListener("click", (e) => {
+        if (e.target.closest("[data-reveal]")) {
+          const reveal = e.target.closest("[data-reveal]"), on = reveal.getAttribute("aria-pressed") !== "true";
+          reveal.dataset.reveal.split(" ").forEach((id) => { $(id).type = on ? "text" : "password"; });
+          reveal.setAttribute("aria-pressed", String(on));
+          reveal.setAttribute("aria-label", on ? "비밀번호 숨기기" : "비밀번호 보기");
+        }
+        if (!e.target.closest("[data-restart]")) return;
+        clearErrors();
+        clearInterval(expiryTimer);
+        clearInterval(resendTimer);
+        signupToken = null;
+        $("email").readOnly = false;
+        $("send").hidden = false;
+        $("send").disabled = false;
+        $("change-line").hidden = true;
+        $("otp-part").hidden = true;
+        $("body1").hidden = false;
+        $("sum1").hidden = true;
+        $("password-form").hidden = true;
+        setStep(1);
+        $("email").focus();
+      });
+
+      // 비밀번호 규칙: 입력할 때마다 충족 표시
+      const rules = {
+        len: (a) => a.length >= 8, mix: (a) => /[A-Za-z]/.test(a) && /\d/.test(a),
+        same: (a, b) => a.length > 0 && a === b,
+      };
+      function checkRules() {
+        const a = $("password").value, b = $("password2").value;
+        let all = true;
+        document.querySelectorAll("#rules li").forEach((li) => {
+          const met = rules[li.dataset.rule](a, b);
+          all = all && met;
+          li.classList.toggle("met", met);
+          li.querySelector("use").setAttribute("href", met ? "#i-ok" : "#i-na");
+          li.querySelector(".st").textContent = met ? "충족" : "미충족";
+        });
+        return all;
+      }
+      $("password").addEventListener("input", checkRules);
+      $("password2").addEventListener("input", checkRules);
+
       $("password-form").onsubmit = async (event) => {
         event.preventDefault();
-        if ($("password").value !== $("password2").value) {
-          TS.message(msg, "비밀번호가 서로 달라요", true);
+        clearErrors();
+        if (!checkRules()) {
+          show($("pw-err"), $("password").value !== $("password2").value && rules.len($("password").value) && rules.mix($("password").value)
+            ? "비밀번호가 서로 달라요." : "비밀번호 규칙을 모두 채워 주세요.");
           return;
         }
+        $("join").disabled = true;
         try {
-          const data = await TS.api("/api/auth/signup/complete", { method: "POST", allow401: true,
-            body: { signup_token: signupToken, password: $("password").value } });
-          TS.message(msg, data.message);
+          const data = await TS.api("/api/auth/signup/complete", { method: "POST", allow401: true, body: { signup_token: signupToken, password: $("password").value } });
+          TS.say(data.message);
+          setStep(3);
           location.href = data.next;
         } catch (e) {
-          TS.message(msg, e.message, true);
+          $("join").disabled = false;
+          if (/인증이 끝났거나/.test(e.message)) {  // 가입 시간(30분)이 지남: 처음부터
+            document.querySelector("[data-restart]").click();
+            alertBox(e.message);
+          } else if (/이미 가입/.test(e.message)) alertBox(e.message, true);
+          else show($("pw-err"), e.message);
         }
       };
     })();

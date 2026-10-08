@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>toolscout 승인 대기</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
@@ -10,36 +10,104 @@
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#15181E">
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+  <style>
+    /* 승인 대기: 가운데 한 열 (합의 목업 pending). 색은 토큰만 쓴다 */
+    .narrow > *,.pd-panel > *{min-width:0;max-width:100%}
+    .pd-panel{display:grid;gap:14px;justify-items:start}
+    .pd-panel h1{font-size:1.375rem;font-weight:700}
+    .pd-body{color:var(--ink-2)}
+    .pd-dl{display:grid;gap:0;width:100%;border-top:1px solid var(--line);margin-top:4px}
+    .pd-dl > div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding-block:10px;border-bottom:1px solid var(--line);font-size:.875rem}
+    .pd-dl dt{color:var(--mute);font-size:.8125rem}
+    .pd-dl dd{color:var(--ink);overflow-wrap:anywhere}
+    .pd-dl dd.mono{font-size:.8125rem}
+    .pd-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+    @media (max-width:767px){.pd-actions{display:grid;width:100%}.pd-actions .btn{width:100%}}
+    .next{display:grid;gap:12px;padding-inline:4px}
+    .next h2{font-size:.9375rem;font-weight:700}
+    .next-list{display:grid;gap:10px}
+    .next-list li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:.875rem;color:var(--ink-2);align-items:start}
+    .next-list .mono{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line-input);font-size:.75rem;color:var(--ink-2)}
+    .next-list b{color:var(--ink);font-weight:600;margin-right:4px}
+    /* 계정 상태: 대기(wait)와 차단(blocked). 상태에 맞지 않는 칸은 숨긴다 */
+    [data-state="wait"] .st-block,[data-state="blocked"] .st-wait{display:none!important}
+  </style>
 </head>
-<body>
-  <!-- 승인 대기 (2026-10-08 사용자 결정: 가입 뒤 관리자 승인). 승인되면 /로 간다 -->
-  <header class="mast" id="mast"></header>
-  <main>
-    <section class="sec">
-      <div class="sec-h"><h2 id="title">가입 신청이 접수됐어요</h2></div>
-      <div class="item">
-        <div class="mark"></div>
-        <div>
-          <p id="body">관리자가 확인하면 브리핑이 시작돼요. 승인되면 이 화면에서 바로 넘어가요.</p>
-          <div class="acts">
-            <a class="act" href="/demo">기다리는 동안 예시 보기</a>
-            <a class="act" href="/login" id="logout">로그아웃</a>
-          </div>
-        </div>
+<body class="page-pending" data-state="wait">
+  <!-- 승인 대기 (2026-10-08 사용자 결정: 가입 뒤 관리자 승인). 승인되면 /로 간다. 승인 전 계정은 셸이 이메일과 로그아웃만 보여 준다 -->
+  <header id="appbar"></header>
+
+  <main id="main" class="narrow">
+    <ol class="stepper" aria-label="가입 단계">
+      <li class="done"><span class="st-dot" aria-hidden="true"><svg class="ic"><use href="#i-tried"/></svg></span>이메일 인증</li>
+      <li class="done"><span class="st-dot" aria-hidden="true"><svg class="ic"><use href="#i-tried"/></svg></span>비밀번호</li>
+      <li class="current" id="st3" aria-current="step"><span class="st-dot" aria-hidden="true">3</span><span id="st3-label">승인 대기</span></li>
+    </ol>
+
+    <section class="panel pd-panel" aria-labelledby="title">
+      <p class="pill pill-neutral st-wait"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg>승인 대기 중</p>
+      <p class="pill pill-bad st-block"><svg class="ic" aria-hidden="true"><use href="#i-bad"/></svg>승인 안 됨</p>
+      <h1 id="title"><span class="st-wait">가입 신청을 받았어요</span><span class="st-block">이용할 수 없는 계정이에요</span></h1>
+      <p class="pd-body st-wait" id="body">관리자가 확인하고 있어요. 승인되면 이 화면에서 바로 넘어가요.</p>
+      <p class="pd-body st-block">관리자가 이 계정의 가입을 승인하지 않았어요. 잘못된 것 같다면 초대해 준 관리자에게 알려 주세요.</p>
+      <dl class="pd-dl">
+        <div><dt>이메일</dt><dd class="mono" id="email"></dd></div>
+        <div class="st-wait"><dt>마지막 확인</dt><dd><span class="mono" id="checked-at">-</span> · <span id="checked-msg">아직 확인 전이에요</span></dd></div>
+      </dl>
+      <div class="pd-actions st-wait">
+        <button type="button" class="btn btn-primary btn-lg" id="recheck"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>승인됐는지 다시 확인</button>
+        <a class="btn btn-lg" href="/demo">예시 브리핑 보기</a>
+      </div>
+      <div class="pd-actions st-block">
+        <a class="btn btn-lg" href="/login" id="logout"><svg class="ic" aria-hidden="true"><use href="#i-logout"/></svg>로그아웃</a>
       </div>
     </section>
+
+    <section class="next st-wait" aria-labelledby="next-h">
+      <h2 id="next-h">승인되면 이렇게 시작해요</h2>
+      <ol class="next-list">
+        <li><span class="mono">1</span><span><b>직군 고르기</b> 필수예요. 카드 고르는 기준이 돼요.</span></li>
+        <li><span class="mono">2</span><span><b>관심 주제 확인</b> 직군 기본값으로 채워 두니 바꾸거나 건너뛰어도 돼요.</span></li>
+        <li><span class="mono">3</span><span><b>쓰는 도구와 한 줄 소개</b> 적으면 더 잘 맞춰요. 비워 둬도 돼요.</span></li>
+        <li><span class="mono">4</span><span><b>첫 브리핑 만들기</b> 10분쯤 걸리고, 다음 날부터는 매일 아침 08:00에 메일로도 보내요.</span></li>
+      </ol>
+    </section>
   </main>
+
   <script src="/static/app.js"></script>
   <script>
     (async () => {
-      await TS.mast({ session: false, title: "승인 대기" });
-      const me = await TS.api("/api/me");
+      const $ = (id) => document.getElementById(id);
+      const me = await TS.shell({ ask: false });
       if (me.approved) { location.href = "/"; return; }
-      if (me.status === "blocked") {
-        document.getElementById("title").textContent = "이 계정은 사용할 수 없어요";
-        document.getElementById("body").textContent = "문의가 필요하면 관리자에게 연락해 주세요.";
+      $("email").textContent = me.email || "";
+      let polling = null;
+
+      function apply(state) {
+        const blocked = state.status === "blocked";
+        document.body.dataset.state = blocked ? "blocked" : "wait";
+        $("st3").className = blocked ? "stop" : "current";
+        $("st3").querySelector(".st-dot").innerHTML = blocked ? '<svg class="ic" aria-hidden="true"><use href="#i-close"/></svg>' : "3";
+        $("st3-label").textContent = blocked ? "승인 안 됨" : "승인 대기";
+        if (blocked) clearInterval(polling);
       }
-      document.getElementById("logout").onclick = async (event) => {
+      apply(me);
+
+      // 승인됐는지 다시 보기. 1분마다 저절로도 본다
+      async function recheck(quiet) {
+        try {
+          const state = await TS.api("/api/me");
+          if (state.approved) { location.href = "/"; return; }
+          const d = new Date(), two = (n) => String(n).padStart(2, "0");
+          $("checked-at").textContent = `${two(d.getHours())}:${two(d.getMinutes())}`;
+          $("checked-msg").textContent = state.status === "blocked" ? "승인되지 않았어요" : "아직 승인 전이에요";
+          apply(state);
+          if (!quiet) TS.say(state.status === "blocked" ? "이 계정은 사용할 수 없어요" : "다시 확인했어요. 아직 승인 전이에요");
+        } catch (e) { if (!quiet) TS.say(e.message); }
+      }
+      $("recheck").onclick = () => recheck(false);
+      polling = setInterval(() => recheck(true), 60000);
+      $("logout").onclick = async (event) => {
         event.preventDefault();
         await TS.api("/api/auth/logout", { method: "POST", allow401: true });
         location.href = "/login";

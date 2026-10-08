@@ -3,282 +3,229 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>toolscout · 9월 15일 브리핑</title>
+<title>toolscout 디자인 기준</title>
+<meta name="description" content="웹앱 공통 디자인 체계의 유일한 기준. 토큰·컴포넌트 견본은 실제 web/app.css·app.js·cards.js를 그대로 불러와 그린다">
+<meta name="theme-color" content="#F3F4F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+<link rel="stylesheet" href="../web/app.css">
 <style>
-:root{
-  --paper:#F7F7F4; --card:#FFFFFF; --ink:#15181E; --ink-2:#3F434B; --mute:#7A7E86; --line:#E1E2DD; --line-2:#CBCDC6;
-  --mast:#15181E; --mast-2:#1F232B; --mast-line:rgba(255,255,255,.08); --mast-text:#E9EAE6; --mast-mute:#9DA2AC;
-  --accent:#12766A; --accent-ink:#0C5B51; --accent-wash:#E3F0ED;
-  --ok:#1E7B4E; --ok-wash:#E4F2EA; --warn:#A85E08; --warn-wash:#FBEFDF; --bad:#B4261F; --bad-wash:#FBE8E6;
-  --t-model:#4C5FD5; --t-price:#B07A17; --t-mcp:#12766A; --t-skill:#7B4BC7; --t-agent:#C24A6E; --t-research:#3A8AA8; --t-biz:#8A6A3E; --t-oss:#4E8B3C;
-  --sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
-  --w:760px;
-}
-*{box-sizing:border-box}
-html{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;word-break:keep-all}
-body{margin:0;padding-bottom:96px}
-a{color:inherit;text-decoration:none}
-button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-
-/* ===== 마스트헤드 ===== */
-.mast{background:var(--mast);color:var(--mast-text);position:relative;overflow:hidden}
-.mast::before{content:"";position:absolute;inset:0;background-image:
-  linear-gradient(var(--mast-line) 1px,transparent 1px),linear-gradient(90deg,var(--mast-line) 1px,transparent 1px);
-  background-size:28px 28px;mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.15));pointer-events:none}
-.mast > *{position:relative}
-.mast .in{max-width:var(--w);margin:0 auto;padding:22px 24px 30px}
-.bar{display:flex;align-items:center;gap:16px}
-.brand{font-weight:800;font-size:18px;letter-spacing:-.02em}
-.brand em{font-style:normal;color:var(--accent);}
-.mode{font-family:var(--mono);font-size:11px;color:var(--mast-mute);border:1px solid var(--mast-line);padding:2px 7px;border-radius:3px}
-.nav{margin-left:auto;display:flex;gap:18px;font-size:14px;color:var(--mast-mute)}
-.nav a[aria-current]{color:var(--mast-text);position:relative}
-.nav a[aria-current]::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:2px;background:var(--accent)}
-
-.date{margin-top:38px;display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap}
-.date h1{margin:0;font-size:52px;line-height:1;font-weight:800;letter-spacing:-.035em}
-.date h1 small{display:block;font-size:14px;font-weight:500;letter-spacing:0;color:var(--mast-mute);margin-bottom:10px}
-.date .basis{color:var(--mast-mute);font-size:14px;line-height:1.5;padding-bottom:6px}
-.date .basis b{color:var(--mast-text);font-weight:600}
-
-/* 에이전트 파이프라인 */
-.pipe{margin-top:30px;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--mast-line);border-radius:10px;background:var(--mast-2)}
-.pipe > div{padding:14px 18px;position:relative}
-.pipe > div + div{border-left:1px solid var(--mast-line)}
-.pipe > div + div::before{content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;border-top:1px solid var(--mast-line);border-right:1px solid var(--mast-line);transform:translateY(-50%) rotate(45deg);background:var(--mast-2)}
-.pipe .who{font-size:12px;color:var(--mast-mute);display:flex;align-items:center;gap:7px}
-.pipe .who i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(18,118,106,.25)}
-.pipe .what{margin-top:6px;font-family:var(--mono);font-size:15px;color:var(--mast-text);letter-spacing:-.01em}
-.pipe .what span{color:var(--mast-mute)}
-.pipe .sub{margin-top:2px;font-size:12px;color:var(--mast-mute)}
-@media (max-width:640px){.pipe{grid-template-columns:1fr}.pipe > div + div{border-left:0;border-top:1px solid var(--mast-line)}.pipe > div + div::before{display:none}}
-
-/* ===== 본문 ===== */
-main{max-width:var(--w);margin:0 auto;padding:8px 24px 0}
-.sec{margin-top:40px}
-.sec-h{display:flex;align-items:baseline;gap:12px;padding-bottom:10px;border-bottom:2px solid var(--ink)}
-.sec-h h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
-.sec-h .n{font-family:var(--mono);font-size:13px;color:var(--mute)}
-.sec-h .hint{margin-left:auto;font-size:13px;color:var(--mute)}
-
-/* 뉴스 항목 */
-.item{display:grid;grid-template-columns:22px 1fr;gap:14px;padding:24px 0;border-bottom:1px solid var(--line);transition:opacity .2s,transform .2s}
-.item .mark{padding-top:9px}
-.item .mark i{display:block;width:10px;height:10px;border-radius:50%;background:var(--t);box-shadow:0 0 0 3px color-mix(in srgb,var(--t) 18%,transparent)}
-.item .topic{font-size:12px;color:var(--t);font-weight:600;margin-bottom:6px}
-.item h3{margin:0;font-size:20px;line-height:1.3;font-weight:750;letter-spacing:-.015em}
-.item h3 a:hover{text-decoration:underline;text-underline-offset:4px}
-.item .src{font-size:13px;color:var(--mute);margin-top:5px}
-.item .sum{margin:12px 0 0;color:var(--ink-2);font-size:15.5px}
-.forme{margin:14px 0 0;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
-.forme b{font-size:12px;font-weight:700;color:var(--accent-ink);background:var(--accent-wash);padding:3px 8px;border-radius:4px;margin-top:2px;white-space:nowrap}
-.forme p{margin:0;color:var(--ink);font-size:15.5px}
-details.why{margin-top:10px;font-size:13.5px;color:var(--mute)}
-details.why summary{cursor:pointer;list-style:none;display:inline-flex;gap:6px;align-items:center}
-details.why summary::-webkit-details-marker{display:none}
-details.why summary::before{content:"";border:4px solid transparent;border-left:6px solid var(--mute);transition:transform .15s}
-details.why[open] summary::before{transform:rotate(90deg)}
-details.why p{margin:8px 0 0;padding-left:12px;border-left:2px solid var(--line);color:var(--ink-2)}
-.acts{display:flex;gap:8px;margin-top:16px;align-items:center}
-.act{font-size:13px;padding:6px 12px;border:1px solid var(--line-2);border-radius:6px;color:var(--ink-2);background:var(--card);transition:background .12s,border-color .12s}
-.act:hover{border-color:var(--ink);color:var(--ink)}
-.act[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
-.act.p{border-color:var(--accent);color:var(--accent-ink)}
-.act.p[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.acts .fb{font-size:13px;color:var(--accent-ink);margin-left:6px;opacity:0;transition:opacity .2s}
-.item.muted{opacity:.45}
-.item.muted .acts .fb{opacity:1}
-
-/* 도구 블록 */
-.tool{margin-top:18px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--t);border-radius:10px;padding:22px 26px 22px 24px}
-.tool .kind{font-family:var(--mono);font-size:11.5px;color:var(--t);font-weight:600}
-.tool h3{margin:6px 0 0;font-size:22px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.tool h3 .ver{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--mute)}
-.tool .meta{font-size:13px;color:var(--mute);margin-top:4px;display:flex;gap:14px}
-.tool .desc{margin:12px 0 0;color:var(--ink-2);font-size:15.5px}
-.pc{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
-.pc > div{padding:12px 14px;border-radius:8px;font-size:14.5px}
-.pc .pros{background:var(--ok-wash)}.pc .cons{background:var(--warn-wash)}
-.pc h4{margin:0 0 6px;font-size:13px;font-weight:700}
-.pc .pros h4{color:var(--ok)}.pc .cons h4{color:var(--warn)}
-.pc ul{margin:0;padding-left:16px}.pc li{margin:4px 0;color:var(--ink-2)}
-.pc li a{font-size:12px;color:var(--mute);margin-left:4px;text-decoration:underline;text-underline-offset:2px}
-@media (max-width:640px){.pc{grid-template-columns:1fr}}
-
-.verify{margin-top:18px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.verify .t{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--paper);border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-2);font-weight:600}
-.verify .t small{font-weight:400;color:var(--mute);margin-left:auto}
-.steps{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px;font-family:var(--mono);font-size:12.5px}
-.step{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:5px;background:#F1F2EE;color:var(--ink-2)}
-.step i{width:14px;height:14px;border-radius:50%;border:1.5px solid currentColor;position:relative;flex:none}
-.step.ok{background:var(--ok-wash);color:var(--ok)}
-.step.ok i{border:0;background:var(--ok)}
-.step.ok i::after{content:"";position:absolute;left:4.5px;top:2px;width:3.5px;height:7px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
-.step.warn{background:var(--warn-wash);color:var(--warn)}
-.step.warn i{border:0;background:var(--warn)}
-.step.warn i::after{content:"!";position:absolute;inset:0;color:#fff;font-size:10px;font-weight:800;text-align:center;line-height:14px}
-.step.bad{background:var(--bad-wash);color:var(--bad)}
-.step.na{background:transparent;border:1px dashed var(--line-2);color:var(--mute)}
-.step.na i{border-style:dashed}
-.verify .note{padding:0 14px 12px;font-size:12.5px;color:var(--mute)}
-
-.cmd{margin-top:14px;display:flex;align-items:center;gap:10px;background:var(--mast);color:#E9EAE6;border-radius:8px;padding:11px 14px;font-family:var(--mono);font-size:13px}
-.cmd .ps{color:#6B7078;user-select:none}
-.cmd code{flex:1;overflow:auto;white-space:nowrap}
-.cmd button{color:#B9BEC7;font-size:12px;padding:3px 8px;border:1px solid #363B45;border-radius:4px}
-.cmd button:hover{color:#fff;border-color:#8A909A}
-
-/* 질문 스레드 + 고정 입력바 */
-.ask{margin-top:48px}
-.thread{display:flex;flex-direction:column;gap:12px;margin-top:16px}
-.q{align-self:flex-end;max-width:85%;background:var(--accent);color:#fff;padding:10px 14px;border-radius:14px 14px 3px 14px;font-size:15px}
-.a{align-self:flex-start;max-width:92%;background:var(--card);border:1px solid var(--line);padding:14px 16px;border-radius:14px 14px 14px 3px;font-size:15px;color:var(--ink-2)}
-.a .refs{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
-.a .refs a{font-size:12px;color:var(--accent-ink);background:var(--accent-wash);padding:3px 9px;border-radius:999px}
-.askbar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(247,247,244,0),var(--paper) 30%);padding:18px 0 16px}
-.askbar form{max-width:var(--w);margin:0 auto;padding:0 24px;display:flex;gap:8px;align-items:center}
-.askbar input{flex:1;font:inherit;font-size:15px;padding:13px 16px;border:1px solid var(--line-2);border-radius:10px;background:var(--card);box-shadow:0 6px 24px rgba(21,24,30,.08)}
-.askbar button{background:var(--ink);color:#fff;padding:13px 18px;border-radius:10px;font-weight:600}
-.askbar .quota{font-family:var(--mono);font-size:11.5px;color:var(--mute);white-space:nowrap}
-
-@media (max-width:640px){
-  .mast .in{padding:16px 18px 24px}.bar{flex-wrap:wrap}.nav{margin-left:0;width:100%;gap:14px}
-  .date h1{font-size:40px}.date{margin-top:26px}
-  main{padding:0 18px}.tool{padding:18px 18px 18px 16px}
-  .askbar form{padding:0 14px}.askbar .quota{display:none}
-}
+/* 이 문서만 쓰는 배치(견본 상자). 색은 app.css 토큰만 쓴다 */
+.ref{display:grid;gap:48px;padding-block:32px 96px}
+.ref > *{min-width:0}
+.ref > section{display:grid;gap:14px;min-width:0}
+.ref > section > h1{font-size:1.75rem;font-weight:800}
+.ref > section > h2{font-size:1.375rem;font-weight:700}
+.ref > section > h3{font-size:1rem;font-weight:700;margin-top:8px}
+.ref .lede{color:var(--ink-2);max-width:48em}
+.ref ul.dots{display:grid;gap:6px;padding-left:18px;list-style:disc;color:var(--ink-2);max-width:56em}
+.ref ul.dots b{color:var(--ink)}
+.box{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:20px;border:1px dashed var(--line-input);border-radius:var(--r-panel);background:var(--bg);min-width:0}
+.box.col{display:grid;align-items:start}
+.box > *{min-width:0}
+.box .savebar{position:static;width:100%}
+.box .toast{position:static;transform:none}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-panel);background:var(--surface)}
+.tok{width:100%;border-collapse:collapse;font-size:.875rem}
+.tok th,.tok td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
+.tok td:nth-child(2){white-space:normal;min-width:180px;color:var(--ink-2)}
+.tok thead th{font-size:.8125rem;color:var(--mute);background:var(--surface-2)}
+.tok .mono{font-size:.75rem}
+.sw{display:inline-block;width:16px;height:16px;border-radius:4px;border:1px solid var(--line-input);vertical-align:-3px;margin-right:6px}
+.phone{width:390px;max-width:100%;height:720px;border:1px solid var(--line-input);border-radius:var(--r-panel);background:var(--bg)}
+.api{display:grid;gap:4px}
+.api dt{font-family:var(--mono);font-size:.8125rem;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.api dd{margin:0 0 10px;color:var(--ink-2);font-size:.875rem}
 </style>
 </head>
 <body>
-
-<header class="mast">
-  <div class="in">
-    <div class="bar">
-      <div class="brand">tool<em>scout</em></div>
-      <span class="mode">DEV</span>
-      <nav class="nav" aria-label="주 메뉴"><a href="/" aria-current="page">오늘</a><a href="/history">지난 브리핑</a><a href="/settings">설정</a><a href="/logout">로그아웃</a></nav>
-    </div>
-    <div class="date">
-      <h1><small>2026년 9월 15일 화요일</small>오늘의 도구</h1>
-      <div class="basis">기준 <b>개발자</b> · 쓰는 도구 <b>python, claude code, mcp</b><br>08:00 발송, 이메일</div>
-    </div>
-    <div class="pipe" aria-label="오늘 새벽 에이전트 작업">
-      <div><div class="who"><i></i>큐레이터</div><div class="what">178 <span>→</span> 50 <span>→</span> 6</div><div class="sub">수집 · 선별 · 내 기준 정렬</div></div>
-      <div><div class="who"><i></i>검증관</div><div class="what">2 <span>/ 2 검증</span></div><div class="sub">샌드박스 설치 · 도구 목록</div></div>
-      <div><div class="who"><i></i>해설가</div><div class="what">6 <span>장 작성</span></div><div class="sub">반려 1 · 원문 재조회 5</div></div>
-    </div>
-  </div>
-</header>
-
-<main>
-  <section class="sec">
-    <div class="sec-h"><h2>뉴스</h2><span class="n">4</span><span class="hint">주제 색은 내 관심도 순</span></div>
-
-    <article class="item" style="--t:var(--t-agent)">
-      <div class="mark"><i></i></div>
-      <div>
-        <div class="topic">에이전트 프레임워크</div>
-        <h3><a href="#">How Fyxer built an AI executive assistant people trust</a></h3>
-        <div class="src">openai.com</div>
-        <p class="sum">Fyxer는 OpenAI 모델을 30~50개의 작은 모델로 분업시켜 이메일 워크플로를 처리합니다. 사용자 피드백과 파인튜닝으로 신뢰도를 높인 사례입니다.</p>
-        <div class="forme"><b>나한테는</b><p>단일 모델 대신 작업 단위로 세분화하는 아키텍처와 파인튜닝 활용 사례를 참고할 수 있습니다.</p></div>
-        <details class="why"><summary>왜 이 카드?</summary><p>프로필의 "에이전트 개발"과 직접 연결되고, 오늘 항목 중 실무 설계 사례가 가장 구체적입니다.</p></details>
-        <div class="acts"><button class="act" aria-pressed="false">관심없음</button><button class="act" aria-pressed="false">이상함</button><span class="fb">내일부터 이 주제는 뒤로 뺄게요</span></div>
-      </div>
-    </article>
-
-    <article class="item muted" style="--t:var(--t-biz)">
-      <div class="mark"><i></i></div>
-      <div>
-        <div class="topic">기업 동향</div>
-        <h3><a href="#">Superhuman acquires YC-backed notetaker Fathom as productivity platforms push for agentic work</a></h3>
-        <div class="src">techcrunch.com</div>
-        <p class="sum">Superhuman이 회의 기록 도구 Fathom을 인수하며 AI 생산성 플랫폼의 에이전트 업무 처리 경쟁이 강화되고 있습니다.</p>
-        <div class="forme"><b>나한테는</b><p>회의 데이터가 에이전트의 능동적 업무 처리에 어떻게 쓰이는지 참고할 수 있습니다.</p></div>
-        <div class="acts"><button class="act" aria-pressed="true">관심없음</button><button class="act" aria-pressed="false">이상함</button><span class="fb">내일부터 기업 동향은 뒤로 뺄게요</span></div>
-      </div>
-    </article>
-
-    <article class="item" style="--t:var(--t-research)">
-      <div class="mark"><i></i></div>
-      <div>
-        <div class="topic">연구</div>
-        <h3><a href="#">Pion, AI에 실제 사업 운영을 맡기는 실험 플랫폼</a></h3>
-        <div class="src">news.hada.io · 원문 확인 필요</div>
-        <p class="sum">Andon Labs가 실제 사업 운영에 AI를 적용하는 실험 플랫폼 Pion을 연구 프리뷰로 공개했습니다.</p>
-        <div class="forme"><b>나한테는</b><p>벤치마크를 넘어 실제 비즈니스 환경에서 에이전트가 어떻게 작동하고 실패하는지 관찰하는 사례입니다.</p></div>
-        <details class="why"><summary>왜 이 카드?</summary><p>긱뉴스 원문은 못 읽어 요약만으로 썼습니다.</p></details>
-        <div class="acts"><button class="act" aria-pressed="false">관심없음</button><button class="act" aria-pressed="false">이상함</button><span class="fb"></span></div>
-      </div>
-    </article>
+<header id="appbar"></header>
+<main class="wrap ref" id="main">
+  <section>
+    <h1>toolscout 디자인 기준</h1>
+    <p class="lede">리디자인 1·2차 회의 합의안(2026-10-08)을 코드로 옮긴 공통 체계예요. 이 문서는 <span class="mono">web/app.css</span>·<span class="mono">app.js</span>·<span class="mono">cards.js</span>·<span class="mono">ask.js</span>를 그대로 불러와 견본을 그려요. 맨 위 상단바도 실제 <span class="mono">TS.shell</span> 결과예요(API 응답만 가짜).</p>
+    <div class="box"><span class="label">계정</span><span class="rbtns" id="acct-set"></span><span class="label">테마</span><span class="rbtns" id="theme-set"></span></div>
   </section>
 
-  <section class="sec">
-    <div class="sec-h"><h2>새 MCP·스킬</h2><span class="n">2</span><span class="hint">7일 안에 등록된 것 중 아직 안 본 것</span></div>
-
-    <article class="tool" style="--t:var(--t-mcp)">
-      <span class="kind">MCP · 공식</span>
-      <h3>OpenMetadata <span class="ver">1.1.1</span></h3>
-      <div class="meta"><span>GitHub ★ 1,240</span><span>등록 2일 전</span><span>npm</span></div>
-      <p class="desc">검색, 리네이지, 데이터 품질, 거버넌스 기능을 제공하는 21개의 읽기·쓰기 도구를 갖춘 공식 MCP 서버입니다.</p>
-      <div class="forme"><b>나한테는</b><p>데이터 메타데이터와 AI 에이전트를 연결하는 실제 MCP 서버 구현 사례를 참고할 수 있습니다.</p></div>
-      <div class="pc">
-        <div class="pros"><h4>좋은 점</h4><ul><li>검색·리네이지·품질·거버넌스 21개 도구<a href="#">근거</a></li><li>AI 에이전트와 데이터 컨텍스트 연결에 오픈 표준<a href="#">근거</a></li></ul></div>
-        <div class="cons"><h4>아쉬운 점</h4><ul><li>OpenMetadata 서버가 먼저 떠 있어야 함<a href="#">근거</a></li><li>도구 21개라 컨텍스트 소비가 큼<a href="#">근거</a></li></ul></div>
-      </div>
-      <div class="verify">
-        <div class="t">직접 깔아봤더니 <small>06:00 샌드박스</small></div>
-        <div class="steps"><span class="step ok"><i></i>설치 9.2s</span><span class="step ok"><i></i>실행</span><span class="step ok"><i></i>도구 21개</span><span class="step warn"><i></i>OPENMETADATA_TOKEN 필요</span></div>
-        <div class="note">설치·기동·도구 노출까지 확인한 결과입니다. 도구가 올바르게 동작하는지는 범위 밖입니다.</div>
-      </div>
-      <div class="cmd"><span class="ps">$</span><code>npx @openmetadata/mcp-server</code><button type="button">복사</button></div>
-      <details class="why"><summary>왜 이 카드?</summary><p>쓰는 도구에 mcp가 있고, 이번 주 신규 중 GitHub 별이 가장 많습니다.</p></details>
-      <div class="acts"><button class="act p" aria-pressed="false">써봤음</button><button class="act" aria-pressed="false">관심없음</button><button class="act" aria-pressed="false">이상함</button><span class="fb"></span></div>
-    </article>
-
-    <article class="tool" style="--t:var(--t-mcp)">
-      <span class="kind">MCP · 커뮤니티</span>
-      <h3>apify-mcp-server <span class="ver">0.15.7</span></h3>
-      <div class="meta"><span>GitHub ★ 380</span><span>버전 업 1일 전</span><span>원격 전용</span></div>
-      <p class="desc">Apify Store의 스크래핑·자동화 도구를 AI 에이전트에 연결해 웹 데이터를 추출합니다. Claude Code와 호환되며 URL만 연결하면 됩니다.</p>
-      <div class="forme"><b>나한테는</b><p>에이전트에 웹 데이터 수집을 붙일 때 설치 없이 바로 시험해 볼 수 있는 후보입니다.</p></div>
-      <div class="pc">
-        <div class="pros"><h4>좋은 점</h4><ul><li>Claude Code와 호환, 원격 MCP로 바로 연결<a href="#">근거</a></li><li>Apify Store의 수천 개 도구<a href="#">근거</a></li></ul></div>
-        <div class="cons"><h4>아쉬운 점</h4><ul><li>레거시 SSE 제거, Streamable HTTP로 마이그레이션 필요<a href="#">근거</a></li></ul></div>
-      </div>
-      <div class="verify">
-        <div class="t">직접 깔아봤더니 <small>06:00 샌드박스</small></div>
-        <div class="steps"><span class="step na"><i></i>설치 해당없음</span><span class="step na"><i></i>실행 해당없음</span><span class="step ok"><i></i>엔드포인트 200</span><span class="step warn"><i></i>APIFY_TOKEN 필요</span></div>
-        <div class="note">원격 전용 서버라 설치·실행 단계는 해당 없음. 엔드포인트 응답만 확인했습니다.</div>
-      </div>
-      <div class="cmd"><span class="ps">url</span><code>https://mcp.apify.com</code><button type="button">복사</button></div>
-      <div class="acts"><button class="act p" aria-pressed="false">써봤음</button><button class="act" aria-pressed="false">관심없음</button><button class="act" aria-pressed="false">이상함</button><span class="fb"></span></div>
-    </article>
+  <section>
+    <h2>원칙</h2>
+    <ul class="dots">
+      <li><b>메일처럼 읽던 화면을 매일 처리하는 보드로.</b> 검정 마스트헤드·760px 한 줄 기둥을 걷고 56px 상단바(모바일 52px + 하단 탭), 최대 1160px 보드, 뉴스 7 / 도구 5 두 레인</li>
+      <li><b>탐색 자리는 어디서나 같게.</b> 768px 이상은 상단바 탭, 미만은 하단 탭. 질문은 페이지가 아니라 시트. 갈 수 없는 탭은 그리지 않는다</li>
+      <li><b>색은 세 가지 용도로만.</b> 블레이즈 파랑은 '나 기준'(로고·현재 탭·포커스·나에게·나와 관련 눈금·선택 워시), 상태색은 검증·위험 신호·원문 확인·폼 오류, 나머지는 푸른 회색 단계</li>
+      <li><b>채움은 행동, 워시는 상태.</b> 잉크 채움 주 버튼은 화면당 하나. 선택·눌림은 블레이즈 워시 + 테두리 + 글자 변화</li>
+      <li><b>색만으로 뜻을 전하지 않기.</b> 상태는 인라인 SVG 아이콘 + 글자. 이모지·유니코드 기호는 아이콘으로 쓰지 않는다. 키 필요는 결함이 아니라 중립 열쇠</li>
+      <li><b>숫자는 근거로만.</b> 파이프라인은 mono 13px 한 줄. 큰 숫자 타일·비율 막대 없음. 미터는 분모가 작은 '검증 N/M'에만</li>
+      <li><b>없는 데이터는 그리지 않기.</b> 업계 중요도·N곳 보도·새 버전 a → b는 카드 데이터에 칸이 생긴 뒤에 그린다</li>
+      <li><b>몸에 맞는 크기.</b> 터치 44px, 입력 글자 16px, 주요 버튼·입력 48px, 한글 최소 13px(12px는 mono 숫자·라틴만), 390px에서 가로 스크롤 없음</li>
+      <li><b>모달·confirm() 없음.</b> 되돌릴 수 있으면 바로 하고 되돌리기, 못 되돌리면 제자리 확인 줄</li>
+    </ul>
   </section>
 
-  <section class="sec ask">
-    <div class="sec-h"><h2>이 브리핑에 대해 물어보기</h2><span class="hint">오늘 안에서 이어 물을 수 있어요</span></div>
-    <div class="thread">
-      <div class="q">오늘 브리핑에 나온 MCP 중 바로 설치해 볼 만한 거 있어?</div>
-      <div class="a">Apify MCP 서버가 바로 써볼 만합니다. Claude Code와 호환되고 원격 MCP라 설치 없이 URL만 연결하면 됩니다. 단 APIFY_TOKEN이 필요하고, 레거시 SSE는 제거돼 Streamable HTTP 주소를 써야 합니다.
-        <div class="refs"><a href="#">확인한 곳 · apify-mcp-server</a><a href="#">레지스트리</a></div>
-      </div>
+  <section>
+    <h2>색 토큰</h2>
+    <p class="lede">라이트는 <span class="mono">:root</span>, 다크는 시스템 설정(<span class="mono">prefers-color-scheme: dark</span>, <span class="mono">data-theme="light"</span>면 제외)과 <span class="mono">data-theme="dark"</span> 두 곳에 같은 값. 다크는 뒤집은 값이 아니라 따로 잰 값이에요. 숫자는 회의에서 잰 바탕 대비.</p>
+    <div class="scroll"><table class="tok"><thead><tr><th>토큰</th><th>쓰는 곳</th><th>라이트</th><th>다크</th></tr></thead><tbody id="tokens"></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>글자 · 모양 · 간격</h2>
+    <ul class="dots">
+      <li><b>글꼴</b> Pretendard Variable(한글·본문) + JetBrains Mono(숫자·라틴·명령). 지금 쓰는 CDN 그대로</li>
+      <li><b>크기</b> 날짜 mono 28/500(모바일 22) · 화면 제목 24/700 · 큰 소식 제목 21/800(800은 워드마크·큰 소식·첫 화면 제목만) · 카드 제목 17/700 · 본문 15/1.65 최대 40em · 라벨·칩·버튼·한글 메타 13 · mono 12(숫자·라틴만)</li>
+      <li><b>모서리</b> 6 칩·작은 버튼 / 8 입력·버튼·나에게·코드 / 10 카드 / 12 패널·시트 / 999 상태 알약·토글</li>
+      <li><b>그림자</b> 카드는 그림자 없이 1px 선. 그림자(<span class="mono">--shadow-float</span>)는 시트·토스트·메뉴·저장 바에만</li>
+      <li><b>간격</b> 옆 여백 16 / 24(768px 이상) / 32(1200px 이상), 상단바 52 / 56. 중단점은 768·1200 둘</li>
+      <li><b>로고</b> 6×18px 블레이즈 막대 + 단색 toolscout 800. 더블 블레이즈는 '업계 큰 소식' 라벨에만</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>앱 셸</h2>
+    <p class="lede">한 셸, 네 가지 계정 상태. 관리자 전용 셸이나 색은 없고 탭만 더하거나 뺀다. 위 '계정'을 바꾸면 맨 위 상단바가 다시 그려져요. 오른쪽은 같은 문서를 390px로 연 모바일 모습(하단 탭)이에요.</p>
+    <div class="scroll"><table class="tok"><thead><tr><th>계정 상태</th><th>상단바 탭 · 하단 탭</th><th>오른쪽</th></tr></thead><tbody>
+      <tr><td>승인 전(대기·차단)</td><td>탭 없음, 하단 탭 없음</td><td>이메일 · 로그아웃</td></tr>
+      <tr><td>첫 설정 · 일반</td><td>탭 없음, 하단 탭 없음, 질문 없음</td><td>계정 메뉴(로그아웃만)</td></tr>
+      <tr><td>첫 설정 · 관리자</td><td>탭 '첫 설정 · 승인 N', 모바일은 상단바 '승인 N' 버튼</td><td>계정 메뉴 + 관리자 칩</td></tr>
+      <tr><td>일반</td><td>오늘 · 지난 브리핑 · 설정, 하단 4칸(오늘·지난·질문·설정)</td><td>질문하기 N/M · 계정 메뉴</td></tr>
+      <tr><td>관리자</td><td>+ 승인 N(0이면 숫자 없음, 100 이상 99+), 하단 5칸</td><td>+ 계정 메뉴 관리자 칩</td></tr>
+      <tr><td>세션 없음(첫 화면·가입·예시·/f)</td><td>브랜드만(<span class="mono">TS.bare</span>), 예시는 가입·로그인 버튼과 모바일 고정 바</td><td>화면이 넘긴 버튼만</td></tr>
+    </tbody></table></div>
+    <iframe class="phone" id="phone" title="모바일 390px 견본"></iframe>
+  </section>
+
+  <section>
+    <h2>컨트롤</h2>
+    <h3>버튼</h3>
+    <div class="box"><button class="btn btn-primary">주 버튼</button><button class="btn">보통</button><button class="btn btn-quiet">조용한</button><button class="btn btn-danger">위험(외곽선)</button><button class="btn btn-sm">작은</button><button class="btn btn-lg">큰</button><button class="btn" disabled>못 누름</button><a class="link" href="#main">글자 링크</a></div>
+    <h3>입력</h3>
+    <div class="box col">
+      <div class="field"><label class="label" for="r-email">이메일</label><input class="input" id="r-email" type="email" placeholder="you@example.com"><p class="help">아이디는 가입한 이메일이에요</p></div>
+      <div class="field"><label class="label" for="r-code">인증번호</label><input class="input" id="r-code" aria-invalid="true" value="12345"><p class="msg msg-bad" id="r-err"></p></div>
+      <textarea class="input" aria-label="여러 줄 입력" placeholder="여러 줄 입력"></textarea>
     </div>
+    <h3>알림 띠 · 토스트 · 상태줄</h3>
+    <div class="box col" id="notes"></div>
+    <h3>알약 · 모드 칩 · 단계 표시</h3>
+    <div class="box" id="pills"></div>
+    <h3>눌림 버튼 · 정보 목록 · 제자리 확인 줄</h3>
+    <div class="box col" id="misc"></div>
+    <h3>저장 바</h3>
+    <div class="box col"><div class="savebar"><div class="sb-text"><p class="sb-n">바뀐 내용 <span class="mono">3</span>개</p><p class="sb-list">직군 · 쓰는 도구 · 관심 주제 1개</p></div><div class="sb-acts"><button class="btn btn-quiet">되돌리기</button><button class="btn btn-primary">저장</button></div></div></div>
+    <h3>빈 상태</h3>
+    <div class="box col"><section class="empty"><h3>오늘은 볼 만한 게 없었어요</h3><p>카드 0장인 날은 서버가 남긴 이유(empty_reason)를 그대로 보여요.</p></section></div>
+  </section>
+
+  <section>
+    <h2>카드와 보드</h2>
+    <p class="lede">카드 해부도: 머리줄 → 제목 → 요약(전부) → 나에게 → 검증·위험 한 줄(도구만) → 발바닥 줄. 장단점·검증 세부·설치 명령·왜 이 카드·관리자 트레이스 줄은 '자세히' 안. 관심없음은 한 줄로 접고 같은 자리에서 되돌린다. 아래는 <span class="mono">Cards.today</span> + <span class="mono">Cards.mount</span> 결과(가상 데이터)예요.</p>
+    <div class="home" id="board"></div>
+  </section>
+
+  <section>
+    <h2>화면에서 쓰는 법</h2>
+    <dl class="api">
+      <dt>&lt;header id="appbar"&gt;&lt;/header&gt; + &lt;main class="wrap ..."&gt;</dt><dd>모든 화면의 뼈대. 스크립트는 /static/app.js(필요하면 /static/cards.js), 스타일은 /static/app.css 하나(cards.css·legacy.css를 불러온다)</dd>
+      <dt>await TS.shell({ active, ask = true })</dt><dd>로그인한 화면의 상단바·하단 탭·질문 시트(ask.js를 불러옴)·DEV·관리자 칩. 반환은 /api/me</dd>
+      <dt>TS.bare({ actions: [[주소, 글자, 주 버튼]], ctabar })</dt><dd>세션 없는 화면의 브랜드만 있는 상단바. ctabar면 모바일 아래 고정 바</dd>
+      <dt>TS.ic(이름, "ic-12"|"ic-18"|"ic-22") · TS.say(글) · TS.confirmLine(버튼, { html, ok, onOk }) · TS.setPending(n) · TS.count(n) · TS.stamp(iso) · TS.copy</dt><dd>아이콘, 토스트, 제자리 확인 줄, 승인 대기 수, 99+ 표시, 절대 시각 "10.06 14:20", 복사(data-copy 버튼은 자동)</dd>
+      <dt>Cards.mount(el, briefing, { day, level, abs, weights, one, empty })</dt><dd>큰 소식 띠 + 뉴스·도구 레인. 피드백 버튼과 사유·소감·관심없음 되돌리기까지 붙는다. Cards.readonly = true면 버튼 없이(예시)</dd>
+      <dt>Cards.today(briefing, { basis, status, demo }) · Cards.pipe(briefing) · Cards.card(card)</dt><dd>오늘 머리줄(mono 날짜·상태줄·기준 줄·파이프라인·어떻게 골랐나), 파이프라인 한 줄, 카드 한 장</dd>
+      <dt>button.more[aria-controls]</dt><dd>펼침 버튼. 누르면 가리키는 칸의 hidden을 바꾼다(app.js가 화면 어디서나 처리)</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>지운 것</h2>
+    <p class="lede">검정 마스트헤드 · 28px 격자 무늬 · 52px '오늘의 도구' 대문 제목 · 섹션마다 2px 검정 밑줄 · 도구 카드 왼쪽 5px 색 띠 · 무지개 주제 점(주제 색 10개) · 검정 설치 명령 블록 · 초록·주황 장단점 상자 · 두 색 워드마크. 하나라도 남으면 메일 인상이 돌아와요. 받아 보는 시각 고르기(08·09·12·18)는 추후 추가 사항이라 화면 문구는 '매일 아침 08:00'.</p>
+  </section>
+
+  <section>
+    <h2>메일 색 (아직 예전 체계)</h2>
+    <p class="lede">아침 메일(<span class="mono">pipeline/briefing_mail.py</span>)은 이번 리디자인 범위 밖이라 예전 색을 그대로 써요. 메일을 바꿀 때 이 칸을 지우고 위 토큰으로 옮겨요.</p>
+    <div class="box"><span><i class="sw" style="background:#15181E"></i><span class="mono">#15181E</span> 잉크</span><span><i class="sw" style="background:#12766A"></i><span class="mono">#12766A</span> 강조</span><span><i class="sw" style="background:#F7F7F4"></i><span class="mono">#F7F7F4</span> 바탕</span><span><i class="sw" style="background:#E1E2DD"></i><span class="mono">#E1E2DD</span> 선</span><span><i class="sw" style="background:#7A7E86"></i><span class="mono">#7A7E86</span> 흐린 글자</span></div>
   </section>
 </main>
 
-<div class="askbar">
-  <form onsubmit="return false">
-    <input type="text" placeholder="이어서 물어보세요" aria-label="질문">
-    <span class="quota">9 / 10</span>
-    <button type="submit">묻기</button>
-  </form>
-</div>
-
+<script src="../web/app.js"></script>
+<script src="../web/ask.js"></script>
+<script src="../web/cards.js"></script>
+<script>
+// 견본 데이터는 모두 가상이다. API는 부르지 않고 아래 값을 돌려준다
+const TOKENS = [
+  ["--bg", "화면 바탕", "#F3F4F6", "#0E1116"], ["--surface", "카드·패널·상단바", "#FFFFFF", "#161A21"], ["--surface-2", "주제 칩, 설치 명령, 검증 칸", "#ECEEF2", "#1D222B"],
+  ["--line", "카드 테두리(장식)", "#DFE2E8", "#262C36"], ["--line-input", "입력·빈 라디오 테두리 (3:1 이상) 3.67", "#80868F", "#646D7A"], ["--tick-empty", "빈 눈금·미터 바탕", "#C7CCD5", "#3A414C"],
+  ["--ink", "제목·본문, 주 버튼 채움 15.7", "#12151B", "#E8EAEE"], ["--ink-2", "요약·보조 글자 9.16", "#424856", "#B4BAC6"], ["--mute", "메타·힌트 4.96", "#5F6673", "#8E95A3"], ["--on-ink", "잉크 채움 위 글자", "#FFFFFF", "#0E1116"],
+  ["--blaze", "로고, 현재 탭, 포커스, 나와 관련 눈금 6.38", "#2E4CE6", "#8197FF"], ["--blaze-ink", "'나에게' 라벨, 선택된 글자 8.00", "#1D35B8", "#A8B6FF"], ["--blaze-wash", "나에게 상자, 선택·눌림 바탕", "#E9EDFF", "#1B2140"],
+  ["--ok", "설치·실행 성공, 위험 신호 정상", "#1A6B3F", "#6CCB94"], ["--ok-wash", "성공 알약 바탕", "#E6F3EC", "#16261D"], ["--warn", "위험 신호 주의, 원문 확인 필요 5.52", "#8F5200", "#E8AE57"], ["--warn-wash", "주의 바탕", "#FBF0DE", "#2A2112"],
+  ["--bad", "실행 실패, 폼 오류, 차단 5.66", "#B3261E", "#F28B82"], ["--bad-wash", "실패 바탕", "#FCEBE9", "#2C1716"], ["--mark", "검색 강조 바탕(+ 600 굵기)", "#FBF0DE", "#2A2112"],
+  ["--hl-border", "업계 큰 소식 1.5px 테두리", "#12151B", "#B4BAC6"], ["--scrim", "모바일 시트 뒤 가림", "rgba(14,17,22,.36)", "rgba(0,0,0,.55)"],
+];
+const ME = {
+  admin: { email: "admin@example.com", is_admin: true, dev_mode: true, approved: true, profile_done: true, pending_applications: 3 },
+  user: { email: "kim@example.com", is_admin: false, dev_mode: false, approved: true, profile_done: true },
+  first: { email: "admin@example.com", is_admin: true, dev_mode: false, approved: true, profile_done: false, pending_applications: 120 },
+  pending: { email: "new@example.com", is_admin: false, dev_mode: false, approved: false, profile_done: false },
+};
+const V = (s, label) => ({ status: s, label });
+const fb = (actions = [], extra = {}) => ({ actions, reason: null, memo: null, ids: {}, ...extra });
+const BRIEFING = { date: "2026-10-08", pool_size: 214, count: 5, exists: true, sent: false,
+  run_stats: { selected: 18, rejected: 2, verify_requested: 2, verified: 2, rollbacks: 0 },
+  cards: [
+    { item_id: 1, type: "news", headline: true, topic: "model_release", topic_label: "모델 출시·성능", title: "[예시] 가상 연구소, 오픈 웨이트 모델 공개", url: "https://example.com/a", summary_ko: "가상의 연구소가 70억 매개변수 오픈 웨이트 모델을 공개했어요. 코딩 평가에서 같은 크기 모델보다 점수가 높다고 밝혔어요.", for_me: "로컬에서 돌릴 작은 코딩 모델을 찾고 있다면 비교 후보로 둘 만해요.", why_this_card: "오늘 여러 곳이 함께 다룬 큰 소식이라 관심 주제와 상관없이 맨 위에 둬요", relevance: 4, source_checked: true, pros: [{ text: "노트북 GPU에서도 돌아가는 크기", evidence_url: "https://example.com/a" }], cons: [{ text: "평가는 발표사 자체 측정", evidence_url: "https://example.com/a" }], item_meta: { published_at: "2026-10-08T01:10:00Z" }, feedback: fb(), trace_url: "https://cloud.langfuse.com/trace/example" },
+    { item_id: 2, type: "news", topic: "agent_framework", topic_label: "에이전트·프레임워크", title: "[예시] 에이전트 프레임워크 2.0, 중간 저장과 재시도", url: "https://example.com/b", notice: "원문 확인 필요", summary_ko: "긴 작업을 단계마다 저장했다가 실패한 단계부터 다시 시작할 수 있게 됐어요.", for_me: "매일 도는 파이프라인이 있다면 직접 짠 재시도 코드를 줄일 수 있어요.", why_this_card: "관심 주제 '에이전트·프레임워크'", relevance: 5, source_checked: true, item_meta: { published_at: "2026-10-07T20:00:00Z" }, feedback: fb(["이상함"], { reason: "사실 틀림", ids: { "이상함": 7 } }) },
+    { item_id: 3, type: "news", topic: "pricing", topic_label: "가격·요금", title: "[예시] 이미지 생성 API 요금 20% 인하", url: "https://example.com/c", summary_ko: "1장당 요금을 20% 내렸어요.", for_me: "이미지 기능을 붙일 계획이 있다면 비용을 다시 계산해 볼 만해요.", why_this_card: "뉴스가 적어 관련도 낮은 소식으로 채웠어요", relevance: 1, source_checked: false, item_meta: {}, feedback: fb(["관심없음"]) },
+    { item_id: 4, type: "mcp", topic: "mcp_tools", topic_label: "MCP·도구 연동", title: "com.example/notes-mcp 1.4.0", url: "https://example.com/d", summary_ko: "메모 앱의 노트를 검색하고 새 노트를 만드는 가상의 MCP 서버예요.", for_me: "에이전트가 내 메모를 찾아 답하게 하고 싶다면 바로 붙여 볼 수 있어요.", why_this_card: "쓰는 도구 'mcp'와 맞아요", relevance: 4, source_checked: true, install_cmd: "npx -y notes-mcp@1.4.0", pros: [{ text: "도구 5개가 바로 보임", evidence_url: "https://example.com/d" }], cons: [{ text: "API 키 필요", evidence_url: "https://example.com/d" }], verification: { install: V("ok", "설치 성공 12.4s"), run: V("ok", "실행 성공"), tools_list: V("ok", "도구 5개"), auth_required: V("warn", "NOTES_API_KEY 필요"), probed_at: "10-08 06:05 샌드박스" }, item_meta: { stars: 1240, published_at: "2026-10-06T09:00:00Z", version: "1.4.0" }, feedback: fb(["써봤음"], { memo: "태그 검색이 편해요", ids: { "써봤음": 8 } }), trace_url: "trace_id 3f2a7c19e04b" },
+    { item_id: 5, type: "skill", topic: "coding_tools", topic_label: "코딩 도구·IDE", title: "pr-review-skill", url: "https://example.com/e", summary_ko: "풀 리퀘스트 변경을 읽고 위험한 부분을 짚어 주는 가상의 스킬이에요.", for_me: "리뷰어가 없다면 커밋 전 점검용으로 써 볼 만해요. 설치 전에 위험 신호부터 보세요.", why_this_card: "관심 주제 '코딩 도구·IDE'", relevance: 3, source_checked: true, risk_signal: { level: "caution", label: "주의", hits: ["외부 전송"], basis: "규칙 검사만 위험으로 봄", quote: "결과를 https://collect.example 로 보낸다", completeness: "보통", reviewed_at: "10-08 06:12" }, item_meta: { stars: 140, published_at: "2026-10-05T11:00:00Z" }, feedback: fb() },
+  ] };
+let acct = new URLSearchParams(location.search).get("acct") || "admin";
+TS.script = async () => {};
+TS.api = async (path, options = {}) => {
+  if (path === "/api/me") return ME[acct];
+  if (path === "/api/ask") return options.method === "POST" ? { gate: "in", answer: "견본이라 실제로 묻지 않아요.", sources: [], remaining: 6 }
+    : { limit: 10, remaining: 7, turns: [{ question: "notes-mcp 키 필요는 뭘 넣으라는 거야?", gate: "in", answer: "NOTES_API_KEY에 메모 앱에서 만든 키를 넣으면 돼요.", sources: [{ title: "notes-mcp 원문", url: "https://example.com/d" }] }] };
+  if (path.endsWith("/note")) return { ok: true, message: "사유를 기록했어요" };
+  return { status: "recorded", feedback_id: 9, message: "내일 추천에 반영할게요" };
+};
+async function drawShell() {
+  document.querySelectorAll(".tabbar, .ctabar").forEach((el) => el.remove());
+  document.body.classList.remove("has-tabbar", "has-ctabar");
+  if (acct === "none") TS.bare({ actions: [["/login", "로그인"], ["/signup", "회원가입", true]], ctabar: true }); else await TS.shell({ active: "/" });
+  document.querySelectorAll("[data-logout], .ctabar a, .appbar .bar-right a.btn").forEach((a) => { a.onclick = (e) => { e.preventDefault(); TS.say("견본이라 이동하지 않아요"); }; });
+}
+const PHONE = new URLSearchParams(location.search).has("phone");
+const set = (id, items, current, onPick) => {
+  const box = document.getElementById(id);
+  box.innerHTML = items.map(([v, t]) => `<button type="button" class="rbtn" data-v="${v}" aria-pressed="${v === current}">${t}</button>`).join("");
+  box.onclick = (e) => { const b = e.target.closest("[data-v]"); if (!b) return; box.querySelectorAll("[data-v]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); onPick(b.dataset.v); };
+};
+(async () => {
+  TS.sprite();
+  if (PHONE) document.querySelectorAll("main > section").forEach((s, i) => { s.hidden = i !== 6; });  // 모바일 견본은 카드와 보드만
+  await drawShell();
+  document.getElementById("tokens").innerHTML = TOKENS.map(([k, use, light, dark]) => `<tr><td class="mono">${k}</td><td>${use}</td><td><i class="sw" style="background:${light}"></i><span class="mono">${light}</span></td><td><i class="sw" style="background:${dark}"></i><span class="mono">${dark}</span></td></tr>`).join("");
+  set("acct-set", [["admin", "관리자·DEV"], ["user", "일반"], ["first", "첫 설정 관리자"], ["pending", "승인 전"], ["none", "세션 없음"]], acct, (v) => { acct = v; drawShell(); document.getElementById("phone").src = `design-reference.html?phone&acct=${v}`; });
+  set("theme-set", [["system", "시스템"], ["light", "라이트"], ["dark", "다크"]], "system", (v) => { if (v === "system") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = v; });
+  document.getElementById("r-err").innerHTML = `${TS.ic("bad")}<span>인증번호가 맞지 않아요</span>`;
+  document.getElementById("notes").innerHTML = `<div class="alert alert-note">${TS.ic("info")}<div class="body"><span>개발 모드예요. 공개돼도 괜찮은 내용만 적어 주세요.</span></div></div>
+    <div class="alert alert-bad" role="alert">${TS.ic("bad")}<div class="body"><span>만들지 못했어요. 잠시 뒤 다시 눌러 주세요.</span><button class="btn btn-sm">${TS.ic("refresh")}다시 시도</button></div></div>
+    <div class="run-line">${TS.ic("clock")}<span>만드는 중 · <span class="mono">3</span>분째</span><span class="chk">마지막 확인 <span class="mono">14:31</span></span></div>
+    <div class="run-line ok">${TS.ic("ok")}<span>다 만들었어요</span><a class="link" href="#board">오늘 화면에서 보기</a></div>
+    <div><button class="btn btn-sm" id="say">토스트 띄우기</button> <span class="toast">내일 추천에 반영할게요</span></div>`;
+  document.getElementById("say").onclick = () => TS.say("토스트는 3초 뒤 사라져요");
+  document.getElementById("pills").innerHTML = `<span class="pill pill-ok">${TS.ic("shield")}위험 신호 · 정상</span><span class="pill pill-warn">${TS.ic("warn")}위험 신호 · 주의</span><span class="pill pill-bad">${TS.ic("bad")}승인 안 됨</span><span class="pill pill-na">${TS.ic("na")}공식 출처, 위험 신호 생략</span><span class="pill pill-neutral pill-sm">${TS.ic("clock")}대기</span><span class="pill pill-plain pill-sm">${TS.ic("ok")}승인</span>
+    <span class="tag-mode">예시</span><span class="tag-mode tag-admin">${TS.ic("lock")}관리자</span><span class="tag-mode tag-dev">DEV</span>
+    <ol class="stepper" aria-label="가입 단계" style="flex:1 1 360px"><li class="done"><span class="st-dot" aria-hidden="true">${TS.ic("tried")}</span>이메일 인증</li><li class="current" aria-current="step"><span class="st-dot" aria-hidden="true">2</span>비밀번호</li><li><span class="st-dot" aria-hidden="true">3</span>승인 대기</li></ol>`;
+  document.getElementById("misc").innerHTML = `<fieldset class="rbtns"><legend class="label">무엇이 이상했나요? 고르지 않아도 돼요</legend>${Cards.REASONS.map((r, i) => `<button type="button" class="rbtn" aria-pressed="${i === 1}">${r}</button>`).join("")}</fieldset>
+    <dl class="info-dl"><div><dt>이메일</dt><dd><span class="mono">kim@example.com</span></dd></div><div><dt>권한</dt><dd><span class="tag-mode tag-admin">${TS.ic("lock")}관리자</span></dd></div></dl>
+    <div><button type="button" class="btn btn-danger" id="forget" aria-expanded="false">기억 지우기</button></div>`;
+  document.getElementById("forget").onclick = (e) => TS.confirmLine(e.currentTarget, { html: "<p><b>지우면 되돌릴 수 없어요.</b> 관심 주제가 직군 기본값으로 돌아가요.</p>", ok: "지우기", onOk: async () => TS.say("지웠어요") });
+  const board = document.getElementById("board");
+  board.innerHTML = Cards.today(BRIEFING, { basis: '기준 <b>개발자</b> · python, claude code · <a href="#main">기준 바꾸기</a>' }) + '<div id="cards"></div>';
+  Cards.mount(document.getElementById("cards"), BRIEFING, { weights: { model_release: 3, agent_framework: 4, pricing: -1, mcp_tools: 3, coding_tools: 4 } });
+  if (!PHONE) document.getElementById("phone").src = `design-reference.html?phone&acct=${acct}`;
+})();
+</script>
 </body>
 </html>

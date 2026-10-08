@@ -97,7 +97,6 @@ def main() -> int:
     web_files = pages + sorted((ROOT / "web").glob("*.js")) + sorted((ROOT / "web").glob("*.css"))
     css = (ROOT / "web" / "app.css").read_text(encoding="utf-8")
     reference = (ROOT / "docs" / "design-reference.html").read_text(encoding="utf-8")
-    reference_style = re.search(r"<style>\s*\n(.*?)</style>", reference, re.S).group(1)
     code = "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "routes").glob("*.py"))
     tool_names = {t.name for t in asyncio.run(mcp.list_tools())}
     checks = {
@@ -106,7 +105,7 @@ def main() -> int:
         "남의_피드백_메모_거부": other_note.status_code == 403,
         "남의_날짜_브리핑은_빈결과": other_day["count"] == 0 and not other_day["exists"] and own_day["count"] == 1,
         "모든_화면_뷰포트_메타": all('name="viewport"' in p.read_text(encoding="utf-8") for p in pages),
-        "디자인_참고파일_style_그대로·640px_이하_한줄": css.startswith(reference_style) and "@media (max-width:640px)" in css,
+        "디자인_참고파일은_app.css를_링크·768px_기준_화면폭_규칙": "app.css" in reference and "min-width:768px" in css.replace(" ", ""),
         "화면_긴줄표_없음": not [p.name for p in web_files if chr(0x2014) in p.read_text(encoding="utf-8")],
         "외부_스크립트·프레임워크_없음": not [p.name for p in pages if re.search(r'<script[^>]+src="https?://', p.read_text(encoding="utf-8"))],
         "SSE_없음": "text/event-stream" not in code and "EventSource" not in "".join(p.read_text(encoding="utf-8") for p in web_files),
