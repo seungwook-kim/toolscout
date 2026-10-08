@@ -20,6 +20,8 @@
       <div class="item">
         <div class="mark"></div>
         <div>
+          <!-- 다른 길(구글 가입·예시 보기)은 두지 않는다 (2026-10-08 사용자: "다른길 유도는 필요 없을 듯"). 구글은 첫 화면에서만 -->
+          <div class="acts"><a class="act" href="/login">← 로그인으로</a></div>
           <div class="acts">
             <input id="email" type="email" autocomplete="email" placeholder="이메일 (아이디)" required>
             <button class="go" type="button" id="send">인증번호 보내기</button>
@@ -36,11 +38,6 @@
             </div>
           </form>
           <div class="acts"><span class="fb" id="msg"></span></div>
-          <div class="acts">
-            <a class="act" href="/auth/google" id="google" hidden>구글로 가입하기</a>
-            <a class="act" href="/login">이미 가입했어요 (로그인)</a>
-            <a class="act" href="/demo">가입 없이 예시 보기</a>
-          </div>
         </div>
       </div>
     </section>
@@ -52,9 +49,6 @@
       const $ = (id) => document.getElementById(id);
       const msg = $("msg");
       let signupToken = null;
-      try {
-        $("google").hidden = !(await TS.api("/api/auth/options", { allow401: true })).google;
-      } catch (e) { /* 숨긴 채로 */ }
       $("send").onclick = async () => {
         TS.message(msg, "보내는 중이에요");
         try {
