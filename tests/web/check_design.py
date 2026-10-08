@@ -1,7 +1,7 @@
 """화면 검수: run_stats·item_meta 읽기 API(A) + 화면 파일 정적 검사(B) + PWA manifest·아이콘(C).
 
 A는 이미 구현된 pipeline/persist.py·routes/briefings.py·db.py 규격을 검수한다(모델 호출 없음).
-B는 app.css가 docs/design-reference.html의 style 그대로이고 뒤에 붙인 보충 규칙은 토큰만 쓰는지, 화면 파일 공통 요소와 금지 사항을 본다.
+B는 app.css 토큰(라이트·다크)·공통 컴포넌트, 색은 토큰만 쓰는지, 화면 파일 공통 요소와 금지 사항을 본다.
 
 실행: uv run python -m tests.web.check_design
 """
@@ -16,7 +16,6 @@ from tests.web import common
 from sqlalchemy import delete, select  # noqa: E402
 
 import db  # noqa: E402
-from agent.schemas import TOPICS  # noqa: E402
 from pipeline import persist  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -94,22 +93,24 @@ def has_uppercase_transform(text: str) -> bool:
     return "text-transform:uppercase" in squashed
 
 
+def strip_tokens(css: str) -> str:
+    """:root{...} 토큰 블록(라이트·다크·수동 다크)을 뺀 나머지 규칙."""
+    return re.sub(r":root[^{}]*\{[^}]*\}", "", css)
+
+
 def check_b() -> dict:
-    """화면 파일 정적 검사."""
-    ref_text = read(ROOT / "docs" / "design-reference.html")
-    style_match = re.search(r"<style>\s*\n(.*?)</style>", ref_text, re.S)
-    ref_style = style_match.group(1) if style_match else None
-
+    """화면 파일 정적 검사 (새 공통 체계: app.css 토큰 + cards.css + 앱 셸 app.js)."""
     app_css = read(WEB / "app.css")
-    starts_with_ref = bool(ref_style) and app_css.startswith(ref_style)
+    css_all = app_css + read(WEB / "cards.css") + read(WEB / "legacy.css")
+    rules = strip_tokens(css_all)
 
-    # 보충 부분 = 참고 style 뒤에 붙인 규칙. 참고 style 자체의 그림자·transition·:hover·색은 기준이라 검사하지 않는다
-    supplement = app_css[len(ref_style):] if starts_with_ref else ""
-    topic_rules_ok = bool(supplement) and all(f'[data-topic="{key}"]{{--t:var(--' in supplement for key in TOPICS)
-    forbidden_in_css = ["box-shadow", "animation", "@keyframes", "transition", ":hover", "text-transform"]
-    no_forbidden_css = bool(supplement) and not any(p in supplement for p in forbidden_in_css)
-    hex_colors = set(re.findall(r"#[0-9a-fA-F]{3,8}\b", supplement))
-    hex_only_fff = bool(supplement) and hex_colors.issubset({"#fff"})
+    dark_auto = "prefers-color-scheme" in app_css and ':root:not([data-theme="light"])' in app_css
+    dark_manual = ':root[data-theme="dark"]' in app_css
+    tokens_ok = all(t in app_css for t in ["--bg:", "--surface:", "--ink:", "--blaze:", "--ok:", "--warn:", "--bad:", "--line:"])
+    components_ok = all(c in app_css for c in [".appbar", ".tabs", ".tabbar", ".btn", ".input", ".alert", ".pill", ".savebar", ".confirm-line"])
+    topic_rules_ok = ".topic" in css_all and "--t:" not in css_all  # 주제 10색은 없앴다(글자 칩 하나)
+    no_new_color = not set(re.findall(r"#[0-9a-fA-F]{3,8}", rules))
+    no_forbidden_css = "@keyframes" not in css_all
 
     html_files = sorted(WEB.glob("*.html"))
     html_texts = [read(f) for f in html_files]
@@ -121,39 +122,39 @@ def check_b() -> dict:
     html_pretendard = in_every_html(lambda t: "pretendard" in t.lower())
     html_jetbrains = in_every_html(lambda t: "jetbrains" in t.lower())
     html_app_css = in_every_html(lambda t: "/static/app.css" in t)
-    html_mast = in_every_html(lambda t: '<header class="mast" id="mast">' in t)
+    html_bar = in_every_html(lambda t: 'id="appbar"' in t or 'id="mast"' in t)
     html_manifest_link = in_every_html(lambda t: '<link rel="manifest" href="/static/manifest.json">' in t)
     html_theme_color = in_every_html(lambda t: '<meta name="theme-color" content="#15181E">' in t)
 
     index_text = read(WEB / "index.html")
-    index_ok = bool(index_text) and all(
-        s in index_text for s in ['class="askbar"', 'class="quota"', "thread", "cards.js"])
+    index_ok = bool(index_text) and "cards.js" in index_text
 
     app_js_text = read(WEB / "app.js")
     app_js_ok = bool(app_js_text) and all(
-        s in app_js_text for s in ["aria-current", 'class="mode"', "DEV", 'class="nav"'])
+        s in app_js_text for s in ["aria-current", "DEV", 'class="tabs"', "async shell(", "bare(", "data-logout", "confirmLine("])
 
     cards_js_text = read(WEB / "cards.js")
-    cards_js_needles = ["item", "tool", "mark", "forme", 'details class="why"', "acts", "aria-pressed", "muted",
-                         "kind", "meta", "verify", "step na", "검증 예정", "cmd", "pipe", "검증</span>", "empty"]
+    cards_js_needles = ["readonly", "aria-pressed", "muted", "forme", "trace", "pipe", "verify", "cmd", "tool", "news", "mount("]
     cards_js_ok = bool(cards_js_text) and all(n in cards_js_text for n in cards_js_needles)
 
-    js_files = [WEB / "app.js", WEB / "cards.js"]
-    all_texts = html_texts + [read(f) for f in js_files] + [app_css]
+    js_files = [WEB / "app.js", WEB / "cards.js", WEB / "ask.js"]
+    all_texts = html_texts + [read(f) for f in js_files] + [css_all]
     no_emoji = bool(all_texts) and not any(has_emoji(t) for t in all_texts)
     no_uppercase = bool(all_texts) and not any(has_uppercase_transform(t) for t in all_texts)
     no_long_dash = bool(all_texts) and not any(LONG_DASH in t for t in all_texts)
 
     return {
-        "B_app_css_참고_스타일로_시작": starts_with_ref,
-        "B_보충css_주제10개_규칙": topic_rules_ok,
-        "B_보충css_그림자·애니메이션·호버·대문자_없음": no_forbidden_css,
-        "B_보충css_새색_없음(#fff만)": hex_only_fff,
+        "B_app_css_토큰_라이트": tokens_ok,
+        "B_app_css_다크_자동·수동": dark_auto and dark_manual,
+        "B_app_css_공통_컴포넌트": components_ok,
+        "B_css_주제_글자칩(10색_없음)": topic_rules_ok,
+        "B_css_토큰_밖_색값_없음": no_new_color,
+        "B_css_keyframes_없음": no_forbidden_css,
         "B_html_뷰포트": html_viewport,
         "B_html_pretendard_CDN": html_pretendard,
         "B_html_jetbrains_CDN": html_jetbrains,
         "B_html_app_css_링크": html_app_css,
-        "B_html_헤더_mast": html_mast,
+        "B_html_상단바_자리": html_bar,
         "B_html_manifest_링크": html_manifest_link,
         "B_html_theme_color": html_theme_color,
         "B_index_요소": index_ok,

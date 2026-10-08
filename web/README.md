@@ -16,6 +16,11 @@
 - `history.html`: 지난 브리핑. 날짜마다 접었다 펴는 칸(펼칠 때 그날 카드를 불러옴, 최근 날짜는 펼쳐 둠), 이름 검색(DB LIKE) → 그날 칸 펼치기
 - `manifest.json`, `icons/`: PWA(standalone, 테마 #15181E, 아이콘 192·512 "ts")
 
+## 새 공통 체계 (2026-10-09) 와 남은 옛 다리
+- `app.css`: 토큰·앱 셸·공통 컴포넌트 / `cards.css`: 카드·보드 / `ask.js`: 질문 시트 / 앱 셸 `TS.shell({active, ask})`(로그인 화면), `TS.bare({actions, ctabar})`(세션 없는 화면)
+- 남은 것: 모든 `*.html`이 아직 `TS.mast`(옛 다리)와 `<header class="mast">`를 부른다. 화면을 `TS.shell`·`TS.bare`로 바꾸면 그 화면 body의 `legacy` 클래스가 없어진다. 전부 바꾼 뒤 `TS.mast`, `web/legacy.css`, `app.css` 첫머리의 `@import url("legacy.css")`를 지운다
+- legacy.css가 받치는 옛 클래스: `.sec .sec-h .item .acts .act .go .askbar .thread .q .a .refs .board details.day details.why .forme`
+
 ## 들어오고 나가는 데이터
 - 들어옴: `/api/` JSON 응답 (세션 쿠키)
 - 나감: 로그인·프로필·피드백·질문 요청 (JSON)

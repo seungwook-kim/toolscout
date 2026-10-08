@@ -1,0 +1,47 @@
+/* 옛 화면 다리 (2026-10-09). 아직 새 셸로 바꾸지 않은 화면(TS.mast를 부르는 화면)에만 body.legacy가 붙는다.
+   옛 마크업(.sec·.item·.acts·.act·.go·.askbar)이 새 토큰 위에서 읽히게만 한다. 새 화면에서는 쓰지 않는다.
+   화면 담당이 모든 화면을 TS.shell·TS.bare로 바꾸면 이 파일과 app.css의 @import 한 줄을 지운다 */
+.legacy main{display:block;max-width:calc(760px + 2 * var(--gutter));margin-inline:auto;padding:24px var(--gutter) 120px}
+.legacy-head{display:grid;gap:8px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.legacy-head h1{font-size:1.5rem;font-weight:700}
+.legacy-head h1 small{display:block;font-size:.8125rem;font-weight:500;color:var(--mute);letter-spacing:0}
+.legacy-head .pipe{justify-items:start;text-align:left}
+.legacy-head .pipe-sub{justify-content:flex-start}
+.legacy .sec{margin-top:32px;display:grid;gap:12px}
+.legacy .sec-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding-bottom:8px;border-bottom:1px solid var(--line);cursor:default}
+.legacy .sec-h h2{font-size:1.0625rem;font-weight:700}
+.legacy .sec-h .n{font-family:var(--mono);font-size:.8125rem;color:var(--mute)}
+.legacy .sec-h .hint{font-size:.8125rem;color:var(--mute)}
+.legacy details.day > summary{list-style:none;cursor:pointer}
+.legacy details.day > summary::-webkit-details-marker{display:none}
+.legacy .item{display:grid;gap:6px;padding:16px 0;border-bottom:1px solid var(--line)}
+.legacy .item .mark{display:none}
+.legacy .item .topic{background:none;padding:0;font-size:.8125rem;font-weight:600;color:var(--ink)}
+.legacy .item h3{font-size:1.0625rem;font-weight:700}
+.legacy .item .src,.legacy .item p{font-size:.875rem;color:var(--ink-2)}
+.legacy .acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+.legacy .act,.legacy .go{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 14px;border-radius:var(--r-ctl);border:1px solid var(--line-input);background:var(--surface);color:var(--ink);font-size:.875rem;font-weight:600;text-decoration:none}
+.legacy .go{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.legacy .act[aria-pressed="true"]{background:var(--blaze-wash);border-color:var(--blaze);color:var(--blaze-ink)}
+.legacy .act:disabled,.legacy .go:disabled{background:var(--surface-2);border-color:var(--line);color:var(--mute);cursor:not-allowed}
+.legacy .acts .fb{display:inline;font-size:.8125rem;color:var(--ink-2)}
+.legacy .acts .fb.bad{color:var(--bad)}
+.legacy main input[type=text],.legacy main input[type=email],.legacy main input[type=password],.legacy main input:not([type]),.legacy main select,.legacy main textarea{flex:1;min-width:0;height:44px;padding:0 12px;border:1px solid var(--line-input);border-radius:var(--r-ctl);background:var(--surface);color:var(--ink);font-size:1rem}
+.legacy main textarea{height:auto;min-height:96px;padding:10px 12px}
+.legacy main input[type=range]{flex:1;accent-color:var(--blaze)}
+.legacy details.why .forme{display:grid;grid-template-columns:9.5rem minmax(0,1fr);align-items:center;background:none;padding:4px 0}
+.legacy details.why .forme > span{display:flex;gap:10px;align-items:center}
+.legacy details.why .forme output{font-family:var(--mono);font-size:.8125rem;color:var(--mute);min-width:24px;text-align:right}
+.legacy details.why > summary{cursor:pointer;font-size:.8125rem;color:var(--ink-2)}
+.legacy .board{grid-template-columns:minmax(0,1fr)}
+.legacy .thread{display:grid;gap:12px;margin-top:12px}
+.legacy .thread .q{justify-self:end;max-width:85%;padding:10px 12px;border-radius:var(--r-ctl);background:var(--surface-2);font-weight:600}
+.legacy .thread .a{max-width:92%;padding:12px 14px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--surface);color:var(--ink-2);white-space:pre-line}
+.legacy .thread .refs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.legacy .thread .refs a{font-size:.8125rem;font-weight:600;padding:2px 8px;border:1px solid var(--line);border-radius:var(--r-chip);text-decoration:none}
+.legacy .askbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px))}
+.legacy .askbar form{max-width:calc(760px + 2 * var(--gutter));margin-inline:auto;padding-inline:var(--gutter);display:flex;gap:8px;align-items:center}
+.legacy .askbar input{flex:1;min-width:0;height:44px;padding:0 12px;border:1px solid var(--line-input);border-radius:var(--r-ctl);background:var(--surface);color:var(--ink);font-size:1rem}
+.legacy .askbar button{min-height:44px;padding:0 16px;border:0;border-radius:var(--r-ctl);background:var(--ink);color:var(--on-ink);font-weight:600}
+.legacy .askbar .quota{font-family:var(--mono);font-size:.75rem}
+@media (max-width:767px){.legacy.has-tabbar .askbar{bottom:calc(56px + env(safe-area-inset-bottom,0px));padding-bottom:10px}.legacy .askbar .quota{display:none}}
