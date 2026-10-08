@@ -2,7 +2,7 @@
 브리핑을 받는다. 예전 초대 코드 입력·이용 신청서는 뺐다(invite_codes 표와 users.application 칸은 기록으로 남는다).
 
 - 관리자(ADMIN_EMAILS)만: GET /api/admin/applications(승인 대기 가입: 먼저 가입한 순서, 가입 방법),
-  GET /api/admin/users(전체 사용자와 마지막 결정), POST /api/admin/users/{id}/status(승인·차단·되돌리기),
+  GET /api/admin/users(전체 사용자와 마지막 결정, 마지막 로그인 시각·방법), POST /api/admin/users/{id}/status(승인·차단·되돌리기),
   GET /api/admin/status-changes(최근 상태 변경 이력: 누가·누구를·무엇에서 무엇으로·언제·어떻게)
 - 상태가 실제로 바뀔 때마다 status_changes에 한 줄 남긴다. 같은 상태로 누르면 남기지 않는다
 """
@@ -76,7 +76,8 @@ def list_users(admin: db.User = Depends(require_admin)) -> dict:
         users = s.exec(select(db.User).order_by(db.User.id)).all()
         return {"users": [{"id": u.id, "email": u.email, "role": u.role, "status": u.status, "is_test": u.is_test,
                            "is_demo": u.is_demo, "via": signup_via(u), "last_change": last.get(u.id),
-                           "created_at": u.created_at.isoformat()} for u in users]}
+                           "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
+                           "last_login_method": u.last_login_method, "created_at": u.created_at.isoformat()} for u in users]}
 
 
 @router.post("/api/admin/users/{user_id}/status")

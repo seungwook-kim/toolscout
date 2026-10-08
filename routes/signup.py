@@ -27,7 +27,7 @@ import db
 import models
 from pipeline import deliver
 from routes import tokens
-from routes.auth import EMAIL, is_admin, next_path, notify_admins_new_user, set_session
+from routes.auth import EMAIL, is_admin, mark_login, next_path, notify_admins_new_user, set_session
 
 router = APIRouter()
 CODE_TTL, CODE_TRIES = timedelta(minutes=10), 5
@@ -179,6 +179,7 @@ def complete(body: CompleteBody) -> JSONResponse:
                            is_admin=admin, applied_at=db.utcnow())
             s.add(user)
         user.password_hash = hash_password(body.password)
+        mark_login(user, "password")  # 가입하면 바로 로그인된다
         s.commit()
         s.refresh(user)
     if created:
@@ -207,6 +208,7 @@ def login(body: LoginBody) -> JSONResponse:
         user.login_failures, user.login_locked_until = 0, None
         if models.dev_mode():
             user.is_test = True
+        mark_login(user, "password")
         s.commit()
         s.refresh(user)
     return set_session(JSONResponse({"ok": True, "next": next_path(user), "status": user.status}), user)

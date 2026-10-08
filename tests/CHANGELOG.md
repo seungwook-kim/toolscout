@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-09 · web/check_auth에 마지막 로그인 항목 2개(가입·비밀번호·링크·구글 방법과 시각, 관리자 사용자 목록), 구글 '설정 없음' 항목은 .env에 실제 키가 있어도 키를 비우고 본다 · 마지막 로그인 기록(사용자 결정 10/9), 실제 구글 키 등록 · 34항목 통과
 - 2026-10-08 · sources/check_claude_notes.py(신규, 6항목), agent/check_same_story에 also_reported·해설가 입력 항목 2개 · Claude 소식 누락 고침(사용자 "기억하고 수정하자") · 통과
 - 2026-10-08 · web/check_auth 다시 씀(가입·인증번호·비밀번호 잠금·예전 링크 계정·운영 모드 승인 대기·관리자 알림·가짜 구글 OAuth, 32항목), access/check_access·check_apply 새 구조로, common.login은 회원가입 흐름으로, check_rules 열린 API 목록 갱신 · 가입·로그인 개편(사용자 결정 2026-10-08) · 세 검수 통과
 - 2026-10-07 · pipeline/check_cron.py(신규, 19항목): 크론 차례별 할 일·발송 재시도와 알림 한 번·지금 만들기 요청·--rehearse 정리·웹 외부 작업 모드·MCP inproc 기본 · check_models: 운영 표 기대값을 gpt-4o-mini 두 칸으로, 전환 규칙 검수는 가짜 두 칸 표로, 옵션 전달에 운영 OpenRouter · run_daily의 cleanup_date는 persist.delete_day로

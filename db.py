@@ -66,6 +66,9 @@ class User(SQLModel, table=True):
     google_sub: str | None = Field(default=None, unique=True)  # 구글 계정 고유 번호
     login_failures: int = 0  # 비밀번호 연속 실패. 5번이면 15분 잠금
     login_locked_until: datetime | None = None
+    # 마지막 로그인 (2026-10-09 사용자 결정 (가): 로그인마다 쌓지 않고 마지막 한 번만 둔다. routes/auth.mark_login)
+    last_login_at: datetime | None = None
+    last_login_method: str | None = None  # password(비밀번호·가입 직후) · google · link(서명 토큰, 검수·도구용)
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -333,7 +336,8 @@ ADDED_COLUMNS = [("items", "stars_checked_at", "TIMESTAMP WITHOUT TIME ZONE"), (
                  ("users", "application", "JSONB"), ("users", "applied_at", "TIMESTAMP WITHOUT TIME ZONE"),
                  ("users", "briefing_requested_at", "TIMESTAMP WITHOUT TIME ZONE"),
                  ("users", "password_hash", "VARCHAR"), ("users", "google_sub", "VARCHAR"),
-                 ("users", "login_failures", "INTEGER NOT NULL DEFAULT 0"), ("users", "login_locked_until", "TIMESTAMP WITHOUT TIME ZONE")]
+                 ("users", "login_failures", "INTEGER NOT NULL DEFAULT 0"), ("users", "login_locked_until", "TIMESTAMP WITHOUT TIME ZONE"),
+                 ("users", "last_login_at", "TIMESTAMP WITHOUT TIME ZONE"), ("users", "last_login_method", "VARCHAR")]
 
 # 초대제 이전에 있던 사용자는 approved로 두고, 그 뒤에 새로 만들어지는 행만 pending으로 시작한다 (2026-09-16). 여러 번 돌려도 같다
 USERS_MIGRATION = [
