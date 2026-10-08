@@ -9,6 +9,7 @@
 - 구글: 설정 없으면 버튼 숨김·/auth/google은 google_off, 있으면 동의 화면으로(state 쿠키), state 틀리면 실패, aud 다르면 실패,
   맞으면 계정 생성(google_sub), 같은 구글 계정은 같은 사용자, 같은 이메일 계정에는 붙임, 개발 모드 관리자 아닌 주소는 dev_only
 - 서명 토큰 로그인(/auth/verify, 검수·도구용): 만료·재사용·위조 거부 / 세션 쿠키 변조 401 / 로그아웃
+- 마지막 로그인(2026-10-09): 가입 직후·비밀번호는 password, 링크는 link, 구글은 google로 시각과 함께 남고 관리자 사용자 목록에 나온다
 """
 import json
 import os
@@ -116,6 +117,8 @@ def main() -> int:
             with db.get_engine().begin() as conn:
                 conn.execute(update(db.User).where(db.User.email == A).values(login_locked_until=None))
             ok_login = c.post("/api/auth/login", json={"email": A, "password": PASSWORD})
+            a_login = user(A)
+            admin_rows = {r["email"]: r for r in c.get("/api/admin/users").json()["users"]}
             login_page = c.get("/login", follow_redirects=False)
             # 틀린 번호 5번이면 다시 받아야
             c.post("/api/auth/logout")
@@ -134,6 +137,7 @@ def main() -> int:
                 conn.execute(db.EmailCode.__table__.delete().where(db.EmailCode.email == C))
             link_login = c.get(f"/auth/verify?token={tokens.sign('login', {'email': C}, 600)}", follow_redirects=False)
             legacy_id = common.user_id(C)
+            c_link = user(C)
             c.post("/api/auth/logout")
             legacy = signup(c, C)
             legacy_user = user(C)
@@ -148,8 +152,9 @@ def main() -> int:
             notices = [m for m in common.mails() if "새 가입 신청" in m["subject"] and B in m["text"]]
             # 구글
             c.post("/api/auth/logout")
-            off_options = c.get("/api/auth/options").json()
-            off = c.get("/auth/google", follow_redirects=False)
+            with env(GOOGLE_CLIENT_ID=None, GOOGLE_CLIENT_SECRET=None):  # .env에 실제 키가 있어도 '설정 없음'을 본다 (10/9부터 키 있음)
+                off_options = c.get("/api/auth/options").json()
+                off = c.get("/auth/google", follow_redirects=False)
             with env(GOOGLE_CLIENT_ID="client-id", GOOGLE_CLIENT_SECRET="client-secret"):
                 on_options = c.get("/api/auth/options").json()
                 start, g_first = google_login(c, G, "g-sub-1")
@@ -227,6 +232,11 @@ def main() -> int:
         "state·aud_틀리면_실패": bad_state.headers["location"] == "/login?error=google_failed"
         and bad_aud.headers["location"] == "/login?error=google_failed",
         "같은_이메일_계정에_구글을_붙임": link_a.status_code == 303 and a_linked.id == a_user.id and a_linked.google_sub == "g-sub-a",
+        "마지막_로그인_시각·방법_기록(가입·비밀번호·링크·구글)": a_user.last_login_method == "password" and a_user.last_login_at is not None
+        and a_login.last_login_method == "password" and a_login.last_login_at >= a_user.last_login_at
+        and c_link.last_login_method == "link" and g_user.last_login_method == "google"
+        and a_linked.last_login_method == "google" and a_linked.last_login_at >= a_login.last_login_at,
+        "관리자_사용자목록에_마지막_로그인": admin_rows[A]["last_login_method"] == "password" and bool(admin_rows[A]["last_login_at"]),
         "개발모드_관리자_아닌_구글은_dev_only": dev_only.headers["location"] == "/login?error=dev_only",
         "운영모드_구글_일반은_승인대기": g2.headers["location"] == "/pending" and g2_user is not None and g2_user.status == "pending",
         "서명토큰_만료·위조·재사용_거부": expired.headers["location"] == "/login?error=expired"

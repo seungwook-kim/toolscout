@@ -87,6 +87,11 @@ def set_session(response: Response, user: db.User) -> Response:
     return response
 
 
+def mark_login(user: db.User, method: str) -> None:
+    """로그인에 성공했을 때 마지막 로그인 시각·방법을 적는다(커밋은 부르는 쪽). 관리자 사용자 목록에 보인다 (2026-10-09 사용자 결정 (가))."""
+    user.last_login_at, user.last_login_method = db.utcnow(), method
+
+
 def login_response(user: db.User, target: str) -> RedirectResponse:
     return set_session(RedirectResponse(target, status_code=303), user)
 
@@ -118,6 +123,7 @@ def verify_link(token: str = "") -> RedirectResponse:
             s.add(user)
         if models.dev_mode():
             user.is_test = True  # 개발 모드: 로그인한 사용자도 브리핑 대상(is_test)에 넣는다
+        mark_login(user, "link")
         s.commit()
         s.refresh(user)
     return login_response(user, next_path(user))

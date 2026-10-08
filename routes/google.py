@@ -21,7 +21,7 @@ from sqlmodel import select
 import db
 import models
 from routes import tokens
-from routes.auth import base_url, google_ready, is_admin, login_response, next_path, notify_admins_new_user
+from routes.auth import base_url, google_ready, is_admin, login_response, mark_login, next_path, notify_admins_new_user
 
 router = APIRouter(include_in_schema=False)
 AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -102,6 +102,7 @@ def callback(request: Request, code: str = "", state: str = "", error: str = "")
             return _fail("blocked")
         user.google_sub = identity["sub"]
         user.is_test = user.is_test or models.dev_mode()
+        mark_login(user, "google")
         s.commit()
         s.refresh(user)
     if created:
