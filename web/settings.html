@@ -88,6 +88,7 @@
             <label class="label" for="free">자유 한 줄 <span class="req-mark">(선택)</span> <span class="chg" data-chg="free" hidden>· 바뀜</span></label>
             <input class="input" id="free" type="text" maxlength="100" placeholder="예: 사내 AI 브리핑 봇을 만들고 있어요" aria-describedby="free-help">
             <div class="frow"><p class="help" id="free-help"></p><span class="ctr" id="free-ctr" aria-hidden="true">0/100</span></div>
+            <p class="msg msg-bad" id="free-over" hidden>100자가 넘어요. 저장하면 100자 뒤는 잘려요</p>
           </div>
         </section>
 
@@ -194,7 +195,11 @@
       $("sb-list").textContent = list.map(([, label]) => label).join(" · ");
       $("mk-help").hidden = !list.length;
       if (!list.length) { $("savebar").classList.remove("leaving"); $("sb-normal").hidden = false; $("sb-leave").hidden = true; leaveHref = ""; }
+      // 서버는 100자까지만 저장한다(memory.save_profile). 예전에 더 길게 저장된 글은 저장하면 뒤가 잘리므로 미리 알린다
+      const over = $("free").value.length > 100;
       $("free-ctr").textContent = `${$("free").value.length}/100`;
+      $("free-ctr").style.color = over ? "var(--bad)" : "";
+      $("free-over").hidden = !over;
       return list;
     }
 
