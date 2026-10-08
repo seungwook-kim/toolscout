@@ -41,3 +41,6 @@ railway up --service <크론 서비스> --detach   # 크론 (처음 한 번 rail
 
 ## 남은 일
 - Railway가 `railway.json`(Config as Code)을 2026-12-01까지만 받는다고 알린다(2026-10-07 `railway add` 경고). 그 전에 `.railway/railway.ts`(Infrastructure as Code)로 옮긴다 (`railway config migrate`)
+- 임시 비밀번호(2026-10-08 사용자 결정 "구글 붙이기 전 기존 계정 모두 123456, 디자인·기능 다 되면 지우고 제대로"): 그때 있던 계정
+  id 45·1·2·3·113·232의 password_hash를 123456으로 넣었다(로컬·Vercel 같은 DB). 끝나면 이 계정들의 password_hash를 비우고
+  본인 계정은 회원가입 화면(인증번호)이나 구글로 다시 정한다. 공개 주소라 그동안은 본인 이메일을 아는 사람이 관리자로 로그인할 수 있다

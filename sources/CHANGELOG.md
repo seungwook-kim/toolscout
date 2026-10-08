@@ -1,5 +1,6 @@
 # sources/ CHANGELOG
 
+- 2026-10-08 · claude_notes.py(신규): Claude 공식 릴리스 노트에서 날짜 창 안 항목을 뉴스로(제목 앞 "Claude: ", 본문 첫 링크가 원문), collect에 넣고 출처 등급 1 · 10/8 메일에서 "Max·Team 월 API 크레딧" 공지가 빠짐(Anthropic·Claude 공지가 소스에 없었다, 사용자 "기억하고 수정하자") · check_claude_notes 6·실측 10/7 항목 2건(하이쿠 5.5·월 API 크레딧)
 - 2026-09-27 · SourceResult.versions 추가, mcp_registry가 거르기 전 7일 갱신 서버의 저장소별 최신 버전(제목·버전·설명·설치 정보)을 채운다 · 받아 본 도구의 새 버전 알림(버전 업은 별 50 이상·상위 10건만 수집되어 그 전 목록이 필요) · check_fallbacks·check_catalog_title·check_news_window 통과, 실측 7일 갱신 6,430건·저장소 있음 4,570건
 
 - 2026-09-23 · skillsmp.py 추가(주제어 8개 검색·githubUrl로 합침·items에 없는 것만·게시자당 3건·별 수 상위 20건), collect에 연결 · 스킬 소스가 anthropics/skills 커밋 하나뿐이라 최근 10일 수집이 1건이고 스킬 카드가 한 장도 안 나갔다. SkillsMP는 검색(q 필수)만 열려 있고 updatedAt이 긁어 간 시각이라(같은 날 받은 319건이 모두 4~5일 전) 창으로는 신규를 못 가린다 · check_skillsmp 11항목(신규)·check_fallbacks·check_news_window·check_catalog_title·run_daily --fake 통과. 실제 수집 319건 중 20건 올림, 그 주소로 skill_check.read 3건 판독 성공
