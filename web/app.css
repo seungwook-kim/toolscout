@@ -1,9 +1,8 @@
 /* toolscout 공통 디자인 체계 (2026-10-09, 리디자인 1·2차 회의 합의안). 견본은 docs/design-reference.html
    이 파일: 토큰·바탕·앱 셸(상단바·탭·하단 탭)·버튼·입력·알림 띠·알약·확인 줄·저장 바·질문 시트.
-   카드·보드는 cards.css, 옛 화면 다리는 legacy.css. 화면 하나만 쓰는 모양은 그 화면 파일에 둔다.
+   카드·보드는 cards.css. 화면 하나만 쓰는 모양은 그 화면 파일에 둔다.
    색은 아래 토큰만 쓴다(토큰 밖에 색 값 없음). 중단점은 768px(모바일 아래)·1200px 둘 */
 @import url("cards.css");
-@import url("legacy.css");
 
 :root{
   --bg:#F3F4F6; --surface:#FFFFFF; --surface-2:#ECEEF2;

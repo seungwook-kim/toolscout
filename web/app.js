@@ -104,12 +104,12 @@ const TS = {
   },
 
   // ===== 앱 셸 =====
-  // 공통 바탕: 아이콘, 본문 건너뛰기, 토스트, 상단바 자리(#appbar 또는 옛 #mast, 없으면 main 앞에 만든다)
+  // 공통 바탕: 아이콘, 본문 건너뛰기, 토스트, 상단바 자리(#appbar, 없으면 main 앞에 만든다)
   frame(barHtml) {
     TS.sprite();
     const main = document.querySelector("main");
     if (main && !main.id) main.id = "main";
-    let bar = document.getElementById("appbar") || document.getElementById("mast");
+    let bar = document.getElementById("appbar");
     if (!bar) {
       const html = '<header id="appbar"></header>';
       if (main) main.insertAdjacentHTML("beforebegin", html); else document.body.insertAdjacentHTML("afterbegin", html);
@@ -231,15 +231,6 @@ const TS = {
       go.disabled = true;
       try { await onOk(); close(line); } catch (e) { TS.say(e.message); go.disabled = false; }
     };
-  },
-
-  // 옛 화면용 다리 (2026-10-09). 화면 담당이 TS.shell·TS.bare로 바꾸면 이 함수와 web/legacy.css를 지운다
-  async mast({ active = "", title, when = "", basis = "", pipe = "", session = true }) {
-    document.body.classList.add("legacy");
-    const me = session ? await TS.shell({ active, ask: false }) : (TS.bare(), null);
-    const main = document.querySelector("main");
-    if (main) main.insertAdjacentHTML("afterbegin", `<div class="legacy-head"><h1>${when ? `<small>${TS.esc(when)}</small>` : ""}${TS.esc(title)}</h1>${basis ? `<p class="basis">${basis}</p>` : ""}${pipe}</div>`);
-    return me;
   },
 };
 

@@ -101,7 +101,7 @@ def strip_tokens(css: str) -> str:
 def check_b() -> dict:
     """화면 파일 정적 검사 (새 공통 체계: app.css 토큰 + cards.css + 앱 셸 app.js)."""
     app_css = read(WEB / "app.css")
-    css_all = app_css + read(WEB / "cards.css") + read(WEB / "legacy.css")
+    css_all = app_css + read(WEB / "cards.css")
     rules = strip_tokens(css_all)
 
     dark_auto = "prefers-color-scheme" in app_css and ':root:not([data-theme="light"])' in app_css
@@ -122,7 +122,7 @@ def check_b() -> dict:
     html_pretendard = in_every_html(lambda t: "pretendard" in t.lower())
     html_jetbrains = in_every_html(lambda t: "jetbrains" in t.lower())
     html_app_css = in_every_html(lambda t: "/static/app.css" in t)
-    html_bar = in_every_html(lambda t: 'id="appbar"' in t or 'id="mast"' in t)
+    html_bar = in_every_html(lambda t: 'id="appbar"' in t)
     html_manifest_link = in_every_html(lambda t: '<link rel="manifest" href="/static/manifest.json">' in t)
     html_theme_color = in_every_html(lambda t: '<meta name="theme-color" content="#15181E">' in t)
 

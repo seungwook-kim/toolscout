@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-10-09 · web/check_rules의 디자인 참고파일 항목을 새 체계로(참고파일이 app.css를 링크하고 768px 기준 규칙이 있는지), check_design에서 legacy.css·옛 #mast 허용 제거 · 옛 다리 삭제 · 통과
+- 2026-10-09 · web/check_settings에 첫 설정 이동 항목 2개(프로필 비면 /·/history·/settings가 /onboarding으로, 차면 /onboarding은 /로) · 새 /onboarding 화면 · 통과
 - 2026-10-09 · web/check_design B를 새 체계로(토큰 라이트·다크, 공통 컴포넌트, 토큰 밖 색값 없음, 앱 셸·카드 함수 요소). A·C는 그대로 · 리디자인 공통 체계 · 통과
 - 2026-10-09 · web/check_auth에 마지막 로그인 항목 2개(가입·비밀번호·링크·구글 방법과 시각, 관리자 사용자 목록), 구글 '설정 없음' 항목은 .env에 실제 키가 있어도 키를 비우고 본다 · 마지막 로그인 기록(사용자 결정 10/9), 실제 구글 키 등록 · 34항목 통과
 - 2026-10-08 · sources/check_claude_notes.py(신규, 6항목), agent/check_same_story에 also_reported·해설가 입력 항목 2개 · Claude 소식 누락 고침(사용자 "기억하고 수정하자") · 통과

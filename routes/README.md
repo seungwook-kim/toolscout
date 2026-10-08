@@ -8,7 +8,7 @@
 - `invite.py`: 관리자 가입 승인 대기 목록·승인·차단·사용자 목록·변경 이력(`/api/admin/*`, ADMIN_EMAILS만, 상태가 바뀌면 status_changes에 기록). 초대 코드·신청서는 2026-10-08에 뺐다
 - `demo.py`: 공개 데모 `/demo`와 `/api/demo/briefing`. `web/demo_sample.json` 고정 예시(가상 회사·제품, DB 없음), IP당 분당 60회
 - `tokens.py`: SESSION_SECRET HMAC 서명 토큰(로그인·세션·피드백 링크), 1회용은 `used_tokens`에 해시로 기록
-- `pages.py`: `/login`(첫 화면) `/signup` `/pending` `/` `/settings` `/history` `/admin/invites` `/f` 화면과 `/robots.txt`. 세션 없으면 /login, 승인 전이면 /pending, 프로필 없으면 /settings, 데모 말고는 noindex
+- `pages.py`: `/login`(첫 화면) `/signup` `/pending` `/onboarding` `/` `/settings` `/history` `/admin/invites` `/f` 화면과 `/robots.txt`. 세션 없으면 /login, 승인 전이면 /pending, 프로필 없으면 /onboarding(첫 설정), 데모 말고는 noindex
 - `w1.py`: 아침 브리핑 작업을 직접 부르는 API (X-Service-Key). 실행·지금 발송·예약 상태
 - `settings.py`: 프로필(직군 5·주제 10 관심도·도구·자유 한 줄·알림 채널·시간), 내 기억 지우기, 계정 삭제, 오늘 브리핑 지금 만들기(본인만)
 - `briefings.py`: 오늘·날짜별 브리핑(내 카드·피드백 상태·N건 중 M건·기준 한 줄·관리자만 트레이스·카드 item_meta·run_stats), 날짜 목록, 키워드 검색

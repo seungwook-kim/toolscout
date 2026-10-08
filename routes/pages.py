@@ -3,7 +3,8 @@
 - /login: 첫 화면(2026-10-08 사용자 결정). 이메일·비밀번호 로그인, 회원가입 버튼, 구글 로그인, 가입 없이 데모 보기
 - /signup: 이메일(아이디) → 인증번호 받기 → 인증번호 확인 → 비밀번호 정하고 가입 / /pending: 관리자 승인 대기
 - /: 오늘 브리핑 / /settings: 프로필·설정 / /history: 지난 브리핑 / /f: 메일 피드백 링크 결과 / /admin/invites: 관리자 가입 승인·사용자 관리
-- 로그인이 필요한 화면은 세션이 없으면 /login으로, 승인 전이면 /pending으로, 프로필이 비었으면 /settings로 보낸다.
+- /onboarding: 첫 설정(2026-10-09 리디자인). 승인됐고 프로필(직군)이 비면 /settings 대신 이 화면. 프로필이 차 있으면 /로 보낸다
+- 로그인이 필요한 화면은 세션이 없으면 /login으로, 승인 전이면 /pending으로, 프로필이 비었으면 /onboarding으로 보낸다.
   예전 초대 코드 화면 주소 /invite는 /pending으로 보낸다
 - 공개 데모 /demo는 routes/demo.py에 있다. 색인은 /demo만 허용하고 나머지 화면은 noindex (2026-09-16 사용자 결정)
 """
@@ -31,7 +32,7 @@ def _gate(request: Request, page: str, need_profile: bool = True):
     if not approved(user):
         return RedirectResponse("/pending", status_code=303)
     if need_profile and not profile_done(user):
-        return RedirectResponse("/settings", status_code=303)
+        return RedirectResponse("/onboarding", status_code=303)
     return _page(page)
 
 
@@ -70,7 +71,17 @@ def invite():
 
 @router.get("/settings")
 def settings(request: Request):
-    return _gate(request, "settings.html", need_profile=False)
+    return _gate(request, "settings.html")
+
+
+@router.get("/onboarding")
+def onboarding(request: Request):
+    user = current_user(request)
+    if user is None:
+        return RedirectResponse("/login", status_code=303)
+    if not approved(user):
+        return RedirectResponse("/pending", status_code=303)
+    return RedirectResponse("/", status_code=303) if profile_done(user) else _page("onboarding.html")
 
 
 @router.get("/history")

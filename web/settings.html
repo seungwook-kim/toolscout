@@ -2,185 +2,338 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>toolscout 설정</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
   <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/profile.css">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#15181E">
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
   <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <style>
+    /* 설정 전용 모양. 색은 토큰만 */
+    .set{max-width:720px;margin-inline:auto;display:grid;gap:16px;padding-block:24px 96px}
+    .set > *{min-width:0}
+    .set-head{display:grid;gap:2px}
+    .set-head h1{font-size:1.5rem;font-weight:700}
+    .set-form{display:grid;gap:16px;min-width:0}
+    .sp{display:grid;gap:20px;scroll-margin-top:calc(var(--bar) + 64px);min-width:0}
+    .sp > *{min-width:0}
+    .sp-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
+    .sp-h h2{font-size:1.0625rem;font-weight:700}
+    .sp-h .help{flex-basis:100%}
+    .sp-h .help.inline{flex-basis:auto}
+    .sp-desc{color:var(--ink-2)}
+    .set-sk{display:grid;gap:16px}
+    .set-sk .sk{border-radius:var(--r-panel)}
+    .set-jump{display:none}
+    @media (max-width:1199px){
+      .set-jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar));z-index:15;display:flex;gap:8px;overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:calc(-1 * var(--gutter));padding:4px var(--gutter);scrollbar-width:none}
+      .set-jump a{flex:none;display:inline-flex;align-items:center;min-height:36px;margin-block:4px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.8125rem;font-weight:600;color:var(--ink);text-decoration:none}
+    }
+    .frow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px}
+    .mk-area{display:grid;gap:10px;justify-items:start;min-width:0}
+    .mk-area > *{max-width:100%}
+    .dz-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 16px;align-items:center;padding-top:16px;border-top:1px solid var(--line)}
+    .dz-row > .confirm-line,.dz-row > .msg{grid-column:1/-1}
+    .dz-text{display:grid;gap:2px}
+    .dz-text h3{font-size:.9375rem;font-weight:600}
+    .dz-text p{font-size:.8125rem;color:var(--ink-2)}
+    @media (max-width:560px){.dz-row{grid-template-columns:minmax(0,1fr)}.dz-row > .btn{justify-self:start}}
+    .del-list{display:grid;gap:2px;padding-left:20px;list-style:disc;color:var(--ink-2)}
+    .del-target{font-size:.8125rem;color:var(--ink-2)}
+    .del-box .field{gap:4px}
+    @media (max-width:767px){.set{padding-block:16px 24px}.set-head h1{font-size:1.25rem}}
+  </style>
 </head>
-<body>
-  <header class="mast" id="mast"></header>
-  <main>
-    <section class="sec">
-      <div class="sec-h"><h2>프로필</h2><span class="hint" id="intro"></span></div>
-      <div class="forme" id="notice" hidden><b>안내</b><p id="notice-text"></p></div>
-      <form id="profile-form">
-        <div class="item">
-          <div class="mark"></div>
-          <div>
-            <div class="topic" id="roles-label">직군 (필수)</div>
-            <div class="acts" id="roles" role="group" aria-labelledby="roles-label"></div>
+<body class="page-settings">
+  <header id="appbar"></header>
+  <main id="main" class="wrap">
+    <div class="set" id="set">
+      <header class="set-head">
+        <h1>설정</h1>
+        <p class="help">저장한 내용은 다음 브리핑부터 반영돼요.</p>
+      </header>
+      <div class="alert alert-note" id="dev-note" hidden>
+        <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+        <div class="body"><span>개발 모드예요. 프로필과 질문이 무료 모델로 갈 수 있어요. 회사 기밀은 적지 마세요.</span></div>
+      </div>
+      <nav class="set-jump" aria-label="설정 구역">
+        <a href="#sec-me">나에 대해</a><a href="#sec-topics">관심 주제</a><a href="#sec-delivery">받는 방법</a><a href="#sec-make">지금 만들기</a><a href="#sec-acct">기억과 계정</a>
+      </nav>
+      <div class="set-sk" id="set-sk" aria-busy="true" aria-label="불러오는 중">
+        <div class="sk" style="height:260px"></div><div class="sk" style="height:520px"></div><div class="sk" style="height:180px"></div>
+      </div>
+
+      <div id="set-body" hidden>
+      <form id="profile-form" class="set-form" novalidate>
+        <section class="panel sp" id="sec-me" aria-labelledby="me-h">
+          <div class="sp-h"><h2 id="me-h">나에 대해</h2><p class="help">직군·쓰는 도구·한 줄로 카드를 고르고 ‘나에게’ 문장을 써요.</p></div>
+          <fieldset class="rchips role" id="roles">
+            <legend class="fs-legend" id="roles-label">직군 <span class="req-mark">(필수)</span> <span class="chg" data-chg="role" hidden>· 바뀜</span></legend>
+          </fieldset>
+          <div class="alert alert-note" id="role-note" hidden>
+            <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+            <div class="body"><span id="role-note-t"></span><button type="button" class="btn btn-sm" id="role-fill"></button></div>
+          </div>
+          <div class="field">
+            <label class="label" for="tag-in">쓰는 도구 <span class="req-mark">(선택)</span> <span class="chg" data-chg="tools" hidden>· 바뀜</span></label>
+            <div class="tagbox" id="tagbox"><ul class="tags" id="tags" role="list" aria-label="넣은 도구"></ul><input id="tag-in" type="text" autocomplete="off" enterkeyhint="done" placeholder="예: python, claude code" aria-describedby="tag-help tag-err"></div>
+            <div class="frow"><p class="help" id="tag-help">Enter나 쉼표로 넣어요 · 한 개 30자, 15개까지</p><span class="ctr" id="tag-ctr" aria-hidden="true">0/15</span></div>
+            <p class="msg msg-bad" id="tag-err" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label" for="free">자유 한 줄 <span class="req-mark">(선택)</span> <span class="chg" data-chg="free" hidden>· 바뀜</span></label>
+            <input class="input" id="free" type="text" maxlength="100" placeholder="예: 사내 AI 브리핑 봇을 만들고 있어요" aria-describedby="free-help">
+            <div class="frow"><p class="help" id="free-help"></p><span class="ctr" id="free-ctr" aria-hidden="true">0/100</span></div>
+          </div>
+        </section>
+
+        <section class="panel sp" id="sec-topics" aria-labelledby="tp-h">
+          <div class="sp-h"><h2 id="tp-h">관심 주제</h2><button type="button" class="btn btn-sm btn-quiet" id="to-preset">직군 기본값으로</button>
+            <p class="help">−5면 그 주제 카드는 받지 않아요. 카드의 관심없음·써봤음으로도 1씩 움직여요.</p></div>
+          <p class="wscale" aria-hidden="true"><span><span class="mono">−5</span> 받지 않음</span><span><span class="mono">0</span> 보통</span><span><span class="mono">+5</span> 많이</span><span>· 트랙 아래 눈금이 직군 기본값</span></p>
+          <div class="wt" id="topics" role="group" aria-labelledby="tp-h"></div>
+        </section>
+
+        <section class="panel sp" id="sec-delivery" aria-labelledby="dl-h">
+          <div class="sp-h"><h2 id="dl-h">받는 방법</h2></div>
+          <dl class="info-dl">
+            <div><dt>받는 시각</dt><dd>매일 아침 <span class="mono">08:00</span></dd></div>
+            <div><dt>받는 곳</dt><dd><svg class="ic" aria-hidden="true"><use href="#i-mail"/></svg><span id="mail-to">이메일</span><span class="help">카카오톡 알림은 준비 중이에요.</span></dd></div>
+          </dl>
+        </section>
+
+        <div class="savebar" id="savebar" role="region" aria-label="저장하지 않은 바뀐 내용" tabindex="-1" hidden>
+          <div class="sb-text">
+            <p class="sb-n" id="sb-n">바뀐 내용 <span class="mono">0</span>개</p>
+            <p class="sb-list" id="sb-list"></p>
+            <p class="msg msg-bad" id="save-msg" role="alert" hidden></p>
+          </div>
+          <div class="sb-acts" id="sb-normal">
+            <button type="button" class="btn btn-quiet" id="sb-revert">되돌리기</button>
+            <button type="submit" class="btn btn-primary" id="sb-save">저장</button>
+          </div>
+          <div class="sb-acts" id="sb-leave" hidden>
+            <button type="button" class="btn" id="sb-discard">버리고 이동</button>
+            <button type="button" class="btn btn-primary" id="sb-save-go">저장하고 이동</button>
           </div>
         </div>
-        <div class="item">
-          <div class="mark"></div>
-          <div>
-            <div class="topic">주제 관심도</div>
-            <details class="why" id="topics-box">
-              <summary>직군에 맞춰 채워져 있어요. 펼쳐서 조정</summary>
-              <div id="topics"></div>
-            </details>
-          </div>
-        </div>
-        <div class="item">
-          <div class="mark"></div>
-          <div>
-            <label class="topic" for="tools">쓰는 도구 (쉼표로 구분)</label>
-            <div class="acts"><input id="tools" type="text" placeholder="python, claude code, notion"></div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="mark"></div>
-          <div>
-            <label class="topic" for="free">자유 한 줄 (선택, 100자까지)</label>
-            <div class="acts"><input id="free" type="text" maxlength="100" placeholder="예: 사내 AI 브리핑 봇을 만들고 있어요"></div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="mark"></div>
-          <div>
-            <label class="topic" for="channel">알림 채널과 시간</label>
-            <div class="acts">
-              <select id="channel"></select>
-              <select id="time" aria-label="알림 시간"></select>
-            </div>
-          </div>
-        </div>
-        <div class="acts"><button class="go" type="submit">저장</button><span class="fb" id="save-msg"></span></div>
       </form>
-    </section>
 
-    <section class="sec">
-      <div class="sec-h"><h2>오늘 브리핑 지금 만들기</h2><span class="hint">10분쯤 걸려요</span></div>
-      <div class="item">
-        <div class="mark"></div>
-        <div>
-          <p class="sum">오늘 뉴스와 도구를 모아 내 기준으로 바로 골라 해설합니다.</p>
-          <div class="acts"><button class="act p" id="make-now" type="button">지금 만들기</button><span class="fb" id="now-msg"></span></div>
+      <section class="panel sp" id="sec-make" aria-labelledby="mk-h" style="margin-top:16px">
+        <div class="sp-h"><h2 id="mk-h">오늘 브리핑 지금 만들기</h2><p class="help inline">누르면 바로 실행돼요</p></div>
+        <p class="sp-desc">오늘 소식과 도구를 저장한 기준으로 골라 만들고, 다 되면 메일로도 보내요. 10분쯤 걸려요.</p>
+        <div class="mk-area">
+          <button type="button" class="btn btn-lg" id="make-now"><svg class="ic" aria-hidden="true"><use href="#i-play"/></svg><span id="mk-lab">지금 만들기</span></button>
+          <p class="help" id="mk-help" hidden>저장하지 않은 바뀐 내용을 먼저 저장하고 만들어요.</p>
+          <p class="msg" id="now-msg" role="status" hidden></p>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="sec">
-      <div class="sec-h"><h2>기억과 계정</h2></div>
-      <div class="item">
-        <div class="mark"></div>
-        <div>
-          <p class="sum">기억을 지우면 주제 가중치, 본 항목, 피드백 기록이 사라지고 프로필은 남아요. 계정 삭제는 되돌릴 수 없어요.</p>
-          <div class="acts">
-            <button class="act" id="forget" type="button">내 기억 지우기</button>
-            <button class="act" id="delete" type="button">계정 삭제</button>
-            <span class="fb" id="danger-msg"></span>
+      <section class="panel sp" id="sec-acct" aria-labelledby="ac-h" style="margin-top:16px">
+        <div class="sp-h"><h2 id="ac-h">기억과 계정</h2><p class="help inline">누르면 바로 실행돼요</p></div>
+        <dl class="info-dl" id="acct-info"></dl>
+        <div class="dz-row">
+          <div class="dz-text"><h3>기억 지우기</h3><p>주제 관심도, 본 카드 기록, 피드백을 지워요. 직군·쓰는 도구·한 줄은 남아요.</p></div>
+          <button type="button" class="btn btn-danger" id="forget" aria-expanded="false">기억 지우기</button>
+          <p class="msg msg-ok" id="danger-msg" role="status" hidden></p>
+        </div>
+        <div class="dz-row">
+          <div class="dz-text"><h3>계정 삭제</h3><p>계정과 브리핑·질문·피드백 기록을 모두 지워요.</p></div>
+          <button type="button" class="btn btn-danger" id="delete" aria-expanded="false" aria-controls="del-box">계정 삭제</button>
+          <div class="confirm-line del-box" id="del-box" tabindex="-1" hidden>
+            <p><b>계정을 지우면 되돌릴 수 없어요.</b> 아래 다섯 가지가 모두 지워져요.</p>
+            <ul class="del-list"><li>계정과 로그인 정보</li><li>지난 브리핑</li><li>질문 기록</li><li>카드에 남긴 피드백</li><li>주제 관심도</li></ul>
+            <p id="del-admin" hidden>관리자 권한은 서버 설정의 관리자 이메일에 남아요. 같은 이메일로 다시 가입하면 바로 승인돼요. 변경 이력의 ‘누가’ 칸은 ‘(지워진 계정)’으로 바뀌어요.</p>
+            <div class="field">
+              <label class="label" for="del-email">확인을 위해 이메일을 그대로 입력하세요</label>
+              <p class="mono del-target" id="del-target"></p>
+              <input class="input" id="del-email" type="email" inputmode="email" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-describedby="del-why">
+              <p class="help" id="del-why">이메일이 같아야 지울 수 있어요.</p>
+            </div>
+            <div class="acts"><button type="button" class="btn btn-danger" id="del-go" aria-disabled="true" aria-describedby="del-why">계정 영구 삭제</button><button type="button" class="btn btn-quiet" id="del-cancel">취소</button></div>
           </div>
         </div>
+      </section>
       </div>
-    </section>
+    </div>
   </main>
   <script src="/static/app.js"></script>
+  <script src="/static/profile.js"></script>
   <script>
-    let state = null;
-    let touched = false;
-    let selectedRole = null;
     const $ = (id) => document.getElementById(id);
+    let state = null, me = null, saved = null, role = null, tagCtl = null, leaveHref = "";
+    const LABELS = { role: "직군", tools: "쓰는 도구", free: "자유 한 줄" };
 
-    function renderTopics(weights) {
-      $("topics").innerHTML = Object.entries(state.topics).map(([id, name]) => `
-        <div class="forme"><b>${TS.esc(name)}</b><span><input type="range" min="-5" max="5" step="1" data-topic="${id}" value="${weights[id] ?? 0}" aria-label="${TS.esc(name)} 관심도"><output>${weights[id] ?? 0}</output></span></div>`).join("");
-      $("topics").querySelectorAll("input").forEach((input) => {
-        input.oninput = () => { input.nextElementSibling.textContent = input.value; touched = true; };
+    // 지금 입력값과 저장된 값. 다르면 "바뀜" 칸이 켜지고 저장 바가 나온다
+    const snapshot = () => ({ role, tools: tagCtl.get().join(","), free: $("free").value.trim(), weights: Profile.readTopics($("topics")) });
+    function changes() {
+      const now = snapshot(), out = [];
+      if (now.role !== saved.role) out.push(["role", LABELS.role]);
+      if (now.tools !== saved.tools) out.push(["tools", LABELS.tools]);
+      if (now.free !== saved.free) out.push(["free", LABELS.free]);
+      const rows = [];
+      document.querySelectorAll(".wrow").forEach((row) => {
+        const k = row.dataset.k, diff = now.weights[k] !== saved.weights[k];
+        row.querySelector(".chg").hidden = !diff;
+        if (diff) rows.push(state.topics[k]);
       });
+      if (rows.length) out.push(["topics", `관심 주제 ${rows.length}개`]);
+      document.querySelectorAll("[data-chg]").forEach((el) => { el.hidden = !out.some(([k]) => k === el.dataset.chg); });
+      return out;
+    }
+    let busy = false;
+    function refresh() {
+      const list = changes();
+      $("savebar").hidden = !list.length;
+      document.body.classList.toggle("has-savebar", list.length > 0);
+      $("sb-n").innerHTML = `바뀐 내용 <span class="mono">${list.length}</span>개`;
+      $("sb-list").textContent = list.map(([, label]) => label).join(" · ");
+      $("mk-help").hidden = !list.length;
+      if (!list.length) { $("savebar").classList.remove("leaving"); $("sb-normal").hidden = false; $("sb-leave").hidden = true; leaveHref = ""; }
+      $("free-ctr").textContent = `${$("free").value.length}/100`;
+      return list;
     }
 
-    function renderRoles(current) {
-      selectedRole = current;
-      $("roles").innerHTML = state.roles.map((role) =>
-        `<button class="act" type="button" aria-pressed="${role === selectedRole}" data-role="${TS.esc(role)}">${TS.esc(role)}</button>`).join("");
-      $("roles").querySelectorAll("button").forEach((b) => {
-        b.onclick = () => {
-          selectedRole = b.dataset.role;
-          $("roles").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-          if (!touched && !state.profile.has_weights) renderTopics(state.presets[selectedRole]);
-        };
+    function renderRoles() {
+      $("roles").querySelectorAll(".rchip").forEach((x) => x.remove());
+      $("roles").insertAdjacentHTML("beforeend", state.roles.map((r) =>
+        `<label class="rchip"><input type="radio" name="role" value="${TS.esc(r)}"${r === role ? " checked" : ""}>${TS.esc(r)}</label>`).join(""));
+      $("roles").querySelectorAll("input").forEach((input) => {
+        input.onchange = () => { role = input.value; roleChanged(); };
       });
+    }
+    // 직군을 바꿔도 관심 주제 숫자는 그대로 두고, 눈금(기본값)만 새 직군 것으로 바꾼다. 채우기는 눌렀을 때만
+    function roleChanged() {
+      const keep = Profile.readTopics($("topics"));
+      drawTopics(keep);
+      const differs = role !== saved.role;
+      $("role-note").hidden = !differs;
+      if (differs) {
+        $("role-note-t").textContent = `관심 주제는 지금 값 그대로예요. 줄마다 붙은 ‘기본’은 ${role} 기본값이에요.`;
+        $("role-fill").textContent = `${role} 기본값으로 채우기`;
+      }
+      refresh();
+    }
+    function drawTopics(weights) { Profile.topics($("topics"), state, weights, role, refresh); }
+    $("role-fill").onclick = () => { drawTopics(state.presets[role]); refresh(); TS.say(`${role} 기본값으로 채웠어요`); };
+    $("to-preset").onclick = () => { drawTopics(state.presets[role]); refresh(); TS.say(`${role} 기본값으로 채웠어요`); };
+
+    function fill(profileState) {
+      state = profileState;
+      const p = state.profile;
+      role = p.role;
+      renderRoles();
+      drawTopics(p.weights);
+      if (tagCtl) tagCtl.set(p.tools_tags || []);
+      $("free").value = p.free_text || "";
+      saved = { role, tools: (p.tools_tags || []).join(","), free: (p.free_text || "").trim(), weights: { ...p.weights } };
+      $("role-note").hidden = true;
+      refresh();
     }
 
     async function load() {
-      state = await TS.api("/api/profile");
-      await TS.mast({ active: "/settings", title: "설정", basis: TS.basis(state) });
-      const p = state.profile;
-      $("intro").textContent = state.first_time ? "처음 오셨네요. 직군을 고르고 저장하면 내일 아침부터 내 기준 브리핑이 와요." : "바뀐 내용은 다음 브리핑부터 반영돼요.";
-      if (state.first_time) {
-        $("notice").hidden = false;
-        $("notice-text").textContent = state.dev_mode
-          ? "개발 모드에서는 프로필과 질문이 무료 모델(로컬·Groq·Gemini·OpenRouter)로 전송될 수 있어요. 공개돼도 괜찮은 내용만 적어 주세요."
-          : "프로필 3칸과 질문은 해설을 위해 학습에 쓰지 않는 유료 API로 전송됩니다. 회사 기밀은 적지 마세요.";
-      }
-      renderRoles(p.role);
-      renderTopics(p.weights);
-      $("tools").value = (p.tools_tags || []).join(", ");
-      $("free").value = p.free_text || "";
-      $("channel").innerHTML = state.channels.map((c) => `<option value="${c.id}" ${c.ready ? "" : "disabled"} ${c.id === p.channel ? "selected" : ""}>${TS.esc(c.label)}</option>`).join("");
-      $("time").innerHTML = state.notify_times.map((t) => `<option ${t === p.notify_time ? "selected" : ""}>${t}</option>`).join("");
+      me = await TS.shell({ active: "/settings" });
+      $("dev-note").hidden = !me.dev_mode;
+      $("free-help").textContent = me.dev_mode ? "개발 모드에서는 무료 모델로 갈 수 있어요. 회사 기밀은 적지 마세요." : "해설을 쓰려고 학습에 쓰지 않는 유료 API로 보내요. 회사 기밀은 적지 마세요.";
+      $("mail-to").innerHTML = `이메일 · <span class="mono">${TS.esc(me.email)}</span>`;
+      $("del-target").textContent = me.email;
+      $("del-admin").hidden = !me.is_admin;
+      const way = { google: "Google", password: "이메일·비밀번호", link: "이메일 링크" }[me.login] || "이메일";
+      $("acct-info").innerHTML = `<div><dt>이메일</dt><dd><span class="mono">${TS.esc(me.email)}</span></dd></div><div><dt>로그인</dt><dd>${way}</dd></div>
+        ${me.is_admin ? `<div><dt>권한</dt><dd><span class="tag-mode tag-admin">${TS.ic("lock")}관리자</span><span class="help">서버 설정의 관리자 이메일로 정해져요. 여기서 바꾸지 않아요.</span></dd></div>` : ""}`;
+      tagCtl = Profile.tags({ box: $("tagbox"), list: $("tags"), input: $("tag-in"), counter: $("tag-ctr"), error: $("tag-err") }, [], refresh);
+      fill(await TS.api("/api/profile"));
+      $("set-sk").hidden = true;
+      $("set-body").hidden = false;
     }
 
-    $("profile-form").onsubmit = async (event) => {
-      event.preventDefault();
-      if (!selectedRole) return TS.message($("save-msg"), "직군을 골라 주세요", true);
-      const weights = {};
-      $("topics").querySelectorAll("input").forEach((input) => { weights[input.dataset.topic] = Number(input.value); });
+    // 저장 (POST /api/profile). 알림 채널·시간은 화면에서 안 고르므로 지금 저장된 값을 그대로 보낸다
+    async function save() {
+      if (busy) return false;
+      if (!role) { showErr("직군을 골라 주세요"); return false; }
+      busy = true; showErr("");
+      const now = snapshot(), p = state.profile;
       try {
-        const data = await TS.api("/api/profile", { method: "POST", body: {
-          role: selectedRole, weights, tools_tags: $("tools").value.split(","), free_text: $("free").value,
-          channel: $("channel").value, notify_time: $("time").value } });
-        TS.message($("save-msg"), data.message);
-        if (state.first_time) { state.first_time = false; $("intro").textContent = "저장했어요. 아래에서 오늘 브리핑을 바로 만들 수 있어요."; }
-      } catch (e) { TS.message($("save-msg"), e.message, true); }
-    };
-
-    async function poll() {
-      const status = await TS.api("/api/briefing/now");
-      if (status.status === "running") { setTimeout(poll, 10000); return; }
-      $("make-now").disabled = false;
-      if (status.status === "done") TS.message($("now-msg"), "다 만들었어요. 오늘 화면에서 볼 수 있어요");
-      if (status.status === "error") TS.message($("now-msg"), "만들지 못했어요. 잠시 뒤 다시 시도해 주세요", true);
+        const data = await TS.api("/api/profile", { method: "POST", body: { role, weights: now.weights, tools_tags: tagCtl.get(), free_text: $("free").value,
+          channel: p.channel, notify_time: p.notify_time } });
+        fill(await TS.api("/api/profile"));
+        TS.say(data.message);
+        return true;
+      } catch (e) { showErr(e.message); return false; } finally { busy = false; }
     }
+    function showErr(text) { $("save-msg").hidden = !text; $("save-msg").innerHTML = text ? `${TS.ic("bad")}<span>${TS.esc(text)}</span>` : ""; }
+    $("profile-form").onsubmit = (event) => { event.preventDefault(); save(); };
+    $("sb-revert").onclick = () => { fill({ ...state }); showErr(""); TS.say("저장된 값으로 되돌렸어요"); };
+    $("free").addEventListener("input", refresh);
 
+    // 저장 안 한 채 다른 화면으로 가려 하면 저장 바가 늘어나 묻는다
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest("a[href]");
+      if (!a || a.target === "_blank" || a.getAttribute("href").startsWith("#") || !changes().length) return;
+      e.preventDefault();
+      leaveHref = a.href;
+      $("savebar").classList.add("leaving"); $("sb-normal").hidden = true; $("sb-leave").hidden = false;
+      $("savebar").focus();
+    });
+    $("sb-discard").onclick = () => { const to = leaveHref; saved = snapshot(); location.href = to; };
+    $("sb-save-go").onclick = async () => { const to = leaveHref; if (await save()) location.href = to; };
+    window.addEventListener("beforeunload", (e) => { if (changes().length && !leaveHref) { e.preventDefault(); e.returnValue = ""; } });
+
+    // 오늘 브리핑 지금 만들기 (POST·GET /api/briefing/now)
+    function nowMsg(text, kind = "") {
+      const el = $("now-msg");
+      el.hidden = !text; el.className = `msg${kind ? ` msg-${kind}` : ""}`;
+      el.innerHTML = text ? `${TS.ic(kind === "bad" ? "bad" : kind === "ok" ? "ok" : "clock")}<span>${text}</span>` : "";
+    }
+    async function poll() {
+      try {
+        const status = await TS.api("/api/briefing/now");
+        if (status.status === "running") { setTimeout(poll, 10000); return; }
+        $("make-now").disabled = false;
+        if (status.status === "done") nowMsg('다 만들었어요. <a href="/">오늘 화면</a>에서 볼 수 있어요', "ok");
+        if (status.status === "error") nowMsg("만들지 못했어요. 잠시 뒤 다시 시도해 주세요", "bad");
+      } catch (e) { $("make-now").disabled = false; }
+    }
     $("make-now").onclick = async () => {
+      if (changes().length && !(await save())) return;
       try {
         const data = await TS.api("/api/briefing/now", { method: "POST" });
-        TS.message($("now-msg"), data.message);
+        nowMsg(TS.esc(data.message));
         $("make-now").disabled = true;
         setTimeout(poll, 10000);
-      } catch (e) { TS.message($("now-msg"), e.message, true); }
+      } catch (e) { nowMsg(TS.esc(e.message), "bad"); }
     };
 
-    $("forget").onclick = async () => {
-      if (!confirm("주제 가중치, 본 항목, 피드백 기록을 지울까요? 프로필은 남아요.")) return;
-      const data = await TS.api("/api/memory/forget", { method: "POST" });
-      TS.message($("danger-msg"), data.message);
-      touched = false;
-      state = await TS.api("/api/profile");
-      renderTopics(state.profile.weights);
+    // 기억 지우기: 제자리 확인 줄 (POST /api/memory/forget)
+    $("forget").onclick = () => {
+      const n = changes().length;
+      TS.confirmLine($("forget"), {
+        ok: "지우기",
+        html: `<p><b>지우면 되돌릴 수 없어요.</b> 관심 주제 10개가 직군 기본값으로 돌아가요(여기서 직접 맞춘 값도 포함). 본 카드 기록이 지워져서 이미 본 소식이 다시 나올 수 있어요.</p>${n ? `<p>저장하지 않은 바뀐 내용 <span class="mono">${n}</span>개도 사라져요.</p>` : ""}`,
+        onOk: async () => {
+          const data = await TS.api("/api/memory/forget", { method: "POST" });
+          fill(await TS.api("/api/profile"));
+          $("danger-msg").hidden = false; $("danger-msg").innerHTML = `${TS.ic("ok")}<span>${TS.esc(data.message)}</span>`;
+        },
+      });
     };
 
-    $("delete").onclick = async () => {
-      if (!confirm("계정과 모든 기록을 지울까요? 되돌릴 수 없어요.")) return;
-      await TS.api("/api/account/delete", { method: "POST" });
-      location.href = "/login";
+    // 계정 삭제: 이메일을 그대로 쳐야 눌린다 (POST /api/account/delete)
+    const same = () => $("del-email").value.trim().toLowerCase() === (me.email || "").toLowerCase();
+    $("delete").onclick = () => {
+      const open = $("del-box").hidden;
+      $("del-box").hidden = !open; $("delete").setAttribute("aria-expanded", String(open));
+      if (open) $("del-email").focus();
+    };
+    $("del-cancel").onclick = () => { $("del-box").hidden = true; $("delete").setAttribute("aria-expanded", "false"); $("del-email").value = ""; $("del-go").setAttribute("aria-disabled", "true"); $("delete").focus(); };
+    $("del-email").oninput = () => $("del-go").setAttribute("aria-disabled", String(!same()));
+    $("del-go").onclick = async () => {
+      if (!same()) return $("del-email").focus();
+      try { await TS.api("/api/account/delete", { method: "POST" }); location.href = "/login"; } catch (e) { TS.say(e.message); }
     };
 
     load();

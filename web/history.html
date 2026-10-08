@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>toolscout 지난 브리핑</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
@@ -11,114 +11,240 @@
   <meta name="theme-color" content="#15181E">
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
   <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <style>
+    /* 지난 브리핑 전용 모양: 왼쪽 날짜 목록 + 오른쪽 그날 판 (모바일은 목록 → 그날 판 두 화면). 색은 토큰만 */
+    .hist{display:grid;gap:20px;padding-block:24px 80px}
+    .hist > *{min-width:0}
+    .hist-head{display:grid;gap:2px}
+    .hist-head h1{font-size:1.5rem;font-weight:700}
+    .hist-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
+    .histnav{display:flex;flex-direction:column;gap:16px;min-width:0}
+    @media (min-width:768px){
+      .hist-grid{grid-template-columns:280px minmax(0,1fr)}
+      .histnav{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar) + 16px);max-height:calc(100dvh - var(--bar) - 32px)}
+      .histnav .dl-wrap,.histnav .sres{overflow-y:auto;min-height:0;flex:1 1 auto;overscroll-behavior:contain;padding-right:2px}
+    }
+    @media (min-width:1200px){.hist-grid{grid-template-columns:320px minmax(0,1fr);gap:32px}}
+    @media (max-width:767px){
+      .hist{padding-block:16px 24px;gap:16px}.hist-head h1{font-size:1.25rem}
+      .hist[data-view="list"] .dayview{display:none}
+      .hist[data-view="day"] .histnav{display:none}
+      .hist[data-view="day"] .hist-head{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+    }
+    .hsearch{display:grid;gap:6px;flex:none}
+    .hs-row{display:flex;gap:8px;min-width:0}
+    .hs-box{position:relative;flex:1;min-width:0}
+    .hs-box > .ic{position:absolute;left:14px;top:16px;color:var(--mute);pointer-events:none}
+    .hs-box .input{padding-left:40px;padding-right:46px}
+    .hs-box .input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;display:none}
+    .hs-clear{position:absolute;right:2px;top:2px;width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:6px;background:none;color:var(--ink-2)}
+    .hs-clear:hover{background:var(--surface-2);color:var(--ink)}
+    .hs-row .btn{flex:none;padding:0 16px}
+    .dl-wrap{display:grid;gap:4px;align-content:start}
+    .dl-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 8px;padding-inline:4px;font-size:.8125rem;font-weight:600;color:var(--mute)}
+    .dl-month{display:grid;gap:2px}
+    .dl-month h2{position:sticky;top:0;z-index:1;background:var(--bg);padding:10px 4px 4px;font-size:.8125rem;font-weight:600;color:var(--mute);letter-spacing:0}
+    @media (max-width:767px){.dl-month h2{top:calc(env(safe-area-inset-top,0px) + var(--bar))}}
+    .dl-month ul{display:grid;gap:2px}
+    .dayrow{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) auto;align-items:center;gap:8px;min-height:52px;padding:0 12px;border:1px solid transparent;border-radius:var(--r-ctl);color:var(--ink);text-decoration:none}
+    .dayrow:hover{background:var(--surface);border-color:var(--line)}
+    .dayrow .d{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.9375rem;font-weight:500;letter-spacing:0}
+    .dayrow .dw{font-size:.8125rem;color:var(--ink-2)}
+    .dayrow .n{grid-column:5;font-size:.8125rem;color:var(--ink-2);white-space:nowrap}
+    .dayrow .n .mono{font-size:.8125rem}
+    .dayrow .n.zero{color:var(--mute)}
+    .dayrow[aria-current="page"]{background:var(--blaze-wash);border-color:var(--blaze);color:var(--blaze-ink)}
+    .dayrow[aria-current="page"] .dw,.dayrow[aria-current="page"] .n,.dayrow[aria-current="page"] .today-chip{color:var(--blaze-ink)}
+    .dayrow[aria-current="page"] .today-chip{border-color:var(--blaze)}
+    @media (max-width:767px){.dayrow{min-height:56px}}
+    .today-chip{display:inline-flex;align-items:center;padding:0 6px;border:1px solid var(--line-input);border-radius:var(--r-chip);font-size:.8125rem;font-weight:600;line-height:1.5;color:var(--ink-2)}
+    .sres{display:grid;gap:8px;align-content:start}
+    .sres-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;padding-inline:4px}
+    .sres-h p{font-size:.875rem;font-weight:600;color:var(--ink)}
+    .sres-h p .mono{font-size:.8125rem}
+    .sres-g{display:grid;gap:4px}
+    .sres-g h2{font-size:.8125rem;font-weight:600;color:var(--mute);padding:6px 4px 0;letter-spacing:0}
+    .sres-g h2 .mono{color:var(--ink-2);font-size:.8125rem}
+    .sres-list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);overflow:clip}
+    .hit{display:grid;gap:4px;padding:12px 14px;min-width:0}
+    .hit + .hit{border-top:1px solid var(--line)}
+    .hit .ht{font-size:.9375rem;font-weight:600;line-height:1.45;color:var(--ink);text-decoration:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;min-width:0}
+    .hit .ht:hover{text-decoration:underline}
+    .hit .hs{font-size:.8125rem;line-height:1.55;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .hit .ext{font-size:.8125rem;color:var(--mute)}
+    .sres-empty{padding:16px;font-size:.875rem;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel)}
+    .dayview{display:grid;gap:24px;align-content:start;min-width:0}
+    .dayview > *{min-width:0}
+    .day-head h2{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;font-size:1rem;letter-spacing:0}
+    .day-head h2:focus{outline:none}
+    .day-head h2:focus-visible{outline:2px solid var(--blaze);outline-offset:4px;border-radius:4px}
+    .day-pager{display:flex;gap:4px;margin-bottom:4px}
+    .day-pager .btn{gap:4px;padding:0 8px}
+    .day-pager .mono{font-size:.8125rem}
+    .ic-l{transform:rotate(90deg)}
+    .ic-r{transform:rotate(-90deg)}
+    .day-sub{display:none}
+    @media (max-width:767px){
+      .day-sub{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar));z-index:16;display:flex;align-items:center;gap:2px;height:48px;margin-inline:calc(-1 * var(--gutter));padding:0 calc(var(--gutter) - 8px);background:var(--bg);border-bottom:1px solid var(--line)}
+      .day-sub .btn{min-height:44px;padding:0 8px}
+      .day-sub .sp{flex:1}
+      .dayview{gap:16px}
+    }
+    .dayview .board{grid-template-columns:minmax(0,1fr);gap:32px}
+    .dayview .hl-grid{grid-template-columns:minmax(0,1fr)}
+    mark{background:var(--mark);color:inherit;font-weight:600;border-radius:2px;padding:0 1px}
+    .sk-row{height:52px;border-radius:var(--r-ctl)}
+  </style>
 </head>
 <body>
-  <header class="mast" id="mast"></header>
-  <main>
-    <section class="sec">
-      <div class="sec-h"><h2>찾기</h2><span class="hint">지난 브리핑에 나온 도구와 소식 이름으로 찾아요</span></div>
-      <form class="acts" id="search-form">
-        <input id="q" type="text" maxlength="60" placeholder="예: 노션, n8n" aria-label="검색어" autocomplete="off">
-        <button class="go" type="submit">찾기</button>
-        <span class="fb" id="search-msg"></span>
-      </form>
-      <div id="results"></div>
+  <header id="appbar"></header>
+  <main id="main" class="wrap hist" data-view="list">
+    <div class="hist-head">
+      <h1 id="hist-h">지난 브리핑</h1>
+      <p class="help">내 브리핑만 보여요. 지난 카드에도 피드백을 남길 수 있어요.</p>
+    </div>
+    <div class="hist-grid" id="hist-grid">
+      <div class="histnav" id="histnav">
+        <form class="hsearch" id="search-form" role="search" novalidate>
+          <label class="label" for="q">지난 브리핑에서 찾기</label>
+          <div class="hs-row">
+            <div class="hs-box">
+              <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+              <input class="input" id="q" type="search" enterkeyhint="search" autocomplete="off" maxlength="60" placeholder="도구·소식 이름" aria-describedby="q-help search-msg">
+              <button type="button" class="hs-clear" id="q-clear" aria-label="검색어 지우기" hidden><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button>
+            </div>
+            <button type="submit" class="btn btn-lg" id="q-go">찾기</button>
+          </div>
+          <p class="help" id="q-help">제목과 요약에서 찾아요 · 두 글자 이상</p>
+          <p class="msg msg-bad" id="search-msg" role="alert" hidden></p>
+        </form>
+        <nav class="dl-wrap" id="daylist" aria-label="브리핑 날짜"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></nav>
+        <section class="sres" id="results" aria-labelledby="sres-h" hidden></section>
+      </div>
+      <section class="dayview" id="days" aria-label="그날 브리핑"></section>
+    </div>
+    <section class="empty" id="hist-none" hidden>
+      <h2>아직 지난 브리핑이 없어요</h2>
+      <p>매일 아침 <span class="mono">08:00</span>에 메일로 보내고 여기에 날짜별로 쌓여요.</p>
     </section>
-
-    <div id="days"><section class="sec"><div class="empty">불러오는 중이에요</div></section></div>
   </main>
   <script src="/static/app.js"></script>
   <script src="/static/cards.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
-    const dayName = (value) => new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "long" })
-      .format(new Date(`${value}T00:00:00`));
-    const shortName = (value) => new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(new Date(`${value}T00:00:00`));
+    const two = (n) => String(n).padStart(2, "0");
+    const DOW = ["일", "월", "화", "수", "목", "금", "토"];
+    const dt = (value) => new Date(`${value}T00:00:00`);
+    const md = (value) => `${two(dt(value).getMonth() + 1)}.${two(dt(value).getDate())}`;
+    const dow = (value) => DOW[dt(value).getDay()];
+    const wide = () => window.matchMedia("(min-width: 768px)").matches;
+    const todayKey = () => { const n = new Date(); return `${n.getFullYear()}-${two(n.getMonth() + 1)}-${two(n.getDate())}`; };
+    let dates = [], basis = "", current = "";
 
-    // 날짜 칸을 처음 펼칠 때 그날 브리핑을 불러와 그린다 (GET /api/briefings?date=)
-    async function loadDay(box) {
-      if (box.dataset.loaded) return;
-      box.dataset.loaded = "1";
-      const body = box.querySelector(":scope > div");
-      body.innerHTML = '<div class="empty">불러오는 중이에요</div>';
-      try {
-        const briefing = await TS.api(`/api/briefings?date=${encodeURIComponent(box.dataset.date)}`);
-        box.querySelector(".hint").textContent = briefing.pool_size ? `${briefing.pool_size}건 중 ${briefing.count}건` : "";
-        Cards.mount(body, briefing, "이날");
-      } catch (e) {
-        body.innerHTML = `<div class="empty">${TS.esc(e.message)}</div>`;
-        delete box.dataset.loaded;
-      }
-    }
-
-    function openDay(day, scroll = false) {
-      const box = document.querySelector(`details.day[data-date="${CSS.escape(day)}"]`);
-      if (!box) return;
-      box.open = true;
-      loadDay(box);
-      if (scroll) box.scrollIntoView({ block: "start" });
-    }
-
-    async function search(q) {
-      $("results").innerHTML = "";
-      $("search-msg").classList.remove("on", "bad");
-      try {
-        const data = await TS.api(`/api/search?q=${encodeURIComponent(q)}`);
-        if (!data.results.length) {
-          $("results").innerHTML = '<div class="empty">지난 브리핑에서 찾지 못했어요.</div>';
-          return;
-        }
-        TS.message($("search-msg"), `${data.results.length}건 찾았어요`);
-        $("results").innerHTML = data.results.map((r) => {
-          const url = TS.safeUrl(r.url);
-          const title = url ? `<a href="${TS.esc(url)}" target="_blank" rel="noopener">${TS.esc(r.title)}</a>` : TS.esc(r.title);
-          return `<article class="item">
-            <div class="mark"></div>
-            <div>
-              <h3>${title}</h3>
-              <div class="src">${shortName(r.date)} 브리핑</div>
-              ${r.summary_ko ? `<p class="sum">${TS.esc(r.summary_ko)}</p>` : ""}
-              <div class="acts"><button class="act" type="button" data-open="${TS.esc(r.date)}">그날 브리핑 보기</button></div>
-            </div>
-          </article>`;
-        }).join("");
-        $("results").querySelectorAll("button[data-open]").forEach((b) => { b.onclick = () => openDay(b.dataset.open, true); });
-      } catch (e) {
-        TS.message($("search-msg"), e.message, true);
-      }
-    }
-
-    async function load() {
-      const profile = await TS.api("/api/profile");
-      await TS.mast({ active: "/history", title: "지난 브리핑", basis: TS.basis(profile) });
-      const data = await TS.api("/api/briefings/dates");
-      if (!data.dates.length) {
-        $("days").innerHTML = '<section class="sec"><div class="empty">아직 지난 브리핑이 없어요</div></section>';
-        return;
-      }
-      // 날짜마다 접었다 펴는 칸. 머리는 .sec-h(날짜, 카드 수, 펼치면 "N건 중 M건")
-      $("days").innerHTML = data.dates.map((d) => `<details class="sec day" data-date="${TS.esc(d.date)}">
-          <summary class="sec-h"><h2>${dayName(d.date)}</h2><span class="n">${d.cards}</span><span class="hint"></span></summary>
-          <div></div>
-        </details>`).join("");
-      $("days").querySelectorAll("details.day").forEach((box) => {
-        box.addEventListener("toggle", () => {
-          if (!box.open) return;
-          loadDay(box);
-          history.replaceState(null, "", `#${box.dataset.date}`);
-        });
+    // 날짜 목록: 월별 묶음, 최근 날짜부터 (GET /api/briefings/dates)
+    function renderList() {
+      let month = "", html = `<p class="dl-head"><span>브리핑 <span class="mono">${dates.length}</span>일</span><span>최근 날짜부터</span></p>`;
+      dates.forEach((d) => {
+        const m = d.date.slice(0, 7);
+        if (m !== month) { if (month) html += "</ul></div>"; month = m; html += `<div class="dl-month"><h2>${m.slice(0, 4)}년 ${Number(m.slice(5))}월</h2><ul>`; }
+        html += `<li><a class="dayrow" href="#${TS.esc(d.date)}" data-date="${TS.esc(d.date)}"${d.date === current ? ' aria-current="page"' : ""}
+          aria-label="${TS.esc(TS.longDate(d.date))}, 카드 ${d.cards}장"><span class="d">${md(d.date)}</span><span class="dw">${dow(d.date)}</span>
+          ${d.date === todayKey() ? '<span class="today-chip">오늘</span>' : ""}<span class="n${d.cards ? "" : " zero"}"><span class="mono">${d.cards}</span>장</span></a></li>`;
       });
-      const wanted = location.hash.slice(1);
-      openDay(data.dates.some((d) => d.date === wanted) ? wanted : data.dates[0].date);
+      $("daylist").innerHTML = `${html}</ul></div>`;
     }
 
-    $("search-form").onsubmit = (event) => {
-      event.preventDefault();
-      const q = $("q").value.trim();
-      if (q) search(q);
-    };
+    // 그날 판: 머리줄(날짜·메일·파이프라인) + 카드 판 (GET /api/briefings?date=)
+    async function openDay(day, { focus = true, card = "" } = {}) {
+      current = day;
+      document.querySelector(".hist").dataset.view = "day";
+      $("daylist").querySelectorAll(".dayrow").forEach((r) => {
+        if (r.dataset.date === day) r.setAttribute("aria-current", "page"); else r.removeAttribute("aria-current");
+      });
+      history.replaceState(null, "", `#${day}`);
+      const i = dates.findIndex((d) => d.date === day), prev = dates[i + 1], next = dates[i - 1];
+      const arrow = (d, cls, label) => d ? `<button type="button" class="icon-btn" data-go="${d.date}" aria-label="${label} 브리핑 ${md(d.date)}">${TS.ic("chev", cls)}</button>`
+        : `<button type="button" class="icon-btn" aria-disabled="true" aria-label="${label} 브리핑 없음">${TS.ic("chev", cls)}</button>`;
+      const sub = `<div class="day-sub"><button type="button" class="btn btn-quiet" data-back>${TS.ic("back")}날짜 목록</button><span class="sp"></span>${arrow(prev, "ic-l", "이전")}${arrow(next, "ic-r", "다음")}</div>`;
+      $("days").innerHTML = `${sub}<div class="sk" style="height:96px"></div><div class="sk" style="height:220px"></div>`;
+      try {
+        const briefing = await TS.api(`/api/briefings?date=${encodeURIComponent(day)}`);
+        if (current !== day) return;
+        const status = briefing.sent ? `${TS.ic("mail")}<span>메일로 보냈어요</span><span>· 카드 <span class="mono">${briefing.count}</span>장</span>`
+          : `${TS.ic("na")}<span>메일은 안 보냈어요</span><span>· 카드 <span class="mono">${briefing.count}</span>장</span>`;
+        const pager = `<div class="day-pager hide-sm">${prev ? `<button type="button" class="btn btn-sm btn-quiet" data-go="${prev.date}" aria-label="이전 브리핑 ${md(prev.date)}">${TS.ic("chev", "ic-l")}<span class="mono">${md(prev.date)}</span></button>` : ""}${next ? `<button type="button" class="btn btn-sm btn-quiet" data-go="${next.date}" aria-label="다음 브리핑 ${md(next.date)}"><span class="mono">${md(next.date)}</span>${TS.ic("chev", "ic-r")}</button>` : ""}</div>`;
+        // 오늘 화면과 같은 머리줄을 쓰되, 이 화면의 h1은 "지난 브리핑"이라 날짜는 h2로 바꾼다
+        const head = Cards.today(briefing, { basis, status })
+          .replace('class="today" aria-labelledby="today-h"', 'class="today day-head" aria-label="이날 요약"')
+          .replace('<h1 id="today-h">', '<h2 id="day-h" tabindex="-1">').replace("</h1>", "</h2>")
+          .replace('<div class="pipe">', `<div class="pipe">${pager}`);
+        $("days").innerHTML = `${sub}${head}<div id="board"></div>`;
+        Cards.mount($("board"), briefing, { day: "이날", abs: true, level: 3, one: true });
+        if (card && document.getElementById(card)) document.getElementById(card).scrollIntoView({ block: "start" });
+        else if (focus && $("day-h")) $("day-h").focus({ preventScroll: wide() });
+      } catch (e) {
+        $("days").innerHTML = `${sub}<div class="alert alert-bad">${TS.ic("bad")}<div class="body"><span>${TS.esc(e.message)}</span></div></div>`;
+      }
+    }
 
-    load();
+    // 찾기 (GET /api/search?q=): 날짜별로 묶는다
+    const mark = (text, q) => {
+      const safe = TS.esc(text || "");
+      if (!q) return safe;
+      const pattern = TS.esc(q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return safe.replace(new RegExp(pattern, "gi"), (m) => `<mark>${m}</mark>`);
+    };
+    function clearSearch() {
+      $("results").hidden = true; $("results").innerHTML = ""; $("daylist").hidden = false;
+      $("q").value = ""; $("q-clear").hidden = true; $("search-msg").hidden = true;
+    }
+    async function search(q) {
+      $("search-msg").hidden = true;
+      const fail = (text) => { $("search-msg").innerHTML = `${TS.ic("bad")}<span>${TS.esc(text)}</span>`; $("search-msg").hidden = false; };
+      if (q.length < 2) return fail("두 글자 이상으로 검색해 주세요");
+      let data;
+      try { data = await TS.api(`/api/search?q=${encodeURIComponent(q)}`); } catch (e) { return fail(e.message); }
+      const label = `‘${TS.esc(q)}’`;
+      let html = `<div class="sres-h"><p id="sres-h" role="status">${data.results.length ? `${label} <span class="mono">${data.results.length}</span>건 · 최근 날짜부터` : `${label} 검색 결과`}</p>
+        <button type="button" class="btn btn-quiet btn-sm" data-clear-search>${TS.ic("close")}검색 지우기</button></div>`;
+      if (!data.results.length) html += `<p class="sres-empty">${label}는 지난 브리핑 제목·요약에 없어요. 이름 일부로 찾아 보세요. 원문 본문은 찾지 않아요.</p>`;
+      let last = "";
+      data.results.forEach((r) => {
+        if (r.date !== last) { if (last) html += "</div></div>"; last = r.date; html += `<div class="sres-g"><h2><span class="mono">${md(r.date)}</span> ${dow(r.date)}</h2><div class="sres-list">`; }
+        const url = TS.safeUrl(r.url);
+        html += `<div class="hit"><a class="ht" href="#${TS.esc(r.date)}" data-hit="${TS.esc(r.date)}" data-card="card-${r.item_id}">${mark(r.title, q)}</a>
+          ${r.summary_ko ? `<p class="hs">${mark(r.summary_ko, q)}</p>` : ""}${url ? `<a class="ext" href="${TS.esc(url)}" target="_blank" rel="noopener">${TS.esc(TS.host(url))} ${TS.ic("ext")}<span class="sr-only">(새 탭)</span></a>` : ""}</div>`;
+      });
+      if (last) html += "</div></div>";
+      $("results").innerHTML = html; $("results").hidden = false; $("daylist").hidden = true;
+    }
+
+    document.addEventListener("click", (e) => {
+      const row = e.target.closest(".dayrow");
+      if (row) { e.preventDefault(); return openDay(row.dataset.date); }
+      const jump = e.target.closest("[data-go]");
+      if (jump) return openDay(jump.dataset.go);
+      if (e.target.closest("[data-back]")) { history.replaceState(null, "", location.pathname); document.querySelector(".hist").dataset.view = "list"; return; }
+      if (e.target.closest("[data-clear-search]")) return clearSearch();
+      if (e.target.closest("#q-clear")) { clearSearch(); return $("q").focus(); }
+      const hit = e.target.closest("[data-hit]");
+      if (hit) { e.preventDefault(); openDay(hit.dataset.hit, { card: hit.dataset.card }); }
+    });
+    $("q").oninput = () => { $("q-clear").hidden = !$("q").value; };
+    $("search-form").onsubmit = (event) => { event.preventDefault(); search($("q").value.trim()); };
+
+    (async () => {
+      await TS.shell({ active: "/history" });
+      try { basis = TS.basis(await TS.api("/api/profile")); } catch (e) { basis = ""; }
+      dates = (await TS.api("/api/briefings/dates")).dates;
+      if (!dates.length) { $("hist-grid").hidden = true; $("hist-none").hidden = false; return; }
+      const wanted = location.hash.slice(1);
+      current = dates.some((d) => d.date === wanted) ? wanted : "";
+      renderList();
+      // 넓은 화면은 가장 최근 날을 바로 연다. 모바일은 목록부터 (주소에 날짜가 있으면 그날)
+      if (current) openDay(current, { focus: false });
+      else if (wide()) openDay(dates[0].date, { focus: false });
+    })();
   </script>
 </body>
 </html>
