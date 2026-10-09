@@ -1,4 +1,4 @@
-"""MCP 공식 레지스트리 공개 API (계획안 9.1 [확인됨]). 7일 창 안에 등록·버전 업된 최신 버전을 모은다.
+"""MCP 공식 레지스트리 공개 API (계획안 9.1 [확인됨]). 최근 48시간에 갱신된 최신 버전을 받아 7일 창 기준으로 새 서버·버전 업을 가른다.
 
 수집 필터 (2026-09-14 사용자 승인)
 - 서버 자신의 GitHub 저장소가 있는 것만 (레지스트리 자체 저장소를 적어 둔 경우는 제외)
@@ -7,9 +7,10 @@
 - 남은 것 중 신규는 별 수 상위 20건, 버전 업은 상위 10건. 별 수는 items에 24시간 캐시 (sources/github_stars.py)
 """
 import os
+import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import quote, urlsplit
 
 import httpx
@@ -20,6 +21,15 @@ from sources.common import SourceResult, error_text, make_item, parse_date
 URL = "https://registry.modelcontextprotocol.io/v0/servers"
 PAGE_SIZE = 100
 MAX_PAGES = 100
+# 목록은 최근 48시간 갱신분만 받는다. 아침 수집이 매일 돌고 이미 본 것은 DB가 걸러서, 하루를 걸러도 48시간이면 메운다.
+# 7일 전체는 수천 건이라 실행이 끝나지 않았다 (2026-10-09 실측: 30쪽=3,000건까지 끝이 안 났고 쪽당 1~90초).
+# 48시간은 27쪽·2,676건, 받는 데 약 218초 (같은 날 실측). 새 서버/버전 업 판정(첫 게시일)과 도구 창 7일의 뜻은 그대로다.
+LIST_WINDOW = timedelta(hours=48)
+LIST_BUDGET = 240  # 목록 받기 전체에 쓸 수 있는 초. 넘기면 받은 만큼으로 진행한다
+PAGE_TIMEOUT = 30  # 쪽 하나를 기다리는 최대 초
+PAGE_RETRIES = 2  # 한 쪽이 실패하면 그 쪽만 다시 받는 횟수
+PAGE_RETRY_WAIT = 1.0
+SELECT_BUDGET = 300  # 첫 게시일·별 수 조회 단계에 쓸 수 있는 초. 넘기면 거기까지 고른 것으로 끝낸다
 META_KEY = "io.modelcontextprotocol.registry/official"
 PLACEHOLDER_REPO = ("modelcontextprotocol", "registry")
 MAX_PER_PUBLISHER = 3
@@ -30,12 +40,15 @@ WORKERS = 8
 
 
 def fetch(since: datetime, client: httpx.Client, *, per_publisher: int = MAX_PER_PUBLISHER,
-          cache: dict | None = None) -> SourceResult:
+          cache: dict | None = None, list_since: datetime | None = None) -> SourceResult:
+    """since는 도구 창(새 서버/버전 업 판정 기준). list_since는 목록을 받을 시작 시각(없으면 since)."""
     result = SourceResult("mcp_registry")
     cache = cache if cache is not None else {}
+    partial: dict = {}
     try:
-        entries = cache.get("entries") or _list_updated(since, client)
-        cache["entries"] = entries
+        entries = cache.get("entries") or _list_updated(list_since or since, client, partial)
+        if not partial:
+            cache["entries"] = entries  # 부분 수집은 캐시하지 않는다
     except Exception as exc:
         result.error = error_text(exc)
         return result
@@ -56,6 +69,8 @@ def fetch(since: datetime, client: httpx.Client, *, per_publisher: int = MAX_PER
     result.stats = {"창_안_active": len(entries), "github_저장소": len(candidates), "게시자": len(by_publisher), **counts,
                     "신규_상위": len(new), "버전업_상위": len(updates), "별수_DB캐시": stars.from_db,
                     "별수_새조회": stars.fetched, "별수_DB저장": saved}
+    if partial:
+        result.stats["부분_수집"] = partial
     # 걸러내기 전 전체에서 저장소별 최신 버전. 받아 본 도구의 새 버전 알림이 쓴다 (버전 업은 별 50 이상만 수집하므로)
     for entry, repo in sorted(candidates, key=lambda c: _published(c[0])):
         server = entry["server"]
@@ -121,13 +136,41 @@ class _Stars:
         return github_stars.save(rows)
 
 
-def _list_updated(since: datetime, client: httpx.Client) -> list[dict]:
+def _get_page(client: httpx.Client, params: dict, deadline: float, sleep=time.sleep) -> dict:
+    """쪽 하나. 실패하면 그 쪽만 짧게 PAGE_RETRIES번 다시 받는다 (처음부터 다시 받지 않는다)."""
+    for attempt in range(PAGE_RETRIES + 1):
+        try:
+            response = client.get(URL, params=params, timeout=min(PAGE_TIMEOUT, max(1.0, deadline - time.monotonic())))
+            response.raise_for_status()
+            return response.json()
+        except (httpx.HTTPError, ValueError):
+            if attempt == PAGE_RETRIES:
+                raise
+            sleep(PAGE_RETRY_WAIT)
+    raise AssertionError("도달 불가")
+
+
+def _list_updated(since: datetime, client: httpx.Client, partial: dict | None = None) -> list[dict]:
+    """since 이후 갱신된 최신 버전 목록. 예산(LIST_BUDGET초)·쪽 상한(MAX_PAGES)을 넘기거나 중간 쪽이 끝내 실패하면
+    예외 대신 받은 만큼 돌려주고 partial에 {받은_쪽수, 이유}를 적는다. 한 쪽도 못 받았으면 예외."""
     params: dict = {"updated_since": since.strftime("%Y-%m-%dT%H:%M:%SZ"), "version": "latest", "limit": PAGE_SIZE}
-    entries = []
-    for _ in range(MAX_PAGES):
-        response = client.get(URL, params=params)
-        response.raise_for_status()
-        data = response.json()
+    entries, pages = [], 0
+    deadline = time.monotonic() + LIST_BUDGET
+    while True:
+        reason = f"쪽 상한 {MAX_PAGES}쪽" if pages >= MAX_PAGES else f"시간 예산 {LIST_BUDGET}초" if pages and time.monotonic() >= deadline else ""
+        if reason:
+            if partial is not None:
+                partial.update({"받은_쪽수": pages, "이유": reason})
+            return entries
+        try:
+            data = _get_page(client, params, deadline)
+        except (httpx.HTTPError, ValueError) as exc:
+            if not pages:
+                raise
+            if partial is not None:
+                partial.update({"받은_쪽수": pages, "이유": f"쪽 실패 {error_text(exc)}"})
+            return entries
+        pages += 1
         for entry in data.get("servers", []):
             meta = entry.get("_meta", {}).get(META_KEY, {})
             published = parse_date(meta.get("updatedAt") or meta.get("publishedAt"))
@@ -138,7 +181,6 @@ def _list_updated(since: datetime, client: httpx.Client) -> list[dict]:
         if not cursor:
             return entries
         params["cursor"] = cursor
-    raise RuntimeError(f"페이지 상한 {MAX_PAGES}회 도달")
 
 
 def _published(entry: dict) -> datetime:
@@ -165,7 +207,8 @@ def _select(by_publisher: dict, since: datetime, client: httpx.Client, per_publi
     queues = {pub: list(items) for pub, items in by_publisher.items()}
     accepted: dict[str, int] = defaultdict(int)
     checked: dict[str, int] = defaultdict(int)
-    while True:
+    deadline = time.monotonic() + SELECT_BUDGET
+    while time.monotonic() < deadline:
         batch = [(pub, queue.pop(0)) for pub, queue in queues.items()
                  if queue and accepted[pub] < per_publisher and checked[pub] < per_publisher * MAX_CHECKS_PER_PUBLISHER]
         if not batch:
@@ -186,6 +229,7 @@ def _select(by_publisher: dict, since: datetime, client: httpx.Client, per_publi
                 continue
             accepted[pub] += 1
             kept.append((entry, repo, kind))
+    counts["조회_예산_초과"] = int(time.monotonic() >= deadline)
     counts["게시자_상한으로_제외"] = sum(len(q) for q in queues.values())
     return kept, counts
 

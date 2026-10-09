@@ -1,5 +1,7 @@
 # sources/ CHANGELOG
 
+- 2026-10-09 · mcp_registry 목록을 최근 48시간 갱신분만 받게(LIST_WINDOW), 목록 예산 240초·쪽 타임아웃 30초·쪽 단위 재시도 2번, 상한을 넘으면 예외 대신 받은 만큼 진행하고 stats["부분_수집"]에 쪽 수·이유, 첫게시일·별 조회 단계에 300초 예산, collect는 MCP_TIMEOUT 60→30초 · Railway 아침 수집에서 7일 목록(수천 건, 쪽당 1~90초)이 100쪽 상한에 걸려 처음부터 다시 받기를 반복해 수십 분 걸리고 끝나지 않음 · check_mcp_list 11항목(신규)·check_fallbacks 통과, 실측은 최종 보고
+
 - 2026-10-09 · github_search.py(신규): GitHub 저장소 검색(topic 5개, 최근 7일 생성, MCP 별 10+·스킬 별 30+, 포크·보관·설명 없음 제외, 게시자당 3건·종류별 상위 20건)을 collect에 연결, MCP 후보는 package.json/pyproject로 npm·PyPI에 실제 있는 패키지만 install로 · 레지스트리·SkillsMP에 없는 새 저장소를 받으려고(사용자 결정, Smithery·Docker 카탈로그는 새 항목이 거의 없어 제외) · check_github_search 29항목·실측 후보 MCP 20·스킬 20, MCP 설치 정보 4건
 - 2026-10-08 · claude_notes.py(신규): Claude 공식 릴리스 노트에서 날짜 창 안 항목을 뉴스로(제목 앞 "Claude: ", 본문 첫 링크가 원문), collect에 넣고 출처 등급 1 · 10/8 메일에서 "Max·Team 월 API 크레딧" 공지가 빠짐(Anthropic·Claude 공지가 소스에 없었다, 사용자 "기억하고 수정하자") · check_claude_notes 6·실측 10/7 항목 2건(하이쿠 5.5·월 API 크레딧)
 - 2026-09-27 · SourceResult.versions 추가, mcp_registry가 거르기 전 7일 갱신 서버의 저장소별 최신 버전(제목·버전·설명·설치 정보)을 채운다 · 받아 본 도구의 새 버전 알림(버전 업은 별 50 이상·상위 10건만 수집되어 그 전 목록이 필요) · check_fallbacks·check_catalog_title·check_news_window 통과, 실측 7일 갱신 6,430건·저장소 있음 4,570건
