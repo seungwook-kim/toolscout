@@ -1,7 +1,7 @@
 """소스 전체 수집. 뉴스는 48시간, 도구(MCP·스킬)는 7일 창을 쓴다 (계획안 9.2 W1).
 
 소스 하나가 실패해도 나머지로 진행하고 실패를 기록한다 (계획안 부록 B 예외 처리).
-MCP 레지스트리는 자주 느리거나 500을 내서 (2026-09-14·15 실측) 제한 시간 60초로 2번 더 시도하고,
+MCP 레지스트리는 자주 느리거나 500을 내서 (2026-09-14·15 실측) 제한 시간 30초로 2번 더 시도하고(목록은 최근 48시간만, 예산 240초, 쪽 단위 재시도, 넘기면 받은 만큼으로 진행),
 그래도 실패하면 마지막으로 성공한 결과를 다시 쓰고 항목에 "수집 실패, 전날 기준"을 붙인다 (2026-09-15 사용자 결정).
 """
 import json
@@ -20,7 +20,8 @@ from sources.rss import FEEDS, fetch_feed
 # 이미 보낸 항목은 pick_for_user의 seen_urls와 items.url 유일 제약이 막는다
 NEWS_WINDOW = timedelta(hours=48)
 TOOL_WINDOW = timedelta(days=7)
-MCP_TIMEOUT, MCP_RETRIES = 60, 2
+# 목록 쪽은 mcp_registry가 예산(240초)·쪽당 재시도로 직접 다룬다. 바깥 재시도는 한 쪽도 못 받았을 때만 돈다 (2026-10-09)
+MCP_TIMEOUT, MCP_RETRIES = 30, 2
 
 
 def cache_dir() -> Path:
@@ -59,7 +60,8 @@ def collect_mcp(tool_since: datetime, now: datetime, *, per_publisher: int, cach
     with http_client(timeout=MCP_TIMEOUT) as client:
         for attempt in range(1, MCP_RETRIES + 2):
             try:
-                result = mcp_registry.fetch(tool_since, client, per_publisher=per_publisher, cache=cache)
+                result = mcp_registry.fetch(tool_since, client, per_publisher=per_publisher, cache=cache,
+                                            list_since=now - mcp_registry.LIST_WINDOW)
             except Exception as exc:  # 파서 버그도 다음 시도로
                 result = SourceResult("mcp_registry", error=error_text(exc))
             attempts.append(result.error or "성공")

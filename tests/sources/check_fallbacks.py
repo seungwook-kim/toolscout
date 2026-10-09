@@ -1,7 +1,7 @@
 """수집 대체 경로 검수 (2026-09-15 사용자 결정 4·5). 네트워크를 쓰지 않는다.
 
 실행: uv run python -m tests.sources.check_fallbacks
-- MCP 레지스트리: 제한 시간 60초 클라이언트, 실패하면 2번 더 시도, 성공하면 마지막 성공 결과 저장
+- MCP 레지스트리: 제한 시간 30초 클라이언트, 실패하면 2번 더 시도, 성공하면 마지막 성공 결과 저장
 - 3번 다 실패하면 마지막 성공 결과를 다시 쓰고 항목에 "수집 실패, 전날 기준", 실패는 그대로 기록. 성공 결과가 없으면 0건
 - 긱뉴스: 항목 안에 외부 링크가 있으면 source_url, 없으면 skip_fetch (해설가가 요약만 쓴다)
 """
@@ -56,7 +56,7 @@ def run_mcp(outcomes: list) -> tuple[SourceResult, list[float]]:
         def __exit__(self, *exc):
             return False
 
-    def fake_fetch(since, client, *, per_publisher, cache=None):
+    def fake_fetch(since, client, *, per_publisher, cache=None, list_since=None):
         outcome = queue.pop(0)
         if outcome == "ok":
             return SourceResult("mcp_registry", items=[dict(ITEM)])
@@ -83,7 +83,7 @@ def main() -> int:
     geek = rss.fetch_feed(feed, datetime(2026, 9, 14, tzinfo=timezone.utc), FakeClient())
     by_title = {i["title"]: i for i in geek.items}
     checks = {
-        "MCP_제한시간_60초": timeouts == [collect.MCP_TIMEOUT] == [60],
+        "MCP_제한시간_30초": timeouts == [collect.MCP_TIMEOUT] == [30],
         "MCP_실패하면_2번_더_시도후_성공": recovered.error is None and len(recovered.items) == 1
         and recovered.stats["시도"] == ["HTTP 500", "RuntimeError: 파서 오류", "성공"],
         "MCP_성공하면_마지막_성공결과_저장": saved["date"] == "2026-09-15" and saved["items"][0]["title"] == ITEM["title"],
