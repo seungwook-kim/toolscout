@@ -8,3 +8,4 @@ docker-compose.yml
 railway.json
 .github
 *.log
+minify_web.py

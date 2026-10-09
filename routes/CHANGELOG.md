@@ -1,5 +1,6 @@
 # routes/ CHANGELOG
 
+- 2026-10-09 · protect.py(신규: AI 크롤러 UA 403·X-Robots-Tag·TDM 헤더·/static 허용 목록), pages에 AI 크롤러 이름별 robots.txt와 /.well-known/tdmrep.json, 루트 main.py는 make_app(docs)로 운영(DEV_MODE=0)에서 /docs·/redoc·/openapi.json 닫음 · 무단 복제·AI 크롤링 1차 보호(사용자 지시) · check_protect·check_access·check_rules 통과
 - 2026-10-09 · pages: /onboarding 추가, 승인됐고 프로필이 비면 /, /history, /settings는 /settings 대신 /onboarding으로(프로필이 차 있으면 /onboarding은 /로) · 첫 설정 화면 분리(리디자인 합의) · check_settings 통과
 - 2026-10-09 · auth.mark_login(마지막 로그인 시각·방법)을 비밀번호 로그인·가입 직후(password)·구글(google)·서명 토큰(link)에서 부름, db.py users.last_login_at·last_login_method, GET /api/admin/users에 두 칸 · 사용자 결정 (가) "마지막 로그인 시각이랑 방법 남겨줘"(로그인마다 쌓지 않음) · check_auth 34·check_apply·check_access 통과
 - 2026-10-08 · signup.py·google.py(신규: 이메일 인증번호 가입·비밀번호 로그인·구글 OAuth), auth.py에서 로그인 링크 요청 제거, invite.py는 승인·사용자 관리만(초대 코드·신청서 제거), pages /signup·/pending(/invite는 /pending으로), demo는 고정 예시 · 사용자 결정: 첫 화면은 회원가입 + 구글 로그인, 아이디 = 이메일, 인증번호 확인 뒤 가입, 비밀번호 로그인, 관리자 승인 뒤 사용 · check_auth 32·check_access·check_apply 통과
