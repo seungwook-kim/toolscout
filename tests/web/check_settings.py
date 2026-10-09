@@ -36,6 +36,11 @@ def main() -> int:
             saved = c.post("/api/profile", json={"role": "개발자", "tools_tags": ["python", " ", "claude code", "python"],
                                                  "free_text": "AI 에이전트를 공부한다", "weights": weights, "notify_time": "09:00"})
             after = c.get("/api/profile").json()
+            long_texts = {}  # 자유 한 줄은 200자까지 (2026-10-09 사용자 결정): 200자는 그대로, 250자는 200자로 잘림
+            for n in (200, 250):
+                c.post("/api/profile", json={"role": "개발자", "tools_tags": ["python", "claude code"], "free_text": "가" * n,
+                                             "weights": weights, "notify_time": "09:00"})
+                long_texts[n] = c.get("/api/profile").json()["profile"]["free_text"]
             root = c.get("/", follow_redirects=False)
             onboarding_after = c.get("/onboarding", follow_redirects=False)
             settings_after = c.get("/settings", follow_redirects=False)
@@ -60,6 +65,7 @@ def main() -> int:
         "없는_직군은_400": bad_role.status_code == 400,
         "저장_직군·도구정리·알림시간": saved.status_code == 200 and after["profile"]["role"] == "개발자"
         and after["profile"]["tools_tags"] == ["python", "claude code"] and after["profile"]["notify_time"] == "09:00",
+        "자유_한줄_200자까지": long_texts[200] == "가" * 200 and long_texts[250] == "가" * 200,
         "가중치_초기값_반영·-5~+5_고정": after["profile"]["weights"]["pricing"] == -5 and after["profile"]["weights"]["mcp_tools"] == 5
         and after["profile"]["has_weights"] is True,
         "프로필_저장후_오늘화면_열림": root.status_code == 200,

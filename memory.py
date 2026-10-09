@@ -84,6 +84,9 @@ def profile(user_id: int) -> dict:
             "notify_time": user.notify_time, "channel": user.channel, "has_weights": bool(weights)}
 
 
+FREE_TEXT_MAX = 200  # 자유 한 줄 최대 글자 수 (2026-10-09 사용자 결정: 100자 → 200자). web/settings.html·onboarding.html과 같게
+
+
 def save_profile(user_id: int, *, role: str, tools_tags: list[str], free_text: str | None, weights: dict[str, int],
                  notify_time: str = "08:00", channel: str = "email") -> None:
     if role not in ROLE_CHOICES:
@@ -91,7 +94,7 @@ def save_profile(user_id: int, *, role: str, tools_tags: list[str], free_text: s
     if notify_time not in NOTIFY_TIMES or channel not in CHANNELS:
         raise ProfileError("알림 채널·시간 값이 올바르지 않아요")
     tags = list(dict.fromkeys(t.strip()[:30] for t in tools_tags if t and t.strip()))[:15]
-    text = (free_text or "").strip()[:100] or None
+    text = (free_text or "").strip()[:FREE_TEXT_MAX] or None
     clean = {topic: max(WEIGHT_MIN, min(WEIGHT_MAX, int(weights.get(topic, 0)))) for topic in TOPICS}
     with db.session() as s:
         user = s.get(db.User, user_id)
