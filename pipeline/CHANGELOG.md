@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-10-09 · briefing_mail.render(mark=)로 카드 본문 글과 HTML·텍스트 본문 끝에 받는 사람의 워터마크, deliver.outbox가 사용자 id로 표식을 만들어 넘김 · 메일이 새어 나갔을 때 어느 계정인지 추적(저장된 카드 원문은 그대로) · check_protect2·check_mail_layout 통과
 - 2026-10-09 · dedupe: SOURCE_TIER에 github_search(2), GitHub 검색 MCP는 제목이 달라 주소로 레지스트리 항목에 합침(레지스트리가 대표, 대소문자 무시) · 같은 저장소가 두 출처에서 오면 설치 정보 있는 쪽이 남아야 해서 · check_github_search 통과
 - 2026-10-07 · cron.py(신규): Railway 크론 진입점. 시각과 DB만 보고 06:00 검증·07:00~08:00 실행(3번)·지난 알림 시각 발송·지금 만들기 요청 처리, `--rehearse` 첫 점검 · scheduler.external()(JOBS_EXTERNAL) · persist에 지금 만들기 요청(request·requested·clear)과 delete_day · run_daily 운영 모드 대상에 관리자 포함(본인 계정이 is_test라 운영 모드에서 빠지던 것) · 사용자 결정 "vercel + railway" · check_cron 19 통과
 - 2026-10-05 · promo: 제목 형식이 확실한 다섯 가지를 모델 전에 뺌(AI타임스 "[게시판]" 단신 묶음, "[기고]"·"[칼럼]" 의견 글, "[영상]"·"[video]" 강연, 끝에 지난해 이전 연도를 단 예전 자료, OpenAI 블로그 고객 사례) · 10/2~10/4 골든셋 정밀도 72.3%·64.8%·61.4%로 10/1(78.6%)보다 낮고, 잘못 통과한 것에 이 형식이 반복됨 · 9/27~10/4 정답 1,003건에서 걸린 것이 모두 정답 X(O 0건), 정밀도 10/2 74.1%·10/3 69.7%·10/4 64.6%로 오르고 재현율 그대로. check_promo 12·run_daily --fake 통과

@@ -5,6 +5,8 @@
   관리자(ADMIN_EMAILS)에게만 카드마다 Langfuse 트레이스 주소
 - GET /api/briefings/dates: 내 브리핑이 있는 날짜 목록
 - GET /api/search?q=: 내 브리핑에 나왔던 항목의 제목·이름 키워드 검색 (DB LIKE, LLM 없음)
+보호 2차 (2026-10-09): 이 라우터의 모든 API는 요청 수 제한(routes/guard.py)을 거치고, 내보내는 카드 본문 글 끝에 사용자별 보이지 않는
+워터마크(routes/watermark.py)를 붙인다. DB 원문에는 넣지 않는다.
 """
 from datetime import date
 
@@ -15,9 +17,10 @@ import db
 from agent import tracing
 from agent.schemas import TOPICS
 from pipeline.run_daily import today_kst
+from routes import guard, watermark
 from routes.auth import is_admin, require_approved
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(guard.rate_limit)])
 SEARCH_LIMIT = 30
 
 
@@ -54,6 +57,7 @@ def briefing_for(user: db.User, day: date) -> dict:
                             .outerjoin(db.Item, db.Item.id == db.Briefing.item_id)
                             .where(db.Briefing.user_id == user.id, db.Briefing.date == day).order_by(db.Briefing.rank)).all()
     admin = is_admin(user.email)
+    mark = watermark.mark_for(user.id)
     cards, empty_reason, pool_size, run_stats = [], None, None, None
     state = feedback_state(user.id, [r.item_id for r in rows if r.item_id])
     for row in rows:
@@ -62,7 +66,7 @@ def briefing_for(user: db.User, day: date) -> dict:
         if row.card_json is None:
             empty_reason = row.empty_reason
             continue
-        card = dict(row.card_json) | {"item_id": row.item_id, "topic": row.topic, "topic_label": TOPICS.get(row.topic or "", ""),
+        card = watermark.mark_card(dict(row.card_json), mark) | {"item_id": row.item_id, "topic": row.topic, "topic_label": TOPICS.get(row.topic or "", ""),
                                       "feedback": state.get(row.item_id, {"actions": [], "reason": None, "memo": None, "ids": {}}),
                                       "item_meta": {"stars": row.stars, "version": row.version, "source": row.source,
                                                     "published_at": row.published_at.isoformat() + "Z" if row.published_at else None}}
@@ -104,5 +108,6 @@ def search(q: str = "", user: db.User = Depends(require_approved)) -> dict:
                             .join(db.Item, db.Item.id == db.Briefing.item_id)
                             .where(db.Briefing.user_id == user.id, *conditions)
                             .order_by(db.Briefing.date.desc()).limit(SEARCH_LIMIT)).all()
+    mark = watermark.mark_for(user.id)
     return {"q": q, "results": [{"date": str(r.date), "item_id": r.id, "title": r.title, "url": r.url, "type": r.type,
-                                 "summary_ko": r.summary_ko} for r in rows]}
+                                 "summary_ko": watermark.mark_text(r.summary_ko, mark)} for r in rows]}

@@ -1,6 +1,6 @@
 """웹 검수 공통: 앱을 프로세스 안에서 띄우고(TestClient), 메일은 폴더로 받고, 검수용 사용자를 만들고 지운다.
 
-- 예약은 끄고(SCHEDULER_ENABLED=0), 메일은 MAIL_FAKE_DIR로 보낸다 (실제 발송 없음)
+- 예약은 끄고(SCHEDULER_ENABLED=0), 메일은 MAIL_FAKE_DIR로 보낸다 (실제 발송 없음), 요청 수 제한은 끈다(RATE_LIMIT_OFF=1)
 - 검수용 사용자 주소는 web-*@toolscout.test. ADMIN_EMAILS에 넣어 개발 모드 회원가입 인증번호를 받게 한다(2026-10-08)
 - 끝나면 검수용 사용자와 그 사람의 weights·seen·feedback·questions·briefings를 지운다
 - 로그인한 검수용 사용자는 승인(status approved) 상태로 둔다. 승인 대기 상태가 필요하면 login(..., approve=False)
@@ -16,6 +16,7 @@ TEST_DOMAIN = "@toolscout.test"
 MAIL_DIR = Path(tempfile.mkdtemp(prefix="toolscout_web_mail_"))
 os.environ["SCHEDULER_ENABLED"] = "0"
 os.environ["MAIL_FAKE_DIR"] = str(MAIL_DIR)
+os.environ.setdefault("RATE_LIMIT_OFF", "1")  # 검수는 짧은 시간에 요청을 많이 보낸다. 요청 수 제한은 check_protect2가 켜고 따로 본다(운영 기본은 켜짐)
 
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import delete, select  # noqa: E402

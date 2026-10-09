@@ -14,12 +14,13 @@ from pathlib import Path
 from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse
 
+from routes import guard
 from routes.auth import approved, current_user, is_admin, profile_done
 from routes.protect import robots_txt
 
 WEB = Path(__file__).resolve().parents[1] / "web"
 router = APIRouter(include_in_schema=False)
-ROBOTS = robots_txt("User-agent: *\nAllow: /demo\nDisallow: /\n")  # 일반 규칙(/demo만 허용) + AI 크롤러 이름별 차단
+ROBOTS = robots_txt(f"User-agent: *\nAllow: /demo\nDisallow: {guard.TRAP_PATH}\nDisallow: /\n")  # 일반 규칙(/demo만 허용, 함정 경로는 따로 명시) + AI 크롤러 이름별 차단
 
 
 def _page(name: str) -> FileResponse:
