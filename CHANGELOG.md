@@ -2,6 +2,8 @@
 
 새 세션은 맨 위 항목을 읽고 시작한다. 폴더별 상세 이력은 각 폴더의 `CHANGELOG.md`, 남은 작업은 각 폴더 README의 `## 할 일`에 있다.
 
+- 2026-10-09 · 공통 푸터(운영정책·이용약관·개인정보처리방침·고객센터 문의하기)와 /policy 운영정책, /support 고객센터 문의(POST /api/support, 관리자 화면 문의 구역), 표 1개(support_messages)(브랜치 footer)
+  - 다음 세션 시작점: main 머지 뒤 표 만들기(`db.init_db()` 또는 check_tables)와 운영 확인(/support에서 문의 한 건 보내 관리자 메일·화면 확인)
 - 2026-10-09 · 무단 복제 2차 보호(브랜치 protect2): 사용자별 0폭 문자 워터마크와 해독 명령, 함정 링크 24시간 차단, DB 고정 창 요청 수 제한, 표 2개(blocked_clients·rate_counters)
   - 결정(사용자): 워터마크·함정 링크·요청 수 제한은 넣고 JS 난독화는 안 함. 자세한 것은 `docs/deploy.md` "보호 장치 2차", `routes/guard.py`·`routes/watermark.py`
   - 다음 세션 시작점: main 머지 뒤 표 만들기(`db.init_db()`)와 운영 확인(docs/deploy.md 운영 확인 방법)

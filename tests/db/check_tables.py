@@ -1,7 +1,7 @@
 """db.py 검수 (착수 프롬프트 0단계 7번, Supabase 전용으로 조정).
 
 실행: uv run python -m tests.db.check_tables
-연결 없이 도는 검사(표 17개, 칸, Postgres DDL, 제약)와 DATABASE_URL이 있을 때만 도는 실제 생성으로 나뉜다.
+연결 없이 도는 검사(표 18개, 칸, Postgres DDL, 제약)와 DATABASE_URL이 있을 때만 도는 실제 생성으로 나뉜다.
 """
 import json
 import os
@@ -134,7 +134,7 @@ def main() -> int:
     ddl = ddl_compiles()
     json_cols = [f"{t}.{c.name}" for t in db.TABLES for c in tables[t].columns if isinstance(c.type, postgresql.JSONB)]
     checks = {
-        "표_17개(email_codes·blocked_clients·rate_counters·app_secrets_포함)": set(tables) == set(db.TABLES) and len(db.TABLES) == 17,
+        "표_18개(email_codes·blocked_clients·rate_counters·app_secrets·support_messages_포함)": set(tables) == set(db.TABLES) and len(db.TABLES) == 18,
         "계획안_칸_모두_있음": not any(missing.values()),
         "postgres_DDL_컴파일": all(v is True for v in ddl.values()),
         "JSON_칸_10개는_JSONB(run_stats·probes.tools·stages·verify_requests.install·users.application 포함)": len(json_cols) == 10,

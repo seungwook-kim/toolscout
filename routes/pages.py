@@ -7,8 +7,9 @@
 - 로그인이 필요한 화면은 세션이 없으면 /login으로, 승인 전이면 /pending으로, 프로필이 비었으면 /onboarding으로 보낸다.
   예전 초대 코드 화면 주소 /invite는 /pending으로 보낸다
 - /robots.txt(AI 크롤러 이름별 차단 포함)·/.well-known/tdmrep.json(TDM 이용 유보). 보호 장치 본체는 routes/protect.py
+- /policy(운영정책)·/support(고객센터 문의, 보내기는 routes/support.py)도 같은 공개 글이다 (2026-10-09). 모든 화면 아래 공통 푸터(web/app.js)에 네 주소가 있다
 - /privacy(개인정보처리방침)·/terms(서비스 이용약관): 로그인 없이 열리는 공개 글. 구글 OAuth 앱 게시에 홈페이지·방침·약관 링크가 필요해서 만들었고
-  /demo처럼 색인을 허용한다 (2026-10-09). 첫 화면과 가입 화면 아래에 작은 링크가 있다
+  /demo처럼 색인을 허용한다 (2026-10-09)
 - 공개 데모 /demo는 routes/demo.py에 있다. 색인은 /demo만 허용하고 나머지 화면은 noindex (2026-09-16 사용자 결정)
 """
 from pathlib import Path
@@ -22,7 +23,7 @@ from routes.protect import robots_txt
 
 WEB = Path(__file__).resolve().parents[1] / "web"
 router = APIRouter(include_in_schema=False)
-ROBOTS = robots_txt(f"User-agent: *\nAllow: /demo\nAllow: /privacy\nAllow: /terms\nDisallow: {guard.TRAP_PATH}\nDisallow: /\n")  # 일반 규칙(/demo만 허용, 함정 경로는 따로 명시) + AI 크롤러 이름별 차단
+ROBOTS = robots_txt(f"User-agent: *\nAllow: /demo\nAllow: /privacy\nAllow: /terms\nAllow: /policy\nAllow: /support\nDisallow: {guard.TRAP_PATH}\nDisallow: /\n")  # 일반 규칙(/demo만 허용, 함정 경로는 따로 명시) + AI 크롤러 이름별 차단
 
 
 def _page(name: str) -> FileResponse:
@@ -70,6 +71,16 @@ def privacy():
 @router.get("/terms")
 def terms():
     return _public("terms.html")
+
+
+@router.get("/policy")
+def policy():
+    return _public("policy.html")
+
+
+@router.get("/support")
+def support():
+    return _public("support.html")
 
 
 @router.get("/login")

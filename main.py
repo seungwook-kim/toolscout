@@ -13,7 +13,7 @@ import mcp_server
 import models
 from agent import tracing
 from pipeline import scheduler
-from routes import ask, auth, briefings, demo, feedback, google, guard, invite, pages, settings, signup, w1
+from routes import ask, auth, briefings, demo, feedback, google, guard, invite, pages, settings, signup, support, w1
 from routes.protect import AllowedStaticFiles, ProtectMiddleware
 
 WEB = Path(__file__).parent / "web"
@@ -51,6 +51,7 @@ def make_app(docs: bool) -> FastAPI:
     app.include_router(feedback.router)  # 피드백 버튼(W3): 웹 세션, 메일 서명 링크
     app.include_router(ask.router)  # 질문창(W2): 게이트·키워드 검색·해설가 답
     app.include_router(invite.router)  # 관리자 가입 승인·사용자 관리
+    app.include_router(support.router)  # 고객센터 문의(로그인 없이 가능)와 관리자 문의 목록
     app.include_router(demo.router)  # 공개 데모 /demo (로그인 없음, 고정 예시 뉴스)
     app.include_router(guard.router)  # 함정 링크(보이지 않는 링크를 따라온 봇을 24시간 차단)
     app.include_router(w1.router)  # 아침 브리핑 작업을 직접 부르는 API (실행·발송·상태)
