@@ -1,5 +1,6 @@
 # web/ CHANGELOG
 
+- 2026-10-09 · settings·onboarding 자유 한 줄 200자(입력 칸·글자 수·넘으면 경고), 서버 memory.FREE_TEXT_MAX=200 · 사용자 "자유 한줄 200자로 바꿔줘" · check_settings 통과
 - 2026-10-09 · 옛 다리 정리: TS.mast, web/legacy.css, app.css의 legacy 불러오기 삭제(화면 9개 모두 TS.shell·TS.bare로 옮겨짐), admin.html에 남은 `</style>` 하나 지움(CSS가 글자로 보였음), 실제 화면을 라이트·다크 1366px·390px로 찍어 확인 · 리디자인 마무리 · check_design·check_auth·check_settings·check_briefings·check_feedback·check_ask·check_rules 통과
 - 2026-10-09 · history·settings·admin·f 화면을 합의 목업대로 새로 만들고 onboarding.html(첫 설정)·profile.js·profile.css(직군 칩·슬라이더·도구 태그, 설정과 공유) 추가, 네 화면은 TS.shell/TS.bare로 옮겨 옛 다리 안 씀, 설정에서 알림 시각 고르기는 뺌(문구 '매일 아침 08:00'), 관리자 사용자 표에 마지막 로그인 · 사용자 결정 '목업대로 실제 화면을 만든다'·'알림 시각은 추후' · check_settings·check_briefings·check_apply·check_feedback·check_auth·check_design 통과
 - 2026-10-09 · 공통 디자인 체계 새로 씀: app.css(토큰 라이트·다크, 앱바·탭·하단 탭·버튼·입력·알림·알약·저장 바·확인 줄), app.js(TS.shell·TS.bare·TS.confirmLine·TS.setPending), cards.js·cards.css(카드 해부도, 자세히, 관리자 트레이스, 관심없음 접기), ask.js(질문 시트), legacy.css(옛 화면 다리) · 리디자인 1·2차 회의 합의 · check_design 통과. 화면 9개는 아직 TS.mast(다리)를 부른다

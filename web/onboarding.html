@@ -96,8 +96,8 @@
             </div>
             <div class="field">
               <label class="label" for="free">자유 한 줄 <span class="req-mark">(선택)</span></label>
-              <input class="input" id="free" type="text" maxlength="100" placeholder="예: 사내 문서 자동화 봇을 만들고 있어요">
-              <div class="frow"><span></span><span class="ctr" id="free-ctr" aria-hidden="true">0/100</span></div>
+              <input class="input" id="free" type="text" maxlength="200" placeholder="예: 사내 문서 자동화 봇을 만들고 있어요">
+              <div class="frow"><span></span><span class="ctr" id="free-ctr" aria-hidden="true">0/200</span></div>
             </div>
             <p class="help">매일 아침 <span class="mono">08:00</span>에 이메일 <span class="mono" id="mail-to"></span>으로 보내요. 카카오톡 알림은 준비 중이에요.</p>
           </div>
@@ -147,7 +147,7 @@
       $("roles").insertAdjacentHTML("beforeend", state.roles.map((r) => `<label class="rchip"><input type="radio" name="role" value="${TS.esc(r)}">${TS.esc(r)}</label>`).join(""));
       $("roles").querySelectorAll("input").forEach((input) => { input.onchange = () => pick(input.value); });
       tagCtl = Profile.tags({ box: $("tagbox"), list: $("tags"), input: $("tag-in"), counter: $("tag-ctr"), error: $("tag-err") }, [], null);
-      $("free").addEventListener("input", () => { $("free-ctr").textContent = `${$("free").value.length}/100`; });
+      $("free").addEventListener("input", () => { $("free-ctr").textContent = `${$("free").value.length}/200`; });
       $("tp-open").onclick = () => {
         const open = $("tp-panel").hidden;
         $("tp-panel").hidden = !open; $("tp-open").setAttribute("aria-expanded", String(open));

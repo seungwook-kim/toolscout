@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-09 · web/check_settings에 자유 한 줄 200자 항목(200자는 그대로, 250자는 200자로 잘림) · 자유 한 줄 100자 → 200자(사용자 결정) · 통과
 - 2026-10-09 · web/check_rules의 디자인 참고파일 항목을 새 체계로(참고파일이 app.css를 링크하고 768px 기준 규칙이 있는지), check_design에서 legacy.css·옛 #mast 허용 제거 · 옛 다리 삭제 · 통과
 - 2026-10-09 · web/check_settings에 첫 설정 이동 항목 2개(프로필 비면 /·/history·/settings가 /onboarding으로, 차면 /onboarding은 /로) · 새 /onboarding 화면 · 통과
 - 2026-10-09 · web/check_design B를 새 체계로(토큰 라이트·다크, 공통 컴포넌트, 토큰 밖 색값 없음, 앱 셸·카드 함수 요소). A·C는 그대로 · 리디자인 공통 체계 · 통과
