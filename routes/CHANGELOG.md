@@ -1,5 +1,6 @@
 # routes/ CHANGELOG
 
+- 2026-10-09 · support.py 신규(POST /api/support 비로그인 가능·저장·관리자 메일 한 통·Reply-To·1시간 3건/10건 제한·꿀단지·중복 거름, 관리자 GET /api/admin/support·POST .../handled), pages에 /policy·/support, INDEXABLE·robots Allow · 로그인 못 하는 사람도 문의할 수 있게(문의자 주소로는 자동 메일 없음) · check_support 통과
 - 2026-10-09 · pages: 로그인 없이 열리는 GET /privacy·/terms 추가, protect.INDEXABLE과 robots.txt에 두 주소 허용 · 구글 OAuth 앱을 프로덕션으로 게시하려면 홈페이지·개인정보처리방침·약관 링크가 필요해서 · check_legal, check_protect 통과
 - 2026-10-09 · google.py: 관리자 전용 GET /admin/gmail/connect와 GET /api/admin/gmail, 같은 콜백에서 state 종류(k=gmail)로 로그인과 Gmail 발송 연결을 가름 · 구글 콘솔에 등록된 리디렉션 주소가 둘뿐이라 새 콜백을 못 만든다 · tests.web.check_gmail_api, check_auth 통과
 - 2026-10-09 · guard: '차단 중' 결과도 1분만 기억하고 DB를 다시 봄 · 운영 확인에서 차단 행을 지워도 따뜻한 서버가 만료(24시간)까지 403을 냈다 · check_protect2 통과

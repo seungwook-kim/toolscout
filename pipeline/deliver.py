@@ -58,7 +58,7 @@ class DirMailer:
         return None
 
     def send_message(self, message: EmailMessage):
-        body = {"to": message["To"], "subject": message["Subject"],
+        body = {"to": message["To"], "subject": message["Subject"], "reply_to": message["Reply-To"],
                 "text": message.get_body(("plain",)).get_content() if message.is_multipart() else message.get_content()}
         name = f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%f')}.json"
         (self.folder / name).write_text(json.dumps(body, ensure_ascii=False), encoding="utf-8")
@@ -80,8 +80,8 @@ def why(exc: Exception) -> str:
     return str(exc)[:160] if isinstance(exc, gmail_api.GmailError) else f"{type(exc).__name__}: {str(exc)[:160]}"
 
 
-def send_single(recipients: list[str], subject: str, text: str, html: str | None = None, smtp_factory=None) -> None:
-    """메일 한 통 (로그인 링크 등). 실패하면 MailError. 설정 값은 오류 문구에 넣지 않는다."""
+def send_single(recipients: list[str], subject: str, text: str, html: str | None = None, smtp_factory=None, reply_to: str | None = None) -> None:
+    """메일 한 통 (로그인 링크 등). reply_to가 있으면 Reply-To 헤더를 단다(고객센터 문의). 실패하면 MailError. 설정 값은 오류 문구에 넣지 않는다."""
     sender, password = os.environ.get("GMAIL_USER", "").strip(), os.environ.get("GMAIL_APP_PASSWORD", "").strip()
     factory = smtp_factory or default_smtp_factory()
     api = factory is gmail_api.GmailApiMailer  # Gmail API는 앱 비밀번호가 필요 없다
@@ -91,6 +91,8 @@ def send_single(recipients: list[str], subject: str, text: str, html: str | None
     email["From"] = f"toolscout <{sender or 'toolscout@example.test'}>"
     email["To"] = ", ".join(recipients)
     email["Subject"] = subject
+    if reply_to:
+        email["Reply-To"] = reply_to
     email.set_content(text)
     if html:
         email.add_alternative(html, subtype="html")

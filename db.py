@@ -298,6 +298,21 @@ class RateCounter(SQLModel, table=True):
     count: int = 0
 
 
+class SupportMessage(SQLModel, table=True):
+    """고객센터 문의 (2026-10-09 사용자 결정, routes/support.py). 로그인 없이도 받는다. 문의자 주소로는 자동 메일을 보내지 않는다.
+    user_id는 로그인 상태로 보냈을 때만 있고 계정을 지우면 비워진다. client_hash는 접속 IP·브라우저를 HMAC한 값(스팸 막기용, 원본 저장 안 함)."""
+    __tablename__ = "support_messages"
+
+    id: int | None = Field(default=None, primary_key=True)
+    email: str  # 답장 받을 주소
+    category: str  # account · briefing · privacy · other
+    body: str
+    user_id: int | None = Field(default=None, sa_column=Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True))
+    client_hash: str = Field(index=True)
+    created_at: datetime = Field(default_factory=utcnow, index=True)
+    handled_at: datetime | None = None  # 관리자가 처리함으로 표시한 시각
+
+
 class AppSecret(SQLModel, table=True):
     """암호화해서 보관하는 비밀값 (2026-10-09 Gmail API 발송). 지금은 gmail_refresh_token 하나.
     value_encrypted는 SESSION_SECRET에서 파생한 키로 AES-GCM 암호화한 값이라 DB만 봐서는 원문을 알 수 없다 (pipeline/gmail_api.py)."""
@@ -310,7 +325,7 @@ class AppSecret(SQLModel, table=True):
 
 TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions", "used_tokens",
           "verify_requests", "invite_codes", "status_changes", "email_codes",
-          "blocked_clients", "rate_counters", "app_secrets"]
+          "blocked_clients", "rate_counters", "app_secrets", "support_messages"]
 
 
 def database_url() -> URL:

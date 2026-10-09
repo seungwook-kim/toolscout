@@ -23,11 +23,12 @@
 .adm-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
 .adm-head h1{font-size:1.5rem;font-weight:700}
 @media (max-width:767px){.adm-head h1{font-size:1.25rem}}
-.adm-grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"queue" "users" "log";gap:40px;align-items:start}
-@media (min-width:1200px){.adm-grid{grid-template-columns:minmax(0,7fr) minmax(0,5fr);grid-template-areas:"queue log" "users users";gap:40px 24px}}
+.adm-grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"queue" "users" "log" "support";gap:40px;align-items:start}
+@media (min-width:1200px){.adm-grid{grid-template-columns:minmax(0,7fr) minmax(0,5fr);grid-template-areas:"queue log" "users users" "support support";gap:40px 24px}}
 #queue{grid-area:queue}
 #users{grid-area:users}
 #log{grid-area:log}
+#support{grid-area:support}
 .adm-sec{display:grid;gap:12px;align-content:start;min-width:0;scroll-margin-top:calc(var(--bar) + 64px)}
 .adm-sec > *{min-width:0}
 .rec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);overflow:clip}
@@ -130,6 +131,19 @@
 .st-flow > .ic{color:var(--mute);width:12px;height:12px}
 .c-last-login .u-by{display:block}
 
+/* 고객센터 문의 */
+.sup-row{display:grid;gap:6px;padding:14px 20px}
+.sup-top{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:.8125rem;color:var(--mute)}
+.sup-top .mono{font-size:.75rem;color:var(--ink-2)}
+.sup-from{font-family:var(--mono);font-size:.875rem;font-weight:500;color:var(--ink);overflow-wrap:anywhere;letter-spacing:0}
+.sup-body{font-size:.875rem;color:var(--ink-2);overflow-wrap:anywhere;white-space:pre-wrap}
+.sup-row details > summary{cursor:pointer;color:var(--ink-2);list-style:none}
+.sup-row details > summary::-webkit-details-marker{display:none}
+.sup-row details[open] > summary .sup-short{display:none}
+.sup-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.sup-row.is-done{background:var(--surface-2)}
+@media (max-width:767px){.sup-row{padding:16px}.sup-foot .btn{min-height:44px}}
+
 /* Gmail 발송 연결 줄 */
 .gm{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel)}
 .gm-t{font-size:.875rem;font-weight:600;color:var(--ink)}
@@ -195,6 +209,13 @@
             </table>
           </div>
           <p class="rec-empty" id="u-empty" hidden></p>
+        </section>
+        <section class="adm-sec" id="support" aria-labelledby="s-h">
+          <div class="lane-h"><h2 id="s-h">문의</h2><span class="n" id="s-open">0</span><span class="hint">처리 안 한 문의 · 최근 50건</span></div>
+          <p class="help">답장은 문의 알림 메일에서 바로 하면 문의자 주소로 가요. 이 화면은 처리 여부만 표시해요. 승인 탭 숫자에는 넣지 않아요.</p>
+          <ul class="rec" id="sup-list"></ul>
+          <p class="rec-empty" id="sup-empty" hidden>받은 문의가 없어요</p>
+          <p class="msg msg-bad" id="sup-err" role="alert" hidden></p>
         </section>
       </div>
     </div>
@@ -378,11 +399,48 @@
       }
     }
 
+    // ----- 고객센터 문의 (GET /api/admin/support, POST /api/admin/support/{id}/handled) -----
+    let support = [];
+    function renderSupport(openCount) {
+      $("s-open").textContent = openCount;
+      $("sup-empty").hidden = !!support.length;
+      $("sup-list").hidden = !support.length;
+      $("sup-list").innerHTML = support.map((m) => {
+        const short = m.body.length > 80 ? `${m.body.slice(0, 80)}…` : m.body;
+        const text = m.body.length > 80 ? `<details><summary><span class="sup-short">${TS.esc(short)}</span><span class="sr-only"> 전체 보기</span></summary>${TS.esc(m.body)}</details>` : TS.esc(m.body);
+        return `<li class="sup-row${m.handled_at ? " is-done" : ""}" data-sid="${m.id}"><p class="sup-top"><span class="mono">${TS.esc(stamp(m.created_at))}</span>
+          <span class="tag-id">${TS.esc(m.category_label)}</span>${m.has_account ? '<span class="tag-id">계정 있음</span>' : ""}</p>
+          <p class="sup-from">${TS.esc(m.email)}</p><div class="sup-body">${text}</div>
+          <div class="sup-foot">${m.handled_at ? `<span class="pill pill-plain pill-sm">${TS.ic("ok")}처리함</span><span class="mono mute">${TS.esc(stamp(m.handled_at))}</span>`
+          : `<button type="button" class="btn btn-sm" data-handled aria-label="${TS.esc(m.email)} 문의 처리함으로 표시">${TS.ic("tried")}처리함</button>`}</div></li>`;
+      }).join("");
+    }
+    async function loadSupport() {
+      try {
+        const data = await TS.api("/api/admin/support");
+        support = data.messages;
+        $("sup-err").hidden = true;
+        renderSupport(data.open);
+      } catch (e) { $("sup-err").hidden = false; $("sup-err").textContent = "문의 목록을 불러오지 못했어요."; }
+    }
+    $("sup-list").addEventListener("click", async (e) => {
+      const button = e.target.closest("[data-handled]");
+      if (!button) return;
+      const id = Number(button.closest(".sup-row").dataset.sid);
+      button.disabled = true;
+      try {
+        await TS.api(`/api/admin/support/${id}/handled`, { method: "POST" });
+        TS.say("처리함으로 표시했어요");
+        await loadSupport();
+      } catch (err) { button.disabled = false; TS.say(err.message); }
+    });
+
     (async () => {
       me = await TS.shell({ active: "/admin/invites", ask: false });
       $("first-note").hidden = !(me.approved && !me.profile_done);
       load();
       loadGmail();
+      loadSupport();
     })();
   </script>
 </body>

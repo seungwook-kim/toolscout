@@ -1,5 +1,6 @@
 # web/ CHANGELOG
 
+- 2026-10-09 · 공통 푸터(app.js TS.footer: 운영정책·이용약관·개인정보처리방침 굵게·고객센터 문의하기·© 2026 toolscout, app.css .site-foot), policy.html·support.html 신규, privacy·terms 문의 안내를 /support로, admin.html에 문의 구역, login·signup의 작은 법적 링크(.legal)는 푸터로 합침 · 모든 화면 맨 아래에서 정책과 문의로 갈 수 있게 · check_support, check_legal, check_design 통과
 - 2026-10-09 · privacy.html(개인정보처리방침)·terms.html(서비스 이용약관) 신규, login·signup 아래에 두 링크(.legal), app.css에 .legal · 구글 OAuth 앱 프로덕션 게시에 필요한 공개 링크 · check_legal, check_design 통과
 - 2026-10-09 · admin.html에 "Gmail 발송 연결" 줄(연결됨·시각 / 안 됨, 연결하기 링크, 돌아왔을 때 결과 안내) · 아침 메일을 Gmail API로 보내려면 관리자가 한 번 연결해야 해서 · check_gmail_api(화면 문구), check_design 통과
 - 2026-10-09 · login·signup·demo·index·history·settings 끝에 보이지 않는 함정 링크(aria-hidden, tabindex -1, 화면 밖) 추가 · 무단 복제 2차 보호(규칙을 무시하는 봇 잡기) · check_protect2·check_design 통과

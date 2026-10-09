@@ -35,6 +35,7 @@ OPEN = {
     "/api/auth/logout": "쿠키 지우기",
     "/api/feedback/link": "메일 버튼 서명 링크(24시간·1회용)",
     "/api/feedback/link/note": "메일 링크 이상함 사유(1시간 서명)",
+    "/api/support": "고객센터 문의 (로그인 못 하는 사람도 써야 함. 비로그인 1시간 3건, 꿀단지, 문의자에게 자동 메일 없음)",
     "/api/demo/briefing": "공개 데모 (고정 예시, DB 없음. IP당 분당 60회)",
 }
 SERVICE_KEY = ("/api/w1/",)  # X-Service-Key

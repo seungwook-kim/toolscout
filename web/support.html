@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <!-- © 2026 toolscout. All rights reserved. 무단 복제·재배포·AI 학습·재구현 금지 -->
+  <meta name="tdm-reservation" content="1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>toolscout 고객센터 문의</title>
+  <meta name="description" content="toolscout 계정, 브리핑, 개인정보·삭제 요청에 대해 운영자에게 문의합니다.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#15181E">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+  <style>
+    /* 고객센터 문의: 가운데 한 열. 색은 토큰만 쓴다 */
+    .sp-form{display:grid;gap:16px}
+    .sp-head{display:grid;gap:6px}
+    .sp-head h1{font-size:1.5rem;font-weight:700}
+    @media (max-width:767px){.sp-head h1{font-size:1.25rem}}
+    .sp-count{display:flex;justify-content:space-between;gap:12px}
+    .sp-trap{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+    .sp-done{display:grid;gap:12px}
+    .sp-done .alert{margin:0}
+    .sp-links{display:flex;flex-wrap:wrap;gap:8px}
+  </style>
+</head>
+<body class="page-support">
+  <!-- 고객센터 문의 (2026-10-09): 로그인 없이 보낼 수 있다. 받는 곳은 POST /api/support, 관리자만 읽는다. 문의자 주소로는 자동 메일을 보내지 않는다 -->
+  <header id="appbar"></header>
+
+  <main id="main" class="narrow">
+    <div class="sp-head">
+      <h1>고객센터 문의하기</h1>
+      <p class="help">로그인이 안 될 때도 보낼 수 있어요. 운영자가 확인하고 적어 주신 이메일로 직접 답장해요. 보통 하루 안에 확인해요.</p>
+    </div>
+
+    <div class="panel">
+      <form id="sp-form" class="sp-form" novalidate>
+        <div id="sp-alert" class="alert alert-bad" role="alert" hidden><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><div class="body"><span id="sp-alert-text"></span></div></div>
+        <div class="field">
+          <label class="label" for="sp-email">답장 받을 이메일</label>
+          <input class="input" id="sp-email" name="email" type="email" autocomplete="email" inputmode="email" enterkeyhint="next" maxlength="254" placeholder="me@example.com" required>
+        </div>
+        <div class="field">
+          <label class="label" for="sp-category">문의 종류</label>
+          <select class="input" id="sp-category" name="category">
+            <option value="account">계정·로그인</option>
+            <option value="briefing">브리핑·메일</option>
+            <option value="privacy">개인정보·삭제 요청</option>
+            <option value="other">기타</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label" for="sp-body">내용</label>
+          <textarea class="input" id="sp-body" name="body" rows="7" maxlength="2000" aria-describedby="sp-count" placeholder="어떤 일이 있었는지 적어 주세요. 비밀번호는 적지 마세요." required></textarea>
+          <p class="help sp-count" id="sp-count"><span>10자 이상, 2000자까지</span><span class="mono" id="sp-n">0 / 2000</span></p>
+        </div>
+        <div class="sp-trap" aria-hidden="true">
+          <label for="sp-website">웹사이트 (사람은 비워 두세요)</label>
+          <input id="sp-website" name="website" type="text" tabindex="-1" autocomplete="off">
+        </div>
+        <button class="btn btn-primary btn-lg btn-block" type="submit" id="sp-send">문의 보내기</button>
+        <p class="help">보낸 내용은 운영자만 볼 수 있고, <a href="/privacy">개인정보처리방침</a>에 따라 다뤄요. 접수 확인 메일은 따로 보내지 않아요.</p>
+      </form>
+
+      <div class="sp-done" id="sp-done" hidden>
+        <div class="alert alert-note" role="status"><svg class="ic" aria-hidden="true"><use href="#i-ok"/></svg><div class="body"><span id="sp-done-text" tabindex="-1">접수됐어요.</span></div></div>
+        <div class="sp-links"><a class="btn" href="/">처음 화면으로</a><button type="button" class="btn btn-quiet" id="sp-again">하나 더 보내기</button></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      TS.bare({ actions: [["/login", "로그인"]] });
+
+      // 로그인돼 있으면 이메일 칸을 계정 이메일로 미리 채운다(고칠 수 있다). 로그인 안 했으면 조용히 넘어간다
+      TS.api("/api/me", { allow401: true }).then((me) => {
+        if (me && me.email && !$("sp-email").value) $("sp-email").value = me.email;
+      }).catch(() => {});
+
+      const body = $("sp-body"), count = () => { $("sp-n").textContent = `${body.value.length} / 2000`; };
+      body.addEventListener("input", count);
+
+      const showAlert = (text, field) => {
+        $("sp-alert-text").textContent = text;
+        $("sp-alert").hidden = false;
+        document.querySelectorAll("#sp-form [aria-invalid]").forEach((el) => el.removeAttribute("aria-invalid"));
+        if (field) { field.setAttribute("aria-invalid", "true"); field.focus(); }
+      };
+
+      $("sp-form").onsubmit = async (event) => {
+        event.preventDefault();
+        $("sp-alert").hidden = true;
+        const email = $("sp-email").value.trim(), text = body.value.trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showAlert("답장 받을 이메일을 올바르게 적어 주세요.", $("sp-email"));
+        if (text.length < 10) return showAlert("내용을 10자 이상 적어 주세요.", body);
+        if (text.length > 2000) return showAlert("내용은 2000자까지 적을 수 있어요.", body);
+        const button = $("sp-send");
+        button.disabled = true;
+        try {
+          const data = await TS.api("/api/support", { method: "POST", allow401: true, body: { email, category: $("sp-category").value, body: text, website: $("sp-website").value } });
+          $("sp-done-text").textContent = data.message || "접수됐어요.";
+          $("sp-form").hidden = true;
+          $("sp-done").hidden = false;
+          $("sp-done-text").focus();
+        } catch (e) {
+          showAlert(e.message);
+        }
+        button.disabled = false;
+      };
+
+      $("sp-again").onclick = () => {
+        body.value = "";
+        count();
+        $("sp-done").hidden = true;
+        $("sp-form").hidden = false;
+        body.focus();
+      };
+    })();
+  </script>
+</body>
+</html>

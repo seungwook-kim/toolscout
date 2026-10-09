@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <!-- © 2026 toolscout. All rights reserved. 무단 복제·재배포·AI 학습·재구현 금지 -->
+  <meta name="tdm-reservation" content="1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>toolscout 운영정책</title>
+  <meta name="description" content="toolscout의 가입·승인 기준, 하면 안 되는 일과 막는 방법, AI 해설과 검증 결과를 읽는 법을 알려 드립니다.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#15181E">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+  <style>
+    /* 법적 안내 글: 가운데 한 열, 읽기 좋은 줄 길이. 색은 토큰만 쓴다 */
+    .doc{max-width:calc(720px + 2 * var(--gutter));margin-inline:auto;padding-inline:var(--gutter);padding-block:32px 64px;display:grid;gap:28px}
+    .doc > *{min-width:0}
+    .doc h1{font-size:1.5rem;font-weight:700}
+    .doc h2{font-size:1.0625rem;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
+    .doc section{display:grid;gap:8px}
+    .doc p,.doc li{font-size:.9375rem;line-height:1.7;color:var(--ink-2)}
+    .doc ul{display:grid;gap:6px;padding-left:1.2em;list-style:disc}
+    .doc b{color:var(--ink);font-weight:600}
+    .doc a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+    @media (max-width:767px){.doc{padding-block:20px 48px}}
+  </style>
+</head>
+<body class="page-legal">
+  <!-- 운영정책: 로그인 없이 열림. 코드(routes/protect.py·guard.py·watermark.py·invite.py, web/cards.js)에서 확인한 내용만 적는다 (2026-10-09) -->
+  <header id="appbar"></header>
+
+  <main id="main" class="doc">
+    <div>
+      <h1>운영정책</h1>
+      <p class="help">시행일 2026-10-09</p>
+    </div>
+
+    <section aria-labelledby="o1">
+      <h2 id="o1">1. 가입과 승인</h2>
+      <ul>
+        <li>이메일(인증번호 확인 뒤 비밀번호 설정) 또는 구글 계정으로 누구나 가입 신청을 할 수 있습니다.</li>
+        <li>가입해도 바로 쓰는 것은 아니고, 운영자가 승인해야 브리핑·질문·피드백·설정을 쓸 수 있습니다. 승인 전에는 승인 대기 화면만 보입니다. 승인 때 따로 알림 메일은 보내지 않습니다.</li>
+        <li>가입 없이도 가상의 예시 브리핑(/demo)은 볼 수 있습니다.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="o2">
+      <h2 id="o2">2. 승인하지 않거나 차단하는 경우</h2>
+      <p>운영자는 아래에 해당하면 가입을 승인하지 않거나, 이미 쓰는 계정을 차단하거나 대기 상태로 돌릴 수 있습니다. 차단된 계정은 로그인해도 “이용할 수 없는 계정”이라는 안내만 보입니다.</p>
+      <ul>
+        <li>다음 3번의 금지 행위를 했거나 하려고 한 경우</li>
+        <li>다른 사람의 계정을 쓰거나, 계정을 여러 개 만들어 제한을 피하려는 경우</li>
+        <li>서비스 운영을 방해하는 경우</li>
+      </ul>
+      <p>승인과 차단이 바뀔 때마다 운영자 화면에 변경 이력이 남습니다. 억울하다면 <a href="/support">고객센터 문의하기</a>로 알려 주세요.</p>
+    </section>
+
+    <section aria-labelledby="o3">
+      <h2 id="o3">3. 하면 안 되는 일</h2>
+      <ul>
+        <li><b>무단 복제·재배포:</b> 브리핑, 카드 글, 메일, 화면 구성, 코드를 운영자 허락 없이 복사해 퍼 나르거나 팔거나 다시 쓰는 일</li>
+        <li><b>크롤링·자동 수집:</b> 프로그램으로 서비스를 긁어 가는 일, 요청 수 제한이나 숨은 링크 장치를 피하려는 일</li>
+        <li><b>AI 학습:</b> 서비스 내용을 AI 모델의 학습·미세조정·데이터 구축에 쓰는 일</li>
+        <li>글에 들어간 보이지 않는 표식을 지우거나 바꾸려는 일</li>
+      </ul>
+      <p>자세한 약속은 <a href="/terms">이용약관</a>의 “하면 안 되는 일”에 있습니다.</p>
+    </section>
+
+    <section aria-labelledby="o4">
+      <h2 id="o4">4. 어떻게 막고 있나</h2>
+      <p>아래 장치가 실제로 켜져 있습니다. 모든 것을 막지는 못하고, 예의 바른 크롤러와 게으른 복제를 막는 정도입니다.</p>
+      <ul>
+        <li><b>AI 크롤러 차단:</b> 알려진 AI 크롤러 이름(GPTBot, ClaudeBot, CCBot 등)으로 오는 요청은 robots.txt와 TDM 이용 유보 안내 말고는 거절(403)합니다. robots.txt와 응답 헤더로 AI 학습 사용 거부 뜻도 밝혀 둡니다.</li>
+        <li><b>요청 수 제한:</b> 브리핑·검색·지난 브리핑·예시 화면을 짧은 시간에 너무 많이 부르면 잠시 막고 “요청이 너무 많아요”라고 알립니다. 보통 사람이 쓰는 속도로는 걸리지 않습니다.</li>
+        <li><b>숨은 링크와 24시간 차단:</b> 사람 눈에 보이지 않고 키보드로도 가지 않는 링크가 화면에 있습니다. robots.txt가 가지 말라고 한 곳이라, 규칙을 무시하고 따라온 프로그램은 24시간 동안 접근이 막힙니다. 로그인한 사용자는 이 때문에 막히지 않습니다. 이때 쓰는 값은 접속 정보를 되돌릴 수 없게 바꾼 것이라 원래 IP를 저장하지 않습니다.</li>
+        <li><b>보이지 않는 워터마크:</b> 카드 글과 메일 끝에 눈에 안 보이는 표식이 들어갑니다. 글이 통째로 퍼졌을 때 어느 계정에서 나왔는지 찾는 단서로 씁니다. 자세한 내용은 <a href="/privacy">개인정보처리방침</a> 7번에 있습니다.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="o5">
+      <h2 id="o5">5. AI가 만든 해설이라 틀릴 수 있어요</h2>
+      <p>카드의 요약과 해설은 AI 모델이 만든 것입니다. 원문 링크와 근거를 함께 보여 주지만 틀리거나 빠진 내용이 있을 수 있습니다. 도구를 설치하거나 업무에 쓰기 전에 원문과 공식 문서를 직접 확인해 주세요.</p>
+      <p>이상한 점을 보면 카드의 <b>이상함</b> 버튼을 눌러 주세요. 무엇이 이상했는지(번역 어색, 사실 틀림, 나랑 상관없음)를 고를 수 있고, 고르지 않아도 됩니다. 눌러 둔 표시는 다음 추천에 반영됩니다. 직접 답장이 필요한 일은 <a href="/support">고객센터 문의하기</a>로 보내 주세요.</p>
+    </section>
+
+    <section aria-labelledby="o6">
+      <h2 id="o6">6. 도구 카드의 “검증”이 뜻하는 것</h2>
+      <ul>
+        <li>새 MCP 서버는 격리된 샌드박스에서 설치하고, 실행해 보고, 도구 목록이 나오는지 확인합니다. 스킬은 SKILL.md를 읽어 위험 신호를 살펴봅니다.</li>
+        <li>키나 로그인이 있어야 하는 도구는 끝까지 확인하지 못하고 “키 필요”로 표시합니다. 아직 검증하지 않은 도구는 “검증 예정”이나 “미확인”으로 보입니다.</li>
+        <li><b>한계:</b> 검증은 “설치되고 켜지는지”를 본 것이고, 도구가 올바르게 동작하는지나 안전하다는 보증이 아닙니다. 검증한 시점의 결과라서 나중에 달라질 수 있습니다. 쓰기 전에 직접 확인해 주세요.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="o7">
+      <h2 id="o7">7. 계정 삭제와 기억 지우기</h2>
+      <ul>
+        <li>설정 화면의 <b>기억 지우기</b>는 주제 관심도, 본 카드 기록, 피드백을 지웁니다. 직군·쓰는 도구·한 줄은 남고, 다음 브리핑은 프로필만으로 고릅니다.</li>
+        <li>설정 화면의 <b>계정 삭제</b>는 계정과 브리핑·질문·피드백 기록을 바로 지우고 로그아웃합니다. 승인 전에도 할 수 있습니다.</li>
+        <li>이미 보낸 메일이나 고객센터 문의처럼 설정 화면에서 지울 수 없는 기록은 <a href="/support">고객센터 문의하기</a>의 “개인정보·삭제 요청”으로 알려 주세요.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="o8">
+      <h2 id="o8">8. 정책이 바뀔 때</h2>
+      <p>운영정책이 바뀌면 이 페이지에 새 시행일과 함께 올립니다. 이용자에게 불리하게 바뀌면 시행 전에 서비스 안이나 메일로 먼저 알립니다.</p>
+      <p class="help">시행일 2026-10-09 · <a href="/terms">서비스 이용약관</a> · <a href="/privacy">개인정보처리방침</a></p>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>TS.bare({ actions: [["/login", "로그인"]] });</script>
+</body>
+</html>

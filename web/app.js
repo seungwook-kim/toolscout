@@ -119,11 +119,20 @@ const TS = {
     if (!document.querySelector(".skip")) document.body.insertAdjacentHTML("afterbegin", '<a class="skip" href="#main">본문으로 건너뛰기</a>');
     bar.className = "appbar";
     bar.innerHTML = `<div class="wrap"><a class="brand" href="/"><span class="blaze" aria-hidden="true"></span>toolscout</a>${barHtml}</div>`;
+    TS.footer();
     if (!document.getElementById("live")) document.body.insertAdjacentHTML("beforeend", '<div id="live" class="toast" role="status" aria-live="polite"></div>');
     if (window.visualViewport && !TS._kb) {  // 가상 키보드가 올라오면 하단 고정 바를 숨긴다
       TS._kb = true;
       visualViewport.addEventListener("resize", () => document.body.classList.toggle("kb", innerHeight - visualViewport.height > 150));
     }
+  },
+
+  // 모든 화면 맨 아래 공통 푸터(2026-10-09): 운영정책·이용약관·개인정보처리방침(굵게)·고객센터 문의하기 + 저작권. frame()이 붙이니 shell·bare 둘 다 나온다
+  footer() {
+    if (document.querySelector(".site-foot")) return;
+    const html = `<footer class="site-foot"><nav aria-label="정책과 문의"><a href="/policy">운영정책</a><a href="/terms">이용약관</a><a class="strong" href="/privacy">개인정보처리방침</a><a href="/support">고객센터 문의하기</a></nav><p class="mono">© 2026 toolscout</p></footer>`;
+    const main = document.querySelector("main");
+    if (main) main.insertAdjacentHTML("afterend", html); else document.body.insertAdjacentHTML("beforeend", html);
   },
 
   // 세션 없는 화면(첫 화면·가입·데모·/f): 브랜드만. actions = [[주소, 글자, 주 버튼이면 true]], ctabar면 모바일은 아래 고정 바로

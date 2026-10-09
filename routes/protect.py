@@ -27,7 +27,7 @@ _BLOCKED = tuple(name.lower() for name in AI_CRAWLERS)
 # 크롤러여도 읽게 두는 경로(규칙을 읽고 따를 수 있어야 한다)
 READABLE = ("/robots.txt", "/.well-known/tdmrep.json")
 # 검색 색인을 열어 두는 화면
-INDEXABLE = ("/demo", "/login", "/privacy", "/terms")
+INDEXABLE = ("/demo", "/login", "/privacy", "/terms", "/policy", "/support")
 STATIC_SUFFIXES = {".html", ".js", ".css", ".png", ".svg", ".ico", ".webmanifest"}
 STATIC_NAMES = {"manifest.json"}
 
