@@ -1,3 +1,4 @@
+/*! © 2026 toolscout. All rights reserved. 무단 복제·재배포·AI 학습·재구현 금지 */
 // toolscout 웹앱 공통 도우미와 앱 셸. 프레임워크 없음. 모양 기준은 docs/design-reference.html (2026-10-09 리디자인)
 const TS = {
   async api(path, options = {}) {

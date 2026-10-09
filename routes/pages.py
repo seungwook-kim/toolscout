@@ -6,18 +6,20 @@
 - /onboarding: 첫 설정(2026-10-09 리디자인). 승인됐고 프로필(직군)이 비면 /settings 대신 이 화면. 프로필이 차 있으면 /로 보낸다
 - 로그인이 필요한 화면은 세션이 없으면 /login으로, 승인 전이면 /pending으로, 프로필이 비었으면 /onboarding으로 보낸다.
   예전 초대 코드 화면 주소 /invite는 /pending으로 보낸다
+- /robots.txt(AI 크롤러 이름별 차단 포함)·/.well-known/tdmrep.json(TDM 이용 유보). 보호 장치 본체는 routes/protect.py
 - 공개 데모 /demo는 routes/demo.py에 있다. 색인은 /demo만 허용하고 나머지 화면은 noindex (2026-09-16 사용자 결정)
 """
 from pathlib import Path
 
 from fastapi import APIRouter, Request
-from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse
 
 from routes.auth import approved, current_user, is_admin, profile_done
+from routes.protect import robots_txt
 
 WEB = Path(__file__).resolve().parents[1] / "web"
 router = APIRouter(include_in_schema=False)
-ROBOTS = "User-agent: *\nAllow: /demo\nDisallow: /\n"
+ROBOTS = robots_txt("User-agent: *\nAllow: /demo\nDisallow: /\n")  # 일반 규칙(/demo만 허용) + AI 크롤러 이름별 차단
 
 
 def _page(name: str) -> FileResponse:
@@ -39,6 +41,12 @@ def _gate(request: Request, page: str, need_profile: bool = True):
 @router.get("/robots.txt")
 def robots() -> PlainTextResponse:
     return PlainTextResponse(ROBOTS)
+
+
+@router.get("/.well-known/tdmrep.json")
+def tdmrep() -> JSONResponse:
+    """텍스트·데이터 마이닝 거부 표준(W3C TDMRep): 사이트 전체 이용 유보."""
+    return JSONResponse([{"location": "/*", "tdm-reservation": 1}])
 
 
 @router.get("/")

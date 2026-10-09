@@ -99,7 +99,7 @@ def demo_checks(c) -> dict:
         "데모_말고는_세션_필요": session_needed.status_code == 401,
         "분당_60회_제한": limited.status_code == 429,
         "색인은_데모만": "Allow: /demo" in robots.text and "Disallow: /" in robots.text
-        and c.get("/login").headers.get("x-robots-tag") == "noindex" and "x-robots-tag" not in {k.lower() for k in page.headers},
+        and "noindex" in c.get("/login").headers.get("x-robots-tag", "") and "noindex" not in page.headers.get("x-robots-tag", ""),  # noai 등은 모든 응답에 붙는다(2026-10-09)
     }
 
 

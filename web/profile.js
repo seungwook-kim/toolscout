@@ -1,3 +1,4 @@
+/*! © 2026 toolscout. All rights reserved. 무단 복제·재배포·AI 학습·재구현 금지 */
 // 프로필 입력 부품 (설정·첫 설정 공통): 관심 주제 슬라이더, 쓰는 도구 태그 입력. 모양은 profile.css
 // 데이터는 GET /api/profile 응답(state): topics(id→이름), presets(직군→가중치), roles
 const Profile = {

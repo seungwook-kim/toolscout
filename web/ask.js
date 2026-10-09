@@ -1,3 +1,4 @@
+/*! © 2026 toolscout. All rights reserved. 무단 복제·재배포·AI 학습·재구현 금지 */
 // 질문 시트 (W2, /api/ask). TS.shell이 승인·첫 설정을 마친 화면에서 불러 붙인다 (app.js가 300줄을 넘지 않게 나눔, 2026-10-09)
 // 범위는 routes/ask.py: 모은 소식 키워드 검색 + 내 브리핑 카드, 대화는 오늘 하루. 데스크톱 오른쪽 비모달 시트, 모바일 아래에서 올라오는 대화상자
 TS.askSheet = function askSheet() {

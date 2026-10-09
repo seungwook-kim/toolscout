@@ -26,10 +26,14 @@
 로컬 전용 파일(`.env`, `CLAUDE.md` 등)이 섞이지 않게 git에 올린 파일만 내보낸 폴더에서 배포한다.
 ```
 git archive --format=tar main | tar -x -C <빈 폴더>
+uv run --with minify-html --with rjsmin --with rcssmin python <빈 폴더>/minify_web.py <빈 폴더>   # 화면 코드 경량화(2026-10-09)
 cd <빈 폴더>
 vercel deploy --prod          # 웹 (처음 한 번 vercel link --project toolscout)
 railway up --service <크론 서비스> --detach   # 크론 (처음 한 번 railway link)
 ```
+- 경량화는 임시 폴더의 `web/`만 줄인다(주석 제거·공백 축소, `/*!` 고지는 남김, 이름 바꾸기는 안 함). 저장소 원본은 그대로.
+  배포 전에 `uv run python -m tests.web.check_minify`가 줄인 결과의 `node --check`와 Edge 화면 열기를 확인한다
+- 보호 장치 1차(2026-10-09): 운영(`DEV_MODE=0`)은 `/docs`·`/redoc`·`/openapi.json`이 닫히고, `/static`은 허용 목록 파일만 열린다. 자세한 것은 `routes/protect.py`
 - 첫 점검: `python -m pipeline.cron --rehearse 2000-01-08`을 한 번 돌리면 검수용 날짜로 관리자만 실행·발송한 뒤 그 날짜를 지운다
   (메일 제목이 "1월 8일 AI 브리핑"으로 온다)
 

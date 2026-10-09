@@ -21,8 +21,9 @@
 - 나감: 로그인·프로필·피드백·질문 요청 (JSON)
 
 ## 관련
-- `routes/pages.py`: 화면 라우팅, 루트 `main.py`: `/static`으로 이 폴더를 연다
+- `routes/pages.py`: 화면 라우팅, 루트 `main.py`: `/static`으로 이 폴더를 연다(허용 목록: html·js·css·png·svg·ico·webmanifest·manifest.json만, 나머지는 404)
 - 외부 텍스트(기사 제목·요약·모델 답)는 `TS.esc`로 이스케이프, 링크는 http(s)만
+- 보호(2026-10-09): 모든 .js·.css 첫 줄에 `/*!` 저작권·AI 이용 금지 고지, 각 .html head에 같은 뜻 주석과 `tdm-reservation` meta. 새 파일에도 넣는다. 배포 때만 루트 `minify_web.py`로 줄인다
 
 ## 할 일
 - [ ] 받아 보는 시각 고르기(알림 시각): 추후 추가. 지금은 '매일 아침 08:00' 고정 문구, 서버 칸 notify_time은 그대로
