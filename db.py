@@ -298,9 +298,19 @@ class RateCounter(SQLModel, table=True):
     count: int = 0
 
 
+class AppSecret(SQLModel, table=True):
+    """암호화해서 보관하는 비밀값 (2026-10-09 Gmail API 발송). 지금은 gmail_refresh_token 하나.
+    value_encrypted는 SESSION_SECRET에서 파생한 키로 AES-GCM 암호화한 값이라 DB만 봐서는 원문을 알 수 없다 (pipeline/gmail_api.py)."""
+    __tablename__ = "app_secrets"
+
+    name: str = Field(primary_key=True)
+    value_encrypted: str
+    updated_at: datetime = Field(default_factory=utcnow)
+
+
 TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions", "used_tokens",
           "verify_requests", "invite_codes", "status_changes", "email_codes",
-          "blocked_clients", "rate_counters"]
+          "blocked_clients", "rate_counters", "app_secrets"]
 
 
 def database_url() -> URL:

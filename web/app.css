@@ -152,6 +152,9 @@ textarea.input{height:auto;min-height:96px;padding:11px 14px;line-height:1.5;res
 .pw .input{padding-right:52px}
 .reveal{position:absolute;right:2px;top:2px;width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;color:var(--ink-2);border-radius:6px}
 .reveal[aria-pressed="true"]{color:var(--blaze-ink)}
+.legal{display:flex;flex-wrap:wrap;justify-content:center;gap:0 20px;padding-block:8px 32px;font-size:.8125rem}
+.legal a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute);text-decoration:underline;text-underline-offset:3px}
+.legal a:hover{color:var(--ink)}
 .help{font-size:.8125rem;color:var(--mute);line-height:1.5}
 .msg{display:flex;gap:6px;align-items:flex-start;font-size:.8125rem;line-height:1.5;font-weight:500}
 .msg .ic{margin-top:2px}

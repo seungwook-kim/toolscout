@@ -9,8 +9,8 @@
 - `settings.html`: 설정(나에 대해·관심 주제 슬라이더·받는 방법·지금 만들기·기억/계정, 저장 바) / `onboarding.html`: 첫 설정 4단계 / `profile.js`·`profile.css`: 두 화면이 같이 쓰는 직군 칩·슬라이더·도구 태그 입력
 - `f.html`: 메일 버튼 링크 결과(관심없음·써봤음·이상함·취소·막힌 상태), 이상함이면 사유 3택
 - `manifest.json`, `icons/`: PWA
-- `admin.html`: 관리자 가입 승인(승인 대기·방금 처리 되돌리기, 변경 이력, 사용자 표에 마지막 로그인·마지막 결정, 제자리 상태 확인 줄)
-- `demo.html`: 공개 데모(`demo_sample.json` 고정 예시). 같은 카드 템플릿을 `Cards.readonly`로 버튼 없이, 마스트헤드에 예시 안내와 회원가입·로그인 링크
+- `admin.html`: 관리자 가입 승인(Gmail 발송 연결 줄, 승인 대기·방금 처리 되돌리기, 변경 이력, 사용자 표에 마지막 로그인·마지막 결정, 제자리 상태 확인 줄)
+- `privacy.html`·`terms.html`: 로그인 없이 읽는 개인정보처리방침·이용약관(`/privacy`·`/terms`, login·signup 아래에 링크) / `demo.html`: 공개 데모(`demo_sample.json` 고정 예시). 같은 카드 템플릿을 `Cards.readonly`로 버튼 없이, 마스트헤드에 예시 안내와 회원가입·로그인 링크
 - `history.html`: 지난 브리핑. 왼쪽 날짜 목록(월별)+오른쪽 그날 판(머리줄은 `Cards.today`), 이름 검색은 날짜별 묶음, 모바일은 목록 → 그날 두 화면
 
 ## 새 공통 체계 (2026-10-09)

@@ -54,7 +54,7 @@ def main() -> int:
         "AI_UA도_robots·tdmrep는_200": crawler_robots.status_code == 200 and crawler_tdm.status_code == 200,
         "일반_UA_200": login.status_code == 200 and demo.status_code == 200 and health.status_code == 200 and home.status_code == 303,
         "검수_클라이언트_기본_UA_200": TestClient(app_main.make_app(docs=False), base_url="https://testserver").get("/login").status_code == 200,
-        "robots_일반_규칙_유지": "User-agent: *\nAllow: /demo\nDisallow: /archive/full-index\nDisallow: /\n" in robots.text,
+        "robots_일반_규칙_유지": "User-agent: *\nAllow: /demo\nAllow: /privacy\nAllow: /terms\nDisallow: /archive/full-index\nDisallow: /\n" in robots.text,
         "robots_AI_이름별_차단": all(n in names for n in ("GPTBot", "ClaudeBot", "Claude-User", "Google-Extended", "Applebot-Extended", "CCBot"))
         and len(names) == len(protect.AI_CRAWLERS) + 3 and all(n in names for n in protect.AI_CRAWLERS),
         "UA_검사_목록에_robots_전용_토큰_없음": not any(t in protect.AI_CRAWLERS for t in protect.ROBOTS_ONLY_TOKENS)

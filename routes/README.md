@@ -4,7 +4,7 @@
 
 ## 파일
 - `auth.py`: 세션 쿠키(30일)·`/api/me`·로그아웃·`/api/auth/options`, 서명 토큰 로그인 `/auth/verify`(검수·도구용). `require_approved`는 승인된
-  사용자만(브리핑·검색·질문·피드백·프로필이 이 검문을 쓰고, 계정 삭제는 세션만) / `signup.py`: 이메일 인증번호 가입·비밀번호 로그인(scrypt, 5번 잠금) / `google.py`: 구글 OAuth
+  사용자만(브리핑·검색·질문·피드백·프로필이 이 검문을 쓰고, 계정 삭제는 세션만) / `signup.py`: 이메일 인증번호 가입·비밀번호 로그인(scrypt, 5번 잠금) / `google.py`: 구글 OAuth(로그인 + 관리자 전용 Gmail 발송 연결 `/admin/gmail/connect`, 같은 콜백에서 state 종류로 가름)
 - `invite.py`: 관리자 가입 승인 대기 목록·승인·차단·사용자 목록·변경 이력(`/api/admin/*`, ADMIN_EMAILS만, 상태가 바뀌면 status_changes에 기록). 초대 코드·신청서는 2026-10-08에 뺐다
 - `demo.py`: 공개 데모 `/demo`와 `/api/demo/briefing`. `web/demo_sample.json` 고정 예시(가상 회사·제품, DB 없음), IP당 분당 60회
 - `w1.py`: 아침 브리핑 작업을 직접 부르는 API (X-Service-Key). 실행·지금 발송·예약 상태 / `protect.py`: 1차 보호 장치. AI 크롤러 UA 403(robots.txt 제외)·모든 응답에 X-Robots-Tag(noai, noimageai; 데모·로그인 말고는 noindex)·`/static` 허용 목록. 못 막는 것: UA를 속이는 크롤러, 화면을 직접 받아 가는 사람

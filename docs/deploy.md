@@ -79,3 +79,26 @@ railway up --service <크론 서비스> --detach   # 크론 (처음 한 번 rail
 - 임시 비밀번호(2026-10-08 사용자 결정 "구글 붙이기 전 기존 계정 모두 123456, 디자인·기능 다 되면 지우고 제대로"): 그때 있던 계정
   id 45·1·2·3·113·232의 password_hash를 123456으로 넣었다(로컬·Vercel 같은 DB). 끝나면 이 계정들의 password_hash를 비우고
   본인 계정은 회원가입 화면(인증번호)이나 구글로 다시 정한다. 공개 주소라 그동안은 본인 이메일을 아는 사람이 관리자로 로그인할 수 있다
+
+## Gmail API로 메일 보내기 (2026-10-09 사용자 결정 "Gmail API로 보내기")
+Railway Hobby는 바깥 SMTP(25·465·587)를 막는다. 10/9 서버 리허설이 `OSError: [Errno 101] Network is unreachable`로 실패했고 공식 정책도 같았다. 그래서 같은 Gmail 계정을 HTTPS(Gmail API)로 쓴다. 새 서비스는 필요 없다. 이 PC 앱과 Vercel은 기본 `smtp` 그대로 둔다.
+
+### 환경변수
+- Railway: `MAIL_TRANSPORT=gmail_api`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`(로컬 `.env`·Vercel과 같은 값), `GMAIL_USER`(보내는 관리자 Gmail), `SESSION_SECRET`(Vercel과 같아야 한다. 토큰 암호화 키가 여기서 나온다). `GMAIL_APP_PASSWORD`는 이 방식에선 안 쓴다
+- Vercel: 연결 화면만 쓰므로 `GOOGLE_CLIENT_ID`·`GOOGLE_CLIENT_SECRET`·`GMAIL_USER`·`SESSION_SECRET`(이미 있음). `MAIL_TRANSPORT`는 넣지 않아도 되지만, 넣으면 웹이 보내는 가입 알림·인증번호 메일도 Gmail API로 나간다
+- `SESSION_SECRET`을 바꾸면 저장된 토큰이 풀리지 않아 "연결 안 됨"으로 보인다. 그때는 다시 연결한다
+
+### 처음 한 번 하는 순서
+1. 구글 클라우드 콘솔에서 이 OAuth 프로젝트에 **Gmail API 사용 설정**(API 및 서비스 > 라이브러리 > Gmail API > 사용)
+2. OAuth 동의 화면의 게시 상태를 **프로덕션**으로 둔다. '테스트' 상태면 refresh_token이 7일 뒤 만료돼 아침 메일이 끊긴다. 브랜딩에는 승인된 도메인 `toolscout-five.vercel.app`, 홈페이지 `https://toolscout-five.vercel.app/demo`(또는 `/login`), 개인정보처리방침 `https://toolscout-five.vercel.app/privacy`, 서비스 약관 `https://toolscout-five.vercel.app/terms`를 넣는다(로그인 없이 열린다. 방침의 문의 메일 주소 자리는 `web/privacy.html`에서 채운다). 리디렉션 URI는 지금 등록된 `https://toolscout-five.vercel.app/auth/google/callback`을 그대로 쓴다(새로 만들지 않음)
+3. 새 표 `app_secrets`를 만든다(코드 배포 전에 한 번): `uv run python -c "import db; db.init_db()"` (이미 있는 표는 건드리지 않고 없는 표만 만든다)
+4. Vercel에 새 코드를 배포하고, 관리자 계정으로 로그인한 채 https://toolscout-five.vercel.app/admin/gmail/connect 를 연다(관리자 화면 상단 "Gmail 발송 연결" 줄의 [연결하기]도 같다)
+5. 구글 화면에서 **보내는 계정(`GMAIL_USER`)**을 고르고 허용한다. 다른 계정을 고르면 저장하지 않고 "보내는 계정(GMAIL_USER)으로 로그인해 주세요"가 뜬다
+   - '확인되지 않은 앱' 경고가 나오면 본인이 만든 앱이라 **고급 > (앱 이름)으로 이동**으로 넘어간다
+   - "구글이 연결 토큰을 주지 않았어요"가 나오면 이미 허용한 적이 있는 것이다. 구글 계정 > 보안 > 서드파티 앱 및 서비스에서 toolscout를 삭제하고 다시 연결한다
+6. 관리자 화면에 "연결됨 · 시각"이 보이면 끝. Railway에 `MAIL_TRANSPORT=gmail_api`를 넣고 `python -m pipeline.cron --rehearse 2000-01-08`로 다시 점검한다
+
+### 문제가 생기면
+- 발송 결과 mode가 `gmail_api`면 정상 경로. `config_missing`이면 연결이 없는 것(실패 사유 "Gmail 연결 안 됨"). 이때는 실패 알림 메일도 같은 길이라 나가지 못하고 로그(`메일을 보낼 수 없음`)에만 남는다
+- 실패 사유 "Gmail 연결이 끊김"은 동의 취소·만료(invalid_grant). 4번부터 다시 한다. 그동안 미발송 메일은 sent_at이 비어 있어 연결 뒤 다음 차례에 나간다
+- 토큰은 `app_secrets`(name `gmail_refresh_token`)에 AES-GCM으로 암호화돼 있다. 지우려면 그 행을 삭제하거나 구글 계정 > 서드파티 앱에서 연결을 끊는다
