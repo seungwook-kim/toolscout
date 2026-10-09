@@ -1,6 +1,6 @@
 # sources/
 
-소스별 수집 파서. 상태: 11곳 구현(2026-10-08 Claude 공식 릴리스 노트 추가), 벤처비트 제외 (계획안 9.1).
+소스별 수집 파서. 상태: 12곳 구현(2026-10-09 GitHub 검색 추가), 벤처비트 제외 (계획안 9.1).
 
 ## 파일
 - `common.py`: 정규화 항목 모양, 정직한 User-Agent HTTP 클라이언트, 날짜 해석, SourceResult(stats 포함)
@@ -10,6 +10,7 @@
 - `github_stars.py`: 별 수 조회와 items.stars·stars_checked_at 24시간 캐시 (DB 없으면 메모리만)
 - `skillsmp.py`: SkillsMP 스킬. 검색만 열려 있어 주제어 8개로 훑고, 갱신 시각을 못 믿어 창 대신 items에 없는 주소만 신규로 본다
   (게시자당 3건·별 수 상위 20건, 키 없으면 건너뜀)
+- `github_search.py`: GitHub topic 검색 5개, 최근 7일 생성, MCP 별 10+·스킬 별 30+, 게시자당 3건·종류별 상위 20, MCP는 npm·PyPI 실제 있을 때만 install (토큰 없으면 오류)
 - `anthropic_skills.py`: anthropics/skills 커밋, 바뀐 skills/<이름>/SKILL.md 폴더를 skill_url로 (검증관 read_skill용)
 - `collect.py`: 전체 수집(뉴스 48시간·도구 7일 창. 뉴스가 48시간인 이유는 CHANGELOG 2026-09-21). 실패 소스는 기록하고 계속. MCP 레지스트리는 제한 시간 60초·2번 더 시도, 그래도 실패면 마지막 성공 결과(`%LOCALAPPDATA%\toolscout`)를 "수집 실패, 전날 기준"으로 재사용
 

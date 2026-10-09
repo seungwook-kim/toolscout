@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-09 · sources/check_github_search.py(신규, 29항목: 쿼리 창·별 기준, 제외, 종류 판정, 게시자당 3건·상위 20, url 형식, 설치 정보 있음/없음, 토큰 없음, 레지스트리와 겹침) · GitHub 검색 출처 추가 · 통과
 - 2026-10-09 · web/check_settings에 자유 한 줄 200자 항목(200자는 그대로, 250자는 200자로 잘림) · 자유 한 줄 100자 → 200자(사용자 결정) · 통과
 - 2026-10-09 · web/check_rules의 디자인 참고파일 항목을 새 체계로(참고파일이 app.css를 링크하고 768px 기준 규칙이 있는지), check_design에서 legacy.css·옛 #mast 허용 제거 · 옛 다리 삭제 · 통과
 - 2026-10-09 · web/check_settings에 첫 설정 이동 항목 2개(프로필 비면 /·/history·/settings가 /onboarding으로, 차면 /onboarding은 /로) · 새 /onboarding 화면 · 통과

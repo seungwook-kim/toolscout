@@ -1,7 +1,7 @@
 # pipeline/
 
 수집부터 발송까지 하루 실행 순서와 앱 안 예약. 상태: 구현 (계획안 9.2 W1, 부록 B 1~6).
-`normalize.py`(HTML 제거·URL 정규화), `dedupe.py`(링크·MCP 이름 중복, 제목 유사도 0.85), `promo.py`(책 연재·행사 홍보·단신 묶음·기고·강연 영상·예전 자료·OpenAI 고객 사례 빼기)가 맨 앞 단계.
+`normalize.py`(HTML 제거·URL 정규화), `dedupe.py`(링크·MCP 이름 중복, GitHub 검색 MCP는 주소로 레지스트리에 합침, 제목 유사도 0.85), `promo.py`(책 연재·행사 홍보·단신 묶음·기고·강연 영상·예전 자료·OpenAI 고객 사례 빼기)가 맨 앞 단계.
 
 ## 파일
 - `verification.py`: 검증 요청 큐 verify_requests(저장·전날 대기+미완료 재시도·상태), skill_reviews 저장, 카드 칸(verification 칩·risk_signal·요청 상태 메모)

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent.schemas import COLLECTION_STALE
-from sources import anthropic_skills, claude_notes, hackernews, mcp_registry, skillsmp
+from sources import anthropic_skills, claude_notes, github_search, hackernews, mcp_registry, skillsmp
 from sources.common import KST, SourceResult, error_text, http_client
 from sources.rss import FEEDS, fetch_feed
 
@@ -89,6 +89,8 @@ def collect(now: datetime | None = None, *, mcp_per_publisher: int = mcp_registr
         ("anthropic_skills", lambda c: anthropic_skills.fetch(tool_since, c)),
         # SkillsMP는 갱신 시각을 믿을 수 없어 창 대신 "아직 안 본 것"으로 고른다 (sources/skillsmp.py)
         ("skillsmp", lambda c: skillsmp.fetch(c)),
+        # GitHub 저장소 검색: 최근 7일에 만든 mcp·스킬 토픽 저장소 (2026-10-09, sources/github_search.py)
+        (github_search.NAME, lambda c: github_search.fetch(tool_since, c)),
     ]
     results = []
     with http_client() as client:
