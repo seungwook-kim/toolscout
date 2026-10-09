@@ -63,7 +63,7 @@ railway up --service <크론 서비스> --detach   # 크론 (처음 한 번 rail
 ### 운영 확인 방법
 1. 숨김 링크: 브라우저에서 `/login` 소스 보기로 `/archive/full-index` 링크가 있는지, Tab 키로 포커스가 가지 않는지 본다. `/robots.txt`에 `Disallow: /archive/full-index`가 있는지 본다
 2. 함정 동작(내 IP가 24시간 막히니 휴대폰 데이터 등 다른 망에서, 확인 뒤 아래 SQL로 해제): `curl -i https://<주소>/archive/full-index`가 403, 곧바로 `curl -i https://<주소>/login`도 403, `/robots.txt`는 200
-3. 차단 목록·해제 (Supabase SQL): `select client_hash, hits, blocked_at, expires_at from blocked_clients order by blocked_at desc;` 해제는 `delete from blocked_clients where client_hash = '<값>';`(프로세스 안 15초 기억 때문에 최대 15초 늦게 풀린다)
+3. 차단 목록·해제 (Supabase SQL): `select client_hash, hits, blocked_at, expires_at from blocked_clients order by blocked_at desc;` 해제는 `delete from blocked_clients where client_hash = '<값>';`(서버가 차단 여부를 잠깐 기억해서 최대 1분 늦게 풀린다)
 4. 요청 수 제한: 로그인 없이 `/api/demo/briefing`을 1분에 31번 부르면 31번째가 429(`Retry-After` 헤더, "요청이 너무 많아요" 안내). 같은 IP에서 로그인 사용자는 따로 센다
 5. 워터마크: 본인 계정의 오늘 브리핑 카드 글을 복사해 `uv run python -m routes.watermark "<글>"`에 넣으면 본인 이메일이 나온다. 같은 글을 공백만 고쳐 붙여도 나오고, 다시 쓴 글은 "표식이 없어요"가 나온다
 6. 앱이 DB 때문에 느릴 때는 Vercel 로그에서 위 경고 문구를 찾는다. 기본값 120·30은 `RATE_LIMIT_USER`·`RATE_LIMIT_ANON`으로 바꾼다
