@@ -23,7 +23,7 @@ from datetime import date, datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
 
-from sqlalchemy import select, update
+from sqlalchemy import or_, select, update
 
 import db
 import models
@@ -133,6 +133,9 @@ def outbox(day: date, notify_until: str | None = None) -> list[dict]:
              .order_by(db.Briefing.user_id, db.Briefing.rank))
     if models.dev_mode():
         query = query.where(db.User.is_test == True)  # noqa: E712
+    else:  # 운영 모드: 하루 실행 대상(run_daily.target_user_ids)과 같게 승인된 실제 사용자와 관리자만.
+        # 2026-10-09 서버 첫 크론에서 차단된 가짜 프로필(.test 주소)의 남은 브리핑이 한 통 나갔다
+        query = query.where(db.User.status == "approved", or_(db.User.is_test == False, db.User.is_admin == True))  # noqa: E712
     grouped: dict[int, dict] = defaultdict(lambda: {"cards": [], "empty_reason": None, "trace_ids": set()})
     with db.get_engine().connect() as connection:
         for user_id, card, empty_reason, trace_id, email, role in connection.execute(query):

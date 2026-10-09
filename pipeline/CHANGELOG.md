@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-10-09 · deliver.outbox: 운영 모드 발송은 승인된 실제 사용자·관리자만(하루 실행 대상과 같게) · 서버 첫 크론(20:30)에서 가짜 프로필(.test)의 남은 브리핑이 한 통 나감 · check_deliver 통과
 - 2026-10-09 · deliver.send_single에 reply_to(Reply-To 헤더) 추가, 가짜 메일 폴더(DirMailer)가 reply_to도 적음 · 고객센터 문의 알림 메일에서 바로 답장하면 문의자에게 가게 · check_support 통과
 - 2026-10-09 · gmail_api.py(신규)와 deliver.py: 환경변수 MAIL_TRANSPORT=gmail_api면 SMTP 대신 Gmail API(HTTPS)로 발송(refresh_token은 app_secrets에 AES-GCM 암호화, access token은 프로세스 안 재사용, 429·5xx 한 번 재시도, invalid_grant는 다시 연결 안내), send_day mode에 gmail_api, 연결 안 됨은 config_missing · Railway Hobby가 바깥 SMTP를 막아 10/9 서버 리허설이 Network is unreachable로 실패 (사용자 결정 "Gmail API로 보내기") · tests.web.check_gmail_api 34항목, check_deliver·check_cron 통과
 - 2026-10-09 · briefing_mail.render(mark=)로 카드 본문 글과 HTML·텍스트 본문 끝에 받는 사람의 워터마크, deliver.outbox가 사용자 id로 표식을 만들어 넘김 · 메일이 새어 나갔을 때 어느 계정인지 추적(저장된 카드 원문은 그대로) · check_protect2·check_mail_layout 통과
