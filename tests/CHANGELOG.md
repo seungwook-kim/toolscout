@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-09 · sources/check_github_search.py(신규, 29항목: 쿼리 창·별 기준, 제외, 종류 판정, 게시자당 3건·상위 20, url 형식, 설치 정보 있음/없음, 토큰 없음, 레지스트리와 겹침) · GitHub 검색 출처 추가 · 통과
 - 2026-10-09 · web/check_protect(보호 장치 19항목)·web/check_minify(+cdp_console.mjs: 경량화 결과 node --check와 Edge 화면 열기), access/check_access의 색인 항목을 noai 헤더가 붙는 것에 맞춤 · 무단 복제·AI 크롤링 1차 보호 · 통과
 - 2026-10-09 · web/check_settings에 자유 한 줄 200자 항목(200자는 그대로, 250자는 200자로 잘림) · 자유 한 줄 100자 → 200자(사용자 결정) · 통과
 - 2026-10-09 · web/check_rules의 디자인 참고파일 항목을 새 체계로(참고파일이 app.css를 링크하고 768px 기준 규칙이 있는지), check_design에서 legacy.css·옛 #mast 허용 제거 · 옛 다리 삭제 · 통과

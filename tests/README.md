@@ -10,7 +10,7 @@
 - `models/check_local_models.py`·`check_groq.py`: 로컬 Ollama VRAM·도구 호출·한글 실측, Groq 목록 API·도구 호출·한도 → `models/local_models.json`·`groq_models.json`
 - `access/check_apply.py`: 이용 신청·관리자 승인 탭 / `access/check_access.py`: 초대제(승인 전 403 6종·코드 기한·횟수·관리자 API)와 공개 데모(비로그인 200·버튼 없음·사용자 노출 없음·분당 60회·색인)
 - `db/check_tables.py`: 표 12개·연결 문자열 변환·is_test·briefings 빈 행 구조 + Supabase 실제 생성·개발 프로필 A·B·C
-- `sources/`: `check_fallbacks.py` 재시도·전날 결과·긱뉴스 링크 / `check_news_window.py` 창 48시간·보낸 항목·제외 규칙 / `check_catalog_title.py` 제목 규칙·upsert 갱신 / `backfill_titles.py` 기존 행 보정 / `check_skillsmp.py` 스킬 수집 / `run_today.py` 수집 건수 → `report.md` / `check_claude_notes.py` Claude 릴리스 노트 파서(고정 HTML)
+- `sources/`: `check_fallbacks.py` 재시도·전날 결과·긱뉴스 링크 / `check_news_window.py` 창 48시간·보낸 항목·제외 규칙 / `check_catalog_title.py` 제목 규칙·upsert 갱신 / `backfill_titles.py` 기존 행 보정 / `check_skillsmp.py` 스킬 수집 / `run_today.py` 수집 건수 → `report.md` / `check_claude_notes.py` Claude 릴리스 노트 파서(고정 HTML) / `check_github_search.py` GitHub 검색 소스(가짜 응답)
 - `pipeline/run_dedupe.py`: 정리·중복 제거 단위 검사 + 전후 건수 / `check_promo.py`: 책 연재·행사 홍보 뉴스 빼기, 선별·해설가 문장 기준 / `check_tool_updates.py`: 받아 본 도구 새 버전 알림 / `check_weekly.py`: 금요일 이번 주 요약
 - `pipeline/run_daily.py`: `--fake`는 검증 노드·저장·멱등·모델 장애·빈 행·도구 목록 쌓기·조회 순서 고정·옵션(2000-01-01 저장 후 삭제), 없으면 실제 한 번(`--users --limit`) → `daily_report.json`, 형식 실패는 `format_failures.json`
 - `pipeline/check_deliver.py`: 메일 렌더링(trace_id·이스케이프·빈 행)·개발 모드 묶음 한 통·운영 모드 사용자별 한 통 + sent_at 멱등 + 가짜 SMTP 발송·실패 알림 + DB 깨우기 + API 키 / `check_mail_layout.py`: 메일 모양 규칙 12항목

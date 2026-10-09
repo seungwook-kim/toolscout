@@ -52,9 +52,11 @@ const Cards = {
     return { name: ns ? ns[2] : m[1], version: m[2] || "", namespace: ns ? ns[1] : "" };
   },
   // MCP 레지스트리 네임스페이스가 도메인 인증(com.회사 등)이면 공식, GitHub 계정 인증(io.github.*)이면 커뮤니티
+  // GitHub 검색으로 모은 항목(item_meta.source === "github_search")은 출처를 "GitHub"로 보인다 (레지스트리 인증이 없어 공식/커뮤니티를 가르지 않는다)
   kind(card, namespace) {
-    if (card.type === "skill") return ["스킬", /github\.com\/anthropics\//.test(card.url) ? "공식" : "커뮤니티"];
-    return ["MCP", !namespace ? "" : namespace.startsWith("io.github.") ? "커뮤니티" : "공식"];
+    const github = (card.item_meta || {}).source === "github_search";
+    if (card.type === "skill") return ["스킬", /github\.com\/anthropics\//.test(card.url) ? "공식" : github ? "GitHub" : "커뮤니티"];
+    return ["MCP", github ? "GitHub" : !namespace ? "" : namespace.startsWith("io.github.") ? "커뮤니티" : "공식"];
   },
   DIST: [[/^https?:\/\//, "원격 전용"], [/^(npx|npm|pnpm|bunx)\b/, "npm"], [/^(uvx|pip|pipx|uv)\b/, "PyPI"], [/^docker\b/, "Docker"]],
   distribution(cmd) { return (Cards.DIST.find(([re]) => re.test(cmd || "")) || [null, ""])[1]; },
