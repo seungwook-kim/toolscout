@@ -1,5 +1,6 @@
 # docs/ CHANGELOG
 
+- 2026-10-09 · deploy.md에 "보호 장치 2차" 절(환경변수·운영 확인 방법·개인정보 메모·머지 때 할 일) · 무단 복제 2차 보호 · check_folder_docs 통과
 - 2026-10-09 · deploy.md 올리는 방법에 화면 경량화 단계(minify_web.py)와 보호 장치 설명 추가 · 무단 복제·AI 크롤링 1차 보호 · check_folder_docs 통과
 - 2026-10-09 · 리디자인 마무리 검수(문서 규칙·README 폴더 문서 점검) · 새 공통 체계 반영 · check_folder_docs·check_readme 통과
 - 2026-10-09 · design-reference.html을 새 공통 체계 견본으로 다시 씀(app.css 링크, 배치만 자체 style) · 리디자인 회의 합의 · check_design 통과

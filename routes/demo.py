@@ -5,14 +5,18 @@
 - GET /demo: 화면. 버튼·질문창·설정 링크 없음, 마스트헤드에 예시 안내와 로그인 링크. 검색엔진 색인 허용
 - GET /api/demo/briefing: 고정 예시 브리핑 (오늘 화면과 같은 모양)
 - IP당 분당 60회. 넘으면 429 (프록시 뒤에서는 X-Forwarded-For 첫 주소를 본다)
+- 보호 2차 (2026-10-09): /api/demo/briefing은 DB 요청 수 제한(비로그인 분당 30, routes/guard.py)도 거치고, 카드 본문 글 끝에 "데모" 고정
+  워터마크(routes/watermark.py)를 붙인다. 위 메모리 제한은 서버리스에서는 인스턴스마다 따로라 느슨한 보조 장치다
 """
 import json
 import time
 from collections import defaultdict
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
+
+from routes import guard, watermark
 
 router = APIRouter()
 WEB = Path(__file__).resolve().parents[1] / "web"
@@ -49,7 +53,9 @@ def demo_page(request: Request) -> FileResponse:
     return FileResponse(WEB / "demo.html", headers={"Cache-Control": "no-store"})
 
 
-@router.get("/api/demo/briefing")
+@router.get("/api/demo/briefing", dependencies=[Depends(guard.rate_limit)])
 def demo_briefing(request: Request) -> dict:
     rate_limit(request)
-    return {"demo": True, "notice": NOTICE, **sample()}
+    data = sample()
+    data["cards"] = watermark.mark_cards(data["cards"], watermark.mark_for(watermark.DEMO))
+    return {"demo": True, "notice": NOTICE, **data}

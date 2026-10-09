@@ -276,8 +276,31 @@ class EmailCode(SQLModel, table=True):
     verified_at: datetime | None = None
 
 
+class BlockedClient(SQLModel, table=True):
+    """함정 링크를 부른 클라이언트의 24시간 차단 기록 (2026-10-09 보호 2차, routes/guard.py).
+    원래 IP·User-Agent는 저장하지 않고 SESSION_SECRET HMAC 값(client_hash)만 둔다. 만료가 지나면 지워도 된다(가끔 정리)."""
+    __tablename__ = "blocked_clients"
+
+    client_hash: str = Field(primary_key=True)
+    path: str  # 부른 함정 경로
+    hits: int = 1
+    blocked_at: datetime = Field(default_factory=utcnow)
+    expires_at: datetime = Field(index=True)
+
+
+class RateCounter(SQLModel, table=True):
+    """요청 수 제한의 고정 창(1분) 카운터 (2026-10-09 보호 2차, routes/guard.py). 서버리스라 메모리 대신 DB에 센다.
+    key는 사용자 번호("u:id") 또는 클라이언트 HMAC("c:해시"). 오래된 창은 가끔 지운다."""
+    __tablename__ = "rate_counters"
+
+    key: str = Field(primary_key=True)
+    window: int = Field(primary_key=True)  # 에포크 초 // 60
+    count: int = 0
+
+
 TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions", "used_tokens",
-          "verify_requests", "invite_codes", "status_changes", "email_codes"]
+          "verify_requests", "invite_codes", "status_changes", "email_codes",
+          "blocked_clients", "rate_counters"]
 
 
 def database_url() -> URL:

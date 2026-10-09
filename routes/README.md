@@ -8,7 +8,7 @@
 - `invite.py`: 관리자 가입 승인 대기 목록·승인·차단·사용자 목록·변경 이력(`/api/admin/*`, ADMIN_EMAILS만, 상태가 바뀌면 status_changes에 기록). 초대 코드·신청서는 2026-10-08에 뺐다
 - `demo.py`: 공개 데모 `/demo`와 `/api/demo/briefing`. `web/demo_sample.json` 고정 예시(가상 회사·제품, DB 없음), IP당 분당 60회
 - `w1.py`: 아침 브리핑 작업을 직접 부르는 API (X-Service-Key). 실행·지금 발송·예약 상태 / `protect.py`: 1차 보호 장치. AI 크롤러 UA 403(robots.txt 제외)·모든 응답에 X-Robots-Tag(noai, noimageai; 데모·로그인 말고는 noindex)·`/static` 허용 목록. 못 막는 것: UA를 속이는 크롤러, 화면을 직접 받아 가는 사람
-- `tokens.py`: SESSION_SECRET HMAC 서명 토큰(로그인·세션·피드백 링크), 1회용은 `used_tokens`에 해시로 기록
+- `tokens.py`: SESSION_SECRET HMAC 서명 토큰(로그인·세션·피드백 링크), 1회용은 `used_tokens`에 해시로 기록 / `guard.py`: 보호 2차(2026-10-09). 함정 링크 `/archive/full-index`(robots Disallow, 화면에 숨긴 링크, 메일 제외)를 부른 클라이언트(IP+UA의 HMAC만 저장)를 24시간 차단(403, 로그인 세션은 통과), 브리핑·검색·데모 API 요청 수 제한(DB 1분 창, 로그인 분당 120·비로그인 30, 429+Retry-After, DB가 안 되면 통과, RATE_LIMIT_USER·ANON·OFF) / `watermark.py`: 카드 본문 글·메일 끝의 사용자별 0폭 문자 표식과 해독 명령 `python -m routes.watermark "<글>"`(다시 쓰면 사라짐)
 - `pages.py`: `/login`(첫 화면) `/signup` `/pending` `/onboarding` `/` `/settings` `/history` `/admin/invites` `/f` 화면과 `/robots.txt`. 세션 없으면 /login, 승인 전이면 /pending, 프로필 없으면 /onboarding(첫 설정), 데모 말고는 noindex
 - `settings.py`: 프로필(직군 5·주제 10 관심도·도구·자유 한 줄·알림 채널·시간), 내 기억 지우기, 계정 삭제, 오늘 브리핑 지금 만들기(본인만)
 - `briefings.py`: 오늘·날짜별 브리핑(내 카드·피드백 상태·N건 중 M건·기준 한 줄·관리자만 트레이스·카드 item_meta·run_stats), 날짜 목록, 키워드 검색

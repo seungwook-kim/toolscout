@@ -3,10 +3,14 @@
 - AI 크롤러 이름이 User-Agent에 들어 있으면 /robots.txt와 tdmrep.json 말고는 403
 - 모든 응답에 X-Robots-Tag(noai, noimageai)와 TDM-Reservation: 1. 데모·로그인 말고는 noindex, nofollow도
 - /static은 허용 목록(.html .js .css .png .svg .ico .webmanifest, manifest.json)만 내보낸다. 나머지는 404
+- 함정 링크를 부른 클라이언트는 24시간 동안 robots.txt 말고 403 (2차, routes/guard.py). 유효한 로그인 세션 쿠키가 있으면 막지 않는다
 - 못 막는 것: User-Agent를 속이는 크롤러, 브라우저로 화면을 직접 받아 가는 사람. 이 장치는 예의 바른 크롤러와 게으른 복제를 막는 정도다
 """
 from fastapi import HTTPException
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
+
+from routes import guard
 
 # User-Agent에 들어 있으면 막는 AI 크롤러 이름(소문자 비교).
 # Google-Extended·Applebot-Extended는 robots.txt 전용 토큰이라 UA에 오지 않으므로 여기엔 없다
@@ -72,13 +76,22 @@ class ProtectMiddleware:
                 message = {**message, "headers": headers}
             await send(message)
 
-        if path not in READABLE and is_ai_crawler(agent):
-            body = b"AI crawlers are not allowed."
+        async def deny(text: bytes) -> None:
             await send_with_headers({"type": "http.response.start", "status": 403,
                                      "headers": [(b"content-type", b"text/plain; charset=utf-8"),
-                                                 (b"content-length", str(len(body)).encode())]})
-            await send_with_headers({"type": "http.response.body", "body": body})
+                                                 (b"content-length", str(len(text)).encode())]})
+            await send_with_headers({"type": "http.response.body", "body": text})
+
+        if path not in READABLE and is_ai_crawler(agent):
+            await deny(b"AI crawlers are not allowed.")
             return
+        if path not in READABLE:
+            headers = {k.decode("latin-1"): v.decode("latin-1") for k, v in scope["headers"]}
+            if guard.session_uid(headers.get("cookie")) is None:  # 로그인 세션이 있으면 차단 대상이 아니다
+                client = guard.client_of(headers, (scope.get("client") or ("?",))[0])
+                if await run_in_threadpool(guard.is_blocked, client):
+                    await deny(guard.BLOCK_MESSAGE.encode())
+                    return
         await self.app(scope, receive, send_with_headers)
 
 

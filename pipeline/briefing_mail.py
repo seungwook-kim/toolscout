@@ -161,11 +161,11 @@ def _masthead(kicker: str, headline: str, sub: str) -> str:
             f'<div style="margin:4px 0 0;font-size:13px;color:{MAST_MUTE}">{_e(sub)}</div></div>')
 
 
-def _page(inner: str) -> str:
+def _page(inner: str, mark: str = "") -> str:
     return (f'<div style="background:{PAPER};padding:16px 0"><div style="font-family:{FONT};max-width:640px;margin:0 auto;'
             f'padding:0 12px;color:{INK};line-height:1.55">{inner}'
             f'<p style="margin:20px 0 0;color:{MUTE};font-size:11px">요약은 원문을 바탕으로 AI가 썼습니다. '
-            f'중요한 결정 전에는 원문 링크를 확인하세요.</p></div></div>')
+            f'중요한 결정 전에는 원문 링크를 확인하세요.{mark}</p></div></div>')
 
 
 def _day_label(day: date) -> str:
@@ -173,9 +173,15 @@ def _day_label(day: date) -> str:
 
 
 def render(day: date, role: str, cards: list[dict], empty_reason: str | None = None, links: Links | None = None,
-           weekly: dict | None = None) -> dict:
+           weekly: dict | None = None, mark: str = "") -> dict:
     """반환: {subject, html, text, body}. cards는 순위 순서의 card_json. body는 머리·꼬리 없이 칸과 카드만 (combine이 쓴다).
-    weekly: 금요일 "이번 주 요약" {html, text} (pipeline/weekly.py). 있으면 맨 아래에 붙인다."""
+    weekly: 금요일 "이번 주 요약" {html, text} (pipeline/weekly.py). 있으면 맨 아래에 붙인다.
+    mark: 받는 사람의 보이지 않는 워터마크(routes/watermark.py, 2026-10-09). 있으면 카드 본문 글과 본문(HTML·텍스트) 끝에 붙인다.
+    저장된 카드 원문은 바꾸지 않는다(복사본에만). 없으면 이전과 똑같다."""
+    if mark:
+        from routes import watermark  # 메일 만들 때만 쓴다(순환 import 방지)
+
+        cards = watermark.mark_cards(cards, mark)
     news = [c for c in cards if c.get("type") not in TOOL_TYPES]
     tools = [c for c in cards if c.get("type") in TOOL_TYPES and not c.get("related")]
     related = [c for c in cards if c.get("related")]
@@ -198,7 +204,7 @@ def render(day: date, role: str, cards: list[dict], empty_reason: str | None = N
         sub = f"{role} 기준 · 뉴스 {len(news)} · 도구 {len(tools) + len(related)}"
     if weekly:
         body_html, body_text = body_html + weekly["html"], f"{body_text}\n\n{weekly['text']}"
-    page = _page(_masthead("TOOLSCOUT 아침 브리핑", _day_label(day), sub) + body_html)
+    page = _page(_masthead("TOOLSCOUT 아침 브리핑", _day_label(day), sub) + body_html, mark)
     text = (f"toolscout 아침 브리핑\n{head}\n\n{body_text}\n\n"
-            "요약은 원문을 바탕으로 AI가 썼습니다. 중요한 결정 전에는 원문 링크를 확인하세요.")
+            f"요약은 원문을 바탕으로 AI가 썼습니다. 중요한 결정 전에는 원문 링크를 확인하세요.{mark}")
     return {"subject": subject(day, cards, empty_reason), "html": page, "text": text, "body": body_html}

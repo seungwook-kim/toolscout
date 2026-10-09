@@ -1,5 +1,6 @@
 # web/ CHANGELOG
 
+- 2026-10-09 · login·signup·demo·index·history·settings 끝에 보이지 않는 함정 링크(aria-hidden, tabindex -1, 화면 밖) 추가 · 무단 복제 2차 보호(규칙을 무시하는 봇 잡기) · check_protect2·check_design 통과
 - 2026-10-09 · cards.js: GitHub 검색 출처(item_meta.source=github_search) 카드의 종류 옆 표시를 "GitHub"로(레지스트리 공식/커뮤니티 구분은 인증이 있는 레지스트리 항목만) · 읽기 쉬운 출처 이름 · 코드 검토만, 화면 확인은 못 함
 - 2026-10-09 · 모든 .js·.css 첫 줄에 `/*!` 저작권·AI 이용 금지 고지, 각 .html head에 같은 뜻 주석과 tdm-reservation meta 추가 · 무단 복제·AI 크롤링 1차 보호 · check_protect·check_rules·check_design 통과
 - 2026-10-09 · settings·onboarding 자유 한 줄 200자(입력 칸·글자 수·넘으면 경고), 서버 memory.FREE_TEXT_MAX=200 · 사용자 "자유 한줄 200자로 바꿔줘" · check_settings 통과

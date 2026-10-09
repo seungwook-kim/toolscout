@@ -64,6 +64,12 @@ def verify(token: str, purpose: str) -> dict:
     return data
 
 
+def derive(label: str, text: str) -> bytes:
+    """SESSION_SECRET로 만든 짧은 식별 값(HMAC-SHA256 전체 32바이트). 워터마크 표식·차단 대상 식별에 쓴다.
+    label이 다르면 같은 text여도 값이 달라 서로 바꿔 쓸 수 없다. 원래 값(사용자 id, IP)은 이 값에서 되찾을 수 없다."""
+    return hmac.new(_secret(), f"{label}|{text}".encode(), hashlib.sha256).digest()
+
+
 def token_hash(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
