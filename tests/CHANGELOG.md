@@ -1,5 +1,7 @@
 # tests/ CHANGELOG
 
+- 2026-10-09 · web/check_legal(신규 7항목: 방침·약관 200·색인·robots·필수 항목·첫화면/가입 링크·실제 메일 주소 없음) · 공개 법적 안내 글 추가 · 통과
+- 2026-10-09 · web/check_gmail_api(신규, 가짜 구글 34항목: 연결 흐름·암호화 저장·발송 방식·재사용·재시도·한 명 실패) 추가, db/check_tables 표 기대값 16에서 17(app_secrets) · Gmail API 발송 추가 · 전체 통과
 - 2026-10-09 · web/check_protect2에 '차단 행 지우면 1분 안에 풀림' 항목(30초 뒤 403, 61초 뒤 200) · 운영 확인에서 해제가 안 먹던 문제를 고침 · 통과
 - 2026-10-09 · db/check_tables 표 수 기대값 13 → 16(email_codes·blocked_clients·rate_counters) · email_codes 추가 때부터 어긋나 있던 것을 2차 보호 표 추가와 함께 맞춤 · 통과
 - 2026-10-09 · web/check_protect2.py(신규, 43항목), web/common에 RATE_LIMIT_OFF=1 기본, check_protect의 robots 항목에 함정 경로 줄 · 무단 복제 2차 보호 검수(검수는 요청이 많아 제한을 끄고 check_protect2만 켜서 봄) · check_protect2 통과

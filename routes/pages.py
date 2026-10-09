@@ -7,6 +7,8 @@
 - 로그인이 필요한 화면은 세션이 없으면 /login으로, 승인 전이면 /pending으로, 프로필이 비었으면 /onboarding으로 보낸다.
   예전 초대 코드 화면 주소 /invite는 /pending으로 보낸다
 - /robots.txt(AI 크롤러 이름별 차단 포함)·/.well-known/tdmrep.json(TDM 이용 유보). 보호 장치 본체는 routes/protect.py
+- /privacy(개인정보처리방침)·/terms(서비스 이용약관): 로그인 없이 열리는 공개 글. 구글 OAuth 앱 게시에 홈페이지·방침·약관 링크가 필요해서 만들었고
+  /demo처럼 색인을 허용한다 (2026-10-09). 첫 화면과 가입 화면 아래에 작은 링크가 있다
 - 공개 데모 /demo는 routes/demo.py에 있다. 색인은 /demo만 허용하고 나머지 화면은 noindex (2026-09-16 사용자 결정)
 """
 from pathlib import Path
@@ -20,11 +22,16 @@ from routes.protect import robots_txt
 
 WEB = Path(__file__).resolve().parents[1] / "web"
 router = APIRouter(include_in_schema=False)
-ROBOTS = robots_txt(f"User-agent: *\nAllow: /demo\nDisallow: {guard.TRAP_PATH}\nDisallow: /\n")  # 일반 규칙(/demo만 허용, 함정 경로는 따로 명시) + AI 크롤러 이름별 차단
+ROBOTS = robots_txt(f"User-agent: *\nAllow: /demo\nAllow: /privacy\nAllow: /terms\nDisallow: {guard.TRAP_PATH}\nDisallow: /\n")  # 일반 규칙(/demo만 허용, 함정 경로는 따로 명시) + AI 크롤러 이름별 차단
 
 
 def _page(name: str) -> FileResponse:
     return FileResponse(WEB / name, headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
+
+
+def _public(name: str) -> FileResponse:
+    """로그인 없이 읽는 공개 글(색인 허용)."""
+    return FileResponse(WEB / name, headers={"Cache-Control": "public, max-age=300"})
 
 
 def _gate(request: Request, page: str, need_profile: bool = True):
@@ -53,6 +60,16 @@ def tdmrep() -> JSONResponse:
 @router.get("/")
 def today(request: Request):
     return _gate(request, "index.html")
+
+
+@router.get("/privacy")
+def privacy():
+    return _public("privacy.html")
+
+
+@router.get("/terms")
+def terms():
+    return _public("terms.html")
 
 
 @router.get("/login")

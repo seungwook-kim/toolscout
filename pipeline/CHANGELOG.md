@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-10-09 · gmail_api.py(신규)와 deliver.py: 환경변수 MAIL_TRANSPORT=gmail_api면 SMTP 대신 Gmail API(HTTPS)로 발송(refresh_token은 app_secrets에 AES-GCM 암호화, access token은 프로세스 안 재사용, 429·5xx 한 번 재시도, invalid_grant는 다시 연결 안내), send_day mode에 gmail_api, 연결 안 됨은 config_missing · Railway Hobby가 바깥 SMTP를 막아 10/9 서버 리허설이 Network is unreachable로 실패 (사용자 결정 "Gmail API로 보내기") · tests.web.check_gmail_api 34항목, check_deliver·check_cron 통과
 - 2026-10-09 · briefing_mail.render(mark=)로 카드 본문 글과 HTML·텍스트 본문 끝에 받는 사람의 워터마크, deliver.outbox가 사용자 id로 표식을 만들어 넘김 · 메일이 새어 나갔을 때 어느 계정인지 추적(저장된 카드 원문은 그대로) · check_protect2·check_mail_layout 통과
 - 2026-10-09 · dedupe: SOURCE_TIER에 github_search(2), GitHub 검색 MCP는 제목이 달라 주소로 레지스트리 항목에 합침(레지스트리가 대표, 대소문자 무시) · 같은 저장소가 두 출처에서 오면 설치 정보 있는 쪽이 남아야 해서 · check_github_search 통과
 - 2026-10-07 · cron.py(신규): Railway 크론 진입점. 시각과 DB만 보고 06:00 검증·07:00~08:00 실행(3번)·지난 알림 시각 발송·지금 만들기 요청 처리, `--rehearse` 첫 점검 · scheduler.external()(JOBS_EXTERNAL) · persist에 지금 만들기 요청(request·requested·clear)과 delete_day · run_daily 운영 모드 대상에 관리자 포함(본인 계정이 is_test라 운영 모드에서 빠지던 것) · 사용자 결정 "vercel + railway" · check_cron 19 통과

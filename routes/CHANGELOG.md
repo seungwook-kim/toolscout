@@ -1,5 +1,7 @@
 # routes/ CHANGELOG
 
+- 2026-10-09 · pages: 로그인 없이 열리는 GET /privacy·/terms 추가, protect.INDEXABLE과 robots.txt에 두 주소 허용 · 구글 OAuth 앱을 프로덕션으로 게시하려면 홈페이지·개인정보처리방침·약관 링크가 필요해서 · check_legal, check_protect 통과
+- 2026-10-09 · google.py: 관리자 전용 GET /admin/gmail/connect와 GET /api/admin/gmail, 같은 콜백에서 state 종류(k=gmail)로 로그인과 Gmail 발송 연결을 가름 · 구글 콘솔에 등록된 리디렉션 주소가 둘뿐이라 새 콜백을 못 만든다 · tests.web.check_gmail_api, check_auth 통과
 - 2026-10-09 · guard: '차단 중' 결과도 1분만 기억하고 DB를 다시 봄 · 운영 확인에서 차단 행을 지워도 따뜻한 서버가 만료(24시간)까지 403을 냈다 · check_protect2 통과
 - 2026-10-09 · guard.py(신규: 함정 링크 24시간 차단·요청 수 제한), watermark.py(신규: 사용자별 0폭 문자 표식·해독 명령), tokens.derive, protect 미들웨어에 차단 확인, briefings·demo에 제한·표식, pages robots에 함정 경로 Disallow, main에 guard 라우터 · 무단 복제 2차 보호(사용자 결정: 워터마크·함정 링크·요청 수 제한은 넣고 JS 난독화는 안 함) · check_protect2 43항목 통과
 - 2026-10-09 · protect.py(신규: AI 크롤러 UA 403·X-Robots-Tag·TDM 헤더·/static 허용 목록), pages에 AI 크롤러 이름별 robots.txt와 /.well-known/tdmrep.json, 루트 main.py는 make_app(docs)로 운영(DEV_MODE=0)에서 /docs·/redoc·/openapi.json 닫음 · 무단 복제·AI 크롤링 1차 보호(사용자 지시) · check_protect·check_access·check_rules 통과

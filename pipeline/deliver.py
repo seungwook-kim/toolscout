@@ -2,12 +2,14 @@
 
 - outbox(day): 그날 sent_at이 비어 있는 briefings를 사용자별 메일 한 통으로 만든다 (카드 전체 또는 empty_reason).
   공개 데모 프로필(users.is_demo)은 가짜 주소라 메일을 만들지 않는다 (2026-09-16)
-- send_day(day): Gmail SMTP(smtp.gmail.com 465)로 보내고, 한 통 보낼 때마다 그 사용자의 sent_at을 채운다. 실패한 사용자는 비워 둔다
+- send_day(day): Gmail SMTP(smtp.gmail.com 465, 기본) 또는 Gmail API(HTTPS, MAIL_TRANSPORT=gmail_api, pipeline/gmail_api.py)로 보내고, 한 통 보낼 때마다 그 사용자의 sent_at을 채운다. 실패한 사용자는 비워 둔다
 - 모든 모드에서 사용자마다 한 통, 운영과 같은 모양이다 (2026-09-28 사용자 결정 "실전으로 갈 거라 메일도 다 수정해").
   개발 모드(DEV_MODE≠0)는 is_test 사용자만이고, 실제 주소로는 ADMIN_EMAILS(개발자 본인) 계정 것만 그 주소로 보낸다.
   가짜 테스트 프로필(.test 주소)은 받는 사람을 ADMIN_EMAILS로 바꾸고 제목 앞에 [테스트 프로필 직군]을 붙인다.
   예전의 개발 모드 묶음 메일([개발 모드] 제목·프로필 목차, 2026-09-16)은 없앴다. ADMIN_EMAILS가 비어 있으면 실제로 보내지 않고 콘솔·DB만
 - 운영 모드: users.email로 보낸다. GMAIL_USER·GMAIL_APP_PASSWORD 값은 로그에 쓰지 않는다
+- 발송 방식(2026-10-09): MAIL_TRANSPORT=smtp(기본) | gmail_api. Railway(Hobby)는 바깥 SMTP를 막아 gmail_api를 쓴다. 이 방식은 앱 비밀번호가 필요 없고 관리자가 한 번 연결해 둔 토큰을 쓴다.
+  MAIL_FAKE_DIR(검수)가 있으면 어느 방식이든 폴더로만 쓴다
 실행: uv run python -m pipeline.deliver [--date 2026-09-15] [--console] [--preview-dir 폴더]
 """
 import argparse
@@ -26,12 +28,13 @@ from sqlalchemy import select, update
 import db
 import models
 from agent import tracing
-from pipeline import briefing_mail, weekly
+from pipeline import briefing_mail, gmail_api, weekly
 from pipeline.run_daily import today_kst
 
 log = logging.getLogger("toolscout.deliver")
 
 SMTP_HOST, SMTP_PORT, SMTP_TIMEOUT = "smtp.gmail.com", 465, 30
+SEND_ERRORS = (smtplib.SMTPException, OSError, gmail_api.GmailError)  # 한 통을 못 보냈을 때 잡는 오류
 
 
 class MailError(Exception):
@@ -61,16 +64,29 @@ class DirMailer:
         (self.folder / name).write_text(json.dumps(body, ensure_ascii=False), encoding="utf-8")
 
 
+def transport() -> str:
+    """발송 방식. 환경변수 MAIL_TRANSPORT가 gmail_api면 gmail_api, 그 밖(비어 있음 포함)은 smtp."""
+    return "gmail_api" if os.environ.get("MAIL_TRANSPORT", "").strip().lower() == "gmail_api" else "smtp"
+
+
 def default_smtp_factory():
-    return DirMailer if os.environ.get("MAIL_FAKE_DIR") else smtplib.SMTP_SSL
+    if os.environ.get("MAIL_FAKE_DIR"):
+        return DirMailer
+    return gmail_api.GmailApiMailer if transport() == "gmail_api" else smtplib.SMTP_SSL
+
+
+def why(exc: Exception) -> str:
+    """실패 사유 한 줄. Gmail API 오류는 이미 쉬운 문구라 그대로, 나머지는 종류: 내용."""
+    return str(exc)[:160] if isinstance(exc, gmail_api.GmailError) else f"{type(exc).__name__}: {str(exc)[:160]}"
 
 
 def send_single(recipients: list[str], subject: str, text: str, html: str | None = None, smtp_factory=None) -> None:
     """메일 한 통 (로그인 링크 등). 실패하면 MailError. 설정 값은 오류 문구에 넣지 않는다."""
     sender, password = os.environ.get("GMAIL_USER", "").strip(), os.environ.get("GMAIL_APP_PASSWORD", "").strip()
     factory = smtp_factory or default_smtp_factory()
-    if factory is not DirMailer and not (sender and password):
-        raise MailError("GMAIL_USER 또는 GMAIL_APP_PASSWORD 비어있음")
+    api = factory is gmail_api.GmailApiMailer  # Gmail API는 앱 비밀번호가 필요 없다
+    if factory is not DirMailer and not (sender and (api or password)):
+        raise MailError("GMAIL_USER 비어있음" if api else "GMAIL_USER 또는 GMAIL_APP_PASSWORD 비어있음")
     email = EmailMessage()
     email["From"] = f"toolscout <{sender or 'toolscout@example.test'}>"
     email["To"] = ", ".join(recipients)
@@ -82,8 +98,8 @@ def send_single(recipients: list[str], subject: str, text: str, html: str | None
         with factory(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT) as smtp:
             smtp.login(sender, password)
             smtp.send_message(email)
-    except (smtplib.SMTPException, OSError) as exc:
-        raise MailError(f"{type(exc).__name__}: {str(exc)[:160]}") from exc
+    except SEND_ERRORS as exc:
+        raise MailError(why(exc)) from exc
 
 
 def admin_emails() -> list[str]:
@@ -179,12 +195,13 @@ def send_day(day: date, notify_until: str | None = None, *, console: bool = Fals
              smtp_factory=None) -> dict:
     """그날 미발송 메일을 보낸다. 반환: {date, dev_mode, mode, sent[], failed[], rows_marked}.
 
-    mode: smtp(실제 발송) / console(보내지 않고 콘솔·DB만) / config_missing(메일 설정 없음, 기록 안 함)
+    mode: smtp(SMTP로 실제 발송) / gmail_api(Gmail API로 실제 발송) / console(보내지 않고 콘솔·DB만) / config_missing(메일 설정·연결 없음, 기록 안 함)
     """
     dev = models.dev_mode()
     admins = admin_emails()
     smtp_factory = smtp_factory or default_smtp_factory()
     sender, password = os.environ.get("GMAIL_USER", "").strip(), os.environ.get("GMAIL_APP_PASSWORD", "").strip()
+    api = smtp_factory is gmail_api.GmailApiMailer
     if smtp_factory is DirMailer:
         sender, password = sender or "toolscout@example.test", password or "fake"
     with tracing.span("W1:send", kind="chain", input={"date": str(day), "dev_mode": dev}) as span:
@@ -194,9 +211,20 @@ def send_day(day: date, notify_until: str | None = None, *, console: bool = Fals
                 preview_dir.mkdir(parents=True, exist_ok=True)
                 (preview_dir / f"{day}_user{message['user_id']}.html").write_text(message["html"], encoding="utf-8")
                 (preview_dir / f"{day}_user{message['user_id']}.txt").write_text(message["text"], encoding="utf-8")
-        mode = "console" if console or (dev and not admins) else "smtp"
+        live = "gmail_api" if api else "smtp"  # 실제로 보내는 방식의 이름
+        mode = "console" if console or (dev and not admins) else live
+        missing = ""  # 보낼 수 없는 이유 (config_missing일 때 사용자별 실패 사유가 된다)
         if mode == "smtp" and not (sender and password):
+            missing = "GMAIL_USER 또는 GMAIL_APP_PASSWORD 비어있음"
+        elif mode == "gmail_api":
+            if not sender:
+                missing = "GMAIL_USER 비어있음"
+            elif messages and not gmail_api.connection_status()["connected"]:
+                missing = gmail_api.NOT_CONNECTED
+        if missing:
             mode = "config_missing"
+            if messages:  # 실패 알림 메일도 같은 길로 나가서 못 보내니 로그만 남긴다
+                log.warning("메일을 보낼 수 없음(%s)", missing)
         sent, failed, rows = [], [], 0
         if not messages:
             pass
@@ -206,7 +234,7 @@ def send_day(day: date, notify_until: str | None = None, *, console: bool = Fals
             sent = [m["user_id"] for m in messages]
             rows = mark_sent(sent, day)
         elif mode == "config_missing":
-            failed = [{"user_id": m["user_id"], "error": "GMAIL_USER 또는 GMAIL_APP_PASSWORD 비어있음"} for m in messages]
+            failed = [{"user_id": m["user_id"], "error": missing} for m in messages]
         else:
             try:
                 with smtp_factory(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT) as smtp:
@@ -217,15 +245,15 @@ def send_day(day: date, notify_until: str | None = None, *, console: bool = Fals
                             smtp.send_message(build_email(mail, sender, recipients))
                             rows += mark_sent([message["user_id"]], day)  # 한 통마다 기록해 중간에 죽어도 다시 보내지 않게
                             sent.append(message["user_id"])
-                        except (smtplib.SMTPException, OSError) as exc:
-                            failed.append({"user_id": message["user_id"], "error": f"{type(exc).__name__}: {str(exc)[:160]}"})
-            except (smtplib.SMTPException, OSError) as exc:  # 연결·로그인 실패는 남은 사용자 전부 실패
+                        except SEND_ERRORS as exc:
+                            failed.append({"user_id": message["user_id"], "error": why(exc)})
+            except SEND_ERRORS as exc:  # 연결·로그인 실패는 남은 사용자 전부 실패
                 done = set(sent) | {f["user_id"] for f in failed}
-                failed += [{"user_id": m["user_id"], "error": f"{type(exc).__name__}: {str(exc)[:160]}"}
+                failed += [{"user_id": m["user_id"], "error": why(exc)}
                            for m in messages if m["user_id"] not in done]
         result = {"date": str(day), "dev_mode": dev, "mode": mode, "messages": len(messages), "sent": sent, "failed": failed,
-                  "rows_marked": rows, "recipients": "ADMIN_EMAILS" if dev and mode == "smtp" else "users.email",
-                  "mails": len(sent) + len(failed) if mode == "smtp" else 0}
+                  "rows_marked": rows, "recipients": "ADMIN_EMAILS" if dev and mode in ("smtp", "gmail_api") else "users.email",
+                  "mails": len(sent) + len(failed) if mode in ("smtp", "gmail_api") else 0}
         span.update(output=result, level="WARNING" if failed else "DEFAULT")
     return result
 

@@ -12,7 +12,7 @@
 - `run_daily.py`: 수집 → 정리 → 중복 제거 → 큐레이터(월요일은 관련 카드도) → 도구 목록·검증 요청 쌓기 → 발송 전 검증(`presend`) → 되돌림 1 → 해설가 → 되돌림 2 → 검증 노드 → 검증 칸 → 저장. 개발 모드는 is_test만, 트레이스 하나
   - `--users N`·`--limit N`(디버깅 `--users 1 --limit 40`). 모델 장애는 사용자·카드 단위로 건너뛰고 전원 실패면 종료 코드 2. 형식 실패 예시는 `tests/pipeline/format_failures.json`(git 추적 안 함)
 - `briefing_mail.py`: 메일 본문(HTML·텍스트). 금요일은 `weekly.py`의 "이번 주 요약"(카드 데이터만, 모델 없음)을 맨 아래에. 카드·trace_id·피드백 서명 링크, 뉴스/도구/관련 칸, 빈 행, 검증 결과 줄과 고정 문구 두 개. 색은 웹앱 디자인 토큰 값, 근거 링크는 원문과 다를 때만 `render(mark=)`는 받는 사람의 보이지 않는 워터마크를 카드 본문 글과 본문 끝에 붙인다(routes/watermark.py)
-- `deliver.py`: 미발송 briefings를 사용자마다 한 통 Gmail SMTP 발송(개발 모드도 운영과 같은 모양), 한 통마다 sent_at. 개발 모드의 가짜 테스트 프로필은
+- `deliver.py`: 미발송 briefings를 사용자마다 한 통 Gmail SMTP 발송(MAIL_TRANSPORT=gmail_api면 `gmail_api.py`의 Gmail API(HTTPS), Railway용: 연결 토큰 암호화 보관·재사용·재시도, mode=gmail_api)(개발 모드도 운영과 같은 모양), 한 통마다 sent_at. 개발 모드의 가짜 테스트 프로필은
   ADMIN_EMAILS로 가고 제목 앞에 [테스트 프로필 직군], 본인 계정은 본인 주소로. ADMIN_EMAILS 없으면 콘솔·DB만, 메일 설정 없으면 기록 안 함. `send_alert`: 실패 알림
 - `scheduler.py`: 앱이 떠 있는 동안 06:00 검증(W1-a, 따로 도는 작업), 06:55 예열·DB 깨우기, 07:00 하루 실행, 알림 시각마다 발송 (KST). 놓친 실행은 22:00 전에 따라잡음. 실행 실패·빠진 사용자는 30분 뒤 그 사용자만 2번 더, 발송 실패는 10분 간격 2번 더, 끝내 실패하면 실패 알림 한 통, 월요일은 실행 전 기억 합치기(W4) / `cron.py`: 배포용 Railway 크론(30분마다 시각·DB만 보고 검증·실행·발송·지금 만들기 요청 처리 뒤 종료, `--rehearse` 서버 첫 점검, docs/deploy.md)
 - `autorestart.py`: 할 일을 마칠 때마다 main 커밋이 바뀌었고 한가하면(06~09시 아님·실행 없음·다음 예정 10분 넘게) 스스로 꺼져 런처가 새 코드로 다시 띄움

@@ -130,6 +130,15 @@
 .st-flow > .ic{color:var(--mute);width:12px;height:12px}
 .c-last-login .u-by{display:block}
 
+/* Gmail 발송 연결 줄 */
+.gm{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel)}
+.gm-t{font-size:.875rem;font-weight:600;color:var(--ink)}
+.gm-s{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.8125rem;color:var(--ink-2)}
+.gm-s .mono{font-size:.75rem}
+.gm .btn{margin-left:auto}
+.gm-m{flex:1 1 100%}
+@media (max-width:767px){.gm{padding:12px 16px}.gm .btn{min-height:44px}}
+
   </style>
 </head>
 <body>
@@ -143,6 +152,12 @@
       </header>
       <div class="alert alert-note" id="first-note" hidden><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><div class="body"><span>내 첫 설정을 마치기 전에도 가입 승인은 할 수 있어요. 오늘·지난 브리핑은 첫 설정을 마치면 열려요.</span></div></div>
       <div class="alert alert-bad" id="load-err" role="alert" hidden><svg class="ic" aria-hidden="true"><use href="#i-bad"/></svg><div class="body"><span>가입 목록을 불러오지 못했어요. 잠시 뒤 다시 불러와 주세요.</span><button type="button" class="btn btn-sm" id="reload"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>다시 불러오기</button></div></div>
+      <div class="gm" id="gm-line" hidden>
+        <span class="gm-t">Gmail 발송 연결</span>
+        <span class="gm-s" id="gm-state"></span>
+        <a class="btn btn-sm" id="gm-go" href="/admin/gmail/connect">연결하기</a>
+        <p class="msg gm-m" id="gm-msg" role="status" hidden></p>
+      </div>
       <div class="adm-grid" id="adm-grid">
         <section class="adm-sec" id="queue" aria-labelledby="q-h">
           <div class="lane-h"><h2 id="q-h">승인 대기</h2><span class="n" data-pending-n>0</span><span class="hint">먼저 가입한 순서</span></div>
@@ -337,10 +352,37 @@
     $("log-more").onclick = () => { logOpen = !logOpen; renderLog(); };
     $("reload").onclick = () => load({ keepDone: false });
 
+    // Gmail 발송 연결 상태 (GET /api/admin/gmail). 연결하러 갔다 오면 ?gmail=결과가 붙는다
+    const GM_MSG = {
+      connected: ["ok", "Gmail 발송이 연결됐어요."],
+      no_refresh: ["bad", "구글이 연결 토큰을 주지 않았어요. 구글 계정의 서드파티 액세스에서 toolscout를 지운 뒤 다시 연결해 주세요."],
+      wrong_account: ["bad", "보내는 계정(GMAIL_USER)으로 로그인해 주세요."],
+      failed: ["bad", "연결하지 못했어요. 잠시 뒤 다시 해 주세요."],
+    };
+    async function loadGmail() {
+      try {
+        const g = await TS.api("/api/admin/gmail");
+        $("gm-state").innerHTML = g.connected
+          ? `<span class="pill pill-plain pill-sm">${TS.ic("ok")}연결됨</span><span class="mono">${TS.esc(stamp(g.connected_at))}</span>`
+          : `<span class="pill pill-neutral pill-sm">${TS.ic("clock")}연결 안 됨</span>`;
+        $("gm-go").textContent = g.connected ? "다시 연결하기" : "연결하기";
+        $("gm-line").hidden = false;
+      } catch (e) { $("gm-line").hidden = true; }
+      const code = new URLSearchParams(location.search).get("gmail"), note = GM_MSG[code];
+      if (note) {
+        $("gm-line").hidden = false;
+        $("gm-msg").className = `msg gm-m msg-${note[0]}`;
+        $("gm-msg").innerHTML = `${TS.ic(note[0])}<span>${TS.esc(note[1])}</span>`;
+        $("gm-msg").hidden = false;
+        history.replaceState(null, "", location.pathname);
+      }
+    }
+
     (async () => {
       me = await TS.shell({ active: "/admin/invites", ask: false });
       $("first-note").hidden = !(me.approved && !me.profile_done);
       load();
+      loadGmail();
     })();
   </script>
 </body>
