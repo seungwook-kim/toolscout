@@ -6,7 +6,7 @@
 | 어디 | 무엇 | 어떻게 |
 |---|---|---|
 | Vercel (Hobby, 프로젝트 `toolscout`, https://toolscout-five.vercel.app, 지역 bom1 = DB와 같은 뭄바이, framework fastapi) | `main.py` FastAPI 전체(화면·로그인·설정·피드백·질문창·/demo) | 요청이 올 때만. 함수 최대 300초 |
-| Railway (크론 서비스) | `python -m pipeline.cron` | KST 06:00~21:30 30분마다 켜져서 할 일만 하고 종료 (`railway.json`, 일정은 UTC `0,30 21-23,0-12 * * *`) |
+| Railway (Hobby, 프로젝트 `toolscout`, 서비스 `toolscout-cron`, 지역 싱가포르 `asia-southeast1-eqsg3a` = DB와 가까운 곳) | `python -m pipeline.cron` | KST 06:00~21:30 30분마다 켜져서 할 일만 하고 종료 (일정은 UTC `0,30 21-23,0-12 * * *`, 설정은 아래 "Railway 설정") |
 | Supabase | DB | 둘이 같이 쓴다 |
 
 - 웹은 하루 실행을 직접 돌리지 않는다(`JOBS_EXTERNAL=1`). "지금 만들기"는 `users.briefing_requested_at`에 요청만 남기고 크론이 30분 안에 만든다. `/api/w1` 실행·발송은 409
@@ -68,6 +68,35 @@ railway up --service <크론 서비스> --detach   # 크론 (처음 한 번 rail
 5. 워터마크: 본인 계정의 오늘 브리핑 카드 글을 복사해 `uv run python -m routes.watermark "<글>"`에 넣으면 본인 이메일이 나온다. 같은 글을 공백만 고쳐 붙여도 나오고, 다시 쓴 글은 "표식이 없어요"가 나온다
 6. 앱이 DB 때문에 느릴 때는 Vercel 로그에서 위 경고 문구를 찾는다. 기본값 120·30은 `RATE_LIMIT_USER`·`RATE_LIMIT_ANON`으로 바꾼다
 
+## Railway 설정 (2026-10-09 확인)
+- 이 서비스는 저장소의 `railway.json`(Config as Code)을 읽지 않았다. 10/9 첫 리허설에서 시작 명령이 안 먹고 Dockerfile 기본 명령(uvicorn 웹서버)이 떠서 바로 껐다.
+  설정은 Railway의 새 방식(Infrastructure as Code, `.railway/railway.ts`)으로 `railway config apply`해서 넣는다.
+  저장소에는 `.railway/` 폴더를 두지 않는다(새 최상위 폴더는 사용자 허락이 필요, CLAUDE.md 2번). 내보낸 임시 폴더에 아래 파일을 두고 적용한다
+- 적용에 필요한 것: Node 22 이상(이 PC는 20이라 임시 폴더에 `npm i node@22`), 임시 폴더에 `npm i railway@3.13.1`(공식 SDK, 그냥 `railway`를 깔면 옛 2.x가 깔릴 수 있다),
+  PowerShell에서 `$env:_`를 실제 `railway.exe` 경로로 두기(npm으로 깐 CLI는 .cmd라 SDK의 버전 검사가 실패한다). 먼저 `railway config plan`으로 바뀌는 것만 확인
+- 리허설 때는 `start`를 `python -m pipeline.cron --rehearse 2000-01-08`로, 크론 일정 없이. 운영은 아래 내용
+```ts
+import { defineRailway, preserve, project, service } from "railway/iac";
+export default defineRailway(() => {
+  const toolscoutCron = service("toolscout-cron", {
+    start: "python -m pipeline.cron",
+    replicas: { "asia-southeast1-eqsg3a": 1 },   // DB(Supabase 뭄바이)와 가까운 싱가포르
+    deploy: { cronSchedule: "0,30 21-23,0-12 * * *", restartPolicyType: "NEVER" },   // UTC. KST 06:00~21:30 30분마다
+    env: { /* 변수는 railway config pull로 받은 preserve() 목록 그대로 둔다(값은 파일에 안 쓴다) */ },
+  });
+  return project("toolscout", { resources: [toolscoutCron] });
+});
+```
+- 변수를 CLI로 새로 넣었으면(`railway variable set`) 적용 전에 `railway config pull --force`로 다시 받아 preserve 목록을 맞춘다(빠진 변수가 지워지지 않게 plan에서 destroy가 없는지 본다)
+- Hobby 플랜은 바깥 SMTP(25·465·587)가 막혀 있다 → 메일은 Gmail API(`MAIL_TRANSPORT=gmail_api`, 아래 절)
+
+## 예외용 무료 대안: GitHub Actions (2026-10-09 사용자 결정: "예외로 사용할 수 있고 무료이다", 기본은 Railway)
+- 무엇: GitHub이 정해진 시각에 저장소 코드를 대신 돌려 주는 기능. 비공개 저장소도 한 달 2,000분까지 무료라, Railway를 못 쓰게 되거나(요금·장애) 비용을 0으로 해야 할 때 아침 작업을 옮길 수 있다
+- 하는 일은 같다: `python -m pipeline.cron`을 예약으로 돌리고, 메일은 Gmail API로 보낸다(SMTP 막힘과 상관없음). 이 PC는 관여하지 않는다
+- 단점: 예약 실행이 혼잡하면 몇 분~수십 분 늦게 시작하고 드물게 건너뛴다 / 실행 서버가 미국이라 뭄바이 DB와 멀어 느리다(Railway 싱가포르 9분 → 20~30분 예상) /
+  무료 2,000분 중 대략 한 달 1,000분 안팎을 쓸 것으로 예상(여유가 크지 않다) / 비밀값을 저장소 Secrets에 따로 넣어야 한다
+- 옮길 때: `.github/workflows/`에 예약 워크플로(UTC cron, 정각을 피해 몇 분 어긋나게)를 만들고, Railway 변수와 같은 값을 Secrets에 넣고, Railway 크론은 끈다(둘 다 켜면 하루 실행이 두 번 돈다)
+
 ## 이 PC 앱에서 넘어가기 (2026-10-07 사용자 결정 "서버 첫 발송 확인 뒤 끄기")
 1. 서버 점검 메일이 정상으로 오는지 확인
 2. 이 PC 앱의 예약을 끈다(`SCHEDULER_ENABLED=0`으로 앱을 다시 띄우거나 작업 `toolscout app` 중지). 둘 다 켜 두면 먼저 돈 쪽이 보내고
@@ -75,7 +104,7 @@ railway up --service <크론 서비스> --detach   # 크론 (처음 한 번 rail
 3. 되돌리기: Railway 크론 서비스를 멈추고 이 PC 앱 예약을 다시 켠다
 
 ## 남은 일
-- Railway가 `railway.json`(Config as Code)을 2026-12-01까지만 받는다고 알린다(2026-10-07 `railway add` 경고). 그 전에 `.railway/railway.ts`(Infrastructure as Code)로 옮긴다 (`railway config migrate`)
+- `railway.json`(Config as Code)은 2026-12-01까지만 받는다는 경고가 있지만, 이 서비스는 이미 IaC로 설정한다(위 "Railway 설정"). 저장소의 `railway.json`은 기록용으로만 남아 있다
 - 임시 비밀번호(2026-10-08 사용자 결정 "구글 붙이기 전 기존 계정 모두 123456, 디자인·기능 다 되면 지우고 제대로"): 그때 있던 계정
   id 45·1·2·3·113·232의 password_hash를 123456으로 넣었다(로컬·Vercel 같은 DB). 끝나면 이 계정들의 password_hash를 비우고
   본인 계정은 회원가입 화면(인증번호)이나 구글로 다시 정한다. 공개 주소라 그동안은 본인 이메일을 아는 사람이 관리자로 로그인할 수 있다
