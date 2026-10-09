@@ -134,7 +134,7 @@ def main() -> int:
     ddl = ddl_compiles()
     json_cols = [f"{t}.{c.name}" for t in db.TABLES for c in tables[t].columns if isinstance(c.type, postgresql.JSONB)]
     checks = {
-        "표_13개(used_tokens·verify_requests·invite_codes·status_changes_포함)": set(tables) == set(db.TABLES) and len(db.TABLES) == 13,
+        "표_16개(email_codes·blocked_clients·rate_counters_포함)": set(tables) == set(db.TABLES) and len(db.TABLES) == 16,
         "계획안_칸_모두_있음": not any(missing.values()),
         "postgres_DDL_컴파일": all(v is True for v in ddl.values()),
         "JSON_칸_10개는_JSONB(run_stats·probes.tools·stages·verify_requests.install·users.application 포함)": len(json_cols) == 10,
