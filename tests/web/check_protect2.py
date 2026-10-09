@@ -189,12 +189,22 @@ def main() -> int:
         later_hit = get(guard.TRAP_PATH, IPS["later"])  # 24시간이 지난 시점에 다른 클라이언트가 걸리면 만료된 행이 정리된다
         with db.get_engine().connect() as c:
             old_gone = c.execute(select(db.BlockedClient).where(db.BlockedClient.client_hash == guard.client_hash(IPS["trap"], UA))).first() is None
+        # 관리자가 차단 행을 지우면 1분 안에 풀린다(서버가 '차단 중'을 1분만 기억). 2026-10-09 운영 확인에서 찾은 문제
+        later_base = base + 24 * 3600 + 1
+        blocked_later = get("/login", IPS["later"]).status_code
+        with db.get_engine().begin() as c:
+            c.execute(db.BlockedClient.__table__.delete().where(db.BlockedClient.client_hash == guard.client_hash(IPS["later"], UA)))
+        guard.clock = lambda: later_base + 30
+        unblock_30s = get("/login", IPS["later"]).status_code
+        guard.clock = lambda: later_base + 61
+        unblock_61s = get("/login", IPS["later"]).status_code
         guard.clock = lambda: base
         guard.clear_cache()
         checks.update({
             "함정_robots_Disallow": f"Disallow: {guard.TRAP_PATH}\n" in robots and "Disallow: /\n" in robots,
             "함정_링크_6개_화면에_숨김": all(len(link.findall(t)) == 1 and t.index(guard.TRAP_PATH) > t.index("<body") for t in pages.values()),
             "부르기_전에는_200": before == 200,
+            "차단_행_지우면_1분_안에_풀림": blocked_later == 403 and unblock_30s == 403 and unblock_61s == 200,
             "부르면_403": hit.status_code == 403 and "접근이 제한" in hit.text,
             "차단되면_비로그인_모든_요청_403": set(after.values()) == {403},
             "robots만은_200": robots_after == 200,

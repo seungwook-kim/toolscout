@@ -37,6 +37,7 @@ TRAP_PATH = "/archive/full-index"
 BLOCK_HOURS = 24
 DB_TIMEOUT_MS = 1500  # 이 시간보다 오래 걸리는 질의는 포기하고 통과시킨다
 NEG_CACHE_SECONDS = 15  # "차단 아님" 확인 결과를 같은 서버 프로세스 안에서 잠깐 기억(요청마다 DB를 부르지 않으려고)
+POS_CACHE_SECONDS = 60  # "차단 중"도 1분만 기억하고 DB를 다시 본다. 관리자가 차단 행을 지우면 1분 안에 풀린다 (2026-10-09 운영 확인: 끝날 때까지 기억하면 행을 지워도 따뜻한 서버에서 계속 403이었다)
 DEFAULT_USER_LIMIT, DEFAULT_ANON_LIMIT, WINDOW_SECONDS = 120, 30, 60
 LIMIT_MESSAGE = "요청이 너무 많아요. 잠시 뒤에 다시 열어 주세요"
 BLOCK_MESSAGE = "접근이 제한됐어요. 24시간 뒤에 다시 시도해 주세요"
@@ -100,7 +101,7 @@ def is_blocked(client: str) -> bool:
     """이 클라이언트가 지금 차단 중인가. DB가 안 되면 False(통과)."""
     current = now()
     seen = _known.get(client)
-    if seen and seen[1] is not None and seen[1] > current:
+    if seen and seen[1] is not None and seen[1] > current and clock() - seen[0] < POS_CACHE_SECONDS:
         return True
     if seen and seen[1] is None and clock() - seen[0] < NEG_CACHE_SECONDS:
         return False
