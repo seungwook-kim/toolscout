@@ -16,7 +16,7 @@ import sys
 from datetime import date
 
 import httpx
-from sqlalchemy import delete, insert, select
+from sqlalchemy import delete, insert, select, update
 
 import db
 import memory
@@ -188,7 +188,12 @@ def prod_checks(user_ids: list[int]) -> dict:
     try:
         os.environ.update({"GMAIL_USER": "sender@example.test", "GMAIL_APP_PASSWORD": "fakepassword0000",
                            "ADMIN_EMAILS": "me@example.test", "DEV_MODE": "0"})
+        # 운영 모드 발송은 승인된 실제 사용자·관리자만 받는다. 검수 동안만 두 프로필을 실제 사용자처럼 두고 끝나면 되돌린다
+        with db.get_engine().begin() as c:
+            before = {r.id: (r.status, r.is_test) for r in c.execute(select(db.User.id, db.User.status, db.User.is_test).where(db.User.id.in_(user_ids)))}
+            c.execute(update(db.User).where(db.User.id.in_(user_ids)).values(status="approved", is_test=False))
         seed(user_ids)
+        blocked_ids, test_ids = _excluded_in_prod(user_ids)
         FakeSMTP.sent, FakeSMTP.fail_subject = [], briefing_mail.EMPTY_TITLE  # 마케터(빈 행)만 실패
         partial = deliver.send_day(DAY, smtp_factory=FakeSMTP)
         remaining = deliver.outbox(DAY)
@@ -200,12 +205,30 @@ def prod_checks(user_ids: list[int]) -> dict:
                 os.environ.pop(k, None)
             else:
                 os.environ[k] = v
+        with db.get_engine().begin() as c:
+            for uid, (status, is_test) in before.items():
+                c.execute(update(db.User).where(db.User.id == uid).values(status=status, is_test=is_test))
     return {
+        "운영모드_차단·가짜프로필은_발송_안함": blocked_ids == [] and test_ids == [],
         "운영모드_사용자마다_각자_한통": partial["mails"] == 2 and all(m["to"].endswith(".test") and "[개발 모드]" not in m["subject"]
                                                      for m in FakeSMTP.sent),
         "운영모드_실패한_사용자만_남음": partial["sent"] == [user_ids[0]] and [f["user_id"] for f in partial["failed"]] == [user_ids[1]]
         and [m["user_id"] for m in remaining] == [user_ids[1]] and retry["sent"] == [user_ids[1]],
     }
+
+
+def _excluded_in_prod(user_ids: list[int]) -> tuple[list[int], list[int]]:
+    """운영 모드에서 차단된 사용자, 관리자 아닌 가짜 프로필(is_test)은 발송함에 안 나온다. 확인 뒤 승인·실제 사용자로 되돌린다."""
+    first = user_ids[0]
+    with db.get_engine().begin() as c:
+        c.execute(update(db.User).where(db.User.id == first).values(status="blocked"))
+    blocked = [m["user_id"] for m in deliver.outbox(DAY) if m["user_id"] == first]
+    with db.get_engine().begin() as c:
+        c.execute(update(db.User).where(db.User.id == first).values(status="approved", is_test=True))
+    test = [m["user_id"] for m in deliver.outbox(DAY) if m["user_id"] == first]
+    with db.get_engine().begin() as c:
+        c.execute(update(db.User).where(db.User.id == first).values(is_test=False))
+    return blocked, test
 
 
 def alert_checks() -> dict:

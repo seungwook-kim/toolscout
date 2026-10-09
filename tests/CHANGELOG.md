@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-09 · pipeline/check_deliver에 '운영모드 차단·가짜프로필은 발송 안 함' 항목, 운영 모드 검수 동안만 두 프로필을 실제 사용자로 두고 되돌림 · 서버 첫 크론의 가짜 프로필 발송 · 통과
 - 2026-10-09 · sources/check_mcp_list(신규 11항목: 48시간 파라미터·쪽 상한·시간 예산 부분 결과·쪽만 재시도·첫 쪽 실패 오류·선택 규칙) 추가, check_fallbacks 제한 시간 30초로 · 레지스트리 목록 받기 개선 · 통과
 
 - 2026-10-09 · web/check_support(신규 44항목: 푸터 정적 검사·/policy·/support·문의 저장/메일/Reply-To/429/꿀단지/중복/관리자 목록·처리함), check_legal·check_protect·check_rules 기대값 갱신, db/check_tables 표 18개 · 공통 푸터·운영정책·고객센터 문의 추가 · 통과
