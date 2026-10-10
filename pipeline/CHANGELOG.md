@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-10-11 · cron.tick: 같은 차례 정기 실행 대상에 든 사용자의 "지금 만들기" 요청은 따로 만들지 않고 요청만 지움(정기 실행이 실패한 사용자는 요청을 남겨 다음 차례가 이어받음) · 10/10 07:01에 정기 실행 4명과 요청 1명이 따로 돌아 같은 사람 것을 두 번 만들었다(모델 호출 33번 추가) · check_cron 23항목 통과
 - 2026-10-09 · deliver.outbox: 운영 모드 발송은 승인된 실제 사용자·관리자만(하루 실행 대상과 같게) · 서버 첫 크론(20:30)에서 가짜 프로필(.test)의 남은 브리핑이 한 통 나감 · check_deliver 통과
 - 2026-10-09 · deliver.send_single에 reply_to(Reply-To 헤더) 추가, 가짜 메일 폴더(DirMailer)가 reply_to도 적음 · 고객센터 문의 알림 메일에서 바로 답장하면 문의자에게 가게 · check_support 통과
 - 2026-10-09 · gmail_api.py(신규)와 deliver.py: 환경변수 MAIL_TRANSPORT=gmail_api면 SMTP 대신 Gmail API(HTTPS)로 발송(refresh_token은 app_secrets에 AES-GCM 암호화, access token은 프로세스 안 재사용, 429·5xx 한 번 재시도, invalid_grant는 다시 연결 안내), send_day mode에 gmail_api, 연결 안 됨은 config_missing · Railway Hobby가 바깥 SMTP를 막아 10/9 서버 리허설이 Network is unreachable로 실패 (사용자 결정 "Gmail API로 보내기") · tests.web.check_gmail_api 34항목, check_deliver·check_cron 통과

@@ -7,6 +7,7 @@
 - 08:00 차례: 먼저 08:00 발송(재시도·알림 있는 경로), 남은 사용자 재시도, 그래도 남으면 실패 알림 한 번
 - 08:30 차례: 08:00 발송은 한 번만(재시도·알림 없음), 하루 실행은 안 함
 - "지금 만들기" 요청: 그 사용자만 실행하고 요청을 지우고 발송을 다시 봄
+- 같은 차례 정기 실행 대상의 요청은 두 번 만들지 않고 요청만 지움 (실패한 사용자는 요청을 남겨 다음 차례가 이어받음)
 - 크론은 MCP_URL=inproc이 기본 / --rehearse는 관리자만 실행·발송한 뒤 그 날짜를 정리(실패해도 정리)
 - 웹 JOBS_EXTERNAL=1: 지금 만들기는 요청만 남기고 상태는 DB로, /api/w1 실행·발송은 409
 """
@@ -123,6 +124,25 @@ async def cron_checks() -> None:
     w = World("06:30", requested=[7])
     await tick(w)
     check("07:00 전 요청은 07:00 차례에", w.calls == [])
+
+    # 같은 사람 두 번 만들기 막기 (10/10 07:01: 정기 실행 4명 + 요청 1명이 따로 돌아 그 사람 것을 두 번 만들었다)
+    w = World("07:00", missing=[1, 2, 3, 4], requested=[3])
+    report = await tick(w)
+    runs = [c for c in w.calls if c[0] == "run"]
+    check("정기 실행 대상의 요청은 따로 만들지 않고 요청만 지움", runs == [("run", (1, 2, 3, 4))] and ("clear", (3,)) in w.calls
+          and report["requested_skipped"] == {"done": [3], "kept": []} and "requested" not in report["did"])
+    w = World("07:00", missing=[1, 2], requested=[2, 9])
+    await tick(w)
+    check("대상 밖 요청자(9)만 따로 실행하고, 대상 안(2)은 지우기만",
+          [c for c in w.calls if c[0] == "run"] == [("run", (1, 2)), ("run", (9,))] and ("clear", (2,)) in w.calls and ("clear", (9,)) in w.calls)
+    w = World("07:30", missing=[2, 3], still_missing=[3], requested=[2, 3])
+    report = await tick(w)
+    check("정기 실행이 실패한 사용자(3)는 요청을 남기고 성공한 사용자(2)만 지움, 다시 만들지 않음",
+          [c for c in w.calls if c[0] == "run"] == [("run", (2, 3))] and [c for c in w.calls if c[0] == "clear"] == [("clear", (2,))]
+          and report["requested_skipped"] == {"done": [2], "kept": [3]})
+    w = World("08:30", missing=[3], requested=[3])
+    await tick(w)
+    check("정기 재시도가 끝난 차례(08:30)에는 남은 요청이 요청 처리로 이어받음", ("run", (3,)) in w.calls and ("clear", (3,)) in w.calls)
 
     failing = World("08:00")
     s = failing.scheduler()

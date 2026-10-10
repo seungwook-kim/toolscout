@@ -30,8 +30,9 @@ import config  # noqa: E402
 import models  # noqa: E402
 import providers  # noqa: E402
 
-MINI = "openai/gpt-4o-mini"  # 2026-10-07 사용자 결정 "mini-4o로 진행해": 서버(운영 모드)는 네 역할 모두 OpenRouter 이 모델 두 칸
-EXPECTED_PROD = {"curator": (MINI, MINI), "verifier": (MINI, MINI), "explainer": (MINI, MINI), "gate": (MINI, MINI)}
+MINI = "openai/gpt-4o-mini"  # 둘째 칸. 2026-10-11 사용자 결정 "1번으로 해": 서버(운영 모드)는 네 역할 모두 [Anthropic Haiku 5.5, OpenRouter 이 모델]
+HAIKU = "claude-haiku-5-5"
+EXPECTED_PROD = {"curator": (HAIKU, MINI), "verifier": (HAIKU, MINI), "explainer": (HAIKU, MINI), "gate": (HAIKU, MINI)}
 SOURCES = ["platform.claude.com/docs", "ai.google.dev/gemini-api/docs/models", "developers.openai.com/api/docs/models",
            "openrouter.ai/api/v1/models", "console.groq.com/docs", "ollama.com/library"]
 MODEL_NAME = re.compile(r"claude-(opus|sonnet|haiku|fable)|gemini-\d|gpt-\d|gpt-oss|gemma-?\d|qwen\d|llama\d|nemotron|:free")
@@ -171,8 +172,8 @@ def option_routing() -> bool:
         models.PROVIDERS[name] = recorder(name)
     try:
         with dev_mode("0"):
-            models.call("verifier", [HumanMessage("x")], temperature=0)  # 운영 표: OpenRouter gpt-4o-mini (reasoning 없음)
-            prod_seen = seen.pop("openrouter", None)
+            models.call("verifier", [HumanMessage("x")], temperature=0)  # 운영 표 첫 칸: Anthropic Haiku 5.5 (온도·추론 옵션 없음)
+            prod_seen = seen.pop("anthropic", None)
         with dev_mode("1"):
             removed = [models.GROQ_FAST, models.LOCAL_JSON_MODEL, {"provider": "gemini", "model": "g", "thinking": "minimal"},
                        {"provider": "openrouter", "model": "o:free", "reasoning": "none"}, {"provider": "anthropic", "model": "a"}]
@@ -180,7 +181,7 @@ def option_routing() -> bool:
                 models._call_one("curator", models.SLOT_NAMES[index % len(models.SLOT_NAMES)], spec, [HumanMessage("x")], None, 0)
     finally:
         models.PROVIDERS.update(original)
-    return (prod_seen == {"temperature": 0} and seen.get("anthropic") == {}
+    return (prod_seen == {} and seen.get("anthropic") == {}
             and seen.get("openrouter") == {"temperature": 0, "reasoning": "none"}
             and seen.get("gemini") == {"temperature": 0, "thinking": "minimal"}
             and seen.get("ollama") == {"temperature": 0}
@@ -219,7 +220,8 @@ def dev_table_rules() -> bool:
             and all(dev[r][0] == haiku for r in ("curator", "gate", "importance"))
             and all(dev[r][0] == sonnet for r in ("explainer", "verifier", "same_story"))
             and haiku.get("thinking") is False and all(s.get("tools") is not False for s in specs)
-            and prod["same_story"] == [{"provider": "openrouter", "model": "openai/gpt-4o-mini"}] * 2 and "importance" not in prod)
+            and prod["same_story"] == [{"provider": "anthropic", "model": HAIKU}, {"provider": "openrouter", "model": MINI}]
+            and "importance" not in prod)
 
 
 def warm_without_ollama() -> bool:
@@ -240,15 +242,27 @@ def history(tool_ai: AIMessage) -> list:
 
 
 def anthropic_conversion() -> bool:
-    captured = {}
-    block = SimpleNamespace(type="tool_use", name="fetch_article", input={"url": "https://a.com"}, id="tu_1")
-    fake = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: captured.update(kw) or SimpleNamespace(
-        content=[block], usage=SimpleNamespace(input_tokens=3, output_tokens=4), stop_reason="tool_use")))
-    providers._anthropic_client = lambda: fake
-    first = providers._anthropic("m", [SystemMessage("시스템"), HumanMessage("요약")], [convert_to_openai_tool(TOOL)])
-    providers._anthropic("m", history(first), None)
-    msgs = captured["messages"]
-    return (first.tool_calls[0]["name"] == "fetch_article" and captured["system"] == "시스템"
+    """Anthropic는 httpx로 직접 부른다(2026-10-11). 자세한 검수는 tests.models.check_anthropic, 여기서는 변환 한 번만 본다."""
+    captured = []
+    reply = {"content": [{"type": "tool_use", "id": "tu_1", "name": "fetch_article", "input": {"url": "https://a.com"}}],
+             "usage": {"input_tokens": 3, "output_tokens": 4}, "stop_reason": "tool_use"}
+
+    def client(timeout=providers.REMOTE_TIMEOUT):
+        return httpx.Client(transport=httpx.MockTransport(lambda r: captured.append(json.loads(r.content)) or httpx.Response(200, json=reply)))
+
+    saved = os.environ.get("ANTHROPIC_API_KEY")
+    os.environ["ANTHROPIC_API_KEY"] = "test-key"
+    providers._http_client = client
+    try:
+        first = providers._anthropic("m", [SystemMessage("시스템"), HumanMessage("요약")], [convert_to_openai_tool(TOOL)])
+        providers._anthropic("m", history(first), None)
+    finally:
+        if saved is None:
+            os.environ.pop("ANTHROPIC_API_KEY", None)
+        else:
+            os.environ["ANTHROPIC_API_KEY"] = saved
+    msgs = captured[1]["messages"]
+    return (first.tool_calls[0]["name"] == "fetch_article" and captured[1]["system"] == "시스템"
             and msgs[1]["content"][0]["type"] == "tool_use" and msgs[2]["content"][0]["type"] == "tool_result")
 
 
@@ -388,7 +402,7 @@ def main() -> int:
     sub_400 = dev_chain_case({"claude_code": FakeStatus(400)})
     verifier_tools = dev_chain_case({"claude_code": None}, role="verifier", tools=[TOOL])
     cc_only = {"calls": ["claude_code"], "slot": "primary", "provider": "claude_code"}
-    originals = (providers._anthropic_client, providers._gemini_client, providers._http_client)
+    originals = (providers._gemini_client, providers._http_client)
     ok = {"calls": 2, "slot": "fallback", "trace_id": True}
     checks = {
         "운영_모델표_CLAUDE_일치": {r: (t[0]["model"], t[1]["model"]) for r, t in models.PROD_MODELS.items()} == EXPECTED_PROD,
@@ -416,7 +430,7 @@ def main() -> int:
         "개발모드_무료등급_호출간격": throttle_spacing(),
         **openai_compatible_conversion(),
     }
-    providers._anthropic_client, providers._gemini_client, providers._http_client = originals
+    providers._gemini_client, providers._http_client = originals
     offline = "--offline" in sys.argv  # 실제 모델 호출 없이 (작업 중 모델 호출 금지, 2026-09-27)
     dev_live = {} if offline else live_calls(models.DEV_MODELS | models.DEV_SINGLE_MODEL_ROLES, required=True)
     prod_live = {} if offline else live_calls(models.PROD_MODELS, required=False)
