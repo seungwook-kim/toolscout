@@ -1,5 +1,6 @@
 # docs/ CHANGELOG
 
+- 2026-10-11 · deploy.md 운영 모델(Haiku 5.5 + gpt-4o-mini 대체)과 ANTHROPIC_API_KEY(Railway·Vercel) 안내 · 모델 전환 결정 반영 · 문서 검수 통과
 - 2026-10-09 · deploy.md: Railway 설정 절(railway.json이 안 먹어 IaC로 적용, 싱가포르, 크론 일정·재시작 안 함, 적용 방법), 예외용 무료 대안 GitHub Actions 절 · 사용자 "GitHub Actions 이건 예외로 사용할 수 있고 무료이다 라고 명시해놔, 레일웨이로 간다" · check_folder_docs 통과
 - 2026-10-09 · deploy.md에 "Gmail API로 메일 보내기" 절(Railway 환경변수·연결 순서·구글 콘솔 설정) · Railway Hobby가 바깥 SMTP를 막아서 · 문서 검수 통과
 - 2026-10-09 · deploy.md에 "보호 장치 2차" 절(환경변수·운영 확인 방법·개인정보 메모·머지 때 할 일) · 무단 복제 2차 보호 · check_folder_docs 통과

@@ -1,8 +1,8 @@
-"""공급자별 모델 호출 (Anthropic, Gemini, OpenAI 호환: OpenAI·OpenRouter·Groq·Ollama). 모델명과 역할 배정은 models.py에만 둔다.
+"""공급자별 모델 호출 (Anthropic(httpx), Gemini, OpenAI 호환: OpenAI·OpenRouter·Groq·Ollama). 모델명과 역할 배정은 models.py에만 둔다.
 
 모두 langchain_core 메시지를 받아 AIMessage(tool_calls 포함)로 돌려준다.
 선택 옵션: temperature(Gemini·OpenRouter·Groq·Ollama), thinking(Gemini thinking_level),
-reasoning(OpenRouter reasoning.effort, Groq·Ollama reasoning_effort).
+reasoning(OpenRouter reasoning.effort, Groq·Ollama reasoning_effort), json_schema(Anthropic 구조화 출력, models.STRUCTURED_SCHEMA에서).
 """
 import json
 import os
@@ -55,48 +55,80 @@ def _usage(input_tokens: int | None, output_tokens: int | None) -> dict[str, int
     return {"input_tokens": i, "output_tokens": o, "total_tokens": i + o}
 
 
-# Anthropic ---------------------------------------------------------------
+# Anthropic (Messages API를 httpx로 직접 호출. 새 라이브러리 없음) ------------------------------------
 
-def _anthropic_client():
-    import anthropic
+ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
+ANTHROPIC_VERSION = "2023-06-01"
+# 구조화 출력이 지원하지 않는 JSON 스키마 키. 값 범위 검사는 어차피 agent/structured.py가 pydantic으로 다시 한다
+_SCHEMA_DROP = {"title", "default", "minLength", "maxLength", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum",
+                "minItems", "maxItems", "format"}
 
-    return anthropic.Anthropic(max_retries=0)  # 재시도는 models.call()의 대체 전환이 맡는다
+
+def strict_schema(node: Any) -> Any:
+    """pydantic JSON 스키마를 Anthropic 구조화 출력 규칙에 맞춘다: 모든 object에 additionalProperties false, 범위 키는 뺀다."""
+    if isinstance(node, list):
+        return [strict_schema(x) for x in node]
+    if not isinstance(node, dict):
+        return node
+    out = {k: strict_schema(v) for k, v in node.items() if k not in _SCHEMA_DROP}
+    if out.get("type") == "object":
+        out["additionalProperties"] = False
+    return out
 
 
-def _anthropic(model: str, messages: list[BaseMessage], tools) -> AIMessage:
+def anthropic_messages(messages: list[BaseMessage]) -> tuple[str, list[dict]]:
+    """langchain 메시지 → (system 글, Anthropic messages). 도구 결과는 user의 tool_result 블록이고 연속이면 한 메시지로 묶는다."""
     system, conversation = _split_system(messages)
     payload: list[dict] = []
     for m in conversation:
         if isinstance(m, HumanMessage):
             payload.append({"role": "user", "content": m.text})
         elif isinstance(m, AIMessage):
-            blocks = list(m.additional_kwargs.get("anthropic_thinking", []))
-            if m.text:
-                blocks.append({"type": "text", "text": m.text})
+            blocks: list[dict] = [{"type": "text", "text": m.text}] if m.text else []
             blocks += [{"type": "tool_use", "id": tc["id"], "name": tc["name"], "input": tc["args"]} for tc in m.tool_calls]
-            payload.append({"role": "assistant", "content": blocks})
+            if blocks:
+                payload.append({"role": "assistant", "content": blocks})
         elif isinstance(m, ToolMessage):
             block = {"type": "tool_result", "tool_use_id": m.tool_call_id, "content": m.text}
             if payload and payload[-1]["role"] == "user" and isinstance(payload[-1]["content"], list):
                 payload[-1]["content"].append(block)  # 연속 도구 결과는 한 user 메시지로 묶는다
             else:
                 payload.append({"role": "user", "content": [block]})
-    kwargs: dict[str, Any] = {"model": model, "max_tokens": MAX_TOKENS, "messages": payload}
+    return system, payload
+
+
+def _anthropic(model: str, messages: list[BaseMessage], tools, json_schema: dict | None = None) -> AIMessage:
+    """json_schema가 있고 도구가 없으면 구조화 출력(output_config.format)으로 받는다.
+
+    강제 도구 호출(tool_choice)은 쓰지 않는다: 최신 모델(Sonnet 5.5·Opus 5.5 등)이 400으로 거절한다. 구조화 출력은 응답 글이
+    스키마에 맞는 JSON으로 나오고, 지금 흐름(loop.parse_output이 글을 JSON으로 읽음)에 그대로 들어간다 (2026-10-11 Haiku 5.5 실호출 확인).
+    재시도는 하지 않는다. 429·529·5xx는 models.call()의 대체 전환이 맡는다. 키와 응답 전체는 로그·오류에 넣지 않는다.
+    """
+    key = os.environ.get("ANTHROPIC_API_KEY")
+    if not key:
+        raise MissingKey("ANTHROPIC_API_KEY 비어있음")
+    system, payload = anthropic_messages(messages)
+    body: dict[str, Any] = {"model": model, "max_tokens": MAX_TOKENS, "messages": payload}
     if system:
-        kwargs["system"] = system
+        body["system"] = system
     if tools:
-        kwargs["tools"] = [{"name": t["function"]["name"], "description": t["function"].get("description", ""),
-                            "input_schema": t["function"].get("parameters", {"type": "object"})} for t in tools]
-    client = _anthropic_client()  # 변수에 잡아 둬야 요청 전에 클라이언트가 닫히지 않는다
-    response = client.messages.create(**kwargs)
-    blocks = response.content
+        body["tools"] = [{"name": t["function"]["name"], "description": t["function"].get("description", ""),
+                          "input_schema": t["function"].get("parameters") or {"type": "object", "properties": {}}} for t in tools]
+    elif json_schema:
+        body["output_config"] = {"format": {"type": "json_schema", "schema": strict_schema(json_schema)}}
+    headers = {"x-api-key": key, "anthropic-version": ANTHROPIC_VERSION}
+    with _http_client(REMOTE_TIMEOUT) as client:
+        response = client.post(ANTHROPIC_URL, headers=headers, json=body)
+        response.raise_for_status()
+    data = response.json()
+    blocks = data.get("content") or []
+    usage = data.get("usage") or {}
     return AIMessage(
-        content="".join(b.text for b in blocks if b.type == "text"),
-        tool_calls=[{"name": b.name, "args": b.input, "id": b.id, "type": "tool_call"} for b in blocks if b.type == "tool_use"],
-        additional_kwargs={"anthropic_thinking": [b.model_dump(exclude_none=True) for b in blocks
-                                                  if b.type in ("thinking", "redacted_thinking")]},
-        usage_metadata=_usage(response.usage.input_tokens, response.usage.output_tokens),
-        response_metadata={"provider": "anthropic", "model": model, "stop_reason": response.stop_reason},
+        content="".join(b.get("text", "") for b in blocks if b.get("type") == "text"),
+        tool_calls=[{"name": b["name"], "args": b.get("input") or {}, "id": b["id"], "type": "tool_call"}
+                    for b in blocks if b.get("type") == "tool_use"],
+        usage_metadata=_usage(usage.get("input_tokens"), usage.get("output_tokens")),
+        response_metadata={"provider": "anthropic", "model": model, "stop_reason": data.get("stop_reason")},
     )
 
 
@@ -268,6 +300,6 @@ PROVIDERS: dict[str, Callable[..., AIMessage]] = {
     "groq": _groq, "ollama": _ollama, "claude_code": _claude_code,
 }
 # 공급자별로 받는 선택 옵션. models._call_one이 이 목록에 있는 것만 넘긴다
-OPTIONS: dict[str, tuple[str, ...]] = {"anthropic": (), "openai": (), "gemini": ("temperature", "thinking"),
+OPTIONS: dict[str, tuple[str, ...]] = {"anthropic": ("json_schema",), "openai": (), "gemini": ("temperature", "thinking"),
                                        "openrouter": ("temperature", "reasoning"), "groq": ("temperature", "reasoning"),
                                        "ollama": ("temperature", "reasoning"), "claude_code": ("thinking",)}

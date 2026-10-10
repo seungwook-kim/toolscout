@@ -6,7 +6,8 @@
 같은 Scheduler의 실행·발송·검증·알림 함수를 그대로 쓴다.
 - 06:00 차례: DB 깨우기, 검증(W1-a), 월요일이면 주간 기억 합치기
 - 07:00·07:30·08:00 차례: 브리핑 없는 대상 사용자만 하루 실행(첫 시도 + 재시도 2번, 앱 안 예약과 같은 횟수). 08:00 차례에도 남으면 실패 알림
-- 07:00~21:59 모든 차례: "지금 만들기" 요청 사용자(users.briefing_requested_at)만 실행하고 요청을 지운다
+- 07:00~21:59 모든 차례: "지금 만들기" 요청 사용자(users.briefing_requested_at)만 실행하고 요청을 지운다.
+  같은 차례 정기 실행 대상에 든 사용자는 따로 만들지 않는다(성공했으면 요청만 지우고, 실패했으면 요청을 남겨 다음 차례가 이어받음)
 - 07:00~21:59 모든 차례: 지난 알림 시각(08·09·12·18시)의 미발송 메일을 보낸다(sent_at 기준 멱등). 실행 앞뒤로 두 번 본다.
   알림 시각 뒤 첫 차례는 실패 재시도(10분 간격 2번)와 실패 알림까지, 그 뒤 차례는 한 번만 보낸다(같은 알림이 반복되지 않게)
 - 도구(MCP)는 같은 프로세스의 mcp_server에 메모리로 붙는다(MCP_URL=inproc, agent/loop.py). 서버를 띄우지 않는다
@@ -66,9 +67,11 @@ async def tick(s: jobs.Scheduler | None = None) -> dict:
     if t < jobs.RUN_AT:
         return report
     report["send_before"] = await _send_due(s, now)
+    ran_ids: set[int] = set()  # 이 차례의 정기 실행 대상. 같은 차례의 "지금 만들기"가 같은 사람을 또 만들지 않게 한다
     if t < RUN_UNTIL:
         missing = await s.missing_users(today)
         if missing:
+            ran_ids = set(missing)
             report["run"] = await s.run_now(user_ids=missing)
             report["did"].append("run")
             missing = await s.missing_users(today)
@@ -77,6 +80,17 @@ async def tick(s: jobs.Scheduler | None = None) -> dict:
                 f"07:00·07:30·08:00 세 번 시도했지만 브리핑이 없는 대상 사용자 {len(missing)}명이 남았어요.",
                 "오늘은 더 시도하지 않아요. 브리핑이 있는 사용자는 알림 시각에 그대로 발송되고, 내일 07:00 크론은 그대로 돌아요."])
     requested = sorted(await asyncio.to_thread(persist.requested_user_ids))
+    if requested and ran_ids:
+        # 10/10 07:01에 정기 실행(4명)과 요청 처리(1명)가 같은 차례에 따로 돌아 그 사람 것을 두 번 만들었다(모델 호출 33번 추가).
+        # 정기 실행 대상에 든 사용자의 요청은 따로 만들지 않는다. 정기 실행이 만든 사람은 요청만 지우고, 실패한 사람은 요청을 남겨
+        # 다음 차례(정기 재시도가 끝난 뒤에는 요청 처리)가 이어받는다
+        failed_ids = set(await s.missing_users(today))
+        covered = [uid for uid in requested if uid in ran_ids]
+        done = [uid for uid in covered if uid not in failed_ids]
+        if done:
+            await asyncio.to_thread(persist.clear_requests, done)
+        report["requested_skipped"] = {"done": done, "kept": [uid for uid in covered if uid in failed_ids]}
+        requested = [uid for uid in requested if uid not in ran_ids]
     if requested:
         report["requested"] = await s.run_now(user_ids=requested)
         await asyncio.to_thread(persist.clear_requests, requested)  # 실패해도 지운다. 사용자가 다시 누를 수 있다

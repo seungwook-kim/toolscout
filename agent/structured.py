@@ -1,7 +1,7 @@
 """에이전트 공통: 모델에게 JSON 규격 응답을 받는다 (큐레이터·해설가).
 
 agent/schemas.py 규격으로 검사하고, 틀리면 오류를 알려 1회 다시 부른다. 그래도 틀리면 실패 예시를 남기고 None.
-모든 호출은 온도 0이다 (계획안 10장 출력 품질). 모델 장애(models.ModelUnavailable)는 호출부가 단위별로 처리한다.
+모든 호출은 온도 0이다 (계획안 10장 출력 품질). Anthropic 제공자는 이 규격을 구조화 출력 스키마로 받아 형식 실패가 거의 없다(models.STRUCTURED_SCHEMA). 모델 장애(models.ModelUnavailable)는 호출부가 단위별로 처리한다.
 """
 import json
 from dataclasses import dataclass, field
@@ -41,7 +41,11 @@ async def ask_json(role: str, prompt: str, payload: Any, schema: type[BaseModel]
     for attempt in (1, 2):
         system = prompt if error is None else f"{prompt}\n\n직전 출력이 규격에 맞지 않았다 ({error}). 규격대로 다시 출력한다."
         text = payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False)
-        result = await loop.run(role, system, text, [], 1, model_call=call)
+        token = models.STRUCTURED_SCHEMA.set(schema.model_json_schema())  # Anthropic은 이 스키마로 구조화 출력, 다른 제공자는 무시
+        try:
+            result = await loop.run(role, system, text, [], 1, model_call=call)
+        finally:
+            models.STRUCTURED_SCHEMA.reset(token)
         stats.calls += 1
         stats.input_tokens += result["usage"]["input_tokens"]
         stats.output_tokens += result["usage"]["output_tokens"]

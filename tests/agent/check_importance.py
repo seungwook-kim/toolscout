@@ -5,8 +5,8 @@
 - 뉴스만 보내고 도구는 안 보냄 / 요청에는 제목·요약 300자와 5단계 영어 기준만 (사용자 정보 없음)
 - 점수 반올림해 importance, 원래 값·confidence는 따로 / 단계 번호가 0부터면 1을 더함 / 1~5 밖으로 안 나감
 - 실패한 기사는 선별 모델 점수 그대로, 나머지는 반영 / 키 없으면 아무것도 안 보냄 / 비용 합산
-- 모델표: same_story는 OpenRouter gpt-4o-mini 단일 모델, 역할표 4개는 그대로 / Jev 주소는 models.JEV
-- same_story 시간 초과면 같은 모델로 한 번 더
+- 모델표: same_story는 [Haiku 5.5, OpenRouter gpt-4o-mini], 역할표 4개는 그대로 / Jev 주소는 models.JEV
+- same_story 첫 칸(Haiku 5.5) 시간 초과면 둘째 칸(gpt-4o-mini)으로
 개발 모드(2026-10-06 "JEV로 돌려": Jev가 먼저, 못 매긴 기사만 구독 대체)
 - Jev가 다 매기면 구독 모델을 부르지 않음 / Jev가 실패한 기사만 "importance" 역할 모델로, 키가 없으면 전부
 - 대체는 20건 묶음마다 한 번 / 입력은 번호·제목·요약 300자(요약이 비면 link_site)만, 기준은 같은 5단계
@@ -201,8 +201,8 @@ async def main() -> None:
     check("운영: 키 없으면 아무것도 안 보냄", none == {"scored": 0, "failed": 0, "skipped": 3, "cost_usd": 0.0})
     with mode("0"):
         prod_same_story = models.active_models()["same_story"]
-    check("운영 모델표: same_story는 gpt-4o-mini 하나를 두 번(같은 모델 재시도), 역할표 4개 그대로",
-          prod_same_story == [{"provider": "openrouter", "model": "openai/gpt-4o-mini"}] * 2
+    check("운영 모델표: same_story는 [Haiku 5.5, gpt-4o-mini(OpenRouter)], 역할표 4개 그대로",
+          prod_same_story == [{"provider": "anthropic", "model": "claude-haiku-5-5"}, {"provider": "openrouter", "model": "openai/gpt-4o-mini"}]
           and set(models.DEV_MODELS) == set(models.PROD_MODELS) == {"curator", "verifier", "explainer", "gate"})
     await dev_checks()
     check("Jev 주소는 models.JEV", models.JEV["url"].endswith("/api/v1/decide") and models.JEV["key_env"] == "JEV_API_KEY")
@@ -213,19 +213,23 @@ async def main() -> None:
 
     def flaky(model, messages, tools, **kw):
         seen_models.append(model)
-        if len(seen_models) == 1:
-            raise httpx.ReadTimeout("timed out")
+        raise httpx.ReadTimeout("timed out")
+
+    def fallback_ok(model, messages, tools, **kw):
+        seen_models.append(model)
         return AI('{"groups": []}', usage_metadata={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2})
-    saved_adapter, saved_interval = models.PROVIDERS["openrouter"], dict(models.FREE_TIER_MIN_INTERVAL)
-    models.PROVIDERS["openrouter"] = flaky
+    saved_adapter, saved_interval = dict(models.PROVIDERS), dict(models.FREE_TIER_MIN_INTERVAL)
+    models.PROVIDERS["anthropic"], models.PROVIDERS["openrouter"] = flaky, fallback_ok
     models.FREE_TIER_MIN_INTERVAL.clear()
     try:
         with mode("0"):
             reply = models.call("same_story", [HumanMessage("x")])
     finally:
-        models.PROVIDERS["openrouter"] = saved_adapter
+        models.PROVIDERS.update(saved_adapter)
         models.FREE_TIER_MIN_INTERVAL.update(saved_interval)
-    check("운영: same_story 시간 초과면 같은 모델로 한 번 더", len(seen_models) == 2 and len(set(seen_models)) == 1 and reply.text == '{"groups": []}')
+    check("운영: same_story 첫 칸(Haiku 5.5) 시간 초과면 둘째 칸(gpt-4o-mini)이 답함",
+          seen_models == ["claude-haiku-5-5", "openai/gpt-4o-mini"] and reply.text == '{"groups": []}'
+          and reply.response_metadata["slot"] == "fallback")
 
     def news_item(n, imp):
         return {"type": "news", "title": f"n{n}", "url": f"u{n}", "source": "openai", "topic": "model_release", "importance": imp}

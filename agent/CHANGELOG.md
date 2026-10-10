@@ -1,5 +1,6 @@
 # agent/ CHANGELOG
 
+- 2026-10-11 · structured.ask_json: 호출 동안 models.STRUCTURED_SCHEMA에 규격(JSON Schema)을 올려 Anthropic 구조화 출력으로 보냄(다른 제공자는 무시) · gpt-4o-mini가 10/10에 형식 실패 18번·복구 못함 8번 · check_anthropic 통과, 실제 게이트 호출 형식 실패 0
 - 2026-10-08 · same_story.drop: 남긴 기사에 뺀 기사 제목·출처·요약을 also_reported로 붙이고 해설가가 남긴 기사에 없는 사실(요금·크레딧·한도)을 summary_ko·for_me에 담게 함, headline 후보 30 → 80건(자른 뒤 묶어서 다룬 곳 수가 적게 세어지던 것) · 10/8 크레딧이 적힌 GeekNews 기사가 같은 소식으로 빠지고 AI Times 기사만 남음, 큰 소식 후보 30건 밖으로 GeekNews가 잘림 · check_same_story 10·check_headline 18·run_explainer --fake 통과
 - 2026-10-07 · loop: MCP_URL=inproc이면 같은 프로세스의 mcp_server.mcp에 메모리로 붙는다 · Vercel 웹은 자기 /mcp를 HTTP로 못 부르고 Railway 크론은 서버를 띄우지 않는다(사용자 결정 "vercel + railway") · github.com fetch_article 실측 3,064자, check_cron 통과
 - 2026-10-06 · importance: 개발 모드도 Jev가 먼저, Jev가 못 매긴 기사(키 없음·연결 실패)만 구독 Haiku로 다시 매기고(span importance_fallback, 보고 fallback), 그것도 실패하면 선별 점수 · 사용자 결정 "JEV로 돌려". Jev의 10/1~10/5 ConnectError는 사이트 장애가 아니라 이 PC의 안랩 차단이었다(check-host.net 바깥 노드는 200, 10/6 10:44부터 이 PC도 접속됨) · check_importance 25 통과

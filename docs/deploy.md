@@ -13,11 +13,11 @@
 - 도구(MCP)는 두 곳 모두 같은 프로세스 안에서 메모리로 붙는다(`MCP_URL=inproc`). /mcp를 HTTP로 부르지 않는다
 - 크론이 하는 일(시각과 DB만 보고 판단): 06:00 검증·DB 깨우기·월요일 합치기 / 07:00·07:30·08:00 브리핑 없는 사용자 실행(08:00에도 남으면 실패 알림) /
   매 차례 지난 알림 시각의 미발송 메일 발송 / 매 차례 "지금 만들기" 요청 처리. 이전 차례가 돌고 있으면 Railway가 이번 차례를 건너뛴다
-- 서버는 운영 모드(`DEV_MODE=0`): 모델은 OpenRouter `openai/gpt-4o-mini`(네 역할), 같은 소식 묶기도 같은 모델, 중요도는 Jev. 브리핑은 승인된 실제 사용자·관리자·데모 프로필만
+- 서버는 운영 모드(`DEV_MODE=0`): 모델은 네 역할과 같은 소식 묶기 모두 첫 칸 Anthropic API `claude-haiku-5-5`(2026-10-11), 둘째 칸 OpenRouter `openai/gpt-4o-mini`(첫 칸이 429·5xx·타임아웃·키 없음이면 넘어감), 중요도는 Jev. 형식 실패를 줄이려고 Anthropic 구조화 출력을 쓴다. Haiku 5.5 가격은 입력 $0.10·출력 $0.50 per 1M(프롬프트 10만 토큰 이하, 넘으면 5배). 브리핑은 승인된 실제 사용자·관리자·데모 프로필만
 
 ## 환경변수 (값은 로컬 `.env`에서 옮기고 출력하지 않는다)
 - 공통: `DATABASE_URL` `SESSION_SECRET`(메일 서명 링크를 웹이 확인하므로 둘이 같아야 한다) `ADMIN_EMAILS` `GMAIL_USER` `GMAIL_APP_PASSWORD`
-  `OPENROUTER_API_KEY` `LANGFUSE_PUBLIC_KEY` `LANGFUSE_SECRET_KEY` `LANGFUSE_HOST` `MCP_SERVICE_KEY` `APP_BASE_URL`(= Vercel 주소),
+  `ANTHROPIC_API_KEY`(Railway·Vercel 둘 다 필요, 운영 첫 모델) `OPENROUTER_API_KEY`(둘째 칸) `LANGFUSE_PUBLIC_KEY` `LANGFUSE_SECRET_KEY` `LANGFUSE_HOST` `MCP_SERVICE_KEY` `APP_BASE_URL`(= Vercel 주소),
   `DEV_MODE=0` `SCHEDULER_ENABLED=0` `MCP_URL=inproc`
 - Vercel만: `JOBS_EXTERNAL=1` `DAILY_QUESTION_LIMIT`
 - Railway만: `JEV_API_KEY` `E2B_API_KEY` `GITHUB_TOKEN` `SKILLSMP_API_KEY` `DAILY_PROBE_LIMIT`

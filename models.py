@@ -12,7 +12,8 @@ DEV_MODE(기본 1)면 개발 모델표(Claude 구독만, 2026-10-05부터), 0이
 - Ollama 로컬: https://ollama.com/library, VRAM·도구 호출·한글 실측은 docs/local-model.md (2026-09-14)
 
 메시지는 langchain_core.messages 형식을 쓰고, 반환도 AIMessage(tool_calls 포함)로 통일한다.
-표의 각 역할은 제공자 순서 목록이다. 503·529(Anthropic 과부하)·연결 실패·타임아웃·키 없음이면 다음 제공자로 넘어간다.
+운영 모델표는 첫 칸 Anthropic Claude Haiku 5.5, 둘째 칸 OpenRouter gpt-4o-mini다 (2026-10-11).
+표의 각 역할은 제공자 순서 목록이다. 5xx·529(Anthropic 과부하)·연결 실패·타임아웃·키 없음이면 다음 제공자로 넘어간다.
 429는 60초 기다렸다가 같은 제공자에 1회 더 보내고, 그래도 429면 다음으로 넘어간다. 도구가 필요한 호출은 도구를 못 쓰는
 모델(tools False)을 건너뛴다. 끝까지 실패하거나 전환 대상이 아닌 오류면 ModelUnavailable을 낸다.
 사고·추론 토큰도 출력 한도를 쓰므로 표에서 thinking(Gemini)·reasoning(OpenRouter·Groq·Ollama)을 낮춰 둔다.
@@ -23,6 +24,7 @@ import os
 import threading
 import time
 from collections import Counter
+from contextvars import ContextVar
 from typing import Any
 
 import httpx
@@ -37,16 +39,19 @@ log = logging.getLogger("toolscout.models")
 
 ModelTable = dict[str, list[dict[str, Any]]]
 
-# 운영 모델표 = 서버 배포(Railway 크론·Vercel 웹, DEV_MODE=0). 2026-10-07 사용자 결정 "mini-4o로 진행해": 네 역할 모두 OpenRouter
-# openai/gpt-4o-mini (입력 $0.15·출력 $0.60 per 1M, 도구 호출·JSON 지원, 2026-10-07 https://openrouter.ai/api/v1/models 조회).
-# 제공자가 하나라 대체 칸도 같은 모델이다(타임아웃·503이면 한 번 더, same_story와 같은 방식). 키는 OPENROUTER_API_KEY 하나.
+# 운영 모델표 = 서버 배포(Railway 크론·Vercel 웹, DEV_MODE=0). 2026-10-11 사용자 결정 "1번으로 해": 첫 칸 Anthropic API Claude Haiku 5.5,
+# 둘째 칸 OpenRouter openai/gpt-4o-mini. 이유: 10/10 서버 실행에서 gpt-4o-mini가 모델 호출 65번 중 형식 실패 18번·복구 못함 8번(항목이 빠짐).
+# Haiku 5.5는 구조화 출력(providers.py)으로 형식 실패가 거의 없고 더 싸다(공식 가격 입력 $0.10·출력 $0.50 per 1M, 프롬프트 10만 토큰
+# 이하 기준이고 넘으면 5배라 넘지 않게. gpt-4o-mini는 $0.15·$0.60). 모델 ID는 Anthropic 모델 목록 API(GET /v1/models)로 확인(2026-10-11).
+# 첫 칸이 429(60초 뒤 1회 더)·5xx·타임아웃·키 없음이면 둘째 칸(gpt-4o-mini)으로 넘어간다. 키는 ANTHROPIC_API_KEY, OPENROUTER_API_KEY 둘 다 서버에 둔다.
 # 예전 계획 표(Gemini·Anthropic·OpenAI 직접 키: 선별 Gemini 3.6 Flash, 검증관 Opus 5, 해설가 Sonnet 5, 게이트 Haiku 4.5)는 쓰지 않는다
+HAIKU_55 = {"provider": "anthropic", "model": "claude-haiku-5-5"}
 OPENROUTER_MINI = {"provider": "openrouter", "model": "openai/gpt-4o-mini"}
 PROD_MODELS: ModelTable = {
-    "curator": [OPENROUTER_MINI, OPENROUTER_MINI],  # 큐레이터 선별
-    "verifier": [OPENROUTER_MINI, OPENROUTER_MINI],  # 검증관
-    "explainer": [OPENROUTER_MINI, OPENROUTER_MINI],  # 해설가
-    "gate": [OPENROUTER_MINI, OPENROUTER_MINI],  # 게이트
+    "curator": [HAIKU_55, OPENROUTER_MINI],  # 큐레이터 선별
+    "verifier": [HAIKU_55, OPENROUTER_MINI],  # 검증관
+    "explainer": [HAIKU_55, OPENROUTER_MINI],  # 해설가
+    "gate": [HAIKU_55, OPENROUTER_MINI],  # 게이트
 }
 
 # 개발 모드는 Claude 구독만 쓴다 (2026-10-05 사용자 결정 "올라마 끄고 다 로컬에 도구모델 기반으로", 구독이 실패하면 "구독만, 실패하면 건너뜀").
@@ -88,7 +93,10 @@ DEV_MODELS: ModelTable = {
     "gate": [CC_HAIKU, CC_HAIKU],
 }
 
-FALLBACK_STATUS = {429, 503, 529}  # 529는 Anthropic 과부하
+FALLBACK_STATUS = {429, 500, 502, 503, 504, 529}  # 529는 Anthropic 과부하. 5xx는 서버 쪽 일시 오류 (2026-10-11)
+# ask_json이 정하는 이번 호출의 출력 스키마(JSON Schema). 구조화 출력을 지원하는 제공자(anthropic)만 받아 쓰고 나머지는 무시한다.
+# 호출부 시그니처를 바꾸지 않으려고 contextvar로 둔다(asyncio.to_thread는 현재 contextvar를 복사해 간다). 도구가 있는 호출에는 적용하지 않는다
+STRUCTURED_SCHEMA: ContextVar[dict | None] = ContextVar("structured_schema", default=None)
 SLOT_NAMES = ["primary", "fallback", "fallback2", "fallback3", "fallback4"]  # 구독 모델을 앞에 넣어 체인이 5칸까지
 # 429는 60초 기다렸다가 같은 제공자에 1회 더 보내고, 그래도 429면 다음 제공자로 (2026-09-15 사용자 결정)
 RATE_LIMIT_WAIT_SECONDS = 60
@@ -122,9 +130,9 @@ def dev_mode() -> bool:
 #   9/23 시험 7세트 중 5세트 정답, 2세트에서 다른 소식을 뺐다. 다른 OpenRouter 모델로 바꾸거나 시험하지 않는다 (사용자 결정)
 #   출처: https://openrouter.ai/api/v1/models (2026-09-23 조회, 입력 $0.15·출력 $0.60 per 1M)
 # 9/24 07:14 이 모델이 한 번 시간 초과로 실패해 그날 큰 소식이 빠졌다. 타임아웃·503이면 같은 모델로 한 번 더 부른다 (2026-09-25)
-_SAME_STORY = {"provider": "openrouter", "model": "openai/gpt-4o-mini"}
+# 2026-10-11 사용자 결정 "1번으로 해": 첫 칸 Haiku 5.5, 둘째 칸 위 gpt-4o-mini (다른 역할과 같은 전환 방식)
 SINGLE_MODEL_ROLES: ModelTable = {
-    "same_story": [_SAME_STORY, _SAME_STORY],
+    "same_story": [HAIKU_55, OPENROUTER_MINI],
 }
 # 뉴스 중요도 점수(agent/importance.py): Jev. 사용자가 jevtypesafeai.com에서 산 키(JEV_API_KEY)라 그 사이트 주소로 부른다.
 # TypeSafe 공식 API(api.typesafe.ai)에서는 이 키가 401이다. 이 사이트는 "TypeSafe AI와 관계없는 독립 플랫폼"이라고 밝힌다.
@@ -152,7 +160,7 @@ def call(role: str, messages: list[BaseMessage], tools: list[Any] | None = None,
 
     - 429는 60초 기다렸다가 같은 제공자에 1회 더 보내고, 그래도 429면 다음 제공자로
     - 도구가 필요한 호출에서 도구 호출을 못 하는 모델(tools False)은 건너뛴다
-    temperature는 받는 공급자에만 넘긴다. Anthropic SDK 1.5 create에는 인자가 없다.
+    temperature는 받는 공급자에만 넘긴다. Anthropic Messages API는 최신 모델이 샘플링 값을 거절할 수 있어 넘기지 않는다.
     """
     chain = active_models()[role]
     openai_tools = [convert_to_openai_tool(t) for t in tools] if tools else None
@@ -238,6 +246,8 @@ def _options(spec: dict[str, Any], temperature: float | None) -> dict[str, Any]:
     wanted: dict[str, Any] = {k: v for k, v in spec.items() if k not in ("provider", "model", "tools")}
     if temperature is not None:
         wanted["temperature"] = temperature
+    if STRUCTURED_SCHEMA.get() is not None:
+        wanted["json_schema"] = STRUCTURED_SCHEMA.get()
     return {k: v for k, v in wanted.items() if k in OPTIONS.get(spec["provider"], ())}
 
 
@@ -257,7 +267,7 @@ def _call_one(role: str, slot: str, spec: dict[str, Any], messages: list[BaseMes
               temperature: float | None = None) -> AIMessage:
     adapter = PROVIDERS[spec["provider"]]
     options = _options(spec, temperature)
-    with tracing.span(f"llm:{role}:{slot}", kind="generation", model=spec["model"], model_parameters=options or None,
+    with tracing.span(f"llm:{role}:{slot}", kind="generation", model=spec["model"], model_parameters=({k: ("있음" if k == "json_schema" else v) for k, v in options.items()} or None),
                       input=_summary(messages), metadata={"provider": spec["provider"], "tools": len(tools or [])}) as span:
         _throttle(spec["provider"])
         result = adapter(spec["model"], messages, tools, **options)
