@@ -171,8 +171,9 @@ def retries_and_keys() -> None:
           and reply.response_metadata["slot"] == "fallback" and reply.text == "대체")
     fake, reply = run(lambda url, body, n: (200, openai_reply("대체")) if "openrouter" in url else (529, {"error": {}}))
     check("529(과부하): 다음 칸으로 전환", host(fake) == ["api.anthropic.com", "openrouter.ai"] and reply.text == "대체")
-    fake, reply = run(lambda url, body, n: (400, {"error": {"message": "bad"}}))
-    check("400: 전환 없이 모델 장애", host(fake) == ["api.anthropic.com"] and isinstance(reply, models.ModelUnavailable))
+    fake, reply = run(lambda url, body, n: (200, openai_reply("대체")) if "openrouter" in url else (400, {"error": {"message": "bad"}}))
+    # 2026-10-11부터 Anthropic 400도 다음 칸으로 넘긴다(리허설에서 해설가 400이 대체 없이 브리핑을 통째로 뺐다)
+    check("Anthropic 400: 다음 칸(OpenRouter)으로 전환", host(fake) == ["api.anthropic.com", "openrouter.ai"] and reply.text == "대체")
     fake, reply = run(lambda url, body, n: (429, {"error": {}}))
     check("429가 계속되면 Anthropic 2번 뒤 다음 칸도 429면 모델 장애",
           host(fake).count("api.anthropic.com") == 2 and isinstance(reply, models.ModelUnavailable))
@@ -201,6 +202,32 @@ def retries_and_keys() -> None:
     check("401 오류 글에 키 값이 없음", leaked is False)
 
 
+def schema_rejection() -> None:
+    """2026-10-11 리허설: 해설가 스키마의 pattern 때문에 400 "Schema is too complex" → 대체 없이 브리핑이 빠졌다."""
+    check("스키마에서 pattern을 뺀다", "pattern" not in json.dumps(providers.strict_schema(
+        {"type": "object", "properties": {"u": {"type": "string", "pattern": "^https?://\S+$"}}})))
+    os.environ["ANTHROPIC_API_KEY"] = SECRET
+    rejected = {"type": "error", "error": {"type": "invalid_request_error", "message": "Schema is too complex."}}
+    fake = Fake(lambda url, body, n: (400, rejected) if "output_config" in body else (200, message([{"type": "text", "text": '{"a": "ok"}'}])))
+    install(fake)
+    reply = providers._anthropic("claude-haiku-5-5", [HumanMessage("x")], None, json_schema={"type": "object", "properties": {"a": {"type": "string"}}})
+    check("스키마 거절이면 형식 강제 없이 한 번 더 묻는다", len(fake.requests) == 2 and "output_config" in fake.requests[0][2]
+          and "output_config" not in fake.requests[1][2] and reply.text == '{"a": "ok"}')
+    other = Fake(lambda url, body, n: (400, {"type": "error", "error": {"type": "invalid_request_error", "message": "messages: bad"}}))
+    install(other)
+    try:
+        providers._anthropic("claude-haiku-5-5", [HumanMessage("x")], None, json_schema={"type": "object", "properties": {}})
+        raised = False
+    except httpx.HTTPStatusError:
+        raised = True
+    check("스키마와 무관한 400은 다시 묻지 않고 오류", raised and len(other.requests) == 1)
+    def error(url: str) -> httpx.HTTPStatusError:
+        request = httpx.Request("POST", url)
+        return httpx.HTTPStatusError("400", request=request, response=httpx.Response(400, request=request))
+    check("Anthropic 400은 다음 칸으로 넘어간다", models.failover_reason(error(providers.ANTHROPIC_URL)) == "400")
+    check("다른 제공자 400은 그대로 실패", models.failover_reason(error("https://openrouter.ai/api/v1/chat/completions")) is None)
+
+
 def prod_table() -> None:
     prod = {**models.PROD_MODELS, **models.SINGLE_MODEL_ROLES}
     want = [{"provider": "anthropic", "model": "claude-haiku-5-5"}, {"provider": "openrouter", "model": "openai/gpt-4o-mini"}]
@@ -220,6 +247,7 @@ try:
     tool_call_response()
     structured_output()
     retries_and_keys()
+    schema_rejection()
     prod_table()
 finally:
     providers._http_client, models._sleep = saved_client, saved_sleep

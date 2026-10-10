@@ -221,6 +221,10 @@ def failover_reason(exc: Exception) -> str | None:
     status = status_code(exc)
     if status in FALLBACK_STATUS:
         return str(status)
+    if status == 400 and isinstance(exc, httpx.HTTPStatusError) and "anthropic.com" in str(exc.request.url):
+        # Anthropic의 요청 거절(예: 구조화 출력 스키마)은 다음 칸(다른 제공자, 요청 형식이 다름)이 받을 수 있다.
+        # 2026-10-11 리허설에서 해설가 6건이 400으로 대체 없이 실패해 브리핑이 통째로 빠졌다
+        return "400"
     if isinstance(exc, MissingKey):
         return "키 없음"
     if isinstance(exc, httpx.TimeoutException):

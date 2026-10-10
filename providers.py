@@ -5,6 +5,7 @@
 reasoning(OpenRouter reasoning.effort, Groq·Ollama reasoning_effort), json_schema(Anthropic 구조화 출력, models.STRUCTURED_SCHEMA에서).
 """
 import json
+import logging
 import os
 import time
 from typing import Any, Callable
@@ -14,6 +15,8 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langchain_core.messages import convert_to_openai_messages
 
 import config  # noqa: F401  .env를 os.environ에 채운다
+
+log = logging.getLogger("toolscout.providers")
 
 MAX_TOKENS = 4096
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
@@ -59,9 +62,10 @@ def _usage(input_tokens: int | None, output_tokens: int | None) -> dict[str, int
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"
-# 구조화 출력이 지원하지 않는 JSON 스키마 키. 값 범위 검사는 어차피 agent/structured.py가 pydantic으로 다시 한다
+# 구조화 출력이 지원하지 않는 JSON 스키마 키. 값 범위·형식 검사는 어차피 agent/structured.py가 pydantic으로 다시 한다.
+# pattern(정규식)은 2026-10-11 리허설에서 해설가 스키마(Evidence.evidence_url)를 "Schema is too complex"(400)로 만들었다
 _SCHEMA_DROP = {"title", "default", "minLength", "maxLength", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum",
-                "minItems", "maxItems", "format"}
+                "minItems", "maxItems", "format", "pattern"}
 
 
 def strict_schema(node: Any) -> Any:
@@ -97,6 +101,15 @@ def anthropic_messages(messages: list[BaseMessage]) -> tuple[str, list[dict]]:
     return system, payload
 
 
+def _schema_rejected(response) -> bool:
+    """400 응답이 구조화 출력 스키마 거절인지. 오류 문장만 보고, 응답 전체는 로그에 쓰지 않는다."""
+    try:
+        message = (response.json().get("error") or {}).get("message") or ""
+    except ValueError:
+        return False
+    return "schema" in message.lower()
+
+
 def _anthropic(model: str, messages: list[BaseMessage], tools, json_schema: dict | None = None) -> AIMessage:
     """json_schema가 있고 도구가 없으면 구조화 출력(output_config.format)으로 받는다.
 
@@ -119,6 +132,11 @@ def _anthropic(model: str, messages: list[BaseMessage], tools, json_schema: dict
     headers = {"x-api-key": key, "anthropic-version": ANTHROPIC_VERSION}
     with _http_client(REMOTE_TIMEOUT) as client:
         response = client.post(ANTHROPIC_URL, headers=headers, json=body)
+        if response.status_code == 400 and "output_config" in body and _schema_rejected(response):
+            # 구조화 출력 스키마를 거절하면(400 "Schema ...") 형식 강제 없이 한 번 더 묻는다. 형식은 structured.py가 검사·재시도한다
+            log.warning("Anthropic이 구조화 출력 스키마를 거절해 형식 강제 없이 다시 묻는다")
+            body.pop("output_config")
+            response = client.post(ANTHROPIC_URL, headers=headers, json=body)
         response.raise_for_status()
     data = response.json()
     blocks = data.get("content") or []
