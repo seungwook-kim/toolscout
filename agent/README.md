@@ -3,7 +3,7 @@
 에이전트 3개와 공통 판단 루프. 상태: 구현, 되돌림 2개 포함 (계획안 5장, 9.3, 부록 D).
 
 ## 파일
-- `loop.py`: `run(role, system_prompt, user_input, allowed_tools, max_steps, max_tool_calls)`. 모델 → 도구 요청 → MCP 실행 → 재호출(MCP 읽기 240초)
+- `loop.py`: `run(role, system_prompt, user_input, allowed_tools, max_steps, max_tool_calls, tool_guard)`. 모델 → 도구 요청 → MCP 실행 → 재호출(MCP 읽기 240초) / `injection.py`: 프롬프트 인젝션 방어. 바깥 글 정리(보이지 않는 글자·<data> 흉내·채팅 틀 토큰), 지시 문장 찾기(경고만), 카드 글 링크·흔적 검사, 설치 명령은 그 도구 자신의 주소만
 - `skill_check.py`: read_skill 구현. GitHub·SkillsMP 원문 10,000자·<data>, 정규식 5종(외부 전송·자격증명·권한 상승·숨은 명령·판독 지시)과 인용
 - `probe.py`: probe_mcp 구현. E2B에서 ① 설치 90초(네트워크) ② 실행 30초(도움말만 나오면 MCP 하위 명령으로 1회 더, 없으면 미확인) ③ 도구 목록(차단, mcp/sandbox_probe.py) ④ 인증 요구, npm은 Node 22 준비, 가드·하루 30건, probes 저장
 - `tracing.py`: Langfuse 스팬 래퍼(키 없으면 로컬 JSONL, trace_id 항상, `trace_url()`) / `structured.py`: JSON 규격 응답(온도 0, 규격을 Anthropic 구조화 출력 스키마로 전달, 검사, 1회 재시도, 실패 예시·모델 장애 기록)

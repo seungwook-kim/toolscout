@@ -67,7 +67,7 @@ def main() -> int:
         "1만자_절단·data_감싸기": long_read["status"] == "ok" and long_read["truncated"] and long_read["text"].startswith("<data source=")
         and len(long_read["text"]) < skill_check.TEXT_LIMIT + 200,
         "절단_뒤_숨긴_명령도_정규식으로": "숨은 명령" in cats(long_read["hits"]),
-        "구분자_탈출_막음": "</data> 구분자" not in exfil_read["text"] and "&lt;/data&gt;" in exfil_read["text"],
+        "구분자_탈출_막음": "</data> 구분자" not in exfil_read["text"] and "&lt;/data> 구분자" in exfil_read["text"],  # agent/injection.clean (10/14)
         "404는_원문_접근_불가": missing["status"] == "error" and "원문 접근 불가" in missing["reason"],
         "GitHub·SkillsMP_말고는_거부": other_host["status"] == "rejected" and plain_http["status"] == "rejected",
         "anthropics_skills는_공식": official["status"] == "ok" and official["official"] is True and official["chars"] > 1000,

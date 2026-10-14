@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-14 · agent/check_injection(신규 18항목 + --live 실제 해설가 3건), verify/check_skill_read 구분자 탈출 항목을 새 정리 방식(&lt;/data>)에 맞춤 · 인젝션 방어 · 통과(--live는 운영 Haiku 5.5 호출 3번), 회귀 20개 통과
 - 2026-10-14 · pipeline/check_validate(신규 8항목: for_me 마지막 수단), sources/check_fallbacks 레딧 7항목, agent/run_explainer --fake 글 본문 원문·근거 링크 정리 2항목, verify/check_skill_now 한도 검사를 한도+5건으로 · 원문 읽기·형식 실패 줄이기 · 모두 통과
 - 2026-10-11 · models/check_anthropic 28항목: 스키마 pattern 제거, 스키마 거절(400) 시 형식 강제 없이 재요청, Anthropic 400은 다음 칸으로 전환(옛 '400은 전환 없음' 항목을 바꿈) · 리허설에서 해설가 6건이 400으로 대체 없이 실패 · 통과
 - 2026-10-11 · models/check_anthropic(신규 23항목: 변환·도구 호출·구조화 출력·429/500/529 전환·키 없음·운영 모델표), check_models 운영 표 [Haiku 5.5, gpt-4o-mini]로 갱신, check_cron에 중복 막기 4항목 · 운영 모델을 Haiku 5.5로 전환(사용자 "1번으로 해") · 모두 통과

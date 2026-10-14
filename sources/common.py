@@ -7,6 +7,7 @@ from typing import TypedDict
 import httpx
 
 import config  # noqa: F401  .env를 os.environ에 채운다 (GITHUB_TOKEN 등)
+from agent import injection
 
 USER_AGENT ="toolscout/0.1 (personal AI briefing agent; +https://github.com/seungwook-kim/toolscout)"
 KST = timezone(timedelta(hours=9))
@@ -56,8 +57,9 @@ def parse_date(value: str | None, naive_tz: timezone = timezone.utc) -> datetime
 
 
 def make_item(*, title: str, url: str, published: datetime, summary: str, source: str, type: str) -> Item:
-    return Item(title=title.strip(), url=url.strip(), published_at=published.isoformat(timespec="seconds"),
-                summary=(summary or "").strip(), source=source, type=type)
+    """제목·요약은 injection.clean으로 보이지 않는 글자·구분자 흉내를 지운다 (2026-10-14 인젝션 방어)"""
+    return Item(title=injection.clean(title).strip(), url=url.strip(), published_at=published.isoformat(timespec="seconds"),
+                summary=injection.clean(summary).strip(), source=source, type=type)
 
 
 def error_text(exc: Exception) -> str:

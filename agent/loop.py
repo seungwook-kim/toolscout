@@ -18,7 +18,7 @@ from mcp import Client
 from mcp.client.streamable_http import streamable_http_client
 
 import models
-from agent import tracing
+from agent import injection, tracing
 
 log = logging.getLogger("toolscout.loop")
 
@@ -37,16 +37,19 @@ _notice = {"shown": False}
 async def run(role: str, system_prompt: str, user_input: str, allowed_tools: list[str], max_steps: int = 5, *,
               mcp_url: str = DEFAULT_MCP_URL, briefing_user: int | None = None,
               on_event: Callable[[Event], None] | None = None,
-              model_call: Callable[..., AIMessage] = models.call, max_tool_calls: int | None = None) -> dict:
+              model_call: Callable[..., AIMessage] = models.call, max_tool_calls: int | None = None,
+              tool_guard: Callable[[str, dict], str | None] | None = None) -> dict:
     """루프를 한 번 돌린다. 반환: {status, output, steps, trace_id, tool_calls, usage, raw}. raw는 마지막 모델 답 원문.
 
     max_tool_calls를 넘는 도구 요청은 실행하지 않고 거부 결과를 돌려준다 (질문 답변은 도구 최대 3회, 부록 E).
+    tool_guard(이름, 인자)가 이유를 돌려주면 그 요청도 실행하지 않는다(인젝션 방어: 질문 답은 후보 링크만 읽기, 2026-10-14).
+    입력의 보이지 않는 글자·채팅 틀 토큰은 injection.scrub로 지운다(DB에 예전에 쌓인 글까지 마지막으로 거르기).
     """
     if models.dev_mode() and not _notice["shown"]:
         log.warning(DEV_MODE_NOTICE)  # 프로세스당 한 번
         _notice["shown"] = True
     messages: list[BaseMessage] = [SystemMessage(f"{system_prompt}\n\n{DATA_RULE}"),
-                                   HumanMessage(f"<data>\n{user_input}\n</data>")]
+                                   HumanMessage(f"<data>\n{injection.scrub(user_input)}\n</data>")]
     with tracing.span(f"agent:{role}", kind="agent", input={"user_input": user_input, "allowed_tools": allowed_tools},
                       metadata={"max_steps": max_steps}) as root:
         emit = _emitter(role, root.trace_id, on_event)
@@ -69,8 +72,12 @@ async def run(role: str, system_prompt: str, user_input: str, allowed_tools: lis
                     return result
                 for call in ai.tool_calls:
                     emit("tool_call", step=step, tool=call["name"], args=call["args"])
+                    refused = tool_guard(call["name"], call["args"] or {}) if tool_guard else None
                     if max_tool_calls is not None and tool_calls >= max_tool_calls:
                         outcome = {"status": "rejected", "reason": f"도구 호출 한도 {max_tool_calls}회를 다 썼다. 지금까지 받은 결과로 답한다"}
+                    elif refused:
+                        outcome = {"status": "rejected", "reason": refused}
+                        log.warning("도구 요청 거부(%s): %s", call["name"], refused)
                     else:
                         tool_calls += 1
                         outcome = await _call_tool(client, call, allowed_tools)

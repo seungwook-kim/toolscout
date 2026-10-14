@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from agent import structured, tracing
+from agent import injection, structured, tracing
 from agent.structured import Stats
 
 ROLE = "gate"
@@ -32,7 +32,7 @@ async def classify(question: str, previous_turns: list[dict], model_call=None) -
     """반환: {gate, reason, trace_id, calls}."""
     stats = Stats()
     with tracing.span("gate", kind="chain", input={"question": question, "previous_turns": len(previous_turns)}) as span:
-        parsed = await structured.ask_json(ROLE, GATE_PROMPT, {"question": question, "previous_turns": previous_turns},
+        parsed = await structured.ask_json(ROLE, GATE_PROMPT, {"question": injection.clean(question), "previous_turns": previous_turns},
                                            GateOutput, stats, label="질문 게이트", model_call=model_call)
         result = {"gate": parsed.gate if parsed else "unclear",
                   "reason": parsed.reason if parsed else "게이트 응답 형식 실패, unclear로 둠",
