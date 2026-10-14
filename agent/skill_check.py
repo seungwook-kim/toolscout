@@ -12,6 +12,8 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from agent import injection
+
 TEXT_LIMIT, SCAN_LIMIT, QUOTE_CHARS = 10_000, 200_000, 200
 SKILLSMP_SEARCH = "https://skillsmp.com/api/v1/skills/search"
 INVISIBLE = re.compile("[\u200b-\u200f\u2060\ufeff]")
@@ -122,7 +124,8 @@ def resolve(url: str, client: httpx.Client) -> tuple[str, str]:
 
 
 def wrap_data(url: str, text: str) -> str:
-    return f'<data source="{url}">\n{text.replace("</data>", "&lt;/data&gt;")}\n</data>'
+    """모델에 넘길 원문 감싸기. 구분자 흉내·보이지 않는 글자는 injection.clean이 지운다(정규식 검사는 그 전 원문에 돈다)."""
+    return f'<data source="{url}">\n{injection.clean(text)}\n</data>'
 
 
 def read(url: str, client: httpx.Client | None = None) -> dict:

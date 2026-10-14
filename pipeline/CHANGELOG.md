@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-10-14 · validate.problems에 인젝션 흔적 검사(agent/injection.output_problems: 요약·나한테는·장단점의 링크·메일 주소, 입력 구분자·지시문 흔적) · 원문에 심긴 '링크를 넣어라' 같은 지시가 카드로 새지 않게(사용자 "인젝션 방어로직도 넣어놔") · check_injection·check_validate 통과, 지난 카드 630장 중 걸림 0
 - 2026-10-14 · validate.run_user: 다시 써도 문제가 남으면 빼기 전에 for_me 첫 문장만 남겨 보고(first_sentence, 첫 문장 20자 이상) 통과하면 살림(고친 내용 기록), presend.SKILL_REVIEW_LIMIT 5 → 10 · 10/14 for_me 두 문장으로 카드 4장이 빠짐(사용자 결정 "첫 문장만 남기기"), 사용자 5명에 스킬 판독 6건이 필요해 1건이 판독 없이 "검증 예정"으로 나감 · check_validate 8항목(신규)·check_skill_now 통과
 - 2026-10-11 · cron.tick: 같은 차례 정기 실행 대상에 든 사용자의 "지금 만들기" 요청은 따로 만들지 않고 요청만 지움(정기 실행이 실패한 사용자는 요청을 남겨 다음 차례가 이어받음) · 10/10 07:01에 정기 실행 4명과 요청 1명이 따로 돌아 같은 사람 것을 두 번 만들었다(모델 호출 33번 추가) · check_cron 23항목 통과
 - 2026-10-09 · deliver.outbox: 운영 모드 발송은 승인된 실제 사용자·관리자만(하루 실행 대상과 같게) · 서버 첫 크론(20:30)에서 가짜 프로필(.test)의 남은 브리핑이 한 통 나감 · check_deliver 통과

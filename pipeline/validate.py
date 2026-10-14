@@ -10,6 +10,7 @@
 - 근거 링크: 장단점마다 evidence_url이 있고 카드 링크와 같아야 한다
 - 한글 비율: 요약·for_me·장단점을 어절로 나눠 한글이 든 어절이 60% 이상. 글자 단위로 세면
   제품명이 많은 정상 요약도 떨어져서(예: 54%) 어절 기준으로 정했다
+- 인젝션 흔적(agent/injection.output_problems): 카드 글에 링크·메일 주소, 입력 구분자·지시문 흔적 (2026-10-14)
 모델은 부르지 않는다 (2단계 재시도만 해설가 호출).
 """
 import re
@@ -17,7 +18,7 @@ from typing import Awaitable, Callable
 
 from pydantic import ValidationError
 
-from agent import schemas, tracing
+from agent import injection, schemas, tracing
 
 MIN_HANGUL_RATIO = 0.6
 MIN_FIRST_SENTENCE = 20  # 이보다 짧은 첫 문장만 남기면 뜻이 비어서 마지막 수단을 쓰지 않는다
@@ -91,6 +92,7 @@ def problems(card: dict) -> list[str]:
     ratio = hangul_ratio(card_text(parsed))
     if ratio < MIN_HANGUL_RATIO:
         found.append(f"한글 비율 {ratio:.0%} (기준 {MIN_HANGUL_RATIO:.0%})")
+    found.extend(injection.output_problems(parsed.summary_ko, parsed.for_me, *(p.text for p in parsed.pros + parsed.cons)))
     return found
 
 

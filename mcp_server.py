@@ -20,7 +20,7 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 import config  # noqa: F401  .env를 os.environ에 채운다 (MCP_SERVICE_KEY 등)
-from agent import tracing
+from agent import injection, tracing
 
 log = logging.getLogger("toolscout.mcp")
 
@@ -82,8 +82,8 @@ def html_to_text(html: str) -> str:
 
 
 def wrap_data(url: str, text: str) -> str:
-    """외부 텍스트 격리 (작업 규칙 6). 본문 안의 닫는 태그로 구분자를 빠져나가지 못하게 막는다."""
-    safe = text.replace("</data>", "&lt;/data&gt;")
+    """외부 텍스트 격리 (작업 규칙 6). 본문 안의 구분자 흉내·보이지 않는 글자를 지워 구분자를 빠져나가지 못하게 막는다(agent/injection)."""
+    safe = injection.clean(text)
     return f'<data source="{url}">\n{safe}\n</data>'
 
 

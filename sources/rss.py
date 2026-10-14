@@ -16,6 +16,7 @@ from urllib.parse import urlsplit
 import feedparser
 import httpx
 
+from agent import injection
 from sources.common import KST, SourceResult, error_text, make_item, parse_date
 
 HREF = re.compile(r"""href=["'](https?://[^"'\s>]+)["']""")
@@ -86,7 +87,7 @@ def reddit_post(body: str) -> dict:
     - 본문 글: source_text = 글 본문(원문 그 자체), 본문 안 첫 바깥 링크가 있으면 source_url로 덧붙여 읽는다
     - 그림·영상만 있는 글: skip_fetch"""
     match = POST_BODY.search(body)
-    text = plain_text(match.group(1))[:POST_TEXT_LIMIT] if match else ""
+    text = injection.clean(plain_text(match.group(1)))[:POST_TEXT_LIMIT] if match else ""
     link = POST_LINK.search(body)
     target = html.unescape(link.group(1)) if link else None
     if target and not is_reddit(target):
