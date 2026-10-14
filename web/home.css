@@ -1,0 +1,74 @@
+/*! © 2026 toolscout. All rights reserved. 무단 복제·재배포·AI 학습·재구현 금지 */
+/* 오늘·예시 화면 배치 (2026-10-15 2라운드 덩이 A, cards.css에서 나눔). index·demo head가 cards.css 뒤에 링크한다. 색은 app.css 토큰만.
+   cards.css는 카드 화면 넷(오늘·예시·지난·login)이 다 받으므로, 오늘·예시에만 있는 본문+레일·도구 줄 목록·주제 거르기·구역 이동 칩은 여기 둔다
+   (화면당 CSS 예산 minify 42KB·gzip 10KB, tests/web/check_minify). 마크업은 web/cards.js(Cards.toolRows·Cards.toc)와 index·demo 인라인 script */
+
+/* ===== 오늘 배치: 본문(.home-main) + 레일(.rail: 도구 줄 목록 → 주제로 거르기 → 질문 → 오늘 한눈에). 1199 이하는 레일을 풀어 순서만 바꾼다
+   (제호 → 칩 줄 → 도구 줄 목록 → 카드). 레일은 자체 스크롤 없이 본문과 같이 흐르고, 1200 이상이면서 높이 760 이상일 때만 sticky ===== */
+.home{display:grid;gap:var(--s-6);padding-block:var(--s-6) var(--s-16);align-items:start}
+.home > *,.home-main > *{min-width:0}
+.home-main{display:grid;gap:var(--s-6);align-content:start;min-width:0}
+.rail{display:grid;gap:var(--s-3);align-content:start;min-width:0}
+.rail-box{display:grid;gap:var(--s-2);min-width:0;padding:var(--s-4);border:1px solid var(--line);border-radius:var(--r-panel);background:var(--surface)}
+.rail-box > h2{font-size:var(--fs-sm);font-weight:700;color:var(--ink);letter-spacing:0}
+.rail-tools:has(#tool-rows:empty),.rail-toc:has(.toc:empty),.rail-filter:has(#filters[hidden]){display:none}
+.ask-field{display:flex;align-items:center;gap:var(--s-2);width:100%;min-height:var(--hit);padding:0 var(--s-3);border:1px solid var(--line-ctl);border-radius:var(--r-ctl);background:var(--surface);color:var(--mute);font-size:var(--fs-md);text-align:left}
+.ask-field:hover{background:var(--surface-2)}
+.rail-ask .help .mono{color:var(--ink-2)}
+.toc{display:grid;gap:var(--s-3)}
+.toc-g{display:grid;gap:2px}
+.toc > *,.toc-g > *,.rail-box > *{min-width:0}
+.toc-g:not(:has(li:not([hidden]))){display:none}
+.toc-k{font-size:var(--fs-sm);font-weight:600;color:var(--mute)}
+.toc-row{display:flex;align-items:center;gap:var(--s-2);width:100%;min-height:32px;padding:0 6px;border:0;border-radius:var(--r-chip);background:none;text-align:left;font-size:var(--fs-md);color:var(--ink)}
+.toc-row:hover{background:var(--surface-2)}
+.toc-row .tt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toc-row .pill{flex:none;max-width:60%;overflow:hidden;white-space:nowrap}
+.toc-row.is-muted .tt{color:var(--mute);text-decoration:line-through}
+.toc-row.is-muted .pill{display:none}
+/* 도구 줄 목록(Cards.toolRows): 머리 글 + 상자 없는 줄(사이 1px --line). 줄 40px, 터치·1199 이하 44px. $ 명령은 1200 이상 레일만 */
+.tool-h{font-size:var(--fs-md);font-weight:700;color:var(--ink)}
+.tool-h .mono{font-size:var(--fs-sm)}
+.tool-rows{margin-top:var(--s-2)}
+.tool-rows li{border-top:1px solid var(--line)}
+.tool-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 var(--s-2);width:100%;min-height:40px;padding:var(--s-1) 0;border:0;background:none;text-align:left;color:var(--ink)}
+.tool-row:hover .tt{text-decoration:underline}
+.tool-row .tt,.tool-row .tr-c{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tool-row .tt{font-size:var(--fs-base);font-weight:600;line-height:1.35}
+.tool-row .tr-c{display:none;grid-column:1/-1;font-family:var(--mono);font-size:var(--fs-sm);color:var(--ink-2)}
+@media (pointer:coarse),(max-width:1199px){.tool-row{min-height:var(--hit)}}
+@media (min-width:1200px){
+  .home{grid-template-columns:minmax(0,760px) 320px;column-gap:var(--s-12);justify-content:center}
+  .rail .filters .lab{display:none}
+  .rail .tr-c{display:block}
+}
+@media (min-width:1200px) and (min-height:760px){.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar) + 16px)}}
+@media (max-width:1199px){
+  .home{max-width:calc(720px + 2 * var(--gutter))}
+  .home-main,.rail{display:contents}
+  #top{order:1}.jump{order:2}.rail-filter{order:3}.rail-tools{order:4}#briefing{order:5}.nudge{order:6}
+  .rail-toc,.rail-ask,.rail-filter > h2,.home .status-line .th{display:none}
+  .rail-filter,.rail-tools{padding:0;border:0;background:none}
+}
+@media (max-width:767px){.home{gap:var(--s-4);padding-block:var(--s-4) var(--s-6)}.home-main{gap:var(--s-4)}.rail-filter:has(.filters:not(.open)){display:none}}
+
+/* ===== 주제 거르기(칩 + 'N장 숨김'), 폰 구역 이동 칩(상단 바 아래 sticky). 칩 글은 이름 span + 개수 span(flex 맨 글자 금지) ===== */
+.filters{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-2)}
+.filters .lab{font-size:var(--fs-sm);font-weight:600;color:var(--ink-2);margin-right:var(--s-1)}
+.fchip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 var(--s-3);border-radius:var(--r-pill);border:1px solid var(--line-ctl);background:var(--surface);font-size:var(--fs-sm);font-weight:600;color:var(--ink-2)}
+.fchip .n{font-family:var(--mono);font-size:var(--fs-xs);color:var(--ink-2)}
+.fchip[aria-pressed="true"]{background:var(--blaze-wash);border-color:var(--blaze);color:var(--blaze-ink)}
+.fchip[aria-pressed="true"] .n{color:var(--blaze-ink)}
+.filter-note{font-size:var(--fs-sm);color:var(--mute)}
+.filter-note button{border:0;background:none;padding:0;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+@media (pointer:coarse),(max-width:767px){.fchip,.filter-note button{min-height:var(--hit)}}
+.jump{display:none}
+@media (max-width:767px){
+  .jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar));z-index:var(--z-jump);display:flex;gap:var(--s-2);overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:calc(-1 * var(--gutter));padding:0 var(--gutter);scrollbar-width:none}
+  .jump a,.jump button{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:var(--hit);margin-block:var(--s-1);padding:0 var(--s-3);border-radius:var(--r-pill);border:1px solid var(--line-ctl);background:var(--surface);font-size:var(--fs-sm);font-weight:600;color:var(--ink);text-decoration:none}
+  .jump .n{font-family:var(--mono);font-size:var(--fs-xs);color:var(--ink-2)}
+  .jump button{margin-left:auto;color:var(--ink-2)}
+  .jump button[aria-expanded="true"]{background:var(--blaze-wash);border-color:var(--blaze);color:var(--blaze-ink)}
+  .filters.collapsible{display:none}
+  .filters.collapsible.open{display:flex}
+}

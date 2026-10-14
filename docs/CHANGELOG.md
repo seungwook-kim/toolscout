@@ -1,5 +1,7 @@
 # docs/ CHANGELOG
 
+- 2026-10-15 · design-reference.html --line 견본 #C4C6BF, --hl-border 줄 삭제, --fs-4xl·TS.bare tagline·#dawn 견본 추가, asset-licenses.md에 #dawn(자체 제작) · 디자인 회의 2라운드 덩이 0(견본이 app.css와 같아야 함) · check_rules 통과
+- 2026-10-14 · design-reference.html을 2차 리디자인 토큰·마크·판정 배지·그림 견본으로 갱신(cards.css 직접 링크), asset-licenses.md·licenses/lucide.txt 신규 · Lucide·글꼴 라이선스 기록과 새 디자인 기준 · check_rules(app.css 링크) 통과
 - 2026-10-11 · deploy.md 남은 일: 임시 비밀번호 123456을 지운 기록(계정 45·1·2·3·113, 운영 로그인 400 확인)과 관리자 로그인 방법 · 사용자 "응 진행해"(디자인·기능이 끝나면 지우기로 한 것) · check_folder_docs 통과
 - 2026-10-11 · deploy.md 운영 모델(Haiku 5.5 + gpt-4o-mini 대체)과 ANTHROPIC_API_KEY(Railway·Vercel) 안내 · 모델 전환 결정 반영 · 문서 검수 통과
 - 2026-10-09 · deploy.md: Railway 설정 절(railway.json이 안 먹어 IaC로 적용, 싱가포르, 크론 일정·재시작 안 함, 적용 방법), 예외용 무료 대안 GitHub Actions 절 · 사용자 "GitHub Actions 이건 예외로 사용할 수 있고 무료이다 라고 명시해놔, 레일웨이로 간다" · check_folder_docs 통과

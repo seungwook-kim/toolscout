@@ -5,6 +5,8 @@
 - mark: 상태 기록. 대기 → 완료 | 실패(설치 실패·원문 접근 불가, 되돌림 1 대상) | 미완료(E2B 장애·시간 초과) | 거부(가드·하루 30건)
 - save_review: skill_reviews 저장
 - 카드 칸: probes → verification(칩 4개), skill_reviews → risk_signal. 고정 문구는 카드 템플릿(web/cards.js, briefing_mail)에 둔다
+- 판정 배지 badge·판정 자리 verdict(2026-10-14 2차 리디자인 안건 2): 웹 Cards.badge와 같은 낱말(tests/web/verdict_cases.json). 메일은 이 함수만 쓴다
+- 도구 머리 tool_head·tool_counts(2026-10-15 2라운드): 웹 Cards.toolHead와 같은 셈(verdict_cases.json tool_head). 메일 도구 줄 상자·금요일 요약이 쓴다
 """
 import re
 from datetime import date
@@ -166,3 +168,105 @@ def results_for(urls: list[str]) -> dict[str, dict]:
             out[row.url] = {"verification": verification, "risk_signal": risk, "request_status": row.status, "note": note,
                             "probe_command": getattr(probes.get(row.id), "command", None)}
     return out
+
+
+# 판정 배지·판정 자리 (2026-10-14 안건 2). 규칙은 여기 하나, 웹 web/cards.js와 같은 낱말 (tests/web/verdict_cases.json)
+STEPS = ("install", "run", "tools_list", "auth_required")
+STEP_NAMES = ("설치", "실행", "도구 목록", "인증")
+CELL = {"ok": "ok", "success": "ok", "fail": "bad", "bad": "bad", "error": "bad", "warn": "key", "auth": "key"}
+RISK_BADGE = {"ok": ("위험 신호 정상", "pass", "shield"), "caution": ("위험 신호 주의", "warn", "risk"),
+              "unverified": ("위험 신호 확인 필요", "warn", "risk"), "skipped": ("위험 신호 생략", "plain", "na")}
+SKILL_QUOTE = 60
+
+
+def cells(card: dict) -> list[tuple[str, str, str, str]]:
+    """MCP 4단계 → [(칸 이름, 짧은 말, 상태 ok|bad|key|na, 서버 문구)]. 짧은 말은 웹 Cards.step과 같다."""
+    verification, out = card.get("verification") or {}, []
+    for n, key in enumerate(STEPS):
+        value = verification.get(key)
+        state, label = (value.get("status"), value.get("label") or "") if isinstance(value, dict) else (value, "")
+        cls, count = CELL.get(state, "na"), re.search(r"도구 (\d+)개", label)
+        word = ("키 필요" if cls == "key" else "실패" if cls == "bad" else ("해당없음" if "해당없음" in label else "미확인") if cls == "na"
+                else f"{count[1]}개" if n == 2 and count else "필요 없음" if n == 3 else "성공")
+        out.append((STEP_NAMES[n], word, cls, label))
+    return out
+
+
+def risk_level(card: dict) -> str | None:
+    """스킬 위험 신호 단계(ok·caution·unverified·skipped). risk_signal이 문자열이면 그 값, 라벨만 있으면 라벨로 거꾸로 찾는다."""
+    risk = card.get("risk_signal")
+    if not risk or isinstance(risk, str):
+        return risk or None
+    return risk.get("level") or next((k for k, v in RISK_LABELS.items() if v == risk.get("label")), risk.get("label"))
+
+
+def badge(card: dict) -> dict | None:
+    """카드 머리줄 판정 배지 {word, tone, icon} 또는 None. tone pass·plain은 글자만, bad·warn은 문제만 채운 칩."""
+    kind = card.get("type")
+    if kind == "mcp":
+        if not card.get("verification"):
+            return {"word": "미검증", "tone": "plain", "icon": "na"}
+        state = [c[2] for c in cells(card)]
+        if "bad" in state:
+            return {"word": "검증 실패", "tone": "bad", "icon": "bad"}
+        if "key" in state:
+            return {"word": "키 필요", "tone": "plain", "icon": "key"}
+        return {"word": "검증 통과", "tone": "pass", "icon": "ok"} if state[2] == "ok" else {"word": "미확인", "tone": "plain", "icon": "na"}
+    if kind == "skill":
+        word, tone, icon = RISK_BADGE.get(risk_level(card), ("미판독", "plain", "na"))
+        return {"word": word, "tone": tone, "icon": icon}
+    return {"word": card["notice"], "tone": "warn", "icon": "warn"} if card.get("notice") else None
+
+
+def verdict(card: dict) -> dict | None:
+    """도구 카드 판정 자리. mode: line(모두 통과·키만 필요·원격) | grid(문제 있음 2x2) | none(결과 없음) | skill. 뉴스는 None.
+    at은 확인 시각(MM-DD HH:MM), head·rest·note는 화면 글 그대로(영어 원값 없음)."""
+    kind = card.get("type")
+    if kind == "mcp":
+        verification = card.get("verification")
+        if not verification:
+            return {"mode": "none", "head": "아직 직접 설치해 보지 않았어요", "note": card.get("verification_note"), "sep": " · "}
+        steps, at = cells(card), str(verification.get("probed_at") or "").replace("샌드박스", "").strip()
+        state = [c[2] for c in steps]
+        if state[2] != "ok" or {"bad", "key"} & set(state[:3]) or state[3] == "bad":
+            return {"mode": "grid", "cells": [c[:3] for c in steps], "at": at}
+        count = re.search(r"도구 \d+개", steps[2][3])
+        auth = (steps[3][3] or "인증 필요") if state[3] == "key" else "인증 미확인" if state[3] == "na" else ""
+        head = "원격 연결" if state[0] == state[1] == "na" else f"{state.count('ok')}단계 통과"
+        return {"mode": "line", "head": head, "rest": [x for x in (count[0] if count else "", auth) if x], "at": at}
+    if kind != "skill":
+        return None
+    level = risk_level(card)
+    if not level:
+        return {"mode": "none", "head": "아직 SKILL.md를 읽어 보지 않았어요", "note": card.get("verification_note"), "sep": ": "}
+    risk = card["risk_signal"] if isinstance(card.get("risk_signal"), dict) else {}
+    hits = [h for h in risk.get("hits") or [] if h]
+    head = ("공식 출처라 위험 신호를 생략했어요" if level == "skipped" else f"걸린 항목: {' · '.join(hits)}" if hits
+            else "걸린 항목 없음" if level == "ok"
+            else risk.get("basis") or card.get("verification_note") or f"위험 신호 {RISK_LABELS.get(level, '확인 필요')}")
+    quote = "" if level in ("ok", "skipped") else re.sub(r"\s+", " ", risk.get("quote") or "").strip()
+    quote = quote[:SKILL_QUOTE - 1].rstrip() + "…" if len(quote) > SKILL_QUOTE else quote
+    return {"mode": "skill", "head": head, "quote": quote, "at": risk.get("reviewed_at") or ""}
+
+
+# 도구 머리 '새 MCP·스킬 n개 · MCP 설치 확인 a/b' (2026-10-15 2라운드 4장 2판 2-2). 웹 Cards.toolHead와 같은 규칙(verdict_cases.json tool_head)
+def _install(card: dict) -> tuple[str, str]:
+    value = (card.get("verification") or {}).get("install")
+    return (value.get("status"), value.get("label") or "") if isinstance(value, dict) else (value, "")
+
+
+def tool_counts(cards: list[dict]) -> tuple[int, int, int]:
+    """(n, a, b). n = 새 도구 카드 수(related 제외), b = 그중 원격 전용이 아닌 MCP 수, a = b 가운데 설치 단계 ok인 수.
+    원격 전용: install_cmd가 http(s)이거나 설치 칸 글에 '해당없음'(card_verification이 원격을 '설치 해당없음'으로 적는다)."""
+    tools = [c for c in cards if c.get("type") in ("mcp", "skill") and not c.get("related")]
+    local = [c for c in tools if c["type"] == "mcp" and not re.match(r"^https?://", c.get("install_cmd") or "")
+             and "해당없음" not in _install(c)[1]]
+    return len(tools), sum(CELL.get(_install(c)[0]) == "ok" for c in local), len(local)
+
+
+def tool_head(cards: list[dict], num=str) -> str:
+    """머리 글. num은 숫자 감싸기(메일은 고정폭 span, 기본은 글자 그대로). 도구가 없으면 '오늘 새 MCP·스킬은 없어요'."""
+    n, a, b = tool_counts(cards)
+    if not n:
+        return "오늘 새 MCP·스킬은 없어요"
+    return f"새 MCP·스킬 {num(n)}개" + (f" · MCP 설치 확인 {num(a)}/{num(b)}" if b else "")

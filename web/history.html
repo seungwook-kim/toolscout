@@ -6,13 +6,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>toolscout 지난 브리핑</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/index.css">
   <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/cards.css">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#15181E">
+  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
   <style>
     /* 지난 브리핑 전용 모양: 왼쪽 날짜 목록 + 오른쪽 그날 판 (모바일은 목록 → 그날 판 두 화면). 색은 토큰만 */
     .hist{display:grid;gap:20px;padding-block:24px 80px}
@@ -77,7 +80,6 @@
     .sres-empty{padding:16px;font-size:.875rem;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel)}
     .dayview{display:grid;gap:24px;align-content:start;min-width:0}
     .dayview > *{min-width:0}
-    .day-head h2{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;font-size:1rem;letter-spacing:0}
     .day-head h2:focus{outline:none}
     .day-head h2:focus-visible{outline:2px solid var(--blaze);outline-offset:4px;border-radius:4px}
     .day-pager{display:flex;gap:4px;margin-bottom:4px}
@@ -92,8 +94,8 @@
       .day-sub .sp{flex:1}
       .dayview{gap:16px}
     }
-    .dayview .board{grid-template-columns:minmax(0,1fr);gap:32px}
-    .dayview .hl-grid{grid-template-columns:minmax(0,1fr)}
+    .dayview{max-width:760px}
+    .dayview .brief{gap:var(--s-8)}
     mark{background:var(--mark);color:inherit;font-weight:600;border-radius:2px;padding:0 1px}
     .sk-row{height:52px;border-radius:var(--r-ctl)}
   </style>
@@ -172,14 +174,13 @@
       try {
         const briefing = await TS.api(`/api/briefings?date=${encodeURIComponent(day)}`);
         if (current !== day) return;
-        const status = briefing.sent ? `${TS.ic("mail")}<span>메일로 보냈어요</span><span>· 카드 <span class="mono">${briefing.count}</span>장</span>`
-          : `${TS.ic("na")}<span>메일은 안 보냈어요</span><span>· 카드 <span class="mono">${briefing.count}</span>장</span>`;
         const pager = `<div class="day-pager hide-sm">${prev ? `<button type="button" class="btn btn-sm btn-quiet" data-go="${prev.date}" aria-label="이전 브리핑 ${md(prev.date)}">${TS.ic("chev", "ic-l")}<span class="mono">${md(prev.date)}</span></button>` : ""}${next ? `<button type="button" class="btn btn-sm btn-quiet" data-go="${next.date}" aria-label="다음 브리핑 ${md(next.date)}"><span class="mono">${md(next.date)}</span>${TS.ic("chev", "ic-r")}</button>` : ""}</div>`;
-        // 오늘 화면과 같은 머리줄을 쓰되, 이 화면의 h1은 "지난 브리핑"이라 날짜는 h2로 바꾼다
-        const head = Cards.today(briefing, { basis, status })
+        // 오늘 화면과 같은 머리(날짜 → 도구 머리 글·어떻게 골랐나 → 메일 상태·기준 → rule-2)를 쓰되, 이 화면의 h1은 "지난 브리핑"이라 날짜는 h2로 바꾼다.
+        // 이전·다음 단추는 날짜 위(2026-10-15 2라운드: 예전엔 '어떻게 골랐나' 앞이라 rule-2가 머리에서 멀어졌다)
+        const head = Cards.today(briefing, { basis, day: "이날" })
           .replace('class="today" aria-labelledby="today-h"', 'class="today day-head" aria-label="이날 요약"')
-          .replace('<h1 id="today-h">', '<h2 id="day-h" tabindex="-1">').replace("</h1>", "</h2>")
-          .replace('<div class="pipe">', `<div class="pipe">${pager}`);
+          .replace('<div class="today-l">', `<div class="today-l">${pager}`)
+          .replace('<h1 id="today-h">', '<h2 id="day-h" tabindex="-1">').replace("</h1>", "</h2>");
         $("days").innerHTML = `${sub}${head}<div id="board"></div>`;
         Cards.mount($("board"), briefing, { day: "이날", abs: true, level: 3, one: true });
         if (card && document.getElementById(card)) document.getElementById(card).scrollIntoView({ block: "start" });

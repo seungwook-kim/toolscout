@@ -7,12 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex">
   <title>toolscout 가입 승인</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/index.css">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#15181E">
+  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
   <style>
 .adm{display:grid;gap:20px;padding-block:24px 80px}
 .adm > *{min-width:0}
@@ -21,10 +24,14 @@
 .adm-wrap{display:grid;gap:20px;min-width:0}
 .adm-wrap > *{min-width:0}
 .adm-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
-.adm-head h1{font-size:1.5rem;font-weight:700}
+.adm-head h1{font-size:var(--fs-2xl);font-weight:700}
 @media (max-width:767px){.adm-head h1{font-size:1.25rem}}
-.adm-grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"queue" "users" "log" "support";gap:40px;align-items:start}
-@media (min-width:1200px){.adm-grid{grid-template-columns:minmax(0,7fr) minmax(0,5fr);grid-template-areas:"queue log" "users users" "support support";gap:40px 24px}}
+/* 2026-10-14 2차: 맨 위 승인 대기를 가장 크게(한 줄 전체), 변경 이력은 접힘이 기본, Gmail은 문제 있을 때만 경고 띠 */
+.adm-grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"queue" "users" "support" "log";gap:40px;align-items:start}
+@media (min-width:1200px){.adm-grid{grid-template-columns:minmax(0,7fr) minmax(0,5fr);grid-template-areas:"queue queue" "users users" "support log";gap:40px 24px}}
+/* 2라운드: cards.css를 읽지 않는다(화면당 CSS 예산, .kind 굵음). 쓰던 구역 머리·상태 칩만 여기 */ .lane-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;border-top:2px solid var(--rule);padding-top:var(--s-2)} .lane-h h2{font-size:var(--fs-lg);font-weight:800;letter-spacing:-.02em} .lane-h .n{font-family:var(--mono);font-size:var(--fs-sm);color:var(--ink-2)} .lane-h .hint{font-size:var(--fs-sm);color:var(--mute)} @media (max-width:767px){.lane-h h2{font-size:1rem}} .filters{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-2)} .filters .lab{font-size:var(--fs-sm);font-weight:600;color:var(--ink-2);margin-right:var(--s-1)} .fchip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 var(--s-3);border-radius:var(--r-pill);border:1px solid var(--line-ctl);background:var(--surface);font-size:var(--fs-sm);font-weight:600;color:var(--ink-2)} .fchip .n{font-family:var(--mono);font-size:var(--fs-xs);color:var(--ink-2)} .fchip[aria-pressed="true"]{background:var(--blaze-wash);border-color:var(--blaze);color:var(--blaze-ink)} .fchip[aria-pressed="true"] .n{color:var(--blaze-ink)} @media (pointer:coarse),(max-width:767px){.fchip{min-height:var(--hit)}}
+#queue .lane-h h2{font-size:var(--fs-xl);font-weight:800}
+#queue .lane-h .n{font-size:var(--fs-lg);font-weight:600;color:var(--ink)}
 #queue{grid-area:queue}
 #users{grid-area:users}
 #log{grid-area:log}
@@ -38,11 +45,11 @@
 /* 승인 대기 행 */
 .req{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 16px;align-items:center;padding:14px 20px;min-height:72px}
 .req-main{display:grid;gap:4px;min-width:0}
-.req-email{font-family:var(--mono);font-size:.875rem;font-weight:500;line-height:1.5;color:var(--ink);overflow-wrap:anywhere;letter-spacing:0}
+.req-email{font-family:var(--mono);font-size:var(--fs-md);font-weight:500;line-height:1.5;color:var(--ink);overflow-wrap:anywhere;letter-spacing:0}
 .req-email:focus{outline:none}
 .req-email:focus-visible{outline:2px solid var(--blaze);outline-offset:2px;border-radius:2px}
-.req-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.8125rem;color:var(--mute)}
-.req-meta .mono{font-size:.75rem;color:var(--ink-2)}
+.req-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:var(--fs-sm);color:var(--mute)}
+.req-meta .mono{font-size:var(--fs-xs);color:var(--ink-2)}
 .req-acts{display:flex;gap:8px}
 .req > .confirm-line,.req > .msg{grid-column:1/-1}
 @media (max-width:767px){
@@ -50,15 +57,15 @@
   .req-acts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
   .req-acts .btn{min-height:44px}
 }
-.rec-empty{display:flex;align-items:center;gap:8px;padding:16px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);font-size:.875rem;color:var(--ink-2)}
+.rec-empty{display:flex;align-items:center;gap:8px;padding:16px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);font-size:var(--fs-md);color:var(--ink-2)}
 .rec-empty:focus{outline:none}
 .rec-empty:focus-visible{outline:2px solid var(--blaze);outline-offset:2px}
 .done-g{display:grid;gap:8px;margin-top:4px}
-.done-g h3{display:flex;gap:6px;align-items:baseline;font-size:.8125rem;font-weight:600;color:var(--mute)}
-.done-g h3 .mono{font-size:.75rem}
+.done-g h3{display:flex;gap:6px;align-items:baseline;font-size:var(--fs-sm);font-weight:600;color:var(--mute)}
+.done-g h3 .mono{font-size:var(--fs-xs)}
 .done-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-height:48px;padding:6px 8px 6px 16px;background:var(--surface-2)}
-.done-line .dl-e{flex:1 1 140px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:.8125rem;color:var(--ink-2)}
-.done-line .dl-t{font-family:var(--mono);font-size:.75rem;color:var(--mute)}
+.done-line .dl-e{flex:1 1 140px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:var(--fs-sm);color:var(--ink-2)}
+.done-line .dl-t{font-family:var(--mono);font-size:var(--fs-xs);color:var(--mute)}
 @media (max-width:767px){.done-line{min-height:56px}}
 
 /* 사용자 */
@@ -67,28 +74,30 @@
 .u-find{flex:0 0 240px;min-width:0}
 .uf-box{position:relative}
 .uf-box > .ic{position:absolute;left:12px;top:12px;color:var(--mute);pointer-events:none}
-.u-find .input{height:40px;padding-left:36px;font-size:.9375rem}
+.u-find .input{height:40px;padding-left:36px;font-size:var(--fs-base)}
 .u-find .input::-webkit-search-cancel-button{cursor:pointer}
 @media (max-width:767px){.u-find{flex:1 1 100%}.u-find .input{height:48px;font-size:1rem}.uf-box > .ic{top:16px}}
-.utab{width:100%;border-collapse:collapse;font-size:.875rem}
-.utab th,.utab td{padding:12px 14px;text-align:left;vertical-align:middle;border-bottom:1px solid var(--line)}
-.utab thead th{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar));z-index:2;background:var(--surface-2);font-size:.8125rem;font-weight:600;color:var(--mute);white-space:nowrap}
+.utab{width:100%;border-collapse:collapse;font-size:var(--fs-md)}
+.utab th,.utab td{padding:12px 10px;text-align:left;vertical-align:middle;border-bottom:1px solid var(--line)}
+.utab thead th{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar));z-index:2;background:var(--surface-2);font-size:var(--fs-sm);font-weight:600;color:var(--mute);white-space:nowrap}
 .utab tbody tr:last-child td{border-bottom:0}
 .utab .c-act{text-align:right}
-.ue{font-family:var(--mono);font-size:.875rem;font-weight:500;color:var(--ink);overflow-wrap:anywhere;letter-spacing:0}
+.utab .c-email{max-width:300px}
+@media (min-width:768px){.utab th:first-child,.utab td:first-child{padding-left:16px}.utab th:last-child,.utab td:last-child{padding-right:16px}}
+.ue{display:inline-block;max-width:min(100%,260px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;font-family:var(--mono);font-size:var(--fs-md);font-weight:500;color:var(--ink);letter-spacing:0}
 .u-tags{display:inline-flex;flex-wrap:wrap;gap:4px;margin-left:4px;vertical-align:1px}
-.u-sub{display:block;font-size:.8125rem;color:var(--mute);margin-top:2px}
-.u-sub .mono{font-size:.75rem}
-.c-joined{font-family:var(--mono);font-size:.8125rem;color:var(--ink-2);white-space:nowrap}
+.u-sub{display:block;font-size:var(--fs-sm);color:var(--mute);margin-top:2px}
+.u-sub .mono{font-size:var(--fs-xs)}
+.utab td.c-joined{font-family:var(--mono);font-size:var(--fs-sm);color:var(--ink-2);white-space:nowrap}
 .c-via .kind{white-space:nowrap}
-.u-flow{display:block;font-size:.8125rem;color:var(--ink-2)}
-.u-by{display:block;font-size:.8125rem;color:var(--mute);margin-top:2px;overflow-wrap:anywhere}
-.u-by .mono{font-size:.75rem}
-.c-act .acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
-.u-note{font-size:.8125rem;color:var(--mute);white-space:nowrap}
+.u-flow{display:block;font-size:var(--fs-sm);color:var(--ink-2)}
+.u-by{display:block;font-size:var(--fs-sm);color:var(--mute);margin-top:2px;overflow-wrap:anywhere}
+.u-by .mono{font-size:var(--fs-xs)}
+.c-act .acts{display:flex;flex-wrap:nowrap;gap:6px;justify-content:flex-end}
+.u-note{font-size:var(--fs-sm);color:var(--mute);white-space:nowrap}
 .u-confirm td{background:var(--surface);padding-top:0}
 .u-msg td{padding-top:0}
-@media (min-width:1200px){.utab .u-sub{display:none}}
+@media (min-width:1200px){.utab .u-sub{display:none}.utab .c-last{min-width:210px}.utab .c-role{min-width:72px}}
 @media (max-width:1199px){.utab .c-role,.utab .c-via,.utab .c-joined{display:none}}
 @media (max-width:767px){
   .utab thead{display:none}
@@ -107,25 +116,25 @@
 
 /* 변경 이력 */
 .log-g + .log-g{border-top:1px solid var(--line)}
-.log-g h3{display:flex;gap:6px;align-items:baseline;padding:12px 20px 2px;font-size:.8125rem;font-weight:600;color:var(--mute)}
-.log-g h3 .mono{font-size:.8125rem;color:var(--ink-2)}
+.log-g h3{display:flex;gap:6px;align-items:baseline;padding:12px 20px 2px;font-size:var(--fs-sm);font-weight:600;color:var(--mute)}
+.log-g h3 .mono{font-size:var(--fs-sm);color:var(--ink-2)}
 .log-g ul{display:grid}
-.log-row{display:grid;gap:4px;padding:10px 20px;min-height:56px;transition:background-color .8s ease-out}
+.log-row{display:grid;gap:4px;padding:10px 20px;min-height:56px;transition:background-color var(--dur-slow) var(--ease-out)}
 .log-row + .log-row{border-top:1px solid var(--line)}
 .lr1{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;min-width:0}
-.lr1 .t{font-family:var(--mono);font-size:.75rem;color:var(--mute);flex:none}
-.lr1 .e{font-family:var(--mono);font-size:.875rem;font-weight:500;color:var(--ink);overflow-wrap:anywhere;min-width:0;letter-spacing:0}
+.lr1 .t{font-family:var(--mono);font-size:var(--fs-xs);color:var(--mute);flex:none}
+.lr1 .e{font-family:var(--mono);font-size:var(--fs-md);font-weight:500;color:var(--ink);overflow-wrap:anywhere;min-width:0;letter-spacing:0}
 .lr1 .e.gone{font-family:var(--sans);color:var(--mute);font-weight:500}
-.lr2{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.8125rem;color:var(--mute)}
-.lr2 .mono{font-size:.75rem;overflow-wrap:anywhere}
+.lr2{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:var(--fs-sm);color:var(--mute)}
+.lr2 .mono{font-size:var(--fs-xs);overflow-wrap:anywhere}
 .log-row.is-new{background:var(--surface-2)}
-.tag-new{display:inline-flex;align-items:center;padding:0 6px;border:1px solid var(--line-input);border-radius:var(--r-chip);font-size:.8125rem;font-weight:600;line-height:1.5;color:var(--ink)}
+.tag-new{display:inline-flex;align-items:center;padding:0 6px;border:1px solid var(--line-input);border-radius:var(--r-chip);font-size:var(--fs-sm);font-weight:600;line-height:1.5;color:var(--ink)}
 @media (prefers-reduced-motion:reduce){.log-row.is-new{background:none}}
 .log-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px}
 #log-more[aria-expanded="true"] .ic{transform:rotate(180deg)}
-.st-none{font-size:.8125rem;color:var(--mute)}
+.st-none{font-size:var(--fs-sm);color:var(--mute)}
 
-.tag-id{display:inline-flex;align-items:center;min-height:20px;padding:0 6px;border:1px solid var(--line-input);border-radius:var(--r-chip);font-size:.8125rem;font-weight:600;color:var(--ink-2);line-height:1.4;white-space:nowrap;font-family:var(--sans)}
+.tag-id{display:inline-flex;align-items:center;min-height:20px;padding:0 6px;border:1px solid var(--line-input);border-radius:var(--r-chip);font-size:var(--fs-sm);font-weight:600;color:var(--ink-2);line-height:1.4;white-space:nowrap;font-family:var(--sans)}
 .mute{color:var(--mute)}
 .st-flow{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px}
 .st-flow > .ic{color:var(--mute);width:12px;height:12px}
@@ -133,25 +142,24 @@
 
 /* 고객센터 문의 */
 .sup-row{display:grid;gap:6px;padding:14px 20px}
-.sup-top{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:.8125rem;color:var(--mute)}
-.sup-top .mono{font-size:.75rem;color:var(--ink-2)}
-.sup-from{font-family:var(--mono);font-size:.875rem;font-weight:500;color:var(--ink);overflow-wrap:anywhere;letter-spacing:0}
-.sup-body{font-size:.875rem;color:var(--ink-2);overflow-wrap:anywhere;white-space:pre-wrap}
-.sup-row details > summary{cursor:pointer;color:var(--ink-2);list-style:none}
+.sup-top{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:var(--fs-sm);color:var(--mute)}
+.sup-top .mono{font-size:var(--fs-xs);color:var(--ink-2)}
+.sup-from{font-family:var(--mono);font-size:var(--fs-md);font-weight:500;color:var(--ink);overflow-wrap:anywhere;letter-spacing:0}
+.sup-body{font-size:var(--fs-md);color:var(--ink-2);overflow-wrap:anywhere;white-space:pre-wrap}
+.sup-row details > summary{cursor:pointer;color:var(--ink-2);list-style:none;display:flex;align-items:center;min-height:var(--hit)}
 .sup-row details > summary::-webkit-details-marker{display:none}
 .sup-row details[open] > summary .sup-short{display:none}
 .sup-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
 .sup-row.is-done{background:var(--surface-2)}
 @media (max-width:767px){.sup-row{padding:16px}.sup-foot .btn{min-height:44px}}
 
-/* Gmail 발송 연결 줄 */
-.gm{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel)}
-.gm-t{font-size:.875rem;font-weight:600;color:var(--ink)}
-.gm-s{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.8125rem;color:var(--ink-2)}
-.gm-s .mono{font-size:.75rem}
-.gm .btn{margin-left:auto}
+/* Gmail 발송 연결: 정상이면 한 줄(.gm), 보내지 못하는 상태면 경고 띠(.alert-bad) */
+.gm{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:var(--fs-sm);color:var(--ink-2)}
+.gm > .ic{color:var(--ok)}
+.gm.off > .ic{color:var(--ink-2)}
+.gm .mono{font-size:var(--fs-xs)}
+.gm .link{display:inline-flex;align-items:center;min-height:var(--hit)}
 .gm-m{flex:1 1 100%}
-@media (max-width:767px){.gm{padding:12px 16px}.gm .btn{min-height:44px}}
 
   </style>
 </head>
@@ -166,16 +174,13 @@
       </header>
       <div class="alert alert-note" id="first-note" hidden><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><div class="body"><span>내 첫 설정을 마치기 전에도 가입 승인은 할 수 있어요. 오늘·지난 브리핑은 첫 설정을 마치면 열려요.</span></div></div>
       <div class="alert alert-bad" id="load-err" role="alert" hidden><svg class="ic" aria-hidden="true"><use href="#i-bad"/></svg><div class="body"><span>가입 목록을 불러오지 못했어요. 잠시 뒤 다시 불러와 주세요.</span><button type="button" class="btn btn-sm" id="reload"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>다시 불러오기</button></div></div>
-      <div class="gm" id="gm-line" hidden>
-        <span class="gm-t">Gmail 발송 연결</span>
-        <span class="gm-s" id="gm-state"></span>
-        <a class="btn btn-sm" id="gm-go" href="/admin/gmail/connect">연결하기</a>
-        <p class="msg gm-m" id="gm-msg" role="status" hidden></p>
-      </div>
+      <div class="alert alert-bad" id="gm-warn" hidden><svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg><div class="body"><span>메일 발송 방식이 Gmail API인데 연결되지 않아 브리핑 메일이 나가지 않아요.</span><a class="btn btn-sm" href="/admin/gmail/connect">Gmail 연결하기</a></div></div>
+      <p class="gm" id="gm-line" hidden></p>
+      <p class="msg gm-m" id="gm-msg" role="status" hidden></p>
       <div class="adm-grid" id="adm-grid">
         <section class="adm-sec" id="queue" aria-labelledby="q-h">
           <div class="lane-h"><h2 id="q-h">승인 대기</h2><span class="n" data-pending-n>0</span><span class="hint">먼저 가입한 순서</span></div>
-          <p class="help">승인해도 알림 메일은 가지 않아요. 그 사람이 다시 들어오면 첫 설정이 열려요.</p>
+          <p class="help" id="q-help">승인해도 알림 메일은 가지 않아요. 그 사람이 다시 들어오면 첫 설정이 열려요.</p>
           <ul class="rec" id="applications"></ul>
           <p class="rec-empty" id="q-empty" tabindex="-1" hidden><svg class="ic" aria-hidden="true"><use href="#i-ok"/></svg>승인을 기다리는 가입이 없어요</p>
           <div class="done-g" id="done-g" hidden>
@@ -186,11 +191,11 @@
         </section>
         <section class="adm-sec" id="log" aria-labelledby="l-h">
           <div class="lane-h"><h2 id="l-h">변경 이력</h2><span class="hint">누가 · 언제 · 무엇에서 무엇으로</span></div>
-          <div class="rec" id="history"></div>
           <div class="log-foot">
-            <button type="button" class="btn btn-sm btn-quiet" id="log-more" aria-expanded="false" aria-controls="history"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg><span>50건 모두 보기</span></button>
+            <button type="button" class="btn btn-sm" id="log-more" aria-expanded="false" aria-controls="history"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg><span>펼치기</span></button>
             <p class="help">최근 50건까지 보여요.</p>
           </div>
+          <div class="rec" id="history" hidden></div>
         </section>
         <section class="adm-sec" id="users" aria-labelledby="u-h">
           <div class="lane-h"><h2 id="u-h">사용자</h2><span class="n" id="u-n">0</span><span class="hint">최근 가입 순</span></div>
@@ -247,6 +252,7 @@
     function renderQueue() {
       $("applications").hidden = !apps.length;
       $("q-empty").hidden = !!apps.length;
+      $("q-help").hidden = !apps.length;
       $("applications").innerHTML = apps.map((a) => `<li class="req" data-id="${a.id}"><div class="req-main"><p class="req-email" tabindex="-1">${TS.esc(a.email || "")}</p>
         <p class="req-meta"><span class="kind">${TS.esc(VIA[a.via] || a.via)}</span><span>신청 <span class="mono">${TS.esc(stamp(a.applied_at))}</span></span><span>· ${TS.esc(TS.daysAgo(utc(a.applied_at)))}</span></p></div>
         <div class="req-acts"><button type="button" class="btn btn-sm btn-quiet" data-reject aria-expanded="false" aria-label="${TS.esc(a.email)} 거절">거절</button>
@@ -266,7 +272,7 @@
       const q = $("u-q").value.trim().toLowerCase(), counts = { all: users.length, pending: 0, approved: 0, blocked: 0 };
       users.forEach((u) => { counts[u.status] = (counts[u.status] || 0) + 1; });
       $("u-filters").innerHTML = '<span class="lab">상태</span>' + [["all", "전체"], ["pending", "대기"], ["approved", "승인"], ["blocked", "차단"]]
-        .map(([k, label]) => `<button type="button" class="fchip" data-uf="${k}" aria-pressed="${filter === k}">${label} <span class="n">${counts[k] || 0}</span></button>`).join("");
+        .map(([k, label]) => `<button type="button" class="fchip" data-uf="${k}" aria-pressed="${filter === k}"><span>${label}</span><span class="n">${counts[k] || 0}</span></button>`).join("");
       $("u-n").textContent = counts.all;
       const rows = users.filter((u) => (filter === "all" || u.status === filter) && (!q || (u.email || "").toLowerCase().includes(q)));
       $("users-body").innerHTML = rows.map((u) => {
@@ -277,7 +283,7 @@
         const act = mine ? '<span class="u-note">내 계정</span>' : u.is_demo ? '<span class="u-note">예시 계정</span>'
           : `<div class="acts">${undo[u.id] ? `<button type="button" class="btn btn-sm btn-quiet" data-u-undo="${u.id}" aria-label="${TS.esc(u.email)} 되돌리기">되돌리기</button>` : ""}${ORDER.filter((s) => s !== u.status).map((s) =>
             `<button type="button" class="btn btn-sm" data-u-to="${s}" data-u-id="${u.id}" aria-label="${TS.esc(u.email)} ${TO[s]} 바꾸기"${confirmU && confirmU.id === u.id && confirmU.to === s ? ' aria-expanded="true"' : ""}>${TO[s]}</button>`).join("")}</div>`;
-        let html = `<tr class="urow" data-id="${u.id}"><td class="c-email"><span class="ue">${TS.esc(u.email || "(이메일 없음)")}</span>${tags ? `<span class="u-tags">${tags}</span>` : ""}
+        let html = `<tr class="urow" data-id="${u.id}"><td class="c-email"><span class="ue" title="${TS.esc(u.email || "")}">${TS.esc(u.email || "(이메일 없음)")}</span>${tags ? `<span class="u-tags">${tags}</span>` : ""}
           <span class="u-sub">${TS.esc(u.role || "직군 미설정")} · ${TS.esc(VIA[u.via] || "")} · 가입 <span class="mono">${TS.esc((u.created_at || "").slice(0, 10))}</span></span></td>
           <td class="c-status">${mark(u.status)}</td><td class="c-role">${u.role ? TS.esc(u.role) : '<span class="mute">직군 미설정</span>'}</td>
           <td class="c-via"><span class="kind">${TS.esc(VIA[u.via] || "")}</span></td><td class="c-joined">${TS.esc((u.created_at || "").slice(0, 10))}</td>
@@ -300,7 +306,7 @@
 
     // ----- 변경 이력 -----
     function renderLog() {
-      const rows = logOpen ? changes : changes.slice(0, 6);
+      const rows = logOpen ? changes : [];  // 접힘이 기본: 펼치면 50건 모두
       let html = "", day = "";
       rows.forEach((c) => {
         const t = stamp(c.at), d = t.slice(0, 5);
@@ -310,9 +316,9 @@
       });
       if (day) html += "</ul></div>";
       $("history").innerHTML = html || '<p class="rec-empty" style="border:0">아직 바뀐 적이 없어요.</p>';
-      $("log-more").hidden = changes.length <= 6;
+      $("history").hidden = !logOpen;
       $("log-more").setAttribute("aria-expanded", String(logOpen));
-      $("log-more").querySelector("span").textContent = logOpen ? "최근 6건만 보기" : `50건 모두 보기 (${changes.length}건)`;
+      $("log-more").querySelector("span").textContent = logOpen ? "접기" : `펼치기 · ${changes.length}건`;
     }
 
     async function load({ keepDone = true } = {}) {
@@ -382,16 +388,16 @@
     };
     async function loadGmail() {
       try {
-        const g = await TS.api("/api/admin/gmail");
-        $("gm-state").innerHTML = g.connected
-          ? `<span class="pill pill-plain pill-sm">${TS.ic("ok")}연결됨</span><span class="mono">${TS.esc(stamp(g.connected_at))}</span>`
-          : `<span class="pill pill-neutral pill-sm">${TS.ic("clock")}연결 안 됨</span>`;
-        $("gm-go").textContent = g.connected ? "다시 연결하기" : "연결하기";
-        $("gm-line").hidden = false;
+        const g = await TS.api("/api/admin/gmail"), broken = g.transport === "gmail_api" && !g.connected;
+        $("gm-warn").hidden = !broken;
+        $("gm-line").className = `gm${g.connected ? "" : " off"}`;
+        $("gm-line").innerHTML = g.connected
+          ? `${TS.ic("ok")}<span>Gmail 발송 연결됨</span><span class="mono">${TS.esc(stamp(g.connected_at))}</span><span aria-hidden="true">·</span><a class="link" href="/admin/gmail/connect">다시 연결하기</a>`
+          : `${TS.ic("mail")}<span>메일은 SMTP로 보내요 · Gmail API는 연결 안 됨</span><span aria-hidden="true">·</span><a class="link" href="/admin/gmail/connect">연결하기</a>`;
+        $("gm-line").hidden = broken;
       } catch (e) { $("gm-line").hidden = true; }
       const code = new URLSearchParams(location.search).get("gmail"), note = GM_MSG[code];
       if (note) {
-        $("gm-line").hidden = false;
         $("gm-msg").className = `msg gm-m msg-${note[0]}`;
         $("gm-msg").innerHTML = `${TS.ic(note[0])}<span>${TS.esc(note[1])}</span>`;
         $("gm-msg").hidden = false;

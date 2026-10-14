@@ -6,25 +6,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>toolscout 설정</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/index.css">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/profile.css">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#15181E">
+  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
   <style>
-    /* 설정 전용 모양. 색은 토큰만 */
+    /* 설정 전용 모양(2026-10-14 2차: 구역 id #about #topics #delivery #make #account, 맨 아래 '되돌릴 수 없는 일' 묶음). 색은 토큰만 */
     .set{max-width:720px;margin-inline:auto;display:grid;gap:16px;padding-block:24px 96px}
     .set > *{min-width:0}
     .set-head{display:grid;gap:2px}
-    .set-head h1{font-size:1.5rem;font-weight:700}
+    .set-head h1{font-size:var(--fs-2xl);font-weight:700}
     .set-form{display:grid;gap:16px;min-width:0}
     .sp{display:grid;gap:20px;scroll-margin-top:calc(var(--bar) + 64px);min-width:0}
     .sp > *{min-width:0}
     .sp-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
-    .sp-h h2{font-size:1.0625rem;font-weight:700}
+    .sp-h h2{font-size:var(--fs-lg);font-weight:700}
     .sp-h .help{flex-basis:100%}
     .sp-h .help.inline{flex-basis:auto}
     .sp-desc{color:var(--ink-2)}
@@ -32,22 +34,25 @@
     .set-sk .sk{border-radius:var(--r-panel)}
     .set-jump{display:none}
     @media (max-width:1199px){
-      .set-jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar));z-index:15;display:flex;gap:8px;overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:calc(-1 * var(--gutter));padding:4px var(--gutter);scrollbar-width:none}
-      .set-jump a{flex:none;display:inline-flex;align-items:center;min-height:36px;margin-block:4px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.8125rem;font-weight:600;color:var(--ink);text-decoration:none}
+      .set-jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar));z-index:var(--z-jump);display:flex;gap:8px;overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:calc(-1 * var(--gutter));padding:4px var(--gutter);scrollbar-width:none}
+      .set-jump a{flex:none;display:inline-flex;align-items:center;min-height:36px;margin-block:4px;padding:0 12px;border-radius:var(--r-pill);border:1px solid var(--line-ctl);background:var(--surface);font-size:var(--fs-sm);font-weight:600;color:var(--ink);text-decoration:none}
     }
+    @media (pointer:coarse),(max-width:767px){.set-jump a{min-height:var(--hit)}}
     .frow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px}
     .mk-area{display:grid;gap:10px;justify-items:start;min-width:0}
     .mk-area > *{max-width:100%}
-    .dz-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 16px;align-items:center;padding-top:16px;border-top:1px solid var(--line)}
+    .danger{display:grid;gap:0;margin-top:4px;padding:16px 20px 20px;border:1px solid var(--bad);border-radius:var(--r-card)}
+    .danger > h3{display:flex;align-items:center;gap:8px;font-size:var(--fs-base);font-weight:700;color:var(--bad)}
+    .dz-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 16px;align-items:center;padding-top:16px;margin-top:16px;border-top:1px solid var(--line)}
     .dz-row > .confirm-line,.dz-row > .msg{grid-column:1/-1}
     .dz-text{display:grid;gap:2px}
-    .dz-text h3{font-size:.9375rem;font-weight:600}
-    .dz-text p{font-size:.8125rem;color:var(--ink-2)}
+    .dz-text h4{font-size:var(--fs-base);font-weight:600}
+    .dz-text p{font-size:var(--fs-sm);color:var(--ink-2)}
     @media (max-width:560px){.dz-row{grid-template-columns:minmax(0,1fr)}.dz-row > .btn{justify-self:start}}
     .del-list{display:grid;gap:2px;padding-left:20px;list-style:disc;color:var(--ink-2)}
-    .del-target{font-size:.8125rem;color:var(--ink-2)}
+    .del-target{font-size:var(--fs-sm);color:var(--ink-2)}
     .del-box .field{gap:4px}
-    @media (max-width:767px){.set{padding-block:16px 24px}.set-head h1{font-size:1.25rem}}
+    @media (max-width:767px){.set{padding-block:16px 24px}.set-head h1{font-size:1.25rem}.danger{padding:12px 16px 16px}}
   </style>
 </head>
 <body class="page-settings">
@@ -63,7 +68,7 @@
         <div class="body"><span>개발 모드예요. 프로필과 질문이 무료 모델로 갈 수 있어요. 회사 기밀은 적지 마세요.</span></div>
       </div>
       <nav class="set-jump" aria-label="설정 구역">
-        <a href="#sec-me">나에 대해</a><a href="#sec-topics">관심 주제</a><a href="#sec-delivery">받는 방법</a><a href="#sec-make">지금 만들기</a><a href="#sec-acct">기억과 계정</a>
+        <a href="#about">나에 대해</a><a href="#topics">관심 주제</a><a href="#delivery">받는 방법</a><a href="#make">지금 만들기</a><a href="#account">기억과 계정</a>
       </nav>
       <div class="set-sk" id="set-sk" aria-busy="true" aria-label="불러오는 중">
         <div class="sk" style="height:260px"></div><div class="sk" style="height:520px"></div><div class="sk" style="height:180px"></div>
@@ -71,7 +76,7 @@
 
       <div id="set-body" hidden>
       <form id="profile-form" class="set-form" novalidate>
-        <section class="panel sp" id="sec-me" aria-labelledby="me-h">
+        <section class="panel sp" id="about" aria-labelledby="me-h">
           <div class="sp-h"><h2 id="me-h">나에 대해</h2><p class="help">직군·쓰는 도구·한 줄로 카드를 고르고 ‘나에게’ 문장을 써요.</p></div>
           <fieldset class="rchips role" id="roles">
             <legend class="fs-legend" id="roles-label">직군 <span class="req-mark">(필수)</span> <span class="chg" data-chg="role" hidden>· 바뀜</span></legend>
@@ -94,17 +99,17 @@
           </div>
         </section>
 
-        <section class="panel sp" id="sec-topics" aria-labelledby="tp-h">
+        <section class="panel sp" id="topics" aria-labelledby="tp-h">
           <div class="sp-h"><h2 id="tp-h">관심 주제</h2><button type="button" class="btn btn-sm btn-quiet" id="to-preset">직군 기본값으로</button>
             <p class="help">−5면 그 주제 카드는 받지 않아요. 카드의 관심없음·써봤음으로도 1씩 움직여요.</p></div>
           <p class="wscale" aria-hidden="true"><span><span class="mono">−5</span> 받지 않음</span><span><span class="mono">0</span> 보통</span><span><span class="mono">+5</span> 많이</span><span>· 트랙 아래 눈금이 직군 기본값</span></p>
-          <div class="wt" id="topics" role="group" aria-labelledby="tp-h"></div>
+          <div class="wt" id="tp-rows" role="group" aria-labelledby="tp-h"></div>
         </section>
 
-        <section class="panel sp" id="sec-delivery" aria-labelledby="dl-h">
+        <section class="panel sp" id="delivery" aria-labelledby="dl-h">
           <div class="sp-h"><h2 id="dl-h">받는 방법</h2></div>
           <dl class="info-dl">
-            <div><dt>받는 시각</dt><dd>매일 아침 <span class="mono">08:00</span></dd></div>
+            <div><dt>받는 시각</dt><dd><span>매일 아침 <span class="mono">08:00</span></span></dd></div>
             <div><dt>받는 곳</dt><dd><svg class="ic" aria-hidden="true"><use href="#i-mail"/></svg><span id="mail-to">이메일</span><span class="help">카카오톡 알림은 준비 중이에요.</span></dd></div>
           </dl>
         </section>
@@ -126,7 +131,7 @@
         </div>
       </form>
 
-      <section class="panel sp" id="sec-make" aria-labelledby="mk-h" style="margin-top:16px">
+      <section class="panel sp" id="make" aria-labelledby="mk-h" style="margin-top:16px">
         <div class="sp-h"><h2 id="mk-h">오늘 브리핑 지금 만들기</h2><p class="help inline">누르면 바로 실행돼요</p></div>
         <p class="sp-desc">오늘 소식과 도구를 저장한 기준으로 골라 만들고, 다 되면 메일로도 보내요. 10분쯤 걸려요.</p>
         <div class="mk-area">
@@ -136,16 +141,18 @@
         </div>
       </section>
 
-      <section class="panel sp" id="sec-acct" aria-labelledby="ac-h" style="margin-top:16px">
-        <div class="sp-h"><h2 id="ac-h">기억과 계정</h2><p class="help inline">누르면 바로 실행돼요</p></div>
+      <section class="panel sp" id="account" aria-labelledby="ac-h" style="margin-top:16px">
+        <div class="sp-h"><h2 id="ac-h">기억과 계정</h2></div>
         <dl class="info-dl" id="acct-info"></dl>
+        <div class="danger" role="group" aria-labelledby="dz-h">
+        <h3 id="dz-h"><svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg>되돌릴 수 없는 일</h3>
         <div class="dz-row">
-          <div class="dz-text"><h3>기억 지우기</h3><p>주제 관심도, 본 카드 기록, 피드백을 지워요. 직군·쓰는 도구·한 줄은 남아요.</p></div>
+          <div class="dz-text"><h4>기억 지우기</h4><p>주제 관심도, 본 카드 기록, 피드백을 지워요. 직군·쓰는 도구·한 줄은 남아요.</p></div>
           <button type="button" class="btn btn-danger" id="forget" aria-expanded="false">기억 지우기</button>
           <p class="msg msg-ok" id="danger-msg" role="status" hidden></p>
         </div>
         <div class="dz-row">
-          <div class="dz-text"><h3>계정 삭제</h3><p>계정과 브리핑·질문·피드백 기록을 모두 지워요.</p></div>
+          <div class="dz-text"><h4>계정 삭제</h4><p>계정과 브리핑·질문·피드백 기록을 모두 지워요.</p></div>
           <button type="button" class="btn btn-danger" id="delete" aria-expanded="false" aria-controls="del-box">계정 삭제</button>
           <div class="confirm-line del-box" id="del-box" tabindex="-1" hidden>
             <p><b>계정을 지우면 되돌릴 수 없어요.</b> 아래 다섯 가지가 모두 지워져요.</p>
@@ -160,6 +167,7 @@
             <div class="acts"><button type="button" class="btn btn-danger" id="del-go" aria-disabled="true" aria-describedby="del-why">계정 영구 삭제</button><button type="button" class="btn btn-quiet" id="del-cancel">취소</button></div>
           </div>
         </div>
+        </div>
       </section>
       </div>
     </div>
@@ -172,9 +180,10 @@
     const LABELS = { role: "직군", tools: "쓰는 도구", free: "자유 한 줄" };
 
     // 지금 입력값과 저장된 값. 다르면 "바뀜" 칸이 켜지고 저장 바가 나온다
-    const snapshot = () => ({ role, tools: tagCtl.get().join(","), free: $("free").value.trim(), weights: Profile.readTopics($("topics")) });
+    const snapshot = () => ({ role, tools: tagCtl.get().join(","), free: $("free").value.trim(), weights: Profile.readTopics($("tp-rows")) });
     function changes() {
       const now = snapshot(), out = [];
+      if (!saved) return out;  // 불러오기 전에 화면을 떠나면 비교할 저장값이 없다
       if (now.role !== saved.role) out.push(["role", LABELS.role]);
       if (now.tools !== saved.tools) out.push(["tools", LABELS.tools]);
       if (now.free !== saved.free) out.push(["free", LABELS.free]);
@@ -215,7 +224,7 @@
     }
     // 직군을 바꿔도 관심 주제 숫자는 그대로 두고, 눈금(기본값)만 새 직군 것으로 바꾼다. 채우기는 눌렀을 때만
     function roleChanged() {
-      const keep = Profile.readTopics($("topics"));
+      const keep = Profile.readTopics($("tp-rows"));
       drawTopics(keep);
       const differs = role !== saved.role;
       $("role-note").hidden = !differs;
@@ -225,7 +234,7 @@
       }
       refresh();
     }
-    function drawTopics(weights) { Profile.topics($("topics"), state, weights, role, refresh); }
+    function drawTopics(weights) { Profile.topics($("tp-rows"), state, weights, role, refresh); }
     $("role-fill").onclick = () => { drawTopics(state.presets[role]); refresh(); TS.say(`${role} 기본값으로 채웠어요`); };
     $("to-preset").onclick = () => { drawTopics(state.presets[role]); refresh(); TS.say(`${role} 기본값으로 채웠어요`); };
 
@@ -256,6 +265,8 @@
       fill(await TS.api("/api/profile"));
       $("set-sk").hidden = true;
       $("set-body").hidden = false;
+      const target = location.hash && document.getElementById(location.hash.slice(1));  // /settings#topics 등: 내용이 뜬 뒤 그 구역으로
+      if (target && target.classList.contains("sp")) target.scrollIntoView();
     }
 
     // 저장 (POST /api/profile). 알림 채널·시간은 화면에서 안 고르므로 지금 저장된 값을 그대로 보낸다

@@ -2,11 +2,12 @@
 
 실행: uv run python -m tests.web.check_minify   (Edge 필요, uv가 minify-html·rjsmin·rcssmin을 임시로 받는다)
 1. 저장소 파일을 임시 폴더에 복사해 `minify_web.py`를 실제 배포 명령으로 돌린다 (크기 줄었는지, `/*!` 고지가 남았는지)
-2. 줄인 모든 JS와 HTML 인라인 스크립트를 `node --check`
+2. 줄인 모든 JS와 HTML 인라인 스크립트를 `node --check`, 화면당 CSS(그 HTML의 /static/*.css + 인라인 style, 줄인 결과) 42KB·gzip 10KB 이하(2026-10-15)
 3. 줄인 폴더로 앱을 8002번에 띄우고(SCHEDULER_ENABLED=0) Edge 헤드리스로 공개 화면(/login /signup /demo)과
    관리자 로그인 뒤 화면(/ /history /settings /admin/invites /onboarding)을 열어 콘솔 오류가 없는지 본다
    로그인은 서명 링크 /auth/verify (토큰·비밀값은 출력하지 않는다). 끝나면 서버·Edge를 끄고 임시 폴더를 지운다
 """
+import gzip
 import json
 import os
 import re
@@ -30,6 +31,7 @@ EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 NOTICE = "/*! © 2026 toolscout. All rights reserved. 무단 복제·재배포·AI 학습·재구현 금지 */"
 PUBLIC = ["/login", "/signup", "/demo"]
 ADMIN_PAGES = ["/", "/history", "/settings", "/admin/invites", "/onboarding"]
+CSS_PAGE_MAX, CSS_PAGE_GZIP_MAX = 42 * 1024, 10 * 1024  # 화면당 CSS 예산(디자인 회의 2라운드 4장 2-3). 넘으면 새 규칙 전에 같은 양을 지운다
 
 
 def copy_repo(dest: Path) -> None:
@@ -60,6 +62,19 @@ def inline_scripts(web: Path) -> dict[str, str]:
             if "src=" not in match.group(1) and match.group(2).strip():
                 found[f"{page.name}#{i}"] = match.group(2)
     return found
+
+
+def css_per_page(web: Path) -> dict[str, list[int]]:
+    """화면당 CSS 예산(2026-10-15 2라운드 2-3): 그 HTML이 읽는 /static/*.css + 인라인 <style>을 줄인 결과물로 더한 [바이트, gzip 바이트]."""
+    sizes = {}
+    for page in sorted(web.glob("*.html")):
+        html = page.read_text(encoding="utf-8")
+        names = [m.group(1) for tag in re.findall(r"<link\b[^>]*>", html) if re.search(r"rel=[\"']?stylesheet", tag)
+                 for m in [re.search(r"href=[\"']?/static/([\w.-]+\.css)", tag)] if m]
+        css = "".join((web / n).read_text(encoding="utf-8") for n in names if (web / n).is_file())
+        data = (css + "".join(re.findall(r"<style\b[^>]*>(.*?)</style>", html, re.S))).encode("utf-8")
+        sizes[page.name] = [len(data), len(gzip.compress(data, 9))]
+    return sizes
 
 
 def wait_health() -> bool:
@@ -93,6 +108,8 @@ def main() -> int:
         inline = inline_scripts(web)
         syntax_errors = node_check({**js_files, **inline}, tmp)
         css_js = [p for p in web.glob("*") if p.suffix in (".js", ".css")]
+        css_pages = css_per_page(web)
+        css_over = {n: s for n, s in css_pages.items() if s[0] > CSS_PAGE_MAX or s[1] > CSS_PAGE_GZIP_MAX}
         results: list[dict] = []
         if run.returncode == 0 and not syntax_errors:
             env = os.environ | {"SCHEDULER_ENABLED": "0", "APP_BASE_URL": BASE, "PYTHONDONTWRITEBYTECODE": "1"}
@@ -121,12 +138,13 @@ def main() -> int:
             "HTML_고지·tdm_meta_남음": all("© 2026 toolscout" in p.read_text(encoding="utf-8") and "tdm-reservation" in p.read_text(encoding="utf-8")
                                        for p in web.glob("*.html")),
             "node_check_통과": not syntax_errors and len(js_files) >= 4 and len(inline) >= 8,
+            "화면당_CSS_예산(minify_42KB·gzip_10KB)": bool(css_pages) and not css_over,
             "화면_모두_열림": len(results) == len(PUBLIC) + len(ADMIN_PAGES),
             "공개_화면_콘솔_오류_없음": all(screens.get(p) for p in PUBLIC),
             "관리자_화면_콘솔_오류_없음": all(screens.get(p) for p in ADMIN_PAGES),
             "관리자_로그인됨": any(r["path"] == "/admin/invites" and r["final"] == "/admin/invites" for r in results),
         }
-        print(json.dumps({"checks": checks, "screens": results, "node_check_errors": syntax_errors, "minify_tail": run.stdout.strip().splitlines()[-1:],
+        print(json.dumps({"checks": checks, "css_per_page": css_pages, "css_over_budget": css_over, "screens": results, "node_check_errors": syntax_errors, "minify_tail": run.stdout.strip().splitlines()[-1:],
                           "minify_stderr": run.stderr.strip()[-300:]}, ensure_ascii=False, indent=2))
         ok = all(checks.values())
         print("통과" if ok else "실패")
