@@ -17,7 +17,7 @@ from agent import verifier
 from pipeline import verification
 
 log = logging.getLogger("toolscout.presend")
-SKILL_REVIEW_LIMIT = 5  # 한 실행에서 그 자리 판독할 스킬 수. 스킬 카드는 하루 몇 장이라 넉넉하다
+SKILL_REVIEW_LIMIT = 10  # 한 실행에서 그 자리 판독할 스킬 수(건당 몇 초). 10/14 사용자 5명에 6건이 필요해 5 → 10
 MCP_PROBE_LIMIT = 4  # 07:00 실행이 08:00 발송 전에 끝나도록 (설치 90초·실행 30초·도구 목록 30초)
 MCP_BUDGET_SECONDS = 600
 DONE_STATUSES = ("done", "failed", "rejected")

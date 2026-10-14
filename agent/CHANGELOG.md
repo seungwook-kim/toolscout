@@ -1,5 +1,6 @@
 # agent/ CHANGELOG
 
+- 2026-10-14 · explainer: 피드 글 본문(source_text)이 있으면 그것을 원문으로(<data>로 감쌈, 바깥 링크가 있으면 읽어서 덧붙임, source_checked=True), 장단점 근거 링크는 own_links가 맞춤(항목·읽은 링크와 그 아래 경로는 카드 링크로, 다른 사이트 근거 줄은 뺌, 형식 실패로 돌리지 않음), for_me 프롬프트에 "마침표 하나, 단서는 '~지만'으로 같은 문장에" · 10/14 jCodemunch 카드가 읽은 /releases를 근거로 적어 형식 실패 2회로 빠짐, for_me 두 문장이 카드 62장 중 28장(재시도 21번) · run_explainer --fake 10항목(신규 2) 통과
 - 2026-10-11 · structured.ask_json: 호출 동안 models.STRUCTURED_SCHEMA에 규격(JSON Schema)을 올려 Anthropic 구조화 출력으로 보냄(다른 제공자는 무시) · gpt-4o-mini가 10/10에 형식 실패 18번·복구 못함 8번 · check_anthropic 통과, 실제 게이트 호출 형식 실패 0
 - 2026-10-08 · same_story.drop: 남긴 기사에 뺀 기사 제목·출처·요약을 also_reported로 붙이고 해설가가 남긴 기사에 없는 사실(요금·크레딧·한도)을 summary_ko·for_me에 담게 함, headline 후보 30 → 80건(자른 뒤 묶어서 다룬 곳 수가 적게 세어지던 것) · 10/8 크레딧이 적힌 GeekNews 기사가 같은 소식으로 빠지고 AI Times 기사만 남음, 큰 소식 후보 30건 밖으로 GeekNews가 잘림 · check_same_story 10·check_headline 18·run_explainer --fake 통과
 - 2026-10-07 · loop: MCP_URL=inproc이면 같은 프로세스의 mcp_server.mcp에 메모리로 붙는다 · Vercel 웹은 자기 /mcp를 HTTP로 못 부르고 Railway 크론은 서버를 띄우지 않는다(사용자 결정 "vercel + railway") · github.com fetch_article 실측 3,064자, check_cron 통과

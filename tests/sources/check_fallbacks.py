@@ -4,6 +4,7 @@
 - MCP 레지스트리: 제한 시간 30초 클라이언트, 실패하면 2번 더 시도, 성공하면 마지막 성공 결과 저장
 - 3번 다 실패하면 마지막 성공 결과를 다시 쓰고 항목에 "수집 실패, 전날 기준", 실패는 그대로 기록. 성공 결과가 없으면 0건
 - 긱뉴스: 항목 안에 외부 링크가 있으면 source_url, 없으면 skip_fetch (해설가가 요약만 쓴다)
+- 레딧(2026-10-14): 본문 글은 본문이 원문(source_text), 링크 글은 링크가 원문(source_url), 그림·다른 레딧 글만이면 skip_fetch
 """
 import json
 import os
@@ -25,6 +26,22 @@ RSS = """<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>
 <item><title>외부 링크 없음</title><link>https://news.hada.io/topic?id=2</link><pubDate>Mon, 14 Sep 2026 23:00:00 GMT</pubDate>
 <description>&lt;ul&gt;&lt;li&gt;요약만 있다&lt;/li&gt;&lt;/ul&gt;</description></item>
 </channel></rss>"""
+
+
+REDDIT_TAIL = (' &#32; submitted by &#32; <a href="https://www.reddit.com/user/u1"> /u/u1 </a> <br/> <span><a href="{link}">[link]</a>'
+               '</span> &#32; <span><a href="https://www.reddit.com/r/LocalLLaMA/comments/1/x/">[comments]</a></span>')
+REDDIT = {  # 2026-10-14 실제 피드 모양
+    "본문": '<!-- SC_OFF --><div class="md"><p>첫 문단 &amp; 둘째 &quot;따옴표&quot;</p> <p>둘째 문단</p></div><!-- SC_ON -->'
+            + REDDIT_TAIL.format(link="https://www.reddit.com/r/LocalLLaMA/comments/1/x/"),
+    "본문_바깥링크": '<!-- SC_OFF --><div class="md"><p>모델 공개 <a href="https://huggingface.co/a/b?x=1&amp;y=2">여기</a></p>'
+                  '</div><!-- SC_ON -->' + REDDIT_TAIL.format(link="https://www.reddit.com/r/LocalLLaMA/comments/2/y/"),
+    "링크글": '<table><tr><td><a href="https://www.reddit.com/r/LocalLLaMA/comments/3/z/"><img src="https://preview.redd.it/p.png"/></a>'
+            '</td><td><!-- SC_OFF --><div class="md"><p>짧은 소개</p></div><!-- SC_ON -->'
+            + REDDIT_TAIL.format(link="https://huggingface.co/LiquidAI/LFM2.5-24B-A2B") + "</td></tr></table>",
+    "그림글": '<table><tr><td><a href="https://www.reddit.com/r/LocalLLaMA/comments/4/w/"><img src="https://preview.redd.it/q.jpeg"/></a></td><td>'
+            + REDDIT_TAIL.format(link="https://i.redd.it/q.jpeg") + "</td></tr></table>",
+    "다른_레딧글": REDDIT_TAIL.format(link="https://www.reddit.com/r/LocalLLM/comments/5/v/?share_id=a&amp;utm=b"),
+}
 
 
 class FakeResponse:
@@ -82,6 +99,8 @@ def main() -> int:
     feed = rss.Feed("geeknews", "https://news.hada.io/rss/news", own_host="hada.io")
     geek = rss.fetch_feed(feed, datetime(2026, 9, 14, tzinfo=timezone.utc), FakeClient())
     by_title = {i["title"]: i for i in geek.items}
+    post = {name: rss.reddit_post(body) for name, body in REDDIT.items()}
+    reddit_feed = next(f for f in rss.FEEDS if f.name == "reddit_localllama")
     checks = {
         "MCP_제한시간_30초": timeouts == [collect.MCP_TIMEOUT] == [30],
         "MCP_실패하면_2번_더_시도후_성공": recovered.error is None and len(recovered.items) == 1
@@ -95,6 +114,15 @@ def main() -> int:
         and not by_title["외부 링크 있음"].get("skip_fetch"),
         "긱뉴스_외부링크_없으면_요약만": by_title["외부 링크 없음"].get("skip_fetch") is True
         and "source_url" not in by_title["외부 링크 없음"],
+        "레딧_피드는_글본문_모드": reddit_feed.post_body is True and reddit_feed.own_host is None,
+        "레딧_본문글은_본문이_원문·태그·엔티티_정리": post["본문"] == {"summary": '첫 문단 & 둘째 "따옴표"\n둘째 문단',
+                                                     "source_text": '첫 문단 & 둘째 "따옴표"\n둘째 문단'},
+        "레딧_본문안_바깥링크는_덧붙여_읽기": post["본문_바깥링크"].get("source_text") == "모델 공개 여기"
+        and post["본문_바깥링크"].get("source_url") == "https://huggingface.co/a/b?x=1&y=2",
+        "레딧_링크글은_링크가_원문": post["링크글"] == {"summary": "짧은 소개", "source_url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B"},
+        "레딧_그림만_있으면_요약만": post["그림글"] == {"summary": "", "skip_fetch": True},
+        "레딧_다른_레딧글_가리키면_요약만": post["다른_레딧글"] == {"summary": "", "skip_fetch": True},
+        "레딧_본문_3000자_상한": len(rss.reddit_post(f'<!-- SC_OFF --><p>{"가" * 5000}</p><!-- SC_ON -->')["source_text"]) == 3000,
     }
     report = {"checks": checks, "pass": all(checks.values())}
     print(json.dumps(report, ensure_ascii=False, indent=2))

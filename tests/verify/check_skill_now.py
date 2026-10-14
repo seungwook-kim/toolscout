@@ -61,7 +61,7 @@ def main() -> int:
     urls = [r["url"] for r in log["requests"]]
 
     skipped_result, skipped_log = run_with(plans, reviewed={skill(1)["url"], skill(2)["url"]})
-    many, many_log = run_with([{"user_id": 1, "tools": [skill(n) for n in range(10)], "related": []}])
+    many, many_log = run_with([{"user_id": 1, "tools": [skill(n) for n in range(presend.SKILL_REVIEW_LIMIT + 5)], "related": []}])
     none_result, none_log = run_with([{"user_id": 1, "tools": [mcp(1)], "related": []}])
     failed, _ = run_with(plans, fail=True)
 

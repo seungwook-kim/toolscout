@@ -29,10 +29,12 @@ BRIEFING_USER_HEADER = "x-briefing-user"  # 브리핑을 만드는 중인 사용
 ARTICLE_LIMIT = 3000
 MAX_REDIRECTS = 3
 # 소스 도메인 + 공식 문서 도메인. 하위 도메인 포함
+# huggingface.co·arxiv.org: 레딧 글이 가리키는 모델 카드·논문 (2026-10-14 사용자 결정, sources/rss.reddit_post)
 ALLOWED_DOMAINS = (
     "openai.com", "blog.google", "aitimes.com", "hada.io", "techcrunch.com", "reddit.com",
     "ycombinator.com", "modelcontextprotocol.io", "github.com", "githubusercontent.com",
     "claude.com", "anthropic.com", "ai.google.dev", "n8n.io", "langfuse.com", "e2b.dev",
+    "huggingface.co", "arxiv.org",
 )
 TOOL_NAMES = ["fetch_article", "lookup_registry", "check_pricing", "probe_mcp", "read_skill", "get_user_memory"]
 
