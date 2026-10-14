@@ -4,7 +4,7 @@
 
 ## 파일
 - `common.py`: 정규화 항목 모양, 정직한 User-Agent HTTP 클라이언트, 날짜 해석, SourceResult(stats 포함)
-- `rss.py`: RSS 6곳 (오픈AI, 구글 AI, AI타임스, 긱뉴스, 테크크런치 AI, 레딧). 긱뉴스는 항목 안 외부 링크를 source_url로, 없으면 skip_fetch(요약만)
+- `rss.py`: RSS 6곳 (오픈AI, 구글 AI, AI타임스, 긱뉴스, 테크크런치 AI, 레딧). 긱뉴스는 항목 안 외부 링크를 source_url로, 없으면 skip_fetch(요약만). 레딧은 글 본문이 원문(source_text), 링크 글은 링크를 source_url로(서버에서 글 페이지 403)
 - `hackernews.py`: Algolia, AI 또는 LLM (optionalWords), points 20 이상 / `claude_notes.py`: Claude 공식 릴리스 노트(support.claude.com, RSS가 없어 날짜·굵은 제목 문단을 읽음, 출처 등급 1)
 - `mcp_registry.py`: 목록은 최근 48시간 갱신분만(예산 240초·쪽 30초·쪽 단위 재시도, 넘기면 받은 만큼 `부분_수집`), 새 서버/버전 업 판정은 7일 창, GitHub 저장소 있는 서버, 게시자당 3건, 버전 업 별 50 이상, 별 수 상위 신규 20·버전 업 10, 항목에 install(packages·remotes). 거르기 전 저장소별 최신 버전은 `versions`로(새 버전 알림)
 - `github_stars.py`: 별 수 조회와 items.stars·stars_checked_at 24시간 캐시 (DB 없으면 메모리만)

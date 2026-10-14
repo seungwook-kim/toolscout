@@ -3,6 +3,7 @@
 두 단계 (2026-09-15 사용자 결정)
 1. 자동 고침: 요약이 120자를 넘으면 120자 안의 마지막 문장 끝에서 잘라 통과시킨다. 문장 끝이 없으면 2단계로
 2. 자가 수정: 빈 필드·남은 문제는 이유를 해설가에게 돌려 1회 다시 쓰게 한다. 그래도 문제면 카드를 빼고 트레이스에 이유
+   단 for_me가 여러 문장인 것은 빼기 전에 첫 문장만 남겨 보고(first_sentence), 그것으로 통과하면 살린다 (2026-10-14)
 
 검사 항목
 - 형식·글자 수: agent/schemas.py의 Card 규격 (summary_ko 120자, for_me 150자·한 문장, 장단점 각 3개, 관련도 3~5)
@@ -19,6 +20,7 @@ from pydantic import ValidationError
 from agent import schemas, tracing
 
 MIN_HANGUL_RATIO = 0.6
+MIN_FIRST_SENTENCE = 20  # 이보다 짧은 첫 문장만 남기면 뜻이 비어서 마지막 수단을 쓰지 않는다
 HANGUL = re.compile(r"[가-힣]")
 LETTER = re.compile(r"[가-힣A-Za-z]")
 NEXT_SENTENCE = re.compile(r"[.!?。]\s+\S")
@@ -45,6 +47,20 @@ def fit_summary(text: str, limit: int = schemas.MAX_SUMMARY) -> tuple[str, str |
         return text, None
     cut = text[:ends[-1]].strip()
     return cut, f"요약 {len(text)}자 → 문장 끝에서 {len(cut)}자로 자름"
+
+
+def first_sentence(card: dict) -> tuple[dict, str | None]:
+    """재시도 뒤 마지막 수단. for_me가 여러 문장이면 첫 문장만 남긴다. 첫 문장이 너무 짧으면 그대로 둔다(고친 내용 None).
+    해설가가 for_me를 두 문장으로 쓰는 일이 잦고(10/14 카드 62장 중 28장, 둘째 문장은 대개 "다만 ~" 단서) 다시 써도
+    두 문장이라 카드가 빠졌다 (2026-10-14 사용자 결정 "첫 문장만 남기기")"""
+    text = (card.get("for_me") or "").strip()
+    match = NEXT_SENTENCE.search(text)
+    if not match:
+        return card, None
+    first = text[:match.start() + 1].strip()
+    if len(first) < MIN_FIRST_SENTENCE:
+        return card, None
+    return card | {"for_me": first}, f"for_me {len(text)}자 여러 문장 → 첫 문장 {len(first)}자만"
 
 
 def autofix(card: dict) -> tuple[dict, list[str]]:
@@ -97,27 +113,27 @@ async def run_user(explained: dict, items_by_url: dict[str, dict], redo: Redo) -
         for draft in explained["cards"]:
             card, fixes = autofix(draft)
             reasons = problems(card)
-            if not reasons:
-                kept.append(card)
-                if fixes:
-                    fixed.append({"title": card["title"], "fixes": fixes})
-                continue
-            retried += 1
-            outcome = await redo(items_by_url[card["url"]], "; ".join(reasons))
-            if outcome["status"] == "card":
-                card, fixes = autofix(outcome["card"])
-                reasons = problems(card)
-                if not reasons:
-                    kept.append(card)
-                    if fixes:
-                        fixed.append({"title": card["title"], "fixes": fixes})
+            if reasons:
+                retried += 1
+                outcome = await redo(items_by_url[card["url"]], "; ".join(reasons))
+                if outcome["status"] == "rejected":  # 다시 쓰게 했더니 해설가가 반려(관련도 3 미만 포함)로 판단
+                    rejected.append({"title": card["title"], "url": card["url"], "reason": outcome["reason"]})
                     continue
-            elif outcome["status"] == "rejected":  # 다시 쓰게 했더니 해설가가 반려(관련도 3 미만 포함)로 판단
-                rejected.append({"title": card["title"], "url": card["url"], "reason": outcome["reason"]})
+                if outcome["status"] == "card":
+                    card, fixes = autofix(outcome["card"])
+                    reasons = problems(card)
+                else:
+                    reasons = [*reasons, f"재시도 결과 {outcome['status']}: {outcome.get('reason') or '형식 실패'}"]
+                if reasons:  # 마지막 수단: for_me 첫 문장만 남겨서 통과하면 살린다
+                    last, fix = first_sentence(card)
+                    if fix and not problems(last):
+                        card, fixes, reasons = last, [*fixes, fix], []
+            if reasons:
+                excluded.append({"title": card["title"], "url": card["url"], "reasons": reasons})
                 continue
-            else:
-                reasons = [*reasons, f"재시도 결과 {outcome['status']}: {outcome.get('reason') or '형식 실패'}"]
-            excluded.append({"title": card["title"], "url": card["url"], "reasons": reasons})
+            kept.append(card)
+            if fixes:
+                fixed.append({"title": card["title"], "fixes": fixes})
         cards = [card | {"rank": rank} for rank, card in enumerate(kept, 1)]
         span.update(output={"kept": len(cards), "retried": retried, "fixed": fixed, "excluded": excluded},
                     level="WARNING" if excluded else "DEFAULT")

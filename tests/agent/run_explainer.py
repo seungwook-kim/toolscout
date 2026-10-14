@@ -31,6 +31,9 @@ def payload_of(messages) -> dict:
     return json.loads(match.group(1))
 
 
+articles: dict[str, str | None] = {}  # 가짜 해설가가 받은 원문(항목 제목별)
+
+
 def fake_model():
     """항목 제목에 따라 정상 카드·반려·첫 응답 형식 오류를 돌려주는 가짜 해설가."""
     seen: set[str] = set()
@@ -42,8 +45,13 @@ def fake_model():
         if "BROKEN" in item["title"] and item["title"] not in seen:
             seen.add(item["title"])
             return AIMessage('{"summary_ko": "끊긴 응답')
+        pros = [{"text": "설치가 쉽다", "evidence_url": item["url"]}]
+        if "LINKS" in item["title"]:  # 항목 아래 경로 근거는 카드 링크로, 다른 사이트 근거는 빼야 한다
+            pros = [{"text": "릴리스 노트 근거", "evidence_url": item["url"] + "/releases"},
+                    {"text": "다른 사이트 근거", "evidence_url": "https://other.example.com/post"}]
         body = {"summary_ko": "테스트 요약입니다.", "for_me": "사내 브리핑 봇에 붙여 볼 수 있다.", "relevance": 4,
-                "pros": [{"text": "설치가 쉽다", "evidence_url": item["url"]}], "cons": [], "install_cmd": "npx -y example"}
+                "pros": pros, "cons": [], "install_cmd": "npx -y example"}
+        articles[item["title"]] = payload_of(messages)["article"]
         return AIMessage(json.dumps(body, ensure_ascii=False))
     return call
 
@@ -57,7 +65,9 @@ async def fake_checks(mcp_url: str) -> dict:
     plan = {"user_id": memories[0]["user_id"], "news": [item("뉴스 원문 못 읽음", "https://example.com/post"),
                                                       item("BROKEN 형식 오류 후 복구", "https://github.com/modelcontextprotocol/python-sdk")],
             "tools": [item("도구 원문 읽음", "https://github.com/modelcontextprotocol/python-sdk", "mcp"),
-                      item("REJECT 반려 대상", "https://github.com/modelcontextprotocol/servers", "mcp")]}
+                      item("REJECT 반려 대상", "https://github.com/modelcontextprotocol/servers", "mcp"),
+                      item("LINKS 근거 링크 정리", "https://github.com/modelcontextprotocol/typescript-sdk", "mcp")]}
+    plan["news"].append(item("레딧 본문 글", "https://www.reddit.com/r/LocalLLaMA/comments/9/t/") | {"source_text": "레딧 글 본문 원문"})
     with tracing.span("test:explainer-fake", kind="chain"):
         result = await explainer.run([plan], memories[:1], mcp_url, model_call=fake_model())
     user = result["users"][0]
@@ -70,7 +80,11 @@ async def fake_checks(mcp_url: str) -> dict:
     return {
         "cards": len(user["cards"]), "rejected": user["rejected"], "stats": result["stats"],
         "checks": {
-            "카드_규격_유효": all(schemas.Card.model_validate(c) for c in user["cards"]) and len(user["cards"]) == 3,
+            "카드_규격_유효": all(schemas.Card.model_validate(c) for c in user["cards"]) and len(user["cards"]) == 5,
+            "글본문_원문은_읽음_표시·본문_전달": cards["레딧 본문 글"]["source_checked"] is True and cards["레딧 본문 글"]["notice"] is None
+            and "레딧 글 본문 원문" in (articles.get("레딧 본문 글") or "") and (articles["레딧 본문 글"] or "").startswith("<data"),
+            "근거_하위경로는_카드링크로·다른사이트는_뺌": [(p["text"], p["evidence_url"]) for p in cards["LINKS 근거 링크 정리"]["pros"]]
+            == [("릴리스 노트 근거", "https://github.com/modelcontextprotocol/typescript-sdk")],
             "원문_읽음_표시": cards["도구 원문 읽음"]["source_checked"] is True and cards["도구 원문 읽음"]["notice"] is None,
             "원문_못읽음_원문확인필요": cards["뉴스 원문 못 읽음"]["notice"] == schemas.SOURCE_UNCHECKED,
             "반려_이유_기록": len(user["rejected"]) == 1 and bool(user["rejected"][0]["reason"]),

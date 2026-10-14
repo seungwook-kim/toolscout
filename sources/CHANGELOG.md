@@ -1,5 +1,6 @@
 # sources/ CHANGELOG
 
+- 2026-10-14 · rss.reddit_post: 레딧 피드 항목을 본문 글(글 본문 = 원문 source_text, 본문 안 첫 바깥 링크는 source_url로 덧붙여 읽기)·링크 글(링크 = source_url)·그림·다른 레딧 글만(skip_fetch)으로 나누고 summary를 HTML 대신 글자로(Feed.post_body) · 레딧 글 페이지가 서버(Railway)에서 매번 HTTP 403이라(10/13·10/14 17번 모두) 레딧 카드가 전부 "원문 확인 필요"로 나감, 10/10~10/14 카드 126장 중 30장이 원문 못 읽음(사용자 "1번으로 다 묶어서 진행해") · check_fallbacks 14항목(레딧 7 신규) 통과, 실제 피드 25건 중 본문 글 17·링크 글 4·요약만 4
 - 2026-10-09 · mcp_registry 목록을 최근 48시간 갱신분만 받게(LIST_WINDOW), 목록 예산 240초·쪽 타임아웃 30초·쪽 단위 재시도 2번, 상한을 넘으면 예외 대신 받은 만큼 진행하고 stats["부분_수집"]에 쪽 수·이유, 첫게시일·별 조회 단계에 300초 예산, collect는 MCP_TIMEOUT 60→30초 · Railway 아침 수집에서 7일 목록(수천 건, 쪽당 1~90초)이 100쪽 상한에 걸려 처음부터 다시 받기를 반복해 수십 분 걸리고 끝나지 않음 · check_mcp_list 11항목(신규)·check_fallbacks 통과, 실측은 최종 보고
 
 - 2026-10-09 · github_search.py(신규): GitHub 저장소 검색(topic 5개, 최근 7일 생성, MCP 별 10+·스킬 별 30+, 포크·보관·설명 없음 제외, 게시자당 3건·종류별 상위 20건)을 collect에 연결, MCP 후보는 package.json/pyproject로 npm·PyPI에 실제 있는 패키지만 install로 · 레지스트리·SkillsMP에 없는 새 저장소를 받으려고(사용자 결정, Smithery·Docker 카탈로그는 새 항목이 거의 없어 제외) · check_github_search 29항목·실측 후보 MCP 20·스킬 20, MCP 설치 정보 4건

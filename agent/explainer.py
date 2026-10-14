@@ -2,7 +2,9 @@
 
 - 항목마다 fetch_article(MCP)로 원문을 한 번 재조회한다. 항목에 외부 출처 링크(source_url)가 있으면 그 링크로 읽고,
   읽을 링크가 없다고 표시된 항목(skip_fetch, 예: 외부 링크 없는 긱뉴스)은 요약만 쓴다. 못 읽으면 "원문 확인 필요"
+- 피드가 글 본문을 원문으로 준 항목(source_text, 레딧 본문 글)은 그 본문이 원문이다. 바깥 링크가 있으면 덧붙여 읽는다 (2026-10-14)
 - 프로필·큐레이터 근거·항목·원문을 넣어 모델을 한 번 부른다 (항목당 호출 1회, 온도 0, 도구 호출은 항목당 1회로 상한 3 안)
+- 장단점 근거 링크는 own_links가 카드 링크로 맞춘다(항목·읽은 링크와 그 아래 경로는 바꾸고, 다른 링크를 단 줄은 뺀다)
 - "나한테는"이 프로필과 이어지지 않으면 카드를 반려하고 이유를 남긴다. 억지로 채우지 않는다
 - 관련도(relevance 1~5)가 3 미만이면 반려한다 (2026-09-15 사용자 결정)
 - 요약 길이·빈 값은 초안 카드(DraftCard)로 넘기고 검증 노드가 처리한다 (문장 끝에서 자름, 이유를 돌려 1회 자가 수정)
@@ -15,9 +17,10 @@ from contextlib import AsyncExitStack
 from dataclasses import asdict
 from functools import partial
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import models
-from agent import loop, schemas, structured, tracing
+from agent import loop, schemas, skill_check, structured, tracing
 from agent.structured import Stats
 
 ROLE = "explainer"
@@ -32,6 +35,7 @@ PROMPT = f"""너는 toolscout 해설가다. 한 사용자에게 보여줄 카드
   원문이나 항목 요약에 없는 사실을 만들지 않는다
 - 문장(summary_ko·for_me)은 모두 "~합니다"체로 끝낸다. "~했다"·"~이다"로 끝내지 않는다
 - for_me: 이 사용자에게 왜 중요한지 한 문장 {schemas.MAX_FOR_ME}자 이내. 직군·쓰는 도구·자유 한 줄 중 무엇과 이어지는지 드러낸다.
+  마침표는 문장 끝에 하나만 쓴다. "다만 ~" 같은 단서를 덧붙이려면 새 문장을 열지 말고 "~지만"으로 이어 같은 문장에 담는다.
   당장 쓸 일이 없어도 이 직군이 알아둘 이유(흐름이 어디로 가는지, 선택지가 늘었는지, 무엇을 조심할지)가 있으면 그것을 쓴다.
   자유 한 줄에 적힌 지금 하는 일에 그대로 쓸 수 있어야만 쓸모 있는 것은 아니다
   읽는 사람에게 직접 말하듯 주어 없이 쓴다. "사용자가 ~하므로", "개발자님께서", "~하시는" 같은 3인칭·호칭은 쓰지 않는다
@@ -62,32 +66,31 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
     with tracing.span(f"card:{item['title'][:60]}", kind="chain",
                       input={"url": item["url"], "user_id": memory["user_id"], "feedback": feedback}) as span:
         read_url = item.get("source_url") or item["url"]
-        if item.get("skip_fetch") and not item.get("source_url"):
-            source = {"status": "skipped", "reason": "원문 링크 없음, 요약만"}
+        post = item.get("source_text")  # 피드가 준 글 본문이 원문 그 자체인 항목(레딧 본문 글, sources/rss.reddit_post)
+        if (item.get("skip_fetch") or post) and not item.get("source_url"):
+            source = {"status": "skipped", "reason": "글 본문만" if post else "원문 링크 없음, 요약만"}
         elif client:
             source = await loop._call_tool(client, {"name": "fetch_article", "args": {"url": read_url}, "id": "source"},
                                            ["fetch_article"])
         else:
             source = {"status": "skipped", "reason": "MCP 연결 없음"}
-        checked = source.get("status") == "ok"
+        fetched = source.get("status") == "ok"
+        checked = fetched or bool(post)
+        article = [skill_check.wrap_data(item["url"], post)] if post else []
+        article += [source["text"]] if fetched else []
         payload = {
             "profile": memory["profile"], "why_this_card": item["why"],
             "item": {"type": item["type"], "title": item["title"], "url": item["url"], "source": item["source"],
                      "summary": item.get("summary", "")[:SUMMARY_ONLY_CHARS if item.get("skip_fetch") else SUMMARY_CHARS]},
-            "article": source.get("text") if checked else None,
+            "article": "\n".join(article) or None,
             "verification": item.get("verification"), "risk_signal": item.get("risk_signal"),  # 검증관 결과가 있으면 (세션 8)
             "also_reported": item.get("also_reported") or None,  # 같은 소식을 다룬 다른 기사 (agent/same_story.drop, 2026-10-08)
             "article_status": "ok" if checked else f"못 읽음 ({source.get('reason') or source.get('status')})",
         }
 
-        def links_from_input(parsed: schemas.ExplainerOutput):
-            for point in parsed.pros + parsed.cons:
-                if point.evidence_url != item["url"]:
-                    raise ValueError("evidence_url은 입력의 항목 링크만 쓸 수 있다")
-
         label = f"카드 {memory['user_id']}:{item['title'][:30]}"
         try:
-            parsed = await structured.ask_json(ROLE, prompt, payload, schemas.ExplainerOutput, stats, links_from_input,
+            parsed = await structured.ask_json(ROLE, prompt, payload, schemas.ExplainerOutput, stats, None,
                                                label, model_call)
         except models.ModelUnavailable as exc:
             outcome = {"status": "model_failed", "reason": stats.model_failed(label, exc), "item": item}
@@ -102,6 +105,7 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
             outcome = {"status": "rejected", "item": item,
                        "reason": f"관련도 {parsed.relevance}/5 (기준 {schemas.MIN_RELEVANCE} 미만): {(parsed.for_me or '')[:80]}"}
         else:
+            parsed, links = own_links(parsed, item)
             notices = [schemas.SOURCE_UNCHECKED] if not checked else []
             if item.get("collection_note"):
                 notices.append(item["collection_note"])
@@ -111,11 +115,44 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
                 install_cmd=parsed.install_cmd if item["type"] in TOOL_TYPES else None, relevance=parsed.relevance,
                 source_checked=checked, notice=" · ".join(notices) or None, related=bool(item.get("related")),
                 headline=bool(item.get("headline")), trace_id=span.trace_id)
-            outcome = {"status": "card", "card": card.model_dump(), "item": item}
+            outcome = {"status": "card", "card": card.model_dump(), "item": item} | ({"links": links} if any(links.values()) else {})
         span.update(output={"status": outcome["status"], "source_checked": checked, "reason": outcome.get("reason"),
-                            "relevance": parsed.relevance if parsed else None},
+                            "relevance": parsed.relevance if parsed else None} | ({"links": outcome["links"]} if "links" in outcome else {}),
                     level="WARNING" if outcome["status"] == "format_failed" else "DEFAULT")
         return outcome
+
+
+def own_links(parsed: schemas.ExplainerOutput, item: dict) -> tuple[schemas.ExplainerOutput, dict]:
+    """장단점 근거 링크를 카드 링크로 맞춘다. 반환: (고친 출력, {changed, dropped}).
+
+    항목 링크와 그 아래 경로(예: 저장소의 /releases), 실제로 읽은 링크(source_url)와 그 아래 경로는 카드 링크로 바꾸고,
+    그 밖의 링크를 단 장단점은 뺀다. 전에는 형식 실패로 다시 쓰게 하고 두 번 틀리면 카드를 통째로 뺐다
+    (10/14 jCodemunch: 해설가가 읽은 /releases 페이지를 근거로 적어 카드가 빠짐)
+    """
+    own = {_bare(item["url"])} | ({_bare(item["source_url"])} if item.get("source_url") else set())
+
+    def ours(url: str) -> bool:
+        bare = _bare(url)
+        return any(bare == o or bare.startswith(o + "/") for o in own)
+
+    sides, changed, dropped = {}, 0, 0
+    for side in ("pros", "cons"):
+        sides[side] = []
+        for point in getattr(parsed, side):
+            if point.evidence_url == item["url"]:
+                sides[side].append(point)
+            elif ours(point.evidence_url):
+                sides[side].append(point.model_copy(update={"evidence_url": item["url"]}))
+                changed += 1
+            else:
+                dropped += 1
+    return parsed.model_copy(update=sides), {"changed": changed, "dropped": dropped}
+
+
+def _bare(url: str) -> str:
+    """비교용 주소: 스킴·www·쿼리·조각·끝 / 를 뗀 호스트+경로 (소문자 호스트)."""
+    parts = urlsplit(url.strip())
+    return (parts.hostname or "").lower().removeprefix("www.") + parts.path.rstrip("/")
 
 
 async def explain_user(plan: dict, memory: dict, client, stats: Stats, model_call=None) -> dict:
