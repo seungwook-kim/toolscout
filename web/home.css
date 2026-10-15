@@ -36,7 +36,10 @@
 .tool-row .tt,.tool-row .tr-c{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tool-row .tt{font-size:var(--fs-base);font-weight:600;line-height:1.35}
 .tool-row .tr-c{display:none;grid-column:1/-1;font-family:var(--mono);font-size:var(--fs-sm);color:var(--ink-2)}
+.tool-row .tr-c.none{font-family:var(--sans);color:var(--mute)}
 @media (pointer:coarse),(max-width:1199px){.tool-row{min-height:var(--hit)}}
+/* 1199 이하는 도구 줄 목록이 제호와 첫 구역 사이에 오므로 첫 구역 머리 괘선을 다시 긋는다(cards.css가 지운 것) */
+@media (max-width:1199px){.brief > :first-child > .band-h,.brief > .board:first-child > .lane:first-child > .lane-h{border-top:2px solid var(--rule);padding-top:var(--s-2)}}
 @media (min-width:1200px){
   .home{grid-template-columns:minmax(0,760px) 320px;column-gap:var(--s-12);justify-content:center}
   .rail .filters .lab{display:none}

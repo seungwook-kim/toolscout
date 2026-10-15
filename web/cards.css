@@ -172,6 +172,7 @@
 
 /* ===== 구역 머리: 위 2px --rule + 굵은 이름 + mono 개수 + 짧은 보조 글 ===== */
 .band-h,.lane-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;border-top:2px solid var(--rule);padding-top:var(--s-2)}
+.brief > :first-child > .band-h,.brief > .board:first-child > .lane:first-child > .lane-h{border-top:0;padding-top:0}  /* 제호 이중 괘선 바로 아래 첫 구역은 괘선을 겹쳐 긋지 않는다 */
 .band-h h2,.band-h h3,.lane-h h2,.lane-h h3{font-size:var(--fs-lg);font-weight:800;letter-spacing:-.02em}
 .lane-h .n{font-family:var(--mono);font-size:var(--fs-sm);color:var(--ink-2)}
 .band-h .hint,.lane-h .hint{font-size:var(--fs-sm);color:var(--mute)}
