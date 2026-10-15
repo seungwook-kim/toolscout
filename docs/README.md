@@ -8,7 +8,7 @@
 - `asset-licenses.md`: 외부 자산(Lucide 아이콘, Pretendard·JetBrains Mono 글꼴)과 자체 제작 그림의 출처·라이선스·가공 / `licenses/lucide.txt`: Lucide 고지 전문
 - `local-model.md`: 개발용 로컬 모델(Ollama) VRAM·도구 호출·한글 실측표와 선택 근거(2026-10-05부터 모델표에서 뺌, 기록용). 모델 배정 자체는 루트 `models.py`
 - `deploy.md`: 배포 구조(Vercel 웹 + Railway 크론, 2026-10-07), 플랫폼별 환경변수, git에 올린 파일만 내보내 올리는 방법, 첫 점검·이 PC 앱에서 넘어가기
-- `img/`: 스크린샷. `today-desktop.png`·`today-mobile.png`(디자인 기준 적용), `pwa-standalone.png`, 예전 `web_cards.png` 등
+- `img/`: 스크린샷(2026-10-15 2차 리디자인 뒤). 오늘 PC `web_cards.png`(라이트)·`today-desktop.png`(다크), 폰 `web_today_phone.png`·`today-mobile.png`, `web_history_phone.png`, `web_login.png`, 메일 `mail_morning.png`. `pwa-standalone.png`는 예전 디자인(9/15)
 
 ## 들어오고 나가는 데이터
 - 들어옴: 설계 변경 결정

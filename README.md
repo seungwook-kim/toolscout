@@ -95,8 +95,8 @@ flowchart TD
 | 동작 검증 | E2B | 관리형 호스팅에서 도커 안 도커가 안 되므로 외부 마이크로 VM을 쓴다 |
 | 트레이싱 | Langfuse | 브리핑 1회가 트레이스 1개, 카드마다 `trace_id` |
 | 수집 | httpx, feedparser | RSS와 공개 API, 전부 무료 |
-| 화면 | 정적 HTML·JS | 프레임워크 없이 FastAPI가 서빙한다 |
-| 배포 | Docker Compose(로컬), Railway(운영) | 컨테이너 1개(app) |
+| 화면 | 정적 HTML·JS | 프레임워크 없이 FastAPI가 서빙한다. 디자인 기준은 `docs/design-reference.html`, 아이콘은 Lucide(ISC), 그림은 자체 제작(`docs/asset-licenses.md`) |
+| 배포 | Vercel(웹), Railway(아침 크론), Docker Compose(로컬) | 자세한 구성은 `docs/deploy.md` |
 
 쓰지 않는 것:
 
@@ -180,18 +180,22 @@ toolscout/
 
 ## 📸 스크린샷
 
-촬영 후 아래 파일명으로 `docs/img/`에 넣는다.
+2026-10-15 2차 리디자인 뒤 화면. 오늘 화면은 개발자 본인 프로필의 10/14 실제 브리핑으로 찍었다(개발 모드라 DEV 표시).
 
 | 장면 | 파일 |
 |---|---|
-| 웹앱 카드 화면 | `docs/img/web_cards.png` |
-| 에이전트 작업 창 | `docs/img/agent_panel.png` |
-| Langfuse 트레이스 | `docs/img/langfuse_trace.png` |
-| Claude Code에서 `ask_briefing` 호출 | `docs/img/claude_code_mcp.png` |
+| 오늘 브리핑 PC(라이트·다크) | `docs/img/web_cards.png`, `docs/img/today-desktop.png` |
+| 오늘 브리핑 폰(라이트·다크) | `docs/img/web_today_phone.png`, `docs/img/today-mobile.png` |
+| 지난 브리핑 폰 | `docs/img/web_history_phone.png` |
+| 첫 화면(로그인) | `docs/img/web_login.png` |
+| 아침 메일(600폭) | `docs/img/mail_morning.png` |
+| 에이전트 작업 창 | `docs/img/agent_panel.png` (촬영 예정) |
+| Langfuse 트레이스 | `docs/img/langfuse_trace.png` (촬영 예정) |
+| Claude Code에서 `ask_briefing` 호출 | `docs/img/claude_code_mcp.png` (촬영 예정) |
 
-웹앱 카드 화면 (2026-09-15, 개발 모드, 개발자 본인 프로필 C 기준 실제 브리핑과 질문 1개). 폰 폭: `docs/img/web_today_phone.png`, 지난 브리핑: `docs/img/web_history_phone.png`
+![오늘 브리핑 PC](docs/img/web_cards.png)
 
-![웹앱 카드 화면](docs/img/web_cards.png)
+![아침 메일](docs/img/mail_morning.png)
 
 ## 📄 라이선스와 문서
 
