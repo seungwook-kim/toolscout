@@ -189,9 +189,7 @@ toolscout/
 | 지난 브리핑 폰 | `docs/img/web_history_phone.png` |
 | 첫 화면(로그인) | `docs/img/web_login.png` |
 | 아침 메일(600폭) | `docs/img/mail_morning.png` |
-| 에이전트 작업 창 | `docs/img/agent_panel.png` (촬영 예정) |
-| Langfuse 트레이스 | `docs/img/langfuse_trace.png` (촬영 예정) |
-| Claude Code에서 `ask_briefing` 호출 | `docs/img/claude_code_mcp.png` (촬영 예정) |
+| 앱 설치 모드(폰) | `docs/img/pwa-standalone.png` |
 
 ![오늘 브리핑 PC](docs/img/web_cards.png)
 
