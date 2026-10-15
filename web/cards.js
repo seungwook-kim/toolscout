@@ -230,10 +230,10 @@ const Cards = {
     return n ? `새 MCP·스킬 ${m(n)}개${b ? ` · MCP 설치 확인 ${m(`${a}/${b}`)}` : ""}` : `${day} 새 MCP·스킬은 없어요`; },
   // 도구 줄 목록(1366 레일 맨 위 칸, 1199 이하는 칩 줄 아래로 흐른다): 머리 = toolHead, 줄 = 이름 + 판정 배지 (+ $ 명령, 1200 이상 레일만). 누르면 그 카드로(data-go, id 없음)
   toolRows(cards) {
-    const rows = cards.filter((c) => Cards.isTool(c) && !c.related).map((c) => { const name = TS.esc(Cards.toolName(c.title).name), cmd = c.install_cmd && !/^https?:/.test(c.install_cmd) ? TS.esc(c.install_cmd) : "";
-      return `<li><button type="button" class="tool-row" data-go="card-${Cards.id(c)}"><span class="tt" title="${name}">${name}</span>${Cards.pill(Cards.badge(c)).replace('class="pill ', 'class="pill pill-sm ')}${cmd ? `<span class="tr-c" aria-hidden="true">$ ${cmd}</span>` : ""}</button></li>`; });
-    return `<p class="tool-h">${Cards.toolHead(cards)}</p>${rows.length ? `<ul class="tool-rows">${rows.join("")}</ul>` : ""}`;
-  },
+    const list = cards.filter((c) => Cards.isTool(c) && !c.related), cmdOf = (c) => c.install_cmd && !/^https?:/.test(c.install_cmd) ? TS.esc(c.install_cmd) : "", anyCmd = list.some(cmdOf);
+    const rows = list.map((c) => { const name = TS.esc(Cards.toolName(c.title).name), cmd = cmdOf(c);  // 명령 줄은 하나라도 있을 때만 모든 줄에 둬 레일 줄 높이를 맞춘다
+      return `<li><button type="button" class="tool-row" data-go="card-${Cards.id(c)}"><span class="tt" title="${name}">${name}</span>${Cards.pill(Cards.badge(c)).replace('class="pill ', 'class="pill pill-sm ')}${anyCmd ? `<span class="tr-c${cmd ? "" : " none"}" aria-hidden="true">${cmd ? `$ ${cmd}` : "설치 명령 없음"}</span>` : ""}</button></li>`; });
+    return `<p class="tool-h">${Cards.toolHead(cards)}</p>${rows.length ? `<ul class="tool-rows">${rows.join("")}</ul>` : ""}`; },
   // 마스트헤드: 제호(마크 40px + 날짜) → 둘째 줄(도구 머리 글 + 글자 단추 '어떻게 골랐나') → 기준 줄(메일 상태 · 기준) → 펼침(rule-2 위) → 이중 괘선. status: 둘째 줄 대신 쓸 글(만드는 중). mail: 기준 줄 앞 글(기본 메일 상태, 예시는 ""). 아직 없음이면 둘째 줄을 비운다(빈 상태 상자와 같은 말 두 번 금지)
   today(briefing, { basis = "", status = null, demo = false, mail = null, day = "오늘" } = {}) {
     const date = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", weekday: "long" }).format(new Date(`${briefing.date}T00:00:00`));
