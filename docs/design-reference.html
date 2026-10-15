@@ -5,11 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>toolscout 디자인 기준</title>
 <meta name="description" content="웹앱 공통 디자인 체계의 유일한 기준. 토큰·컴포넌트 견본은 실제 web/app.css·app.js·cards.js를 그대로 불러와 그린다">
-<meta name="theme-color" content="#F3F4F6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F4F4F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1115" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/index.css">
 <link rel="stylesheet" href="../web/app.css">
+<link rel="stylesheet" href="../web/cards.css">
+<link rel="icon" type="image/svg+xml" href="../web/icons/icon.svg">
 <style>
 /* 이 문서만 쓰는 배치(견본 상자). 색은 app.css 토큰만 쓴다 */
 .ref{display:grid;gap:48px;padding-block:32px 96px}
@@ -44,7 +47,7 @@
 <main class="wrap ref" id="main">
   <section>
     <h1>toolscout 디자인 기준</h1>
-    <p class="lede">리디자인 1·2차 회의 합의안(2026-10-08)을 코드로 옮긴 공통 체계예요. 이 문서는 <span class="mono">web/app.css</span>·<span class="mono">app.js</span>·<span class="mono">cards.js</span>·<span class="mono">ask.js</span>를 그대로 불러와 견본을 그려요. 맨 위 상단바도 실제 <span class="mono">TS.shell</span> 결과예요(API 응답만 가짜).</p>
+    <p class="lede">리디자인 1·2차 회의 합의안(2026-10-08)과 2차 리디자인(2026-10-14: 중립 팔레트·아침 프롬프트 마크·Lucide 아이콘·판정 배지 두 갈래)을 코드로 옮긴 공통 체계예요. 이 문서는 <span class="mono">web/app.css</span>·<span class="mono">app.js</span>·<span class="mono">cards.js</span>·<span class="mono">ask.js</span>를 그대로 불러와 견본을 그려요. 맨 위 상단바도 실제 <span class="mono">TS.shell</span> 결과예요(API 응답만 가짜).</p>
     <div class="box"><span class="label">계정</span><span class="rbtns" id="acct-set"></span><span class="label">테마</span><span class="rbtns" id="theme-set"></span></div>
   </section>
 
@@ -53,9 +56,9 @@
     <ul class="dots">
       <li><b>메일처럼 읽던 화면을 매일 처리하는 보드로.</b> 검정 마스트헤드·760px 한 줄 기둥을 걷고 56px 상단바(모바일 52px + 하단 탭), 최대 1160px 보드, 뉴스 7 / 도구 5 두 레인</li>
       <li><b>탐색 자리는 어디서나 같게.</b> 768px 이상은 상단바 탭, 미만은 하단 탭. 질문은 페이지가 아니라 시트. 갈 수 없는 탭은 그리지 않는다</li>
-      <li><b>색은 세 가지 용도로만.</b> 블레이즈 파랑은 '나 기준'(로고·현재 탭·포커스·나에게·나와 관련 눈금·선택 워시), 상태색은 검증·위험 신호·원문 확인·폼 오류, 나머지는 푸른 회색 단계</li>
+      <li><b>색은 세 가지 용도로만.</b> 블레이즈 파랑은 '나 기준'(나에게 라벨·현재 탭·포커스·눌림)과 마크의 해(점), 채움 색은 문제(실패·주의)에만, 나머지는 중립 회색 단계(프린트지 / 터미널 중성)</li>
       <li><b>채움은 행동, 워시는 상태.</b> 잉크 채움 주 버튼은 화면당 하나. 선택·눌림은 블레이즈 워시 + 테두리 + 글자 변화</li>
-      <li><b>색만으로 뜻을 전하지 않기.</b> 상태는 인라인 SVG 아이콘 + 글자. 이모지·유니코드 기호는 아이콘으로 쓰지 않는다. 키 필요는 결함이 아니라 중립 열쇠</li>
+      <li><b>색만으로 뜻을 전하지 않기.</b> 상태는 인라인 SVG 아이콘(Lucide 1.57.0) + 글자. 이모지·유니코드 기호는 웹에서 아이콘으로 쓰지 않는다. 판정 배지는 글자+아이콘(통과·키 필요·미검증)과 문제만 채움 칩(실패·주의) 두 갈래</li>
       <li><b>숫자는 근거로만.</b> 파이프라인은 mono 13px 한 줄. 큰 숫자 타일·비율 막대 없음. 미터는 분모가 작은 '검증 N/M'에만</li>
       <li><b>없는 데이터는 그리지 않기.</b> 업계 중요도·N곳 보도·새 버전 a → b는 카드 데이터에 칸이 생긴 뒤에 그린다</li>
       <li><b>몸에 맞는 크기.</b> 터치 44px, 입력 글자 16px, 주요 버튼·입력 48px, 한글 최소 13px(12px는 mono 숫자·라틴만), 390px에서 가로 스크롤 없음</li>
@@ -65,19 +68,21 @@
 
   <section>
     <h2>색 토큰</h2>
-    <p class="lede">라이트는 <span class="mono">:root</span>, 다크는 시스템 설정(<span class="mono">prefers-color-scheme: dark</span>, <span class="mono">data-theme="light"</span>면 제외)과 <span class="mono">data-theme="dark"</span> 두 곳에 같은 값. 다크는 뒤집은 값이 아니라 따로 잰 값이에요. 숫자는 회의에서 잰 바탕 대비.</p>
+    <p class="lede">라이트는 <span class="mono">:root</span>, 다크는 시스템 설정(<span class="mono">prefers-color-scheme: dark</span>, <span class="mono">data-theme="light"</span>면 제외)과 <span class="mono">data-theme="dark"</span> 두 곳에 글자 하나까지 같은 값(<span class="mono">tests/web/check_design</span>이 비교하고 대비 기준 글자 4.5·경계 3·카드 선 1.5도 계산). 다크는 뒤집은 값이 아니라 따로 잰 값이에요. 숫자는 라이트 면 기준 대비.</p>
     <div class="scroll"><table class="tok"><thead><tr><th>토큰</th><th>쓰는 곳</th><th>라이트</th><th>다크</th></tr></thead><tbody id="tokens"></tbody></table></div>
   </section>
 
   <section>
     <h2>글자 · 모양 · 간격</h2>
     <ul class="dots">
-      <li><b>글꼴</b> Pretendard Variable(한글·본문) + JetBrains Mono(숫자·라틴·명령). 지금 쓰는 CDN 그대로</li>
+      <li><b>글꼴</b> Pretendard Variable(한글·본문) + JetBrains Mono Variable(기계 출력만: 명령·버전·별 수·시각·검증 값, 굵기 400·600). 한글에는 mono를 쓰지 않는다</li>
+      <li><b>크기 토큰</b> <span class="mono">--fs-xs 12 · --fs-sm 13 · --fs-md 14 · --fs-base 15 · --fs-lg 17 · --fs-xl 21 · --fs-2xl 24 · --fs-3xl 28 · --fs-4xl 36(제호)</span>, 간격 <span class="mono">--s-1 4 … --s-16 64</span>, 움직임 <span class="mono">--dur-fast 120 · --dur-base 200 · --dur-slow 280</span>(transition만), 겹침 <span class="mono">--z-*</span></li>
       <li><b>크기</b> 날짜 mono 28/500(모바일 22) · 화면 제목 24/700 · 큰 소식 제목 21/800(800은 워드마크·큰 소식·첫 화면 제목만) · 카드 제목 17/700 · 본문 15/1.65 최대 40em · 라벨·칩·버튼·한글 메타 13 · mono 12(숫자·라틴만)</li>
-      <li><b>모서리</b> 6 칩·작은 버튼 / 8 입력·버튼·나에게·코드 / 10 카드 / 12 패널·시트 / 999 상태 알약·토글</li>
+      <li><b>모서리</b> 6 칩·작은 버튼 / 8 입력·버튼·코드 / 10 카드 / 12 패널 / 16 모바일 시트 / 999 상태 알약·토글. 누르는 것의 테두리는 <span class="mono">--line-ctl</span>(3:1 이상)</li>
       <li><b>그림자</b> 카드는 그림자 없이 1px 선. 그림자(<span class="mono">--shadow-float</span>)는 시트·토스트·메뉴·저장 바에만</li>
       <li><b>간격</b> 옆 여백 16 / 24(768px 이상) / 32(1200px 이상), 상단바 52 / 56. 중단점은 768·1200 둘</li>
-      <li><b>로고</b> 6×18px 블레이즈 막대 + 단색 toolscout 800. 더블 블레이즈는 '업계 큰 소식' 라벨에만</li>
+      <li><b>마크</b> "아침 프롬프트"(<span class="mono">&gt;</span> + 밑줄 커서 + 해) <svg class="mark" aria-hidden="true" focusable="false"><use href="#i-mark"/></svg> 24px(모바일 22) + toolscout 800 -0.04em. 원본 <span class="mono">web/icons/mark.svg</span>, 상단바는 <span class="mono">TS.ICONS.mark</span>, 파비콘 <span class="mono">icon.svg</span>(#15181E 타일). 두 색 워드마크·대문자 키커 없음</li>
+      <li><b>그림</b> <span class="mono">web/img/illus.svg</span>의 #empty·#pending·#done·#dawn(4:3, 데스크톱 160×120·모바일 120×90, login 첫 화면 dawn만 .ill-lg 240×180), 할 일이 없는 화면에 하나만. 그림은 상태의 뜻: dawn은 '곧 와요'(login, 오늘 '아직 없음'), empty는 '살펴봤지만 고를 게 없음'. 아래 견본</li>
     </ul>
   </section>
 
@@ -88,7 +93,7 @@
       <tr><td>승인 전(대기·차단)</td><td>탭 없음, 하단 탭 없음</td><td>이메일 · 로그아웃</td></tr>
       <tr><td>첫 설정 · 일반</td><td>탭 없음, 하단 탭 없음, 질문 없음</td><td>계정 메뉴(로그아웃만)</td></tr>
       <tr><td>첫 설정 · 관리자</td><td>탭 '첫 설정 · 승인 N', 모바일은 상단바 '승인 N' 버튼</td><td>계정 메뉴 + 관리자 칩</td></tr>
-      <tr><td>일반</td><td>오늘 · 지난 브리핑 · 설정, 하단 4칸(오늘·지난·질문·설정)</td><td>질문하기 N/M · 계정 메뉴</td></tr>
+      <tr><td>일반</td><td>오늘 · 지난 브리핑 · 설정, 하단 4칸(오늘·지난·질문·설정)</td><td>질문하기 · N회 남음 · 계정 메뉴</td></tr>
       <tr><td>관리자</td><td>+ 승인 N(0이면 숫자 없음, 100 이상 99+), 하단 5칸</td><td>+ 계정 메뉴 관리자 칩</td></tr>
       <tr><td>세션 없음(첫 화면·가입·예시·/f)</td><td>브랜드만(<span class="mono">TS.bare</span>), 예시는 가입·로그인 버튼과 모바일 고정 바</td><td>화면이 넘긴 버튼만</td></tr>
     </tbody></table></div>
@@ -109,6 +114,10 @@
     <div class="box col" id="notes"></div>
     <h3>알약 · 모드 칩 · 단계 표시</h3>
     <div class="box" id="pills"></div>
+    <h3>판정 배지 두 갈래(글자+아이콘 / 문제만 채움 칩)</h3>
+    <div class="box" id="verdicts"></div>
+    <h3>그림</h3>
+    <div class="box"><svg class="ill" viewBox="0 0 160 120" aria-hidden="true" focusable="false"><use href="../web/img/illus.svg#empty"/></svg><svg class="ill" viewBox="0 0 160 120" aria-hidden="true" focusable="false"><use href="../web/img/illus.svg#pending"/></svg><svg class="ill" viewBox="0 0 160 120" aria-hidden="true" focusable="false"><use href="../web/img/illus.svg#done"/></svg><svg class="ill" viewBox="0 0 160 120" aria-hidden="true" focusable="false"><use href="../web/img/illus.svg#dawn"/></svg><p class="help">외부 <span class="mono">&lt;use&gt;</span>라 파일로 열면 안 보일 수 있어요. 서버(/static)로 열면 보여요</p></div>
     <h3>눌림 버튼 · 정보 목록 · 제자리 확인 줄</h3>
     <div class="box col" id="misc"></div>
     <h3>저장 바</h3>
@@ -126,9 +135,9 @@
   <section>
     <h2>화면에서 쓰는 법</h2>
     <dl class="api">
-      <dt>&lt;header id="appbar"&gt;&lt;/header&gt; + &lt;main class="wrap ..."&gt;</dt><dd>모든 화면의 뼈대. 스크립트는 /static/app.js(필요하면 /static/cards.js), 스타일은 /static/app.css 하나(cards.css·legacy.css를 불러온다)</dd>
+      <dt>&lt;header id="appbar"&gt;&lt;/header&gt; + &lt;main class="wrap ..."&gt;</dt><dd>모든 화면의 뼈대. 스크립트는 /static/app.js(필요하면 /static/cards.js), 스타일은 /static/app.css, 카드를 그리는 화면(index·demo·history·login·admin·f)은 /static/cards.css도 head에 링크(2026-10-14부터 app.css가 불러오지 않음)</dd>
       <dt>await TS.shell({ active, ask = true })</dt><dd>로그인한 화면의 상단바·하단 탭·질문 시트(ask.js를 불러옴)·DEV·관리자 칩. 반환은 /api/me</dd>
-      <dt>TS.bare({ actions: [[주소, 글자, 주 버튼]], ctabar })</dt><dd>세션 없는 화면의 브랜드만 있는 상단바. ctabar면 모바일 아래 고정 바</dd>
+      <dt>TS.bare({ actions: [[주소, 글자, 주 버튼]], ctabar, tagline })</dt><dd>세션 없는 화면의 브랜드만 있는 상단바. ctabar면 모바일 아래 고정 바, tagline이면 워드마크 옆 "개발자용 AI·MCP 아침 브리핑"(.tagline, 폰에서는 숨김. login·signup·demo만, 앱 상단바에는 없음)</dd>
       <dt>TS.ic(이름, "ic-12"|"ic-18"|"ic-22") · TS.say(글) · TS.confirmLine(버튼, { html, ok, onOk }) · TS.setPending(n) · TS.count(n) · TS.stamp(iso) · TS.copy</dt><dd>아이콘, 토스트, 제자리 확인 줄, 승인 대기 수, 99+ 표시, 절대 시각 "10.06 14:20", 복사(data-copy 버튼은 자동)</dd>
       <dt>Cards.mount(el, briefing, { day, level, abs, weights, one, empty })</dt><dd>큰 소식 띠 + 뉴스·도구 레인. 피드백 버튼과 사유·소감·관심없음 되돌리기까지 붙는다. Cards.readonly = true면 버튼 없이(예시)</dd>
       <dt>Cards.today(briefing, { basis, status, demo }) · Cards.pipe(briefing) · Cards.card(card)</dt><dd>오늘 머리줄(mono 날짜·상태줄·기준 줄·파이프라인·어떻게 골랐나), 파이프라인 한 줄, 카드 한 장</dd>
@@ -142,7 +151,7 @@
   </section>
 
   <section>
-    <h2>메일 색 (아직 예전 체계)</h2>
+    <h2>메일 색 (메일 덩이가 토큰 이름으로 옮기기 전)</h2>
     <p class="lede">아침 메일(<span class="mono">pipeline/briefing_mail.py</span>)은 이번 리디자인 범위 밖이라 예전 색을 그대로 써요. 메일을 바꿀 때 이 칸을 지우고 위 토큰으로 옮겨요.</p>
     <div class="box"><span><i class="sw" style="background:#15181E"></i><span class="mono">#15181E</span> 잉크</span><span><i class="sw" style="background:#12766A"></i><span class="mono">#12766A</span> 강조</span><span><i class="sw" style="background:#F7F7F4"></i><span class="mono">#F7F7F4</span> 바탕</span><span><i class="sw" style="background:#E1E2DD"></i><span class="mono">#E1E2DD</span> 선</span><span><i class="sw" style="background:#7A7E86"></i><span class="mono">#7A7E86</span> 흐린 글자</span></div>
   </section>
@@ -154,13 +163,15 @@
 <script>
 // 견본 데이터는 모두 가상이다. API는 부르지 않고 아래 값을 돌려준다
 const TOKENS = [
-  ["--bg", "화면 바탕", "#F3F4F6", "#0E1116"], ["--surface", "카드·패널·상단바", "#FFFFFF", "#161A21"], ["--surface-2", "주제 칩, 설치 명령, 검증 칸", "#ECEEF2", "#1D222B"],
-  ["--line", "카드 테두리(장식)", "#DFE2E8", "#262C36"], ["--line-input", "입력·빈 라디오 테두리 (3:1 이상) 3.67", "#80868F", "#646D7A"], ["--tick-empty", "빈 눈금·미터 바탕", "#C7CCD5", "#3A414C"],
-  ["--ink", "제목·본문, 주 버튼 채움 15.7", "#12151B", "#E8EAEE"], ["--ink-2", "요약·보조 글자 9.16", "#424856", "#B4BAC6"], ["--mute", "메타·힌트 4.96", "#5F6673", "#8E95A3"], ["--on-ink", "잉크 채움 위 글자", "#FFFFFF", "#0E1116"],
-  ["--blaze", "로고, 현재 탭, 포커스, 나와 관련 눈금 6.38", "#2E4CE6", "#8197FF"], ["--blaze-ink", "'나에게' 라벨, 선택된 글자 8.00", "#1D35B8", "#A8B6FF"], ["--blaze-wash", "나에게 상자, 선택·눌림 바탕", "#E9EDFF", "#1B2140"],
-  ["--ok", "설치·실행 성공, 위험 신호 정상", "#1A6B3F", "#6CCB94"], ["--ok-wash", "성공 알약 바탕", "#E6F3EC", "#16261D"], ["--warn", "위험 신호 주의, 원문 확인 필요 5.52", "#8F5200", "#E8AE57"], ["--warn-wash", "주의 바탕", "#FBF0DE", "#2A2112"],
-  ["--bad", "실행 실패, 폼 오류, 차단 5.66", "#B3261E", "#F28B82"], ["--bad-wash", "실패 바탕", "#FCEBE9", "#2C1716"], ["--mark", "검색 강조 바탕(+ 600 굵기)", "#FBF0DE", "#2A2112"],
-  ["--hl-border", "업계 큰 소식 1.5px 테두리", "#12151B", "#B4BAC6"], ["--scrim", "모바일 시트 뒤 가림", "rgba(14,17,22,.36)", "rgba(0,0,0,.55)"],
+  ["--bg", "화면 바탕(중립 프린트지 / 터미널 중성)", "#F4F4F0", "#0F1115"], ["--surface", "카드·패널·상단바", "#FFFFFF", "#171A1F"], ["--surface-2", "칩·명령 칸·판정 칸", "#EDEDE8", "#20242B"],
+  ["--line", "1px 괘선·카드 테두리(면 대비 1.72, 바탕 위 1.56)", "#C4C6BF", "#3A3F48"], ["--line-input", "입력칸 테두리 4.01", "#7D8078", "#6B717B"], ["--line-ctl", "누르는 것의 테두리(버튼·칩·입력) 4.01, 점선 괘선", "#7D8078", "#6B717B"], ["--tick-empty", "빈 눈금", "#CFD1CA", "#3A3F48"],
+  ["--ink", "제목·본문, 주 버튼 채움 17.92", "#16171A", "#E8EAED"], ["--ink-2", "요약·보조 글자 9.45", "#43464D", "#B7BCC5"], ["--mute", "메타·힌트 5.76(surface-2 위 4.91)", "#62666E", "#9198A3"], ["--on-ink", "잉크 채움 위 글자", "#FFFFFF", "#0F1115"],
+  ["--blaze", "나에게 라벨, 현재 탭, 눌림 테두리, 마크의 해 6.38", "#2E4CE6", "#8197FF"], ["--blaze-ink", "워시 위 파랑 글자만 8.00", "#1D35B8", "#A8B6FF"], ["--blaze-wash", "선택·눌림 바탕", "#E9EDFF", "#1B2140"],
+  ["--ok", "통과·정상 6.52", "#1A6B3F", "#6CCB94"], ["--ok-wash", "성공 알약 바탕", "#E6F3EC", "#16261D"], ["--warn", "주의·원문 확인 6.22", "#8F5200", "#E8AE57"], ["--warn-wash", "주의 칩 바탕", "#FBF0DE", "#2A2112"],
+  ["--bad", "실패·위험·오류 6.54", "#B3261E", "#F28B82"], ["--bad-wash", "실패 칩 바탕", "#FCEBE9", "#2C1716"], ["--mark", "형광펜(검색 일치)", "#FFE9A6", "#463A14"],
+  ["--rule", "제호 이중 괘선·섹션 2px 괘선", "#16171A", "#8A909B"], ["--focus", "포커스 링(= blaze)", "#2E4CE6", "#8197FF"],
+  ["--brand-tile", "파비콘·앱 아이콘·메일 마크 타일(두 모드 같음)", "#15181E", "#15181E"], ["--ill-line", "그림 선(= ink-2)", "#43464D", "#B7BCC5"], ["--ill-accent", "그림의 강조 점 하나", "#2E4CE6", "#8197FF"],
+  ["--scrim", "모바일 시트 뒤 가림", "rgba(14,17,22,.36)", "rgba(0,0,0,.55)"],
 ];
 const ME = {
   admin: { email: "admin@example.com", is_admin: true, dev_mode: true, approved: true, profile_done: true, pending_applications: 3 },
@@ -213,6 +224,7 @@ const set = (id, items, current, onPick) => {
     <div class="run-line">${TS.ic("clock")}<span>만드는 중 · <span class="mono">3</span>분째</span><span class="chk">마지막 확인 <span class="mono">14:31</span></span></div>
     <div class="run-line ok">${TS.ic("ok")}<span>다 만들었어요</span><a class="link" href="#board">오늘 화면에서 보기</a></div>
     <div><button class="btn btn-sm" id="say">토스트 띄우기</button> <span class="toast">내일 추천에 반영할게요</span></div>`;
+  document.getElementById("verdicts").innerHTML = `<span class="pill pill-pass">${TS.ic("ok")}검증 통과</span><span class="pill pill-plain">${TS.ic("key")}키 필요</span><span class="pill pill-plain">${TS.ic("na")}미검증</span><span class="pill pill-pass">${TS.ic("shield")}위험 신호 정상</span><span class="pill pill-plain">${TS.ic("na")}위험 신호 생략</span><span class="pill pill-bad">${TS.ic("bad")}검증 실패</span><span class="pill pill-warn">${TS.ic("risk")}위험 신호 확인 필요</span><span class="pill pill-warn">${TS.ic("warn")}원문 확인 필요</span>`;
   document.getElementById("say").onclick = () => TS.say("토스트는 3초 뒤 사라져요");
   document.getElementById("pills").innerHTML = `<span class="pill pill-ok">${TS.ic("shield")}위험 신호 · 정상</span><span class="pill pill-warn">${TS.ic("warn")}위험 신호 · 주의</span><span class="pill pill-bad">${TS.ic("bad")}승인 안 됨</span><span class="pill pill-na">${TS.ic("na")}공식 출처, 위험 신호 생략</span><span class="pill pill-neutral pill-sm">${TS.ic("clock")}대기</span><span class="pill pill-plain pill-sm">${TS.ic("ok")}승인</span>
     <span class="tag-mode">예시</span><span class="tag-mode tag-admin">${TS.ic("lock")}관리자</span><span class="tag-mode tag-dev">DEV</span>

@@ -87,6 +87,15 @@ def published(item: dict) -> datetime | None:
     return value.astimezone(timezone.utc).replace(tzinfo=None) if value.tzinfo else value
 
 
+def card_extras(row) -> dict:
+    """카드 사본에 붙이는 화면용 칸 topic·topic_label·item_meta(별 수·버전·출처·공개 시각 …Z). 저장하지 않는다.
+    row는 Item의 topic·stars·version·source·published_at 열을 가진 행(outerjoin이라 모두 None일 수 있다).
+    웹 routes/briefings.py와 메일 pipeline/deliver.py가 같이 부른다(2026-10-14, 복사 금지)."""
+    return {"topic": row.topic, "topic_label": schemas.TOPICS.get(row.topic or "", ""),
+            "item_meta": {"stars": row.stars, "version": row.version, "source": row.source,
+                          "published_at": row.published_at.isoformat() + "Z" if row.published_at else None}}
+
+
 CATALOG_TYPES = ("mcp", "skill")
 DESCRIPTION_CHARS = 300
 

@@ -71,15 +71,19 @@ def render_checks() -> dict:
     return {
         "제목_날짜·카드수": mixed["subject"] == "[toolscout] 1월 2일 AI 브리핑 · 카드 2장",
         "카드마다_trace_id(HTML·텍스트)": all(t in mixed["html"] and t in mixed["text"] for t in ("trace-1", "trace-2")),
-        "카드_전체_필드": all(s in mixed["html"] for s in ("요약", "나한테는", "이 카드인 이유", "장점", "설치:", "원문 확인 필요")),
+        # 2026-10-14 2차 리디자인(3장): 메일 카드는 나에게·좋은 점·$ 명령·원문 확인 필요 배지. '이 카드인 이유'는 메일에 넣지 않는다
+        "카드_전체_필드": all(s in mixed["html"] for s in ("요약", "나에게", "좋은 점", "npx -y @example/mcp", "원문 확인 필요"))
+        and "이 카드인 이유" not in mixed["html"],
         "제목·요약_이스케이프": "<script>" not in mixed["html"] and "&lt;script&gt;" in mixed["html"] and "A &amp; B &lt;b&gt;" in mixed["html"],
         "javascript_링크_차단": "javascript:" not in mixed["html"],
-        "뉴스·도구_칸": "뉴스</h2>" in mixed["html"] and "새 MCP·스킬</h2>" in mixed["html"],
+        "뉴스·도구_칸": ">뉴스 <span" in mixed["html"] and ">새 MCP·스킬 <span" in mixed["html"] and "== 뉴스 ==" in mixed["text"],
         "도구_없으면_오늘_새_도구_없음": briefing_mail.NO_TOOLS in news_only["html"] and briefing_mail.NO_TOOLS in news_only["text"],
-        "관련카드는_따로_칸(없으면_칸없음)": f"{briefing_mail.RELATED_TITLE}</h2>" in monday["html"]
-        and f"[{briefing_mail.RELATED_TITLE}]" in monday["text"] and briefing_mail.RELATED_TITLE not in mixed["html"]
+        "관련카드는_따로_칸(없으면_칸없음)": f">{briefing_mail.RELATED_TITLE}</td>" in monday["html"]
+        and f"== {briefing_mail.RELATED_TITLE} ==" in monday["text"] and briefing_mail.RELATED_TITLE not in mixed["html"]
         and monday["html"].index("관련 도구 카드") > monday["html"].index(briefing_mail.RELATED_TITLE),
         "빈_행이면_오늘_볼_만한_게_없었음": briefing_mail.EMPTY_TITLE in empty["subject"] and "반려 3" in empty["html"] and "반려 3" in empty["text"],
+        "trace_id_헤더_한_줄": deliver.build_email(mixed | {"trace_ids": ["trace-1", "trace-2"]}, "me@example.test", ["a@example.test"])
+        ["X-Toolscout-Trace"] == "trace-1,trace-2",
         **address_checks(mixed),
     }
 

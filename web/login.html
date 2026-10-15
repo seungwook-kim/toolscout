@@ -7,52 +7,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>toolscout</title>
   <meta name="description" content="매일 아침 AI 소식과 새 MCP·스킬을 내 기준으로 골라 한글로 해설합니다.">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/index.css">
   <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/cards.css">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#15181E">
+  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
   <style>
-    /* 첫 화면: 왼쪽 7 소개·미리보기, 오른쪽 5 로그인 (합의 목업 landing). 색은 토큰만 쓴다 */
-    .landing{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);grid-template-areas:"hero auth" "preview auth";gap:40px 56px;padding-block:56px 72px;align-items:start}
+    /* 첫 화면(2026-10-14 2차): 왼쪽 소개·실물 검증 줄·3단계·예시 카드, 오른쪽 로그인. 폰은 소개 → 검증 줄 → 로그인 → 3단계 → 예시.
+       예시 카드 모양은 cards.css가 맡는다(여기서 카드 클래스를 덮지 않고 바깥 상자만). 색은 토큰만 */
+    .landing{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);grid-template-areas:"hero auth" "proof auth" "flow auth" "preview auth";grid-template-rows:auto auto auto 1fr;gap:24px 56px;padding-block:56px 72px;align-items:start}
     .landing > *{min-width:0}
     .hero{grid-area:hero;display:grid;gap:16px;align-content:start}
-    .eyebrow{font-size:.8125rem;font-weight:600;color:var(--mute)}
-    .eyebrow .mono{color:var(--ink)}
-    .hero h1{font-size:2.5rem;font-weight:800;line-height:1.2;letter-spacing:-.03em;max-width:15em}
-    .lede{font-size:1.0625rem;color:var(--ink-2);max-width:30em}
+    .hero h1{font-size:2.5rem;font-weight:800;line-height:1.2;letter-spacing:-.03em;max-width:16em}
+    .lede{font-size:var(--fs-lg);color:var(--ink-2);max-width:32em}
+    .hero .ill{display:block}  /* dawn 그림(1장 2판 1-6): H1 위, 아래 16px(.hero gap). 크기는 app.css .ill-lg 240×180, 폰은 .ill 120×90 */
+    /* 실물 검증 줄: MCP를 샌드박스에 설치해 본 결과를 한 줄로. 글은 아래 예시 카드 판정 글(.verdict > span)을 스크립트가 복사, 못 불러오면 고정 글 */
+    .proof{grid-area:proof;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;max-width:620px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);font-size:var(--fs-md);line-height:var(--lh-ui)}
+    .pf-v{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ink)}
+    .pf-v .ic{color:var(--ok)}
+    .pf-cmd{font-family:var(--mono);font-size:var(--fs-sm);color:var(--ink-2);background:var(--surface-2);border-radius:var(--r-chip);padding:2px 8px;white-space:nowrap;letter-spacing:0}
+    .pf-cmd .p{color:var(--mute);margin-right:6px}
+    .pf-tag{margin-left:auto;font-size:var(--fs-sm);color:var(--mute)}
+    /* 3단계: 모아요 → 골라 해설해요 → 메일로 와요 */
+    .flow{grid-area:flow;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:var(--fs-md);font-weight:600;color:var(--ink-2)}
+    .flow li{display:inline-flex;align-items:center;gap:8px}
+    .flow .mono{color:var(--ink)}
+    .fl-ic{width:18px;height:18px;color:var(--ink)}
+    .fl-sep{color:var(--mute)}
     .auth{grid-area:auth;display:grid;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar) + 24px)}
     .auth-panel{display:grid;gap:14px;padding:28px}
-    .auth-panel h2{font-size:1.25rem;font-weight:700}
+    .auth-panel h2{font-size:var(--fs-xl);font-weight:700}
     .auth-form{display:grid;gap:14px}
-    .or{display:flex;align-items:center;gap:12px;font-size:.8125rem;color:var(--mute);margin-block:2px 14px}
+    .or{display:flex;align-items:center;gap:12px;font-size:var(--fs-sm);color:var(--mute);margin-block:2px 14px}
     .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
     .google-part[hidden]{display:none}
     .btn-google{gap:10px}
-    .fine{display:flex;gap:6px;align-items:flex-start;font-size:.8125rem;color:var(--mute)}
+    .fine{display:flex;gap:6px;align-items:flex-start;font-size:var(--fs-sm);color:var(--mute)}
     .fine .ic{margin-top:2px}
-    .demo-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:10px 16px;border:1px solid var(--line);border-radius:var(--r-panel);background:var(--surface);text-decoration:none;color:var(--ink)}
-    .demo-row:hover{border-color:var(--line-input)}
+    .demo-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:10px 16px;border:1px solid var(--line-ctl);border-radius:var(--r-panel);background:var(--surface);text-decoration:none;color:var(--ink)}
+    .demo-row:hover{background:var(--surface-2)}
     .demo-row > span{display:grid;gap:0}
-    .demo-row b{font-size:.9375rem;font-weight:700}
-    .demo-row b + span{font-size:.8125rem;color:var(--mute)}
-    .preview{grid-area:preview;display:grid;gap:12px;max-width:620px}
+    .demo-row b{font-size:var(--fs-base);font-weight:700}
+    .demo-row b + span{font-size:var(--fs-sm);color:var(--mute)}
+    .preview{grid-area:preview;display:grid;gap:12px;max-width:620px;padding-top:8px}
     .preview[hidden]{display:none}
     .pv-cards{display:grid;gap:12px}
-    .pv-cap{font-size:.8125rem;font-weight:600;color:var(--mute);letter-spacing:0}
+    .pv-cap{font-size:var(--fs-sm);font-weight:600;color:var(--mute);letter-spacing:0}
     .err-wrap{padding-top:16px}
     @media (max-width:1023px){
-      .landing{grid-template-columns:minmax(0,1fr);grid-template-areas:"hero" "auth" "preview";gap:24px;padding-block:24px 48px}
+      .landing{grid-template-columns:minmax(0,1fr);grid-template-areas:"hero" "proof" "auth" "flow" "preview";grid-template-rows:none;gap:20px;padding-block:24px 48px}
       .auth{position:static;max-width:460px}
     }
     @media (max-width:767px){
       .hero{gap:8px}
-      .hero h1{font-size:1.75rem;line-height:1.25}
-      .lede{font-size:.9375rem}
+      .hero .ill{margin-bottom:8px}
+      .hero h1{font-size:var(--fs-3xl);line-height:1.25}
+      .lede{font-size:var(--fs-base)}
+      .proof{padding:10px 12px;gap:6px 10px}
       .auth-panel{padding:20px;gap:12px}
       .auth{max-width:none}
+      .flow{display:grid;gap:8px;padding-top:8px}
+      .flow .fl-sep{display:none}
     }
   </style>
 </head>
@@ -66,10 +86,24 @@
 
   <main id="main" class="wrap landing">
     <div class="hero">
-      <p class="eyebrow">매일 <span class="mono">08:00</span> · 개발자용 AI 브리핑</p>
-      <h1>내 일에 맞춘 AI 소식과 새 MCP·스킬, 아침마다 한국어로</h1>
-      <p class="lede">직군과 관심 주제로 골라 해설해요. 새 MCP 서버는 샌드박스에 직접 설치해 본 결과까지 붙여요.</p>
+      <svg class="ill ill-lg" viewBox="0 0 160 120" aria-hidden="true" focusable="false"><use href="/static/img/illus.svg#dawn"/></svg>
+      <h1>개발자를 위한<br class="hide-sm"> 매일 아침 8시 AI 브리핑</h1>
+      <p class="lede">내 일에 맞춘 AI 소식과 새 MCP·스킬을 아침마다 한국어로 골라 해설해요. 새 MCP 서버는 샌드박스에 직접 설치해 본 결과까지 붙여요.</p>
     </div>
+
+    <!-- 실물 검증 줄(그림 아님): 고정 글은 예시 카드 판정 글과 같게. 예시를 불러오면 스크립트가 카드의 판정 글·명령으로 바꾼다.
+         flex 안이라 아이콘 뒤 글은 span 하나로(맨 글자와 span을 형제로 두면 gap이 끼어 '도구 5 개'로 띄어 보인다) -->
+    <p class="proof"><span class="sr-only">예시 검증 결과: </span>
+      <span class="pf-v"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-ok"/></svg><span id="pf-text"><span class="mono">3</span>단계 통과 · 도구 <span class="mono">5</span>개 · <span class="mono">NOTES_API_KEY</span> 필요</span></span>
+      <code class="pf-cmd"><span class="p" aria-hidden="true">$</span><span id="pf-cmd">npx -y notes-mcp@1.4.0</span></code>
+      <span class="pf-tag" aria-hidden="true">예시</span>
+    </p>
+
+    <ol class="flow" aria-label="받는 과정">
+      <li><svg class="ic fl-ic" aria-hidden="true" focusable="false"><use href="#i-today"/></svg><span><span class="mono">07:00</span> 모아요</span></li>
+      <li><svg class="ic fl-sep" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg><svg class="ic fl-ic" aria-hidden="true" focusable="false"><use href="#i-filter"/></svg>골라 해설해요</li>
+      <li><svg class="ic fl-sep" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg><svg class="ic fl-ic" aria-hidden="true" focusable="false"><use href="#i-mail"/></svg><span><span class="mono">08:00</span> 메일로 와요</span></li>
+    </ol>
 
     <section class="auth" aria-labelledby="login-h">
       <div class="panel auth-panel">
@@ -117,7 +151,7 @@
   <script>
     (() => {
       const $ = (id) => document.getElementById(id);
-      TS.bare({ actions: [["/demo", "예시 브리핑"]] });
+      TS.bare({ actions: [["/demo", "예시 브리핑"]], tagline: true });
 
       // 로그인 실패 알림은 입력 칸 위, 링크·구글 문제는 맨 위 띠
       const showAlert = (text) => { $("login-alert-text").textContent = text; $("login-alert").hidden = false; };
@@ -170,6 +204,10 @@
         $("pv-h").innerHTML = `예시 · <span class="mono">${TS.esc(briefing.date.replace(/-/g, "."))}</span> 브리핑에서 ${picks.length === 2 ? "두 장" : "한 장"}`;
         $("pv-cards").innerHTML = picks.map(Cards.card).join("");
         $("preview").hidden = false;
+        // 검증 줄 = 예시 도구 카드 판정 글 그대로(글자까지 같게). 통과 한 줄(.verdict, 미검증 .na 제외)이 없으면 고정 글이 남는다
+        const verdict = $("pv-cards").querySelector(".verdict:not(.na) > span"), tool = picks.find(isTool);
+        if (verdict) $("pf-text").innerHTML = verdict.innerHTML;
+        if (verdict && tool && tool.install_cmd) $("pf-cmd").textContent = tool.install_cmd;
       }).catch(() => {});
     })();
   </script>

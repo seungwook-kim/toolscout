@@ -6,39 +6,54 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>toolscout 오늘 브리핑</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/index.css">
   <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/cards.css">
+  <link rel="stylesheet" href="/static/home.css">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#15181E">
+  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
   <style>
-    /* 오늘 화면 전용: 불러오는 중 뼈대, 만드는 중 안내. 카드·보드·머리줄은 cards.css. 색은 토큰만 쓴다 */
-    #top{display:contents}
-    .skel .lane{display:grid;gap:12px;align-content:start}
-    .sk-card.tall{height:260px}
-    .empty .btn{margin-top:4px}
+    /* 오늘 화면 전용: 불러오는 중 뼈대(카드 겉면 모양, 반짝임 없음), 빈·만드는 중 안내. 카드·머리·빈 상태는 cards.css, 배치·레일은 home.css. 색은 토큰만 쓴다 */
+    .skel{display:grid;gap:var(--s-3)}
+    .sk-mast{height:88px;border-radius:var(--r-ctl)}
+    .sk-card{display:grid;gap:var(--s-3);align-content:start;height:auto;padding:var(--s-5);background:var(--surface)}
+    .sk-card i{display:block;height:12px;border-radius:var(--r-chip);background:var(--surface-2)}
+    .sk-card i:nth-child(1){width:30%}.sk-card i:nth-child(2){height:18px;width:80%}.sk-card i:nth-child(5){width:60%}
+    .empty .btn{margin-top:var(--s-1)}
     .empty .msg{margin-top:2px}
   </style>
 </head>
 <body class="page-home">
-  <!-- 오늘 (합의 목업 home, 2026-10-09). 앱 셸이 탭·질문하기·질문 시트를 붙인다. 카드는 cards.js -->
+  <!-- 오늘 (2026-10-14 2차 리디자인, 2026-10-15 2라운드): 본문 한 열 + 1200 이상 오른쪽 레일(도구 줄 목록 → 주제로 거르기 → 질문 → 오늘 한눈에).
+       1199 이하는 레일을 풀어 제호 → 칩 줄 → 도구 줄 목록 → 카드. '어떻게 골랐나'는 제호 둘째 줄 끝 단추. 앱 셸이 탭·질문하기·질문 시트를 붙인다. 카드는 cards.js -->
   <header id="appbar"></header>
 
   <main id="main" class="wrap home">
-    <div id="top"></div>
-    <nav class="jump" id="jump" aria-label="오늘 브리핑 구역" hidden></nav>
-    <div class="filters collapsible" id="filters" role="group" aria-label="주제로 거르기" hidden></div>
-
-    <div id="briefing">
-      <section class="skel" aria-label="불러오는 중" aria-busy="true">
-        <div class="board">
-          <div class="lane"><div class="sk sk-h"></div><div class="sk sk-card"></div><div class="sk sk-card"></div><div class="sk sk-card"></div></div>
-          <div class="lane"><div class="sk sk-h"></div><div class="sk sk-card tall"></div><div class="sk sk-card tall"></div></div>
-        </div>
-      </section>
+    <div class="home-main">
+      <div id="top"></div>
+      <nav class="jump" id="jump" aria-label="오늘 브리핑 구역" hidden></nav>
+      <div id="briefing">
+        <section class="skel" aria-label="불러오는 중" aria-busy="true">
+          <div class="sk sk-mast"></div>
+          <div class="sk sk-card"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="sk sk-card"><i></i><i></i><i></i><i></i><i></i></div>
+        </section>
+      </div>
     </div>
+    <aside class="rail" aria-label="오늘 브리핑 도우미">
+      <section class="rail-box rail-tools" aria-label="새 MCP·스킬"><div id="tool-rows"></div></section>
+      <section class="rail-box rail-filter" aria-labelledby="flt-h"><h2 id="flt-h">주제로 거르기</h2>
+        <div class="filters collapsible" id="filters" role="group" aria-label="주제로 거르기" hidden></div></section>
+      <section class="rail-box rail-ask" aria-labelledby="rask-h"><h2 id="rask-h">오늘 카드에 대해 묻기</h2>
+        <button type="button" class="ask-field" data-ask aria-haspopup="dialog" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg>예: 오늘 MCP 중 바로 써 볼 만한 것은?</button>
+        <p class="help" hidden>오늘 <span class="mono" data-quota-left></span>회 남음</p></section>
+      <section class="rail-box rail-toc" aria-labelledby="toc-h"><h2 id="toc-h">오늘 한눈에</h2><div class="toc" id="toc"></div></section>
+    </aside>
   </main>
 
   <script src="/static/app.js"></script>
@@ -63,12 +78,11 @@
         $("top").innerHTML = Cards.today(briefing, { basis, status });
       }
 
-      // ===== 오늘 브리핑이 아직 없을 때: 지금 만들기 =====
-      const emptyHtml = (msg = "") => `<section class="empty" aria-labelledby="empty-h"><h2 id="empty-h">아직 오늘 브리핑이 없어요</h2>
-        <p>매일 아침 <span class="mono">08:00</span>에 메일로도 보내요. 지금 바로 만들 수도 있어요. 10분쯤 걸리고, 다 되면 이 화면이 바뀌어요.</p>
+      // ===== 오늘 브리핑이 아직 없을 때: dawn 그림(곧 와요) + 지금 만들기. 마스트헤드 둘째 줄은 비우고(Cards.today) 이 상자 제목만 '아직 …없어요' =====
+      const emptyHtml = (msg = "") => Cards.empty("h2", "dawn", "아직 오늘 브리핑이 없어요", `<p>지금 만들면 10분쯤 걸려요. 다 되면 이 화면이 바뀌어요.</p>
         <button type="button" class="btn btn-primary btn-lg" data-make-now>${TS.ic("play")}오늘 브리핑 지금 만들기</button>
-        <p class="msg msg-bad" id="make-msg" role="alert"${msg ? "" : " hidden"}>${TS.esc(msg)}</p></section>`;
-      const makingHtml = () => `<section class="empty" aria-labelledby="making-h"><h2 id="making-h">${TS.ic("clock", "ic-18")} 만드는 중 · <span class="mono" id="mk-min">1</span>분째</h2>
+        <p class="msg msg-bad" id="make-msg" role="alert"${msg ? "" : " hidden"}>${TS.esc(msg)}</p>`);
+      const makingHtml = () => `<section class="empty" aria-labelledby="making-h"><h2 id="making-h">${TS.ic("clock", "ic-18")}<span>만드는 중 · <span class="mono" id="mk-min">1</span>분째</span></h2>
         <p>소식을 모으고 고르고 도구를 검증하고 해설을 쓰고 있어요. 10초마다 확인해서 끝나면 바로 보여 드려요. 이 화면을 닫아도 계속 만들어요.</p></section>`;
 
       function making() {
@@ -115,7 +129,7 @@
         const news = cards.filter((c) => !c.headline && !isTool(c) && !c.related).length;
         const tools = cards.filter((c) => isTool(c) && !c.related).length, related = cards.filter((c) => c.related).length;
         const jump = [hl ? ["#hl", "큰 소식", hl] : null, ["#news", "뉴스", news], tools || related ? ["#tools", "도구", tools + related] : null].filter(Boolean);
-        $("jump").innerHTML = jump.map(([href, label, n]) => `<a href="${href}">${label} <span class="n">${n}</span></a>`).join("")
+        $("jump").innerHTML = jump.map(([href, label, n]) => `<a href="${href}"><span>${label}</span><span class="n">${n}</span></a>`).join("")
           + `<button type="button" data-filter-toggle aria-expanded="false" aria-controls="filters">${TS.ic("filter")}거르기</button>`;
         $("jump").hidden = false;
 
@@ -127,8 +141,8 @@
         });
         const list = [...topics.entries()].sort((a, b) => b[1].n - a[1].n), shown = 4, total = list.reduce((s, [, t]) => s + t.n, 0);
         if (list.length < 2) return;
-        const chip = ([key, t], extra) => `<button type="button" class="fchip" data-topic="${TS.esc(key)}" aria-pressed="false"${extra ? " hidden data-extra" : ""}>${TS.esc(t.label)} <span class="n">${t.n}</span></button>`;
-        $("filters").innerHTML = `<span class="lab">주제</span><button type="button" class="fchip" data-topic="all" aria-pressed="true">전체 <span class="n">${total}</span></button>`
+        const chip = ([key, t], extra) => `<button type="button" class="fchip" data-topic="${TS.esc(key)}" aria-pressed="false"${extra ? " hidden data-extra" : ""}><span>${TS.esc(t.label)}</span><span class="n">${t.n}</span></button>`;
+        $("filters").innerHTML = `<span class="lab">주제</span><button type="button" class="fchip" data-topic="all" aria-pressed="true"><span>전체</span><span class="n">${total}</span></button>`
           + list.map((entry, i) => chip(entry, i >= shown)).join("")
           + (list.length > shown ? `<button type="button" class="fchip" data-more-topics aria-label="주제 ${list.length - shown}개 더 보기">+${list.length - shown}</button>` : "")
           + '<span class="filter-note" id="filter-note" hidden></span>';
@@ -179,11 +193,8 @@
         return;
       }
       top();
-      Cards.mount($("briefing"), briefing, {
-        weights: profile.profile.weights,
-        empty: `<section class="empty" aria-labelledby="zero-h"><h2 id="zero-h">오늘은 볼 만한 게 없었어요</h2><p>${TS.esc(briefing.empty_reason || "")}</p>
-          <a class="link" href="/history">지난 브리핑 보기</a></section>`,
-      });
+      // 카드 0장(볼 만한 게 없음)은 Cards.mount가 그린다: empty 그림 + 웹·메일 같은 문구 + '선별 기록 · …' + [관심 주제 넓히기][지난 브리핑 보기]
+      Cards.mount($("briefing"), briefing, { weights: profile.profile.weights });
       if (briefing.cards.length) filterBar();
     })();
   </script>

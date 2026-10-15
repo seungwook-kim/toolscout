@@ -15,7 +15,7 @@ from sqlalchemy import func, or_, select
 
 import db
 from agent import tracing
-from agent.schemas import TOPICS
+from pipeline import persist
 from pipeline.run_daily import today_kst
 from routes import guard, watermark
 from routes.auth import is_admin, require_approved
@@ -66,10 +66,8 @@ def briefing_for(user: db.User, day: date) -> dict:
         if row.card_json is None:
             empty_reason = row.empty_reason
             continue
-        card = watermark.mark_card(dict(row.card_json), mark) | {"item_id": row.item_id, "topic": row.topic, "topic_label": TOPICS.get(row.topic or "", ""),
-                                      "feedback": state.get(row.item_id, {"actions": [], "reason": None, "memo": None, "ids": {}}),
-                                      "item_meta": {"stars": row.stars, "version": row.version, "source": row.source,
-                                                    "published_at": row.published_at.isoformat() + "Z" if row.published_at else None}}
+        card = watermark.mark_card(dict(row.card_json), mark) | {"item_id": row.item_id, **persist.card_extras(row),  # 메일과 같은 helper
+                                      "feedback": state.get(row.item_id, {"actions": [], "reason": None, "memo": None, "ids": {}})}
         if admin:
             card["trace_url"] = tracing.trace_url(row.trace_id) or f"trace_id {row.trace_id}"
         cards.append(card)

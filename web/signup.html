@@ -6,58 +6,57 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>toolscout 회원가입</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/index.css">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#15181E">
+  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
   <style>
-    /* 가입: 가운데 한 열, 세 단계 (합의 목업 signup). 색은 토큰만 쓴다 */
-    .back{display:inline-flex;align-items:center;gap:6px;min-height:44px;width:max-content;font-size:.875rem;font-weight:600;color:var(--ink-2);text-decoration:none;margin-block:-8px}
+    /* 가입(2026-10-14 2차): 단계 표시는 위 한 줄(1 이메일 인증 · 2 비밀번호 · 3 승인 대기), 카드 안은 지금 단계 입력만. 색은 토큰만 쓴다 */
+    .back{display:inline-flex;align-items:center;gap:6px;min-height:44px;width:max-content;font-size:var(--fs-md);font-weight:600;color:var(--ink-2);text-decoration:none;margin-block:-8px}
     .back:hover{color:var(--ink)}
     .su-head{display:grid;gap:6px}
-    .su-head h1{font-size:1.5rem;font-weight:700}
+    .su-head h1{font-size:var(--fs-2xl);font-weight:700}
     .su-panel{display:grid;gap:0;padding-block:8px}
     .su-panel > *,.su-sec > *,.sec-body > *,.otp-part > *{min-width:0}
     .su-panel > .alert{margin-block:16px 4px}
-    .su-sec{display:grid;gap:14px;padding-block:20px;border-top:1px solid var(--line)}
-    .su-panel > .su-sec:first-of-type{border-top:0}
-    .su-sec > h2{display:flex;align-items:center;gap:10px;font-size:1.0625rem;font-weight:700;letter-spacing:-.01em}
+    .su-sec{display:grid;gap:14px;padding-block:20px 16px}
+    .su-sec[hidden]{display:none}
+    .su-sec > h2{font-size:var(--fs-lg);font-weight:700;letter-spacing:-.01em}
     .su-sec > h2:focus{outline:none}
-    .sec-n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:600;background:var(--surface-2);color:var(--ink-2);flex:none}
-    .su-sec.todo > h2{color:var(--mute);font-weight:600}
-    .su-sec.todo .sec-n{background:transparent;border:1px solid var(--line-input);color:var(--mute)}
-    .su-sec.active .sec-n{background:var(--blaze-wash);color:var(--blaze-ink);box-shadow:inset 0 0 0 2px var(--blaze)}
-    .su-sec.done .sec-n{background:var(--ink);color:var(--on-ink)}
+    .su-note{padding:12px 0 16px;border-top:1px solid var(--line);font-size:var(--fs-sm);color:var(--mute)}
     .sec-body{display:grid;gap:14px}
     .sec-body[hidden],.otp-part[hidden],.sum-line[hidden],.change-line[hidden]{display:none}
-    .sum-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.875rem;color:var(--ink-2)}
+    .sum-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:var(--fs-md);color:var(--ink-2)}
     .sum-line .ic{color:var(--ok)}
-    .sum-line .mono{font-size:.8125rem;color:var(--ink);overflow-wrap:anywhere}
-    .link-btn{border:0;background:none;padding:0 4px;min-height:44px;font-size:.875rem;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+    .sum-line .mono{font-size:var(--fs-sm);color:var(--ink);overflow-wrap:anywhere}
+    .link-btn{border:0;background:none;padding:0 4px;min-height:44px;font-size:var(--fs-md);font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
     .row{display:flex;gap:8px;align-items:flex-end}
     .row .field{flex:1}
     @media (max-width:767px){.row{flex-direction:column;align-items:stretch}.row .btn{width:100%}}
     .change-line{margin-top:-10px}
     .otp-part{display:grid;gap:14px}
-    .sent{display:flex;gap:8px;align-items:flex-start;font-size:.8125rem;color:var(--ink-2);background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px}
+    .sent{display:flex;gap:8px;align-items:flex-start;font-size:var(--fs-sm);color:var(--ink-2);background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px}
     .sent .ic{margin-top:2px;flex:none}
-    .sent .mono{font-size:.75rem;color:var(--ink);overflow-wrap:anywhere}
+    .sent .mono{font-size:var(--fs-xs);color:var(--ink);overflow-wrap:anywhere}
     /* 인증번호: 실제 입력은 하나, 6칸은 장식 */
     .otp{--cw:44px;--cg:8px;position:relative;width:calc(6 * var(--cw) + 5 * var(--cg));max-width:100%;height:52px;overflow:hidden}
     @media (max-width:360px){.otp{--cw:34px;--cg:5px}}
     .otp .cells{position:absolute;inset:0;display:grid;grid-template-columns:repeat(6,var(--cw));gap:var(--cg);pointer-events:none}
-    .otp .cells span{border:1px solid var(--line-input);border-radius:8px;background:var(--surface)}
+    .otp .cells span{border:1px solid var(--line-ctl);border-radius:var(--r-ctl);background:var(--surface)}
     .otp:focus-within .cells span.cur{border:2px solid var(--blaze)}
     .otp.invalid .cells span{border-color:var(--bad)}
-    .otp input{position:relative;display:block;width:calc(100% + 60px);height:100%;margin:0;border:0;background:transparent;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.5rem;font-weight:500;letter-spacing:calc(var(--cw) + var(--cg) - 1ch);padding:0 0 0 calc((var(--cw) - 1ch) / 2);caret-color:var(--blaze)}
+    .otp input{position:relative;display:block;width:calc(100% + 60px);height:100%;margin:0;border:0;background:transparent;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--fs-2xl);font-weight:500;letter-spacing:calc(var(--cw) + var(--cg) - 1ch);padding:0 0 0 calc((var(--cw) - 1ch) / 2);caret-color:var(--blaze)}
     .otp input:focus{outline:none}
     .otp-actions{display:flex;flex-wrap:wrap;gap:8px}
     @media (max-width:767px){.otp-actions{display:grid}.otp-actions .btn{width:100%}}
-    .rules{display:grid;gap:6px;font-size:.8125rem;color:var(--ink-2)}
+    .rules{display:grid;gap:6px;font-size:var(--fs-sm);color:var(--ink-2)}
     .rules li{display:flex;align-items:center;gap:8px}
-    .rules .st{margin-left:auto;font-size:.8125rem;color:var(--mute)}
+    .rules .st{margin-left:auto;font-size:var(--fs-sm);color:var(--mute)}
     .rules li.met .ic{color:var(--ok)}
     .rules li.met .st{color:var(--ok);font-weight:600}
   </style>
@@ -71,13 +70,12 @@
     <a class="back" href="/login"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>로그인으로</a>
     <div class="su-head">
       <h1>이메일로 가입</h1>
-      <p class="help">가입하면 관리자 승인 뒤 브리핑이 시작돼요. 보통 하루 안에 확인해요.</p>
     </div>
 
     <ol class="stepper" aria-label="가입 단계">
-      <li id="st1" class="current" aria-current="step"><span class="st-dot" aria-hidden="true">1</span>이메일 인증</li>
-      <li id="st2"><span class="st-dot" aria-hidden="true">2</span>비밀번호</li>
-      <li id="st3"><span class="st-dot" aria-hidden="true">3</span>승인 대기</li>
+      <li id="st1" class="current" aria-current="step"><span class="st-dot" aria-hidden="true">1</span><span>이메일 인증</span></li>
+      <li id="st2"><span class="st-dot" aria-hidden="true">2</span><span>비밀번호</span></li>
+      <li id="st3"><span class="st-dot" aria-hidden="true">3</span><span>승인 대기</span></li>
     </ol>
     <p class="sr-only" id="step-text" role="status">3단계 중 1단계 · 이메일 인증</p>
 
@@ -87,8 +85,8 @@
         <div class="body"><span id="su-alert-text"></span><a id="su-alert-action" class="btn btn-sm" href="/login" hidden>로그인으로</a></div>
       </div>
 
-      <section class="su-sec active" id="sec1" aria-labelledby="sec1-h">
-        <h2 id="sec1-h" tabindex="-1"><span class="sec-n mono" aria-hidden="true">1</span>이메일 인증</h2>
+      <section class="su-sec" id="sec1" aria-labelledby="sec1-h">
+        <h2 id="sec1-h" tabindex="-1">이메일 인증</h2>
         <p class="sum-line" id="sum1" hidden>
           <svg class="ic" aria-hidden="true"><use href="#i-ok"/></svg>
           <span class="mono" id="sum-email"></span><span>인증됨</span>
@@ -124,8 +122,8 @@
         </div>
       </section>
 
-      <section class="su-sec todo" id="sec2" aria-labelledby="sec2-h">
-        <h2 id="sec2-h" tabindex="-1"><span class="sec-n mono" aria-hidden="true">2</span>비밀번호 정하기</h2>
+      <section class="su-sec" id="sec2" aria-labelledby="sec2-h" hidden>
+        <h2 id="sec2-h" tabindex="-1">비밀번호 정하기</h2>
         <form class="sec-body" id="password-form" hidden novalidate>
           <div class="field">
             <label class="label" for="password">비밀번호</label>
@@ -148,10 +146,7 @@
         </form>
       </section>
 
-      <section class="su-sec todo" aria-labelledby="sec3-h">
-        <h2 id="sec3-h"><span class="sec-n mono" aria-hidden="true">3</span>승인 대기</h2>
-        <p class="help">관리자가 확인하면 첫 설정을 거쳐 브리핑을 받아요.</p>
-      </section>
+      <p class="su-note">가입하면 관리자가 확인해요. 보통 하루 안이에요.</p>
     </div>
   </main>
 
@@ -159,7 +154,7 @@
   <script>
     (() => {
       const $ = (id) => document.getElementById(id);
-      TS.bare();  // 가입 화면에는 다른 길 링크를 두지 않는다
+      TS.bare({ tagline: true });  // 가입 화면에는 다른 길 링크를 두지 않는다. 워드마크 옆 설명만(1장 2판 1-2(f), 폰은 CSS가 숨김)
 
       let signupToken = null, expiryTimer = null, resendTimer = null;
       const show = (el, text) => { if (text !== undefined) el.textContent = text; el.hidden = false; };
@@ -176,8 +171,8 @@
           i === n ? li.setAttribute("aria-current", "step") : li.removeAttribute("aria-current");
           dot.innerHTML = i < n ? '<svg class="ic" aria-hidden="true"><use href="#i-tried"/></svg>' : String(i);
         });
-        $("sec1").className = `su-sec ${n === 1 ? "active" : "done"}`;
-        $("sec2").className = `su-sec ${n === 2 ? "active" : "todo"}`;
+        $("sec1-h").hidden = n !== 1;  // 지난 단계는 제목 없이 요약 한 줄(sum1)만, 다음 단계는 아직 숨김
+        $("sec2").hidden = n !== 2;
         $("step-text").textContent = `3단계 중 ${n}단계 · ${labels[n - 1]}`;
       }
 

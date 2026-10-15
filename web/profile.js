@@ -23,7 +23,7 @@ const Profile = {
     box.innerHTML = Object.entries(state.topics).map(([id, name]) => {
       const v = weights[id] ?? 0, d = def[id];
       return `<div class="wrow" data-k="${TS.esc(id)}">
-        <label class="wname" for="w-${TS.esc(id)}">${TS.esc(name)} <span class="chg" hidden>· 바뀜</span></label>
+        <label class="wname" for="w-${TS.esc(id)}"><span>${TS.esc(name)}</span><span class="chg" hidden>· 바뀜</span></label>
         <div class="wrange"><input class="range" type="range" id="w-${TS.esc(id)}" data-k="${TS.esc(id)}" min="-5" max="5" step="1" value="${v}" aria-describedby="w-${TS.esc(id)}-h">
           ${d == null ? "" : `<span class="notch" style="--d:${(d + 5) / 10}" aria-hidden="true"></span>`}</div>
         <output class="wval" for="w-${TS.esc(id)}"></output>

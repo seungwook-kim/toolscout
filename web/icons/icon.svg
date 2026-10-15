@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- toolscout 파비콘(자체 제작): 작은 크기용으로 선을 굵게 하고 --brand-tile 타일에 고정색 -->
+  <rect width="32" height="32" rx="7" fill="#15181E"/>
+  <path d="M6 9l7 7-7 7" fill="none" stroke="#F4F4F0" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="16" y="21.25" width="11" height="3.5" rx="1.75" fill="#F4F4F0"/>
+  <circle cx="21.5" cy="13.5" r="3.5" fill="#8197FF"/>
+</svg>

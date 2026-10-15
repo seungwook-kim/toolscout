@@ -149,7 +149,7 @@ def main() -> int:
         outbox = [m for m in deliver.outbox(today_kst()) if m["user_id"] == a_id]
         checks.update({
             "메일_HTML·텍스트_끝에_표식": marked["html"].count(FOOTER + mark_a) == 1 and marked["text"].endswith(FOOTER + mark_a)
-            and marked["html"].count(mark_a) >= 5,
+            and marked["html"].count(mark_a) >= 3,  # 요약·나에게·꼬리. 메일 뉴스 카드는 좋은 점·아쉬운 점을 뺀다(2026-10-15 리디자인 2판)
             "메일_보이는_글자_그대로": visible(marked["html"]) == plain["html"] and visible(marked["text"]) == plain["text"]
             and marked["subject"] == plain["subject"] and not STRIP.search(plain["html"] + plain["text"]),
             "메일_제목·링크는_표식_없음": f'href="{HOST}1"' in marked["html"] and not STRIP.search(marked["subject"]),

@@ -16,7 +16,10 @@ TS.askSheet = function askSheet() {
   const sheet = document.getElementById("ask"), scrim = document.getElementById("ask-scrim"), input = document.getElementById("ask-input");
   const thread = document.getElementById("ask-thread"), form = document.getElementById("ask-composer"), small = matchMedia("(max-width: 767px)");
   let limit = null, last = null;
-  const quota = (left) => document.querySelectorAll("[data-quota]").forEach((el) => { el.textContent = limit != null ? `${left}/${limit}` : `${left}`; });
+  const quota = (left) => {  // 시트 "남음/한도", 오늘 화면 레일 "오늘 N회 남음"([data-quota-left])
+    document.querySelectorAll("[data-quota]").forEach((el) => { el.textContent = limit != null ? `${left}/${limit}` : `${left}`; });
+    document.querySelectorAll("[data-quota-left]").forEach((el) => { el.textContent = `${left}`; el.closest("[hidden]")?.removeAttribute("hidden"); });
+  };
   // 답: 확인한 곳 칩(http 링크만), 연속 out이면 질문 예시, out이면 "AI 질문이었어요"(게이트를 건너뛰고 다시 묻기)
   const answer = (a) => {
     const refs = (a.sources || []).filter((s) => TS.safeUrl(s.url)).map((s) => `<a href="${TS.esc(s.url)}" target="_blank" rel="noopener">${TS.esc(s.title || TS.host(s.url))}${TS.ic("ext", "ic-12")}<span class="sr-only">(새 탭)</span></a>`).join("");
@@ -86,5 +89,11 @@ TS.askSheet = function askSheet() {
     h.turns.forEach((t) => turn(t.question, answer(t)));
     quota(h.remaining);
   }).catch(() => quota("-"));
-  if (location.hash === "#ask") toggle(true);
+  // 주소 #ask 또는 ?ask=1(메일 꼬리 "질문하기" 링크)이면 바로 연다. ask는 주소에서 지운다
+  const params = new URLSearchParams(location.search);
+  if (params.get("ask") === "1") {
+    params.delete("ask");
+    history.replaceState(null, "", `${location.pathname}${params.toString() ? `?${params}` : ""}${location.hash}`);
+    toggle(true);
+  } else if (location.hash === "#ask") toggle(true);
 };

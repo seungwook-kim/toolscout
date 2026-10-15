@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- toolscout 마크 "아침 프롬프트"(자체 제작): > 프롬프트 + 밑줄 커서 + 커서 위로 뜨는 해. 단색(currentColor)으로도 성립, 점 색은 --mark-dot -->
+  <path d="M5 8.5l7.5 7.5L5 23.5" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="15" y="21.75" width="13" height="3.5" rx="1.75" fill="currentColor"/>
+  <circle cx="21.5" cy="13" r="3.5" style="fill:var(--mark-dot,currentColor)"/>
+</svg>

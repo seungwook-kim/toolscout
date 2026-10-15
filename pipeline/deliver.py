@@ -28,7 +28,7 @@ from sqlalchemy import or_, select, update
 import db
 import models
 from agent import tracing
-from pipeline import briefing_mail, gmail_api, weekly
+from pipeline import briefing_mail, gmail_api, persist, weekly
 from pipeline.run_daily import today_kst
 
 log = logging.getLogger("toolscout.deliver")
@@ -124,10 +124,12 @@ def send_alert(title: str, lines: list[str], smtp_factory=None) -> str:
 
 
 def outbox(day: date, notify_until: str | None = None) -> list[dict]:
-    """반환: [{user_id, to, role, subject, html, text, cards, empty_reason, trace_ids}] (user_id 순)."""
+    """반환: [{user_id, to, role, subject, html, text, cards, empty_reason, trace_ids}] (user_id 순).
+    카드 사본에 웹과 같은 topic·topic_label·item_meta를 붙인다(persist.card_extras). Item은 outerjoin(빈 날 행은 item_id가 NULL, 2026-10-14)."""
     query = (select(db.Briefing.user_id, db.Briefing.card_json, db.Briefing.empty_reason, db.Briefing.trace_id,
-                    db.User.email, db.User.role)
+                    db.User.email, db.User.role, db.Item.topic, db.Item.stars, db.Item.published_at, db.Item.version, db.Item.source)
              .join(db.User, db.User.id == db.Briefing.user_id)
+             .outerjoin(db.Item, db.Item.id == db.Briefing.item_id)
              .where(db.Briefing.date == day, db.Briefing.sent_at.is_(None), db.User.is_demo == False)  # noqa: E712
              .where(db.User.notify_time <= notify_until if notify_until else True)
              .order_by(db.Briefing.user_id, db.Briefing.rank))
@@ -138,14 +140,14 @@ def outbox(day: date, notify_until: str | None = None) -> list[dict]:
         query = query.where(db.User.status == "approved", or_(db.User.is_test == False, db.User.is_admin == True))  # noqa: E712
     grouped: dict[int, dict] = defaultdict(lambda: {"cards": [], "empty_reason": None, "trace_ids": set()})
     with db.get_engine().connect() as connection:
-        for user_id, card, empty_reason, trace_id, email, role in connection.execute(query):
-            entry = grouped[user_id]
-            entry.update(user_id=user_id, to=email, role=role)
-            if card:
-                entry["cards"].append(card)
-            if empty_reason:
-                entry["empty_reason"] = empty_reason
-            entry["trace_ids"].add(trace_id)
+        for row in connection.execute(query):
+            entry = grouped[row.user_id]
+            entry.update(user_id=row.user_id, to=row.email, role=row.role)
+            if row.card_json:
+                entry["cards"].append(row.card_json | persist.card_extras(row))
+            if row.empty_reason:
+                entry["empty_reason"] = row.empty_reason
+            entry["trace_ids"].add(row.trace_id)
     messages = []
     for user_id in sorted(grouped):
         entry = grouped[user_id]
@@ -186,11 +188,13 @@ def addressed(message: dict, dev: bool, admins: list[str]) -> tuple[dict, list[s
 
 
 def build_email(mail: dict, sender: str, recipients: list[str]) -> EmailMessage:
-    """mail: {subject, text, html} (사용자 한 명분)."""
+    """mail: {subject, text, html, trace_ids} (사용자 한 명분). 카드 trace_id는 화면에서 빼고 X-Toolscout-Trace 헤더 한 줄로 단다(2026-10-14)."""
     email = EmailMessage()
     email["From"] = f"toolscout <{sender}>"
     email["To"] = ", ".join(recipients)
     email["Subject"] = mail["subject"]
+    if traces := [str(t) for t in mail.get("trace_ids") or [] if t]:
+        email["X-Toolscout-Trace"] = ",".join(traces)
     email.set_content(mail["text"])
     email.add_alternative(mail["html"], subtype="html")
     return email

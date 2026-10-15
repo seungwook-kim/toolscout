@@ -1,4 +1,5 @@
 /*! © 2026 toolscout. All rights reserved. 무단 복제·재배포·AI 학습·재구현 금지 */
+/*! Lucide 1.57.0 (ISC) https://lucide.dev, 일부 Feather (MIT). 고지 전문: docs/licenses/lucide.txt */
 // toolscout 웹앱 공통 도우미와 앱 셸. 프레임워크 없음. 모양 기준은 docs/design-reference.html (2026-10-09 리디자인)
 const TS = {
   async api(path, options = {}) {
@@ -62,28 +63,35 @@ const TS = {
     return n <= 0 ? "" : n >= 100 ? "99+" : String(n);
   },
 
-  // ===== 아이콘: 인라인 SVG 한 벌(이모지·유니코드 기호는 아이콘으로 쓰지 않는다). TS.ic("ok") =====
+  // ===== 아이콘: 인라인 SVG 한 벌(이모지·유니코드 기호는 아이콘으로 쓰지 않는다). TS.ic("ok"). 키는 그대로, 선은 Lucide 1.57.0(이름 대응표는 docs/asset-licenses.md) =====
   ICONS: {
-    ok: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8 5.4-5.6"/>', bad: '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
-    warn: '<path d="M12 3.8l9.2 16H2.8z"/><path d="M12 10v4.2M12 17v.2"/>', na: '<circle cx="12" cy="12" r="9" stroke-dasharray="2.4 2.6"/>',
-    key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l8.5-8.5M16 7l2.5 2.5M13.5 9.5l2 2"/>',
-    shield: '<path d="M12 3l7.5 3v5.5c0 4.5-3.2 8-7.5 9.5-4.3-1.5-7.5-5-7.5-9.5V6z"/><path d="M8.8 12l2.3 2.3 4.2-4.3"/>',
-    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>', ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
-    copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
-    star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>', flag: '<path d="M5 21V4M5 4h11.5l-2 4 2 4H5"/>',
-    mute: '<path d="M3 12s3.5-6 9-6c1.6 0 3 .5 4.2 1.2M21 12s-3.5 6-9 6c-1.6 0-3-.5-4.2-1.2M4 4l16 16"/>', tried: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
-    chev: '<path d="M6 9l6 6 6-6"/>', chat: '<path d="M4 5h16v11H9.5L4 20z"/><path d="M8 9.5h8M8 12.5h5"/>',
-    today: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
-    history: '<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3L4.5 9"/><path d="M4.5 4.5V9H9M12 8v4.5l3 2"/>',
-    settings: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
-    approve: '<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.5 3.4-5.5 6.5-5.5 1.3 0 2.5.3 3.5 1M15 18l2 2 4-4"/>',
-    search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>', logout: '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10"/>',
-    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
-    eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
-    mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>', close: '<path d="M6 6l12 12M18 6L6 18"/>',
-    filter: '<path d="M4 6h16M7 12h10M10 18h4"/>', refresh: '<path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4"/>',
-    up: '<path d="M12 19V6M6.5 11.5L12 6l5.5 5.5"/>', play: '<path d="M7 5l12 7-12 7z"/>',
-    lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.2"/>',
+    ok: '<circle cx="12" cy="12" r="10"/><path d="M16 9l-5.5 5.5L8 12"/>', bad: '<circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6 M9 9l6 6"/>',
+    warn: '<path d="M21.73 18l-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3 M12 9v4 M12 17h.01"/>',
+    na: '<path d="M10.1 2.182a10 10 0 0 1 3.8 0 M13.9 21.818a10 10 0 0 1-3.8 0 M17.609 3.721a10 10 0 0 1 2.69 2.7 M2.182 13.9a10 10 0 0 1 0-3.8 M20.279 17.609a10 10 0 0 1-2.7 2.69 M21.818 10.1a10 10 0 0 1 0 3.8 M3.721 6.391a10 10 0 0 1 2.7-2.69 M6.391 20.279a10 10 0 0 1-2.69-2.7"/>',
+    key: '<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>',
+    shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z M9 12l2 2 4-4"/>',
+    risk: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z M12 8v4 M12 16h.01"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', ext: '<path d="M15 3h6v6 M10 14 21 3 M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+    copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+    star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+    flag: '<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/>',
+    mute: '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49 M14.084 14.158a3 3 0 0 1-4.242-4.242 M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143 M2 2l20 20"/>',
+    tried: '<path d="M20 6 9 17l-5-5"/>', chev: '<path d="M6 9l6 6 6-6"/>',
+    chat: '<path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z M7 11h10 M7 15h6 M7 7h8"/>',
+    today: '<path d="M15 18h-5 M18 14h-8 M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0v-9a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="10" y="6" rx="1"/>',
+    history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5 M12 7v5l4 2"/>',
+    settings: '<path d="M10 5H3 M12 19H3 M14 3v4 M16 17v4 M21 12h-9 M21 19h-5 M21 5h-7 M8 10v4 M8 12H3"/>',
+    approve: '<path d="M16 11l2 2 4-4 M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>', search: '<path d="M21 21l-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
+    logout: '<path d="M16 17l5-5-5-5 M21 12H9 M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>', arrow: '<path d="M5 12h14 M12 5l7 7-7 7"/>', back: '<path d="M12 19l-7-7 7-7 M19 12H5"/>',
+    eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+    mail: '<path d="M22 7l-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/>', close: '<path d="M18 6 6 18 M6 6l12 12"/>',
+    filter: '<path d="M2 5h20 M6 12h12 M9 19h6"/>',
+    refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8 M21 3v5h-5 M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16 M8 16H3v5"/>', up: '<path d="M5 12l7-7 7 7 M12 19V5"/>',
+    play: '<path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/>',
+    lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>', info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4 M12 8h.01"/>',
+    wait: '<path d="M5 22h14 M5 2h14 M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22 M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+    // 아침 프롬프트 마크(자체 제작, web/icons/mark.svg의 0.75배). 몸은 currentColor, 해(점)는 --blaze
+    mark: '<path d="M3.75 6.375l5.625 5.625L3.75 17.625" fill="none" stroke="currentColor" stroke-width="2.625" stroke-linecap="round" stroke-linejoin="round"/><rect x="11.25" y="16.3125" width="9.75" height="2.625" rx="1.3125" fill="currentColor" stroke="none"/><circle cx="16.125" cy="9.75" r="2.625" stroke="none" style="fill:var(--blaze)"/>',
   },
   ic(name, cls = "") {
     return `<svg class="ic${cls ? ` ${cls}` : ""}" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`;
@@ -118,7 +126,7 @@ const TS = {
     }
     if (!document.querySelector(".skip")) document.body.insertAdjacentHTML("afterbegin", '<a class="skip" href="#main">본문으로 건너뛰기</a>');
     bar.className = "appbar";
-    bar.innerHTML = `<div class="wrap"><a class="brand" href="/"><span class="blaze" aria-hidden="true"></span>toolscout</a>${barHtml}</div>`;
+    bar.innerHTML = `<div class="wrap"><a class="brand" href="/"><svg class="mark" aria-hidden="true" focusable="false"><use href="#i-mark"/></svg>toolscout</a>${barHtml}</div>`;
     TS.footer();
     if (!document.getElementById("live")) document.body.insertAdjacentHTML("beforeend", '<div id="live" class="toast" role="status" aria-live="polite"></div>');
     if (window.visualViewport && !TS._kb) {  // 가상 키보드가 올라오면 하단 고정 바를 숨긴다
@@ -136,11 +144,12 @@ const TS = {
   },
 
   // 세션 없는 화면(첫 화면·가입·데모·/f): 브랜드만. actions = [[주소, 글자, 주 버튼이면 true]], ctabar면 모바일은 아래 고정 바로
-  bare({ actions = [], ctabar = false } = {}) {
+  // tagline이면 워드마크 옆 설명(login·signup·demo만 켠다. 앱 상단바 shell에는 없음, 폰에서는 CSS가 숨김)
+  bare({ actions = [], ctabar = false, tagline = false } = {}) {
     const link = (size) => ([href, label, primary]) =>
       `<a class="btn ${size} ${primary ? "btn-primary" : "btn-quiet"}" href="${TS.esc(href)}">${TS.esc(label)}</a>`;
     const links = actions.map(link("btn-sm")).join("");
-    TS.frame(links ? `<div class="bar-right${ctabar ? " hide-sm" : ""}">${links}</div>` : "");
+    TS.frame(`${tagline ? '<span class="tagline">개발자용 AI·MCP 아침 브리핑</span>' : ""}${links ? `<div class="bar-right${ctabar ? " hide-sm" : ""}">${links}</div>` : ""}`);
     if (ctabar && links && !document.querySelector(".ctabar")) {
       document.body.insertAdjacentHTML("beforeend", `<div class="ctabar">${actions.map(link("btn-lg")).join("").replace(/btn-quiet/g, "")}</div>`);
       document.body.classList.add("has-ctabar");
@@ -160,13 +169,14 @@ const TS = {
     const badge = `<span class="count" data-pending${pending ? "" : " hidden"}>${TS.count(pending)}</span>`;
     const tabs = !me.approved ? [] : first ? (me.is_admin ? [["/settings", "첫 설정"], ["/admin/invites", "승인"]] : [])
       : [["/", "오늘"], ["/history", "지난 브리핑"], ["/settings", "설정"]].concat(me.is_admin ? [["/admin/invites", "승인"]] : []);
-    const nav = tabs.length ? `<nav class="tabs" aria-label="주 메뉴">${tabs.map(([href, label]) => `<a href="${href}"${cur(href)}>${label}${href === "/admin/invites"
-      ? ` ${badge}<span class="sr-only">건 대기</span>` : ""}</a>`).join("")}</nav>` : "";
+    // 탭·버튼은 gap 있는 flex라 글자와 배지(span)를 형제로 두지 않고 span 하나로 감싼다(flex 맨 글자 규칙, check_screens 11)
+    const nav = tabs.length ? `<nav class="tabs" aria-label="주 메뉴">${tabs.map(([href, label]) => `<a href="${href}"${cur(href)}>${href === "/admin/invites"
+      ? `<span>${label} ${badge}<span class="sr-only">건 대기</span></span>` : label}</a>`).join("")}</nav>` : "";
     const email = TS.esc(me.email || "");
     const right = !me.approved
       ? `<span class="bar-email mono">${email}</span><a class="btn btn-quiet btn-sm" href="/login" data-logout>로그아웃</a>`
-      : `${first && me.is_admin ? `<a class="btn btn-sm only-sm" href="/admin/invites">${TS.ic("approve")}승인 ${badge}</a>` : ""}
-        ${withAsk ? `<button type="button" class="btn btn-sm hide-sm" data-ask aria-haspopup="dialog" aria-expanded="false">${TS.ic("chat")}질문하기 <span class="mono" data-quota></span></button>` : ""}
+      : `${first && me.is_admin ? `<a class="btn btn-sm only-sm" href="/admin/invites">${TS.ic("approve")}<span>승인 ${badge}</span></a>` : ""}
+        ${withAsk ? `<button type="button" class="btn btn-sm hide-sm" data-ask aria-haspopup="dialog" aria-expanded="false">${TS.ic("chat")}<span>질문하기<span data-quota-bar hidden> · <span class="mono"></span>회 남음</span></span></button>` : ""}
         <details class="acct"><summary aria-label="계정 메뉴"><span class="avatar" aria-hidden="true">${TS.esc((me.email || "?")[0].toUpperCase())}</span></summary>
         <div class="acct-menu"><p class="mono">${email}</p>${me.is_admin ? `<p class="acct-role"><span class="tag-mode tag-admin">${TS.ic("lock")}관리자</span></p>` : ""}
         ${full ? `<a href="/settings">${TS.ic("settings")}설정</a>` : ""}<a href="/login" data-logout>${TS.ic("logout")}로그아웃</a></div></details>`;
@@ -187,8 +197,16 @@ const TS = {
         location.href = "/login";
       };
     });
-    if (withAsk) TS.script("/static/ask.js").then(() => TS.askSheet && TS.askSheet()).catch(() => TS.say("질문창을 불러오지 못했어요"));
+    if (withAsk) TS.script("/static/ask.js").then(() => { if (TS.askSheet) TS.askSheet(); TS.quotaBar(); }).catch(() => TS.say("질문창을 불러오지 못했어요"));
     return me;
+  },
+  // 상단바 "질문하기 · N회 남음": 시트의 남은 질문 수(ask.js가 "남음/한도"로 채움)를 따라 앞 숫자만 옮긴다
+  quotaBar() {
+    const src = document.querySelector("#ask [data-quota]"), bar = document.querySelector("[data-quota-bar]");
+    if (!src || !bar) return;
+    const sync = () => { const n = (src.textContent.match(/^\d+/) || [""])[0]; bar.hidden = !n; bar.querySelector(".mono").textContent = n; };
+    new MutationObserver(sync).observe(src, { childList: true, characterData: true, subtree: true });
+    sync();
   },
   // 스크립트 한 번만 불러오기 (질문 시트 web/ask.js)
   script(src) {

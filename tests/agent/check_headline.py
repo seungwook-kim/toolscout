@@ -6,12 +6,13 @@
 - 두 번째도 8점 이상이면 2칸, 8점 미만이면 1칸
 - 사용자 뉴스 맨 위에 고정, 같은 소식 다른 기사는 빠지고 전체 5장, rank 다시 매김, 빈 브리핑이면 비움 해제
 - 이미 본 소식이면 그 사용자에게 안 넣음, 주제 가중치 -5여도 넣음(계획안 부록 C "헤드라인엔 남음") / plan 실패면 그대로
-- 선별 판정에 importance가 없으면 3 / 카드 규격 headline 칸 / 메일에 "오늘의 큰 소식" 표시
+- 선별 판정에 importance가 없으면 3 / 카드 규격 headline 칸 / 메일에 '업계 큰 소식' 칸 리드로 표시
 - curator.run이 큰 소식을 사용자마다 붙이고 결과에 요약을 남긴다
 """
 import asyncio
 import json
 import sys
+from datetime import date
 
 from langchain_core.messages import AIMessage
 
@@ -94,9 +95,10 @@ async def main() -> None:
     card = {"type": "news", "title": "Opus 5.5 공개", "url": "https://x.test/1", "summary_ko": "요약.", "for_me": "나한테.",
             "why_this_card": "이유", "relevance": 4, "source_checked": True, "trace_id": "t", "headline": True}
     check("카드 규격에 headline", schemas.Card(**card).headline)
-    html, text = briefing_mail._card_html(card), briefing_mail._card_text(card)
-    check("메일에 오늘의 큰 소식 표시", briefing_mail.HEADLINE_LABEL in html and f"[{briefing_mail.HEADLINE_LABEL}]" in text
-          and briefing_mail.HEADLINE_LABEL not in briefing_mail._card_html(card | {"headline": False}))
+    # 2026-10-15 2라운드(메일 3장 2판): 큰 소식은 '업계 큰 소식' 칸의 리드(28px, 상자 없음). 꼭지 앞말 "오늘의 큰 소식 ·"은 뺐다
+    mail, plain = briefing_mail.render(date(2026, 9, 23), "개발자", [card]), briefing_mail.render(date(2026, 9, 23), "개발자", [card | {"headline": False}])
+    check("메일에 큰 소식 리드 표시", 'class="ts-lead"' in mail["html"] and "== 업계 큰 소식 ==" in mail["text"]
+          and briefing_mail.HEADLINE_LABEL not in mail["html"] + mail["text"] and "업계 큰 소식" not in plain["html"] and 'class="ts-lead"' not in plain["html"])
 
     items = [{k: v for k, v in i.items() if k not in ("importance", "topic", "reason")} | {"summary": "s"} for i in OPUS + GPT]
 
