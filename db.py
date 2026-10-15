@@ -16,6 +16,7 @@ from urllib.parse import parse_qsl, unquote, urlsplit
 from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.engine import URL, Engine
+from sqlalchemy.pool import NullPool
 from sqlmodel import Field, Session, SQLModel, create_engine
 
 import config  # noqa: F401  .env를 os.environ에 채운다
@@ -367,6 +368,10 @@ CONNECT_ARGS = {"connect_timeout": 10, "keepalives": 1, "keepalives_idle": 30, "
 
 @lru_cache
 def get_engine(url: URL | None = None) -> Engine:
+    # Vercel(서버리스)은 인스턴스마다 풀(기본 5+10)을 잡고 멈춘 채 남아 Session pooler 한도 15를 채운다(2026-10-15 배포 여러 번 뒤
+    # EMAXCONNSESSION으로 로그인 화면 500). 그곳에서는 요청이 끝나면 연결을 바로 닫는다. Railway 크론·로컬은 그대로 풀을 쓴다
+    if os.environ.get("VERCEL"):
+        return create_engine(url or database_url(), poolclass=NullPool, connect_args=CONNECT_ARGS)
     return create_engine(url or database_url(), pool_pre_ping=True, connect_args=CONNECT_ARGS)
 
 
