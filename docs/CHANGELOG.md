@@ -1,5 +1,6 @@
 # docs/ CHANGELOG
 
+- 2026-10-15 · pwa-standalone.png를 새 디자인으로 다시 찍음(Edge 헤드리스 display-mode standalone, 폰 390 2배) · 예전 9/15 화면이 남아 있었음 · 문서만
 - 2026-10-15 · 스크린샷 새로 찍음(오늘 PC 라이트·다크, 폰 라이트·다크, 지난 브리핑 폰, 첫 화면, 아침 메일), README img 설명 갱신 · 2차 리디자인 뒤 화면이 바뀌어서 · 문서만
 - 2026-10-15 · deploy.md 경량화 명령에서 rjsmin 뺌 · JS는 경량화하지 않기로 함(minify_web.py) · 문서만
 - 2026-10-15 · design-reference.html --line 견본 #C4C6BF, --hl-border 줄 삭제, --fs-4xl·TS.bare tagline·#dawn 견본 추가, asset-licenses.md에 #dawn(자체 제작) · 디자인 회의 2라운드 덩이 0(견본이 app.css와 같아야 함) · check_rules 통과
