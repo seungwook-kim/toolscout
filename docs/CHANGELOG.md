@@ -1,5 +1,6 @@
 # docs/ CHANGELOG
 
+- 2026-10-15 · README 스크린샷 표에서 촬영 예정 3칸(에이전트 작업 창·Langfuse 트레이스·ask_briefing) 뺌, 앱 설치 모드 칸 추가 · 둘은 아직 없는 기능이고 Langfuse는 로그인 화면이라 · 문서만
 - 2026-10-15 · pwa-standalone.png를 새 디자인으로 다시 찍음(Edge 헤드리스 display-mode standalone, 폰 390 2배) · 예전 9/15 화면이 남아 있었음 · 문서만
 - 2026-10-15 · 스크린샷 새로 찍음(오늘 PC 라이트·다크, 폰 라이트·다크, 지난 브리핑 폰, 첫 화면, 아침 메일), README img 설명 갱신 · 2차 리디자인 뒤 화면이 바뀌어서 · 문서만
 - 2026-10-15 · deploy.md 경량화 명령에서 rjsmin 뺌 · JS는 경량화하지 않기로 함(minify_web.py) · 문서만

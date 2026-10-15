@@ -18,4 +18,4 @@
 - 루트 `README.md`: 계획안을 줄여 소개한다. "프로젝트 구조" 트리는 부록 F와 같아야 한다 (`tests/docs/check_readme.py`)
 
 ## 할 일
-- [ ] 스크린샷 나머지 3장: 에이전트 작업 창, Langfuse 트레이스, Claude Code에서 ask_briefing
+- [ ] 에이전트 작업 창·공개 MCP(ask_briefing)를 만들면 그 화면 스크린샷을 더한다(지금은 기능이 없어 README 표에서 뺐다)
