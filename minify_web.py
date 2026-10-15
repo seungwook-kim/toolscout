@@ -1,10 +1,10 @@
 """배포용 web/ 경량화 (2026-10-09). 저장소 원본은 건드리지 않고, 배포 때 임시 폴더에서만 쓴다.
 
-실행: uv run --with minify-html --with rjsmin --with rcssmin python minify_web.py <배포 임시 폴더>
-- <폴더>/web 의 *.html *.js *.css 를 제자리에서 줄인다: 주석 제거, 공백 축소(HTML 안 인라인 script·style 포함)
+실행: uv run --with minify-html --with rcssmin python minify_web.py <배포 임시 폴더>
+- <폴더>/web 의 *.html *.css 를 제자리에서 줄인다: 주석 제거, 공백 축소(HTML 안 인라인 style 포함). JS(*.js·인라인 script)는 그대로 둔다(아래 min_js)
 - `/*!`로 시작하는 저작권 고지는 남기고, HTML은 head의 고지 주석을 다시 넣는다
 - 변수 이름 바꾸기(난독화)는 하지 않는다. 바꾸면 인라인 onclick 등이 깨질 수 있다
-- 의존성(minify-html·rjsmin·rcssmin)은 배포 때만 쓰니 pyproject에 넣지 않는다 (docs/deploy.md)
+- 의존성(minify-html·rcssmin)은 배포 때만 쓰니 pyproject에 넣지 않는다 (docs/deploy.md)
 - 줄인 결과가 깨지지 않았는지는 `uv run python -m tests.web.check_minify`가 본다(node --check + Edge 헤드리스)
 """
 import re
@@ -13,7 +13,6 @@ from pathlib import Path
 
 import minify_html
 import rcssmin
-import rjsmin
 
 HTML_NOTICE = "<!-- © 2026 toolscout. All rights reserved. 무단 복제·재배포·AI 학습·재구현 금지 -->"
 SCRIPT = re.compile(r"(<script\b([^>]*)>)(.*?)(</script>)", re.S | re.I)
@@ -22,7 +21,9 @@ JS_TYPES = ("", "text/javascript", "module", "application/javascript")
 
 
 def min_js(code: str) -> str:
-    return rjsmin.jsmin(code, keep_bang_comments=True)
+    """JS는 줄이지 않는다(2026-10-15). rjsmin은 템플릿 문자열(`...`)을 몰라 그 안 공백까지 지웠다.
+    운영에서 `class="ic ${cls}"`가 `class="icic-12"`로, `<${h} id=`가 `<h2id=`로 붙어 아이콘이 300px 검은 그림이 됐다."""
+    return code
 
 
 def min_css(code: str) -> str:

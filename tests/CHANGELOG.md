@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-15 · check_minify: JS 파일이 경량화 뒤에도 원본과 같은지 보는 항목 추가, 크기 감소 항목은 HTML·CSS만 · 운영에서 rjsmin이 템플릿 문자열 안 공백을 지워 아이콘이 깨진 일 · check_minify 통과
 - 2026-10-15 · pipeline/check_mail_layout 44항목(세 무게·마크 alt와 타일칸·설명 글·날짜 36/26·리드 28/22·도구 줄 상자 머리·verdict_cases.json tool_head 사례를 파이썬 verification.tool_head로·빈 날 세 줄과 선별 기록·꼭지에 '오늘의 큰 소식' 없음·☆·고정폭 숫자 공백 없음·RULE 2px 넷), check_weekly 분모(원격 아닌 MCP, 미검증 포함)·새 MCP 줄 낱말, agent/check_headline 메일 항목을 '업계 큰 소식' 리드로 · 메일 2라운드(3장 2판 6절) · 넷 모두 통과
 - 2026-10-15 · web/check_screens를 화면마다 node 따로(240초, 넘으면 timeout 1건, 화면별 초 출력), 1366 높이 650, 10 잘림·11 flex 맨 글자·브랜드 검수(제호 36/26·.mark-lg·.tagline·login 그림·dawn·empty) 추가, 데이터 없는 검수 사용자로 today_none·today_zero, 9번에 Cards.toolHead 비교 / verdict_cases.json에 tool_head 사례 11개 / check_design 대비 line/bg 1.5·--fs-4xl·--hl-border 없음·dawn·tool_head 사례 / check_minify 화면당 CSS 42KB·gzip 10KB · 디자인 회의 2라운드 4장 2판 2-4 · 지금 코드에서 레일 잘림(904>562)·'도구 5 개'·상단바 질문하기를 잡음, check_design은 cards.css --hl-border(덩이 A)만, check_minify는 admin 47.1KB·history 43.8KB 예산 초과로 실패
 - 2026-10-14 · pipeline/check_mail_layout 다시 씀(32항목: app.css 토큰 색·preheader·color-scheme·verdict_cases 배지·판정 세 경우·큰 소식 버튼·$ 칸·13px 미만 한글·허용 기호·8장 60KB·실제 길이 서명 링크), check_deliver 카드 필드·칸 머리 낱말을 새 메일에 맞추고 X-Toolscout-Trace 헤더 항목 추가, check_weekly 칸 위치를 마지막 등장으로 · 메일 2차 리디자인 · 넷 다 통과
