@@ -26,7 +26,7 @@
 로컬 전용 파일(`.env`, `CLAUDE.md` 등)이 섞이지 않게 git에 올린 파일만 내보낸 폴더에서 배포한다.
 ```
 git archive --format=tar main | tar -x -C <빈 폴더>
-uv run --with minify-html --with rjsmin --with rcssmin python <빈 폴더>/minify_web.py <빈 폴더>   # 화면 코드 경량화(2026-10-09)
+uv run --with minify-html --with rcssmin python <빈 폴더>/minify_web.py <빈 폴더>   # 화면 코드 경량화(2026-10-09)
 cd <빈 폴더>
 vercel deploy --prod          # 웹 (처음 한 번 vercel link --project toolscout)
 railway up --service <크론 서비스> --detach   # 크론 (처음 한 번 railway link)

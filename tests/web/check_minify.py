@@ -1,6 +1,6 @@
 """배포용 경량화(minify_web.py) 검수 (2026-10-09). 모델 호출 없음. 저장소 원본 web/은 건드리지 않는다.
 
-실행: uv run python -m tests.web.check_minify   (Edge 필요, uv가 minify-html·rjsmin·rcssmin을 임시로 받는다)
+실행: uv run python -m tests.web.check_minify   (Edge 필요, uv가 minify-html·rcssmin을 임시로 받는다)
 1. 저장소 파일을 임시 폴더에 복사해 `minify_web.py`를 실제 배포 명령으로 돌린다 (크기 줄었는지, `/*!` 고지가 남았는지)
 2. 줄인 모든 JS와 HTML 인라인 스크립트를 `node --check`, 화면당 CSS(그 HTML의 /static/*.css + 인라인 style, 줄인 결과) 42KB·gzip 10KB 이하(2026-10-15)
 3. 줄인 폴더로 앱을 8002번에 띄우고(SCHEDULER_ENABLED=0) Edge 헤드리스로 공개 화면(/login /signup /demo)과
@@ -100,7 +100,7 @@ def main() -> int:
     try:
         copy_repo(app_dir)
         original = {p.name: p.stat().st_size for p in (app_dir / "web").glob("*") if p.suffix in (".html", ".js", ".css")}
-        run = subprocess.run(["uv", "run", "--with", "minify-html", "--with", "rjsmin", "--with", "rcssmin", "python", "minify_web.py", str(app_dir)],
+        run = subprocess.run(["uv", "run", "--with", "minify-html", "--with", "rcssmin", "python", "minify_web.py", str(app_dir)],
                              cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
         web = app_dir / "web"
         minified = {p.name: p.stat().st_size for p in web.glob("*") if p.suffix in (".html", ".js", ".css")}
@@ -133,7 +133,8 @@ def main() -> int:
         screens = {r["path"]: not r["errors"] and r["bodyChars"] > 20 for r in results}
         checks = {
             "경량화_명령_성공": run.returncode == 0,
-            "파일마다_작아짐": bool(minified) and all(minified[n] < original[n] for n in minified),
+            "HTML·CSS_파일마다_작아짐": bool(minified) and all(minified[n] < original[n] for n in minified if not n.endswith(".js")),
+            "JS_파일_그대로(템플릿 문자열 보호)": all(js_files[n] == (ROOT / "web" / n).read_text(encoding="utf-8") for n in js_files),
             "JS·CSS_첫머리_고지_남음": bool(css_js) and all(p.read_text(encoding="utf-8").startswith(NOTICE) for p in css_js),
             "HTML_고지·tdm_meta_남음": all("© 2026 toolscout" in p.read_text(encoding="utf-8") and "tdm-reservation" in p.read_text(encoding="utf-8")
                                        for p in web.glob("*.html")),
