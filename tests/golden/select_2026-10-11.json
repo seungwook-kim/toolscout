@@ -5,7 +5,7 @@
   "O: 모델·제품·도구 출시, 개발 도구 공개·업데이트, 연구 결과, AI 안전·규제·보안 사건, 주요 AI 기업의 투자·계약·실적 같은 새로운 사실",
   "X: AI와 무관, AI가 곁다리인 사회·문화 이야기, 에세이·의견, 발언·인터뷰만 있는 기사, 개인 경험·질문 글, 행사·교육 홍보, 기업 고객 사례 홍보"
  ],
- "labeler": "Claude Code (2026-10-16, 모델 판정을 보지 않고 제목·출처만으로, 개발자 검토 전). 계획안: 채점자는 개발자 본인 외 1명 이상",
+ "labeler": "Claude Code (2026-10-16, 모델 판정을 보지 않고 제목·출처만으로). 개발자 표본 검토 40건(4일, review_select_2026-10-08_11.csv) 일치 38건, 다른 2건과 같은 기사의 한국어판은 개발자 판정으로 고침. 계획안: 채점자는 개발자 본인 외 1명 이상",
  "source": "10/11 실행 트레이스 7a7d4d6a8658abea0299542943017e2a의 선별 입력(제목·출처)",
  "items": [
   {
@@ -311,7 +311,7 @@
   {
    "title": "수학자가 Lean 정리 증명기에 대해 알아야 할 것: 신뢰성과 AI",
    "source": "geeknews",
-   "label": "X"
+   "label": "O"
   },
   {
    "title": "스페이스X, 무선 통신 진출…미·유럽 통신주 '직격탄'",
@@ -636,7 +636,7 @@
   {
    "title": "What mathematicians should know about the Lean Theorem Prover: reliability & AI",
    "source": "hackernews",
-   "label": "X"
+   "label": "O"
   },
   {
    "title": "Show GN: suta — AI가 생성한 UI문제를 줄이는 스킬",
