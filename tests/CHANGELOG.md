@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-16 · sources/check_new_feeds 6항목(출처 등급·해설가 허용 도메인·--live 실제 수집) · 새 출처 8곳 · 통과
 - 2026-10-16 · agent/check_select_rule 7 → 10항목(맞춘 소식 최대 2건·프롬프트·큰 소식이 와도 남음) · 맞춘 소식 자리 · 통과
 - 2026-10-16 · agent/check_news_fresh 9항목(26시간 지난 뉴스 빠짐·시각 모름과 도구는 그대로·excluded.stale·큰 소식은 새 기사가 하나라도 있어야·group_titles) · 사용자 뉴스 새로움 · 통과
 - 2026-10-16 · agent/check_select_rule 7항목(뉴스 AI 관련이면 후보·도구는 볼 만해야·재사용 같은 규칙·후보 입력 별점 순), check_review 삭제(2차 검토 뺌), check_select_memo 가짜 판정을 ai_related 기준으로, golden/fetch_select의 2차 검토 처리·run_daily 가짜 검토 답 삭제, golden/human_select_2026-10-02_60.csv·_key.json(개발자 무작위 60건, Claude 정답과 73% 일치) · 사용자 결정 B · 통과

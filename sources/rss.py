@@ -1,4 +1,7 @@
-"""RSS 소스 7곳 (계획안 9.1 [확인됨]).
+"""RSS 소스 14곳 (계획안 9.1 [확인됨]).
+
+2026-10-16 원문·빠른 출처 8곳 추가(사용자 "일반 AI보다 더 정확하고 빠른 뉴스"). 메타 '뮤즈 스파크 오픈'이 처음 뜬 시각(UTC)은
+더 버지 10/15 18:15, 엔비디아 개발자 블로그 18:29, 더 디코더 18:34였고 AI타임스는 10/16 06:17이었다(약 12시간 늦음).
 
 긱뉴스는 항목 링크(news.hada.io/topic)가 봇에게 403이라, 항목 안의 외부 출처 링크가 있으면 source_url로 두고
 없으면 skip_fetch로 표시해 해설가가 요약만 쓰게 한다 (2026-09-15 사용자 결정). 2026-09-15 확인 시 긱뉴스 RSS에는
@@ -44,6 +47,16 @@ FEEDS = [
     Feed("geeknews", "https://news.hada.io/rss/news", own_host="hada.io"),
     Feed("techcrunch_ai", "https://techcrunch.com/category/artificial-intelligence/feed/"),
     Feed("reddit_localllama", "https://www.reddit.com/r/LocalLLaMA/.rss", post_body=True),
+    # 2026-10-16 추가. 회사 원문(출처 등급 1): 메타·딥시크·xAI는 공식 RSS가 없어 매체로 잡는다
+    Feed("deepmind", "https://deepmind.google/blog/rss.xml"),
+    Feed("mistral", "https://mistral.ai/news/rss"),  # rss.xml은 이 주소로 301
+    Feed("nvidia_dev", "https://developer.nvidia.com/blog/feed/"),
+    Feed("huggingface", "https://huggingface.co/blog/feed.xml"),  # 전체 글이 오고 시각 없이 날짜만. 창 필터로 거른다
+    Feed("github_changelog", "https://github.blog/changelog/feed/"),  # AI 무관 변경은 선별 ai_related에서 빠진다
+    # AI 전용·빠른 매체(등급 2)와 개발자 개인 블로그(등급 3)
+    Feed("the_decoder", "https://the-decoder.com/feed/"),
+    Feed("verge_ai", "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"),
+    Feed("simonwillison", "https://simonwillison.net/atom/everything/"),
 ]
 # 벤처비트는 제외: 정직한 봇 User-Agent에 HTTP 429로 차단, 우회하지 않는다 (tests/sources/report.md)
 
