@@ -29,6 +29,9 @@ LOW_IMPORTANCE, PICK_MIN_STRONG = 2, 10
 # 사용자 뉴스는 원문이 이 시간 안인 것만 (2026-10-16 사용자 "더 빠른 뉴스"). 하루 1회 실행 24시간 + 피드 지연 여유 2시간.
 # 수집 창(sources/collect.NEWS_WINDOW 48시간)은 큰 소식의 다룬 곳 세기에 그대로 쓴다
 FRESH_NEWS = timedelta(hours=26)
+# 사용자 뉴스 중 별점이 낮아도 프로필과 직접 이어지는 "맞춘 소식" 자리. 큰 소식이 자리를 차지해도 이 자리는 남긴다 (headline.attach)
+# 2026-10-16 사용자 "일반 AI가 뽑아오는 뉴스와 똑같음": 별점 순만 쓰면 여러 매체가 다룬 소식만 남는다
+MAX_MINE = 2
 TOOL_TYPES = ("mcp", "skill")
 TOPIC_LINES = "\n".join(f"  - {key}: {label}. {schemas.TOPIC_GUIDE[key]}" for key, label in schemas.TOPICS.items())
 JSON_ONLY = "출력은 JSON 객체 하나만 쓴다. 설명 문장이나 코드 블록을 붙이지 않는다."
@@ -57,11 +60,13 @@ PICK_PROMPT = f"""너는 toolscout 큐레이터다. 한 사용자의 기억(프�
 - 같은 발표·같은 출시·같은 사건을 다룬 뉴스는 언어·매체가 달라도 하나만 고른다(공식 발표 원문이 있으면 그것). 남는 자리는 다른 소식으로 채운다
 - 가중치가 음수인 주제는 뒤로 미루고 양수인 주제는 앞으로 당긴다
 - 뉴스의 importance(1~5, 별점)가 높을수록 먼저 고른다. 별점이 낮은 뉴스는 프로필과 분명히 이어질 때만 고른다
+- 뉴스 중 최대 {MAX_MINE}건은 mine: true인 "이 사용자에게 맞춘 소식" 자리다. 여러 매체가 다 다룬 큰 소식이 아니라 별점이 3 이하라도
+  쓰는 도구·자유 한 줄·가중치 높은 주제와 직접 이어지는 소식을 넣는다. 그런 소식이 없으면 mine 없이 별점 순으로 채운다
 - 자유 한 줄에 보기 싫다고 적힌 기술·주제·회사는 고르지 않는다. 이 제외는 다른 기준보다 먼저다
 - why: 이 사용자에게 왜 이 카드인지 한국어 한 줄 (80자 이내). 프로필의 무엇(직군·쓰는 도구·자유 한 줄·가중치 높은 주제)과 이어지는지
   구체적으로 쓰고 "~해서 골랐습니다"처럼 합니다체로 끝낸다. "관심 있는 개발자에게 유용한 도구입니다"처럼 어느 항목에나 붙는 말은 쓰지 않는다
 - 뉴스와 도구가 모두 0건이면 empty_reason에 이유를 한 줄로 쓴다
-{JSON_ONLY} 형식: {{"news": [{{"id": 1, "why": "..."}}], "tools": [{{"id": 1, "why": "..."}}], "empty_reason": null}}"""
+{JSON_ONLY} 형식: {{"news": [{{"id": 1, "why": "...", "mine": false}}], "tools": [{{"id": 1, "why": "..."}}], "empty_reason": null}}"""
 
 RELATED_PICK_INPUT, RELATED_DESCRIPTION_CHARS = 30, 100  # 로컬 모델 문맥 8192토큰 안에 들게 후보 단계와 비슷한 크기로
 RELATED_PROMPT = f"""너는 toolscout 큐레이터다. 주 1회 관련 카드로, 날짜와 상관없이 이 사용자에게 맞는 MCP·스킬을 최대 {schemas.MAX_RELATED}개 고른다.
@@ -196,7 +201,9 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
         return plan | {"failed": True, "failure_reason": stats.model_failed(label, exc)}
     if parsed is None:
         return plan | {"empty": True, "empty_reason": "후보 선정 응답 형식 실패"}
-    picked, plan["same_story_dropped"] = await same_story.drop([{**news[p.id - 1], "why": p.why} for p in parsed.news], stats, model_call)
+    mine = [p.id for p in parsed.news if p.mine][:MAX_MINE]
+    picked, plan["same_story_dropped"] = await same_story.drop([{**news[p.id - 1], "why": p.why, "mine": p.id in mine}
+                                                                for p in parsed.news], stats, model_call)
     # 카드의 "이 카드인 이유"는 데이터 근거로, 모델이 쓴 이유는 pick_why로 트레이스에만 (agent/card_why.py)
     plan["news"] = card_why.attach(_rank_by_weight(picked, weights), memory)
     plan["tools"] = card_why.attach(_rank_by_weight([{**tools[p.id - 1], "why": p.why} for p in parsed.tools], weights), memory)

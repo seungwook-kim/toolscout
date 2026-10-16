@@ -127,7 +127,7 @@ async def explain_item(item: dict, memory: dict, client, stats: Stats, model_cal
                 for_me=parsed.for_me or "", why_this_card=item["why"], pros=parsed.pros, cons=parsed.cons,
                 install_cmd=install, relevance=parsed.relevance,
                 source_checked=checked, notice=" · ".join(notices) or None, related=bool(item.get("related")),
-                headline=bool(item.get("headline")), trace_id=span.trace_id)
+                headline=bool(item.get("headline")), mine=bool(item.get("mine")), trace_id=span.trace_id)
             outcome = {"status": "card", "card": card.model_dump(), "item": item} | ({"links": links} if any(links.values()) else {})
         extra = ({"links": outcome["links"]} if "links" in outcome else {}) | ({"injection_suspect": suspect} if suspect else {})
         span.update(output={"status": outcome["status"], "source_checked": checked, "reason": outcome.get("reason"),

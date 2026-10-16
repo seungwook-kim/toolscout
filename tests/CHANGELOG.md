@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-16 · agent/check_select_rule 7 → 10항목(맞춘 소식 최대 2건·프롬프트·큰 소식이 와도 남음) · 맞춘 소식 자리 · 통과
 - 2026-10-16 · agent/check_news_fresh 9항목(26시간 지난 뉴스 빠짐·시각 모름과 도구는 그대로·excluded.stale·큰 소식은 새 기사가 하나라도 있어야·group_titles) · 사용자 뉴스 새로움 · 통과
 - 2026-10-16 · agent/check_select_rule 7항목(뉴스 AI 관련이면 후보·도구는 볼 만해야·재사용 같은 규칙·후보 입력 별점 순), check_review 삭제(2차 검토 뺌), check_select_memo 가짜 판정을 ai_related 기준으로, golden/fetch_select의 2차 검토 처리·run_daily 가짜 검토 답 삭제, golden/human_select_2026-10-02_60.csv·_key.json(개발자 무작위 60건, Claude 정답과 73% 일치) · 사용자 결정 B · 통과
 - 2026-10-16 · golden/human_select_2026-10-03.csv(개발자가 Claude 정답·모델 판정 없이 무작위 순서로 156건 전체 O/X) · 정답 라벨 독립성 지적에 사람 정답 하루치 · Claude 정답과 일치 93.6%(카파 0.86, 다른 10건 모두 개발자 O), 사람 정답 기준 당시 운영 정밀도 73.2%·재현율 81.2%, 새 방식 재판정 90.7%·76.6%
