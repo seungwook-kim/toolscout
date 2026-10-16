@@ -4,8 +4,8 @@
 - 뉴스는 ai_related면 worth_today가 false여도 선별에 들어가고, AI 무관 뉴스는 빠진다
 - 도구(MCP·스킬)는 전처럼 ai_related이고 worth_today여야 들어간다
 - 재사용 판정(select_memo)도 같은 규칙
-- 사용자 후보 단계 입력은 같은 주제 가중치 안에서 별점(중요도) 높은 순, 후보 모델에게 별점을 보여 준다
-- 맞춘 소식(mine) 자리는 최대 curator.MAX_MINE건, 큰 소식이 자리를 차지해도 남고 별점 순 뉴스가 줄어든다 (2026-10-16 "일반 AI와 똑같음")
+- 사용자 후보 단계 입력은 별점(중요도) 높은 순, 같은 별점이면 주제 가중치 순, 후보 모델에게 별점을 보여 준다
+- 뉴스는 큰 소식 포함 최대 10건, 별점 3 이상만, 별점 높은 순 (2026-10-16 사용자 "점수 높은 순위로 뉴스 10개")
 """
 import asyncio
 import json
@@ -48,40 +48,44 @@ async def selection() -> None:
 
 
 def ranking() -> None:
-    news = [{"type": "news", "title": f"n{s}", "topic": "industry", "source": "aitimes", "importance": s} for s in (3, 5, 4)]
+    news = [{"type": "news", "title": f"n{s}", "topic": "industry", "source": "aitimes", "importance": s} for s in (3, 5, 2, 4)]
     news.append({"type": "news", "title": "가중치", "topic": "model_release", "source": "aitimes", "importance": 3})
     pool, _ = curator._pick_pool(news, [], {"model_release": 2})
-    check("후보_입력은_가중치_다음_별점_높은_순", [i["title"] for i in pool] == ["가중치", "n5", "n4", "n3"])
-    check("후보_프롬프트에_별점_높은_뉴스_먼저", "importance(1~5, 별점)가 높을수록 먼저" in curator.PICK_PROMPT)
+    check("후보_입력은_별점_다음_가중치_순·별점_2_이하_뺌", [i["title"] for i in pool] == ["n5", "n4", "가중치", "n3"])
+    check("후보_프롬프트에_별점_높은_뉴스_먼저_최대_10건", "별점이 높을수록 먼저" in curator.PICK_PROMPT and "최대 10건" in curator.PICK_PROMPT)
     check("선별_프롬프트에_뉴스는_ai_related만", "뉴스(type news)는 ai_related만으로 후보가 된다" in curator.SELECT_PROMPT)
 
 
 def pick_fake(role, messages, tools=None, **kw):
+    """후보 단계는 뉴스를 거꾸로(별점 낮은 것부터) 모두 고른다. 같은 소식 묶기는 묶을 것 없음."""
     data = json.loads(messages[-1].content.split("<data>\n")[1].split("\n</data>")[0])
-    if isinstance(data, list):  # 같은 소식 묶기: 묶을 것 없음
+    if isinstance(data, list):
         return AIMessage('{"groups": []}', usage_metadata={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2})
-    return AIMessage(json.dumps({"news": [{"id": d["id"], "why": "골랐습니다", "mine": d["id"] >= 3} for d in data["news"]],
-                                 "tools": [], "empty_reason": None}), usage_metadata={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2})
+    picks = [{"id": d["id"], "why": "골랐습니다"} for d in reversed(data["news"])][:curator.schemas.MAX_NEWS]
+    return AIMessage(json.dumps({"news": picks, "tools": [], "empty_reason": None}),
+                     usage_metadata={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2})
 
 
-async def mine_slot() -> None:
-    news = [{**item(20 + n, f"m{n}"), "topic": "industry", "importance": 5 - n, "reason": "r"} for n in range(5)]
+async def ten_news() -> None:
+    stars = [5, 5, 4, 4, 4, 3, 3, 3, 3, 3, 3, 2, 2, 1]
+    news = [{**item(20 + n, f"m{n}"), "topic": "industry", "importance": s, "reason": "r"} for n, s in enumerate(stars)]
     memory = {"user_id": 1, "is_test": True, "profile": {"role": "개발자"}, "weights": {}, "seen_urls": [], "seen_recent_urls": []}
     plan = await curator.pick_for_user(news, memory, Stats(), pick_fake)
-    check("맞춘_소식은_최대_MAX_MINE건", sum(i["mine"] for i in plan["news"]) == curator.MAX_MINE == 2)
-    check("후보_프롬프트에_맞춘_소식_자리", "맞춘 소식" in curator.PICK_PROMPT and '"mine": false' in curator.PICK_PROMPT)
-    top = {**item(99, "큰 소식"), "headline": True, "group_urls": ["https://rule.test/99"]}
+    got = [i["importance"] for i in plan["news"]]
+    check("뉴스는_최대_10건(MAX_NEWS)", curator.schemas.MAX_NEWS == 10 and len(got) == 10)
+    check("별점_2_이하는_보여_주지_않음", min(got) >= curator.MIN_IMPORTANCE == 3)
+    check("모델이_순서를_바꿔도_별점_높은_순", got == sorted(got, reverse=True) and [i["rank"] for i in plan["news"]] == list(range(1, 11)))
+    top = {**item(99, "큰 소식"), "importance": 5, "headline": True, "group_urls": ["https://rule.test/99"]}
     out = headline.attach(plan, [top], memory)
     titles = [i["title"] for i in out["news"]]
-    mine = [i["title"] for i in plan["news"] if i.get("mine")]
-    check("큰_소식이_와도_맞춘_소식은_남고_별점_순_뉴스가_줄어듦",
-          len(titles) == 5 and titles[0] == "큰 소식" and mine == ["m2", "m3"] and all(t in titles for t in mine) and "m4" not in titles)
+    check("큰_소식_포함_10건·큰_소식이_맨_위", len(titles) == 10 and titles[0] == "큰 소식"
+          and [i["importance"] for i in out["news"][1:]] == sorted([i["importance"] for i in out["news"][1:]], reverse=True))
 
 
 def main() -> int:
     asyncio.run(selection())
     ranking()
-    asyncio.run(mine_slot())
+    asyncio.run(ten_news())
     passed = sum(ok for _, ok in results)
     print(json.dumps({"pass": passed == len(results), "passed": passed, "total": len(results)}, ensure_ascii=False))
     return 0 if passed == len(results) else 1
