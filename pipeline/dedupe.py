@@ -8,8 +8,9 @@ from difflib import SequenceMatcher
 # 대표를 고를 때 우선순위. 공식 발표 > 매체 > 커뮤니티 (items.source_tier와 같은 값)
 SOURCE_TIER = {
     "openai": 1, "google_ai": 1, "claude_notes": 1, "anthropic_skills": 1, "mcp_registry": 1,
-    "aitimes": 2, "techcrunch_ai": 2, "github_search": 2,
-    "geeknews": 3, "hackernews": 3, "reddit_localllama": 3,
+    "deepmind": 1, "mistral": 1, "nvidia_dev": 1, "huggingface": 1, "github_changelog": 1,
+    "aitimes": 2, "techcrunch_ai": 2, "github_search": 2, "the_decoder": 2, "verge_ai": 2,
+    "geeknews": 3, "hackernews": 3, "reddit_localllama": 3, "simonwillison": 3,
 }
 TITLE_SIMILARITY = 0.85
 WORD = re.compile(r"[\w가-힣]+")

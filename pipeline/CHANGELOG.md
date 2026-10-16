@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-10-16 · dedupe.SOURCE_TIER에 새 출처 8곳(회사 원문 1, 더 디코더·더 버지 2, 사이먼 윌리슨 3) · RSS 출처 추가 · check_new_feeds 통과
 - 2026-10-16 · run_daily: 큐레이터에 fresh_since(실행 시각 - curator.FRESH_NEWS 26시간) 전달, 가짜 모델 검수는 옛 날짜 항목이라 넘기지 않음 · 사용자 뉴스 새로움 · run_daily --fake 통과
 - 2026-10-16 · run_daily: 큐레이터 전에 select_memo.load(오늘·어제 판정), 뒤에 select_memo.save(오늘 모델 판정), 보고에 select_reused·select_memo_saved. 가짜 모델 검수에서는 DB 기록을 읽고 쓰지 않음 · 같은 기사 이틀 판정 없애기 · run_daily --fake 통과
 - 2026-10-16 · promo: OpenAI 블로그 고객 사례 규칙 넓힘(제품 이름 뒤에 말이 붙는 "with ChatGPT and Codex"·"with OpenAI Daybreak"·"with GPT-6.1 Sol", 수치 자랑 동사 cuts·halves·saves·boosts, "into ChatGPT", 끝이 "with 회사명". OpenAI·ChatGPT가 주어인 자기 발표는 제외) · 10/8~10/11 골든셋에서 10/5 규칙을 지나 모델이 통과시킨 고객 사례 8건 · 골든셋 전체에서 걸린 것 38건 모두 정답 X(O 0건), 4일 합 정밀도 75.5% → 77.3%(재현율 그대로), check_promo 통과

@@ -35,6 +35,8 @@ ALLOWED_DOMAINS = (
     "ycombinator.com", "modelcontextprotocol.io", "github.com", "githubusercontent.com",
     "claude.com", "anthropic.com", "ai.google.dev", "n8n.io", "langfuse.com", "e2b.dev",
     "huggingface.co", "arxiv.org",
+    # 2026-10-16 추가한 수집 출처(sources/rss.py). 수집한 곳의 원문만 읽는다
+    "deepmind.google", "mistral.ai", "developer.nvidia.com", "github.blog", "the-decoder.com", "theverge.com", "simonwillison.net",
 )
 TOOL_NAMES = ["fetch_article", "lookup_registry", "check_pricing", "probe_mcp", "read_skill", "get_user_memory"]
 
