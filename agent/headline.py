@@ -11,8 +11,12 @@
 - 대표 기사는 공식 발표 > 매체 > 커뮤니티 순. 같은 소식의 다른 기사는 사용자 뉴스에서 뺀다
 - 이미 본 소식(묶음의 어느 링크든 본 적 있음)이면 그 사용자에게는 넣지 않는다. 주제 가중치가 -5여도 넣는다
   (계획안 부록 C "그 주제는 카드에 안 나오되 헤드라인엔 남음", 9/23 "관심도와 상관없이". 9/28 예외 처리 점검에서 어긋난 것을 바로잡음)
+- 묶음의 기사가 모두 원문 26시간(curator.FRESH_NEWS)보다 오래됐으면 큰 소식으로 올리지 않는다 (2026-10-16 사용자 "더 빠른 뉴스").
+  다룬 곳 수는 48시간 수집분으로 그대로 센다
 모델 장애·형식 실패면 칸을 비운다 (브리핑을 막지 않는다). Jev 같은 점수 전용 모델은 보류했다 (2026-09-23 사용자 결정).
 """
+from datetime import datetime, timezone
+
 from agent import same_story, schemas
 from agent.structured import Stats
 
@@ -26,7 +30,16 @@ def _tier(item: dict) -> int:
     return SOURCE_TIER.get(item.get("source"), 9)
 
 
-async def pick(selected: list[dict], stats: Stats, model_call=None) -> list[dict]:
+def is_fresh(item: dict, since: datetime | None) -> bool:
+    """원문 시각이 since 뒤면 새 소식. since가 없거나(검수 가짜 실행) 원문 시각을 모르면 새 소식으로 본다."""
+    value = item.get("published_at")
+    if since is None or not value:
+        return True
+    at = datetime.fromisoformat(str(value))
+    return (at if at.tzinfo else at.replace(tzinfo=timezone.utc)) >= since
+
+
+async def pick(selected: list[dict], stats: Stats, model_call=None, fresh_since: datetime | None = None) -> list[dict]:
     """오늘의 큰 소식 0~2건(점수 순). 각각 대표 기사 + {headline, coverage, score, group_urls, why}."""
     pool = sorted((i for i in selected if i["type"] == "news" and i.get("importance", 3) >= MIN_IMPORTANCE),
                   key=lambda i: (-i.get("importance", 3), _tier(i)))[:CANDIDATES]
@@ -42,11 +55,13 @@ async def pick(selected: list[dict], stats: Stats, model_call=None) -> list[dict
         official = any(_tier(i) == 1 for i in members)
         if not (len(members) >= MIN_COVERAGE or (top == 5 and len(members) >= MIN_COVERAGE_TOP)):
             continue
+        if not any(is_fresh(i, fresh_since) for i in members):
+            continue
         ranked.append((top + len(members) - 1 + official, members))
     ranked.sort(key=lambda r: -r[0])
     chosen = ranked[:1] + [r for r in ranked[1:MAX_HEADLINES] if r[0] >= SECOND_MIN_SCORE]
     return [{**min(members, key=lambda i: (_tier(i), -i.get("importance", 3))), "headline": True, "coverage": len(members),
-             "score": score, "group_urls": [i["url"] for i in members],
+             "score": score, "group_urls": [i["url"] for i in members], "group_titles": [i["title"] for i in members],
              "why": f"오늘 {len(members)}곳이 함께 다룬 큰 소식이라 관심 주제와 상관없이 맨 위에 둡니다"} for score, members in chosen]
 
 

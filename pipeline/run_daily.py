@@ -145,7 +145,10 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
         pools = {m["user_id"]: await asyncio.to_thread(persist.related_pool, m) for m in memories} if with_related else None
         # 오늘·어제 판정한 뉴스는 그 판정을 쓴다(agent/select_memo.py). 검수(가짜 모델)에서는 DB 기록을 읽거나 쓰지 않는다
         known = await asyncio.to_thread(select_memo.load, today, curator_input) if memories and model_call is None else {}
-        curated = await curator.run(curator_input, memories, model_call=model_call, related_pools=pools, known=known) if memories else None
+        # 사용자 뉴스·큰 소식은 원문 26시간 안만(curator.FRESH_NEWS). 검수(가짜 모델)는 옛 날짜 항목이라 거르지 않는다
+        fresh_since = datetime.now(timezone.utc) - curator.FRESH_NEWS if model_call is None else None
+        curated = await curator.run(curator_input, memories, model_call=model_call, related_pools=pools, known=known,
+                                    fresh_since=fresh_since) if memories else None
         memo_saved = await asyncio.to_thread(select_memo.save, today, curated["judged"]) if curated and model_call is None else 0
         catalog_saved = await asyncio.to_thread(save_catalog, today, curated["selected"]) if curated else 0
         verify_saved = await asyncio.to_thread(verification.save_requests, today, curated["verify"]) if curated else 0
