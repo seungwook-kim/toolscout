@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-16 · agent/check_select_rule 7항목(뉴스 AI 관련이면 후보·도구는 볼 만해야·재사용 같은 규칙·후보 입력 별점 순), check_review 삭제(2차 검토 뺌), check_select_memo 가짜 판정을 ai_related 기준으로, golden/fetch_select의 2차 검토 처리·run_daily 가짜 검토 답 삭제, golden/human_select_2026-10-02_60.csv·_key.json(개발자 무작위 60건, Claude 정답과 73% 일치) · 사용자 결정 B · 통과
 - 2026-10-16 · golden/human_select_2026-10-03.csv(개발자가 Claude 정답·모델 판정 없이 무작위 순서로 156건 전체 O/X) · 정답 라벨 독립성 지적에 사람 정답 하루치 · Claude 정답과 일치 93.6%(카파 0.86, 다른 10건 모두 개발자 O), 사람 정답 기준 당시 운영 정밀도 73.2%·재현율 81.2%, 새 방식 재판정 90.7%·76.6%
 - 2026-10-16 · agent/check_review 10항목(검토 대상·뺀 뉴스·judged 최종 판정·형식 실패 시 1차 유지·curator.run 연결·프롬프트 기준·fetch_select 반영), golden/fetch_select가 2차 검토("reviews")에서 뺀 뉴스를 worth_today false로, pipeline/run_daily 가짜 모델에 검토 답(모두 남김) · 선별 2차 검토 · check_review·run_daily --fake·check_rollback·check_verifier·check_anthropic 통과
 - 2026-10-16 · agent/check_select_memo 10항목(재사용 뉴스는 모델에 안 보냄·도구는 보냄·judged·전부 재사용이면 모델 안 부름·DB 오늘·어제만·덮어쓰기·7일 정리), db/check_tables 표 19개 · 선별 판정 재사용 · 통과

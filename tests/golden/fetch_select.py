@@ -50,21 +50,11 @@ def judgments(obs: list[dict]) -> list[dict]:
         if not o["name"].startswith("llm:curator"):
             continue
         messages = o["input"] if isinstance(o["input"], list) else json.loads(o["input"])
-        review = '"reviews"' in messages[0]["content"]  # 2차 검토(agent/review.py, 2026-10-16)에서 뺀 뉴스는 worth_today false로
-        if '"judgments"' not in messages[0]["content"] and not review:
+        if '"judgments"' not in messages[0]["content"]:
             continue
         batch = json.loads(re.search(r"<data>\n(.*)\n</data>", messages[-1]["content"], re.S).group(1))
         text = o["output"].get("text") if isinstance(o["output"], dict) else o["output"]
         found = re.search(r"\{.*\}", text or "", re.S)
-        if review:
-            try:
-                drop = {r["id"] for r in json.loads(found.group(0))["reviews"] if r.get("keep") is False}
-            except (AttributeError, ValueError, KeyError, TypeError):
-                continue
-            for item in batch:
-                if item["id"] in drop and item["title"] in rows:
-                    rows[item["title"]]["worth_today"] = False
-            continue
         try:
             by_id = {j["id"]: j for j in json.loads(found.group(0))["judgments"]}
         except (AttributeError, ValueError, KeyError, TypeError):

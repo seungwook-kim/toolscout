@@ -1,0 +1,307 @@
+{
+ "date": "2026-10-02",
+ "sample": "select_2026-10-02.json 178건에서 random.Random(20261002).sample 60건(단순 무작위)",
+ "translation": "영어 제목은 Claude Code가 한국어로 옮김(번역 true)",
+ "items": [
+  {
+   "번호": 1,
+   "title": "AI 가격 급락, 기술 역사상 최고 속도…기업 지속가능성은 '비상'",
+   "번역": false
+  },
+  {
+   "번호": 2,
+   "title": "엔비디아, 물리 법칙 배우는 영상 생성 프레임워크 ‘파이시스-랭’ 공개",
+   "번역": false
+  },
+  {
+   "번호": 3,
+   "title": "오픈AI, 자체 에이전트에 ‘디시전스 API’ 적용...아키텍처 판도 바뀐다",
+   "번역": false
+  },
+  {
+   "번호": 4,
+   "title": "Responsible Release of AI-Generated Mathematics",
+   "번역": true
+  },
+  {
+   "번호": 5,
+   "title": "[기고] AI판 빅맥지수가 비춘 'AI 강국'의 그림자",
+   "번역": false
+  },
+  {
+   "번호": 6,
+   "title": "China and the memory market",
+   "번역": true
+  },
+  {
+   "번호": 7,
+   "title": "리사 수 AMD CEO, 10월8일 방한…국내 NPU 기업과 인프라 협력 구체화",
+   "번역": false
+  },
+  {
+   "번호": 8,
+   "title": "Vote on which of Hacker News' challenges for AI have been met",
+   "번역": true
+  },
+  {
+   "번호": 9,
+   "title": "'불량 AI 에이전트' 논란에…미 FTC 조사 착수·오픈AI 첫 피소",
+   "번역": false
+  },
+  {
+   "번호": 10,
+   "title": "If one hour of AI is costing me 0.12€ is paying for frontier a cheaper option?",
+   "번역": true
+  },
+  {
+   "번호": 11,
+   "title": "Finally got my 4th card in (64gb total)",
+   "번역": true
+  },
+  {
+   "번호": 12,
+   "title": "Gemini 4 Argon (High): Intelligence, Performance and Price Analysis",
+   "번역": true
+  },
+  {
+   "번호": 13,
+   "title": "Amazon's delivery driver smart glasses will take photos 'almost constantly'",
+   "번역": true
+  },
+  {
+   "번호": 14,
+   "title": "배경훈 장관 “독파모 계속된다…SPC 프론티어 AI 도전과 병행”",
+   "번역": false
+  },
+  {
+   "번호": 15,
+   "title": "56k.rip - 1996년 전화 접속 인터넷 체험",
+   "번역": false
+  },
+  {
+   "번호": 16,
+   "title": "We just open-sourced the world's fastest WebGPU kernels for local AI on Hugging Face",
+   "번역": true
+  },
+  {
+   "번호": 17,
+   "title": "정부, 송전망 수용량 52GW 늘린다…2030년 재생에너지 100GW 대응",
+   "번역": false
+  },
+  {
+   "번호": 18,
+   "title": "무료 앱 하나 배포하는데, Android 개발자 인증까지 해야 하나?",
+   "번역": false
+  },
+  {
+   "번호": 19,
+   "title": "DDR4/PCIe4 vs DDR5/PCIe5 for LLMs- I benchmarked them for pre-training. What are your thoughts?",
+   "번역": true
+  },
+  {
+   "번호": 20,
+   "title": "DeepSeek harness 0.2 - Optional Bundle Architecture, Windows Sandbox improvements, Async Question Mode, Desktop release, Web Search without key",
+   "번역": true
+  },
+  {
+   "번호": 21,
+   "title": "What local AI model is good for game decomps/recomps?",
+   "번역": true
+  },
+  {
+   "번호": 22,
+   "title": "청동기 시대는 왜 붕괴했는가",
+   "번역": false
+  },
+  {
+   "번호": 23,
+   "title": "OpenAI’s Jev clone could help the frontier lab stop its swarming agents",
+   "번역": true
+  },
+  {
+   "번호": 24,
+   "title": "오스트리아, 개인 간 전력 공유 허용…태양광 잉여전력 직접 판매",
+   "번역": false
+  },
+  {
+   "번호": 25,
+   "title": "Meta disputes claim that Muse read a user’s private messages without permission",
+   "번역": true
+  },
+  {
+   "번호": 26,
+   "title": "Brian Chesky interview: AI agents need their own operating system",
+   "번역": true
+  },
+  {
+   "번호": 27,
+   "title": "구글, AI 모델 재학습 없이 ‘하네스’ 스스로 개선하는 ‘RRSI’ 공개",
+   "번역": false
+  },
+  {
+   "번호": 28,
+   "title": "Councilmember, residents push back on AI 'blight scores' given to homes",
+   "번역": true
+  },
+  {
+   "번호": 29,
+   "title": "ChatGPT can now virtually try on clothes for you",
+   "번역": true
+  },
+  {
+   "번호": 30,
+   "title": "Jeff-Qwen3.5-0.8B v1.2 + 9 LoRA adapters: put it in front of Qwen3.8-27B for 38× faster decisions and +8.7 points accuracy, for under 2 GB extra memory",
+   "번역": true
+  },
+  {
+   "번호": 31,
+   "title": "업스테이지, sLM '솔라 미니 4' 출시... '프로·미니' 투트랙 본격화",
+   "번역": false
+  },
+  {
+   "번호": 32,
+   "title": "AI CEO Interviews (2026)",
+   "번역": true
+  },
+  {
+   "번호": 33,
+   "title": "Show HN: Open-source model routing for coding agents at Astra-level performance",
+   "번역": true
+  },
+  {
+   "번호": 34,
+   "title": "Why am I like this? (Full Chat and Image generation on a 286 Tandy 1000 TL/3)",
+   "번역": true
+  },
+  {
+   "번호": 35,
+   "title": "GPT-6.1 Sol replaces GPT-6 Sol after just 7 days, with near-Astra intelligence",
+   "번역": true
+  },
+  {
+   "번호": 36,
+   "title": "Amazon releases its own Jev clone as decision models flood the web",
+   "번역": true
+  },
+  {
+   "번호": 37,
+   "title": "$5400 eBay 8x V100 server cranks on flash-next",
+   "번역": true
+  },
+  {
+   "번호": 38,
+   "title": "F/OSS Comics #11: BSD 유닉스 1화 – UC 버클리로 간 유닉스 코드",
+   "번역": true
+  },
+  {
+   "번호": 39,
+   "title": "생각을 정리하는 도구로서의 커밋 설명",
+   "번역": false
+  },
+  {
+   "번호": 40,
+   "title": "Google releases Gemini 4 Argon, called its most powerful model yet",
+   "번역": true
+  },
+  {
+   "번호": 41,
+   "title": "전남광주, 2027년 지적재조사 국비 101억원 확보…전년보다 13억원 늘어",
+   "번역": false
+  },
+  {
+   "번호": 42,
+   "title": "Pledge signed by President Trump and top AI leaders misspells the United States",
+   "번역": true
+  },
+  {
+   "번호": 43,
+   "title": "현대차그룹, 전국 고속도로서 피지컬 AI·지능형 충전 기술 실증",
+   "번역": false
+  },
+  {
+   "번호": 44,
+   "title": "Book of Shapes - 맞춤 설정 가능한 미니멀 생성형 SVG 패턴 모음",
+   "번역": false
+  },
+  {
+   "번호": 45,
+   "title": "The ugly economics of consumer AI",
+   "번역": true
+  },
+  {
+   "번호": 46,
+   "title": "오픈AI, 반도체 설계 전용 'GPT-시놉시스' 개발 합의…'수익 공유' 적용",
+   "번역": false
+  },
+  {
+   "번호": 47,
+   "title": "The Den frees up 10-15 hours a week to grow with ChatGPT Work",
+   "번역": true
+  },
+  {
+   "번호": 48,
+   "title": "구글, 내부서 '제미나이 4 아르곤' 성능 회의론...\"벤치맥싱 한계\" 지적",
+   "번역": false
+  },
+  {
+   "번호": 49,
+   "title": "버그 찾기",
+   "번역": false
+  },
+  {
+   "번호": 50,
+   "title": "PostgreSQL JSONB: JSON 데이터 조회, 수정 및 인덱싱",
+   "번역": false
+  },
+  {
+   "번호": 51,
+   "title": "비드래프트, 법률 데이터 학습 없이 글로벌 벤치마크 1위 달성",
+   "번역": false
+  },
+  {
+   "번호": 52,
+   "title": "Qwen3.8-27B Q4_K_M on one RTX 3090 + OpenCode: throughput, four coding tasks, and a reasoning-budget failure",
+   "번역": true
+  },
+  {
+   "번호": 53,
+   "title": "Google thinks SpaceX’s Starship has to launch 1,800 times before space data centers get off the ground",
+   "번역": true
+  },
+  {
+   "번호": 54,
+   "title": "제미나이 4 아르곤(Argon): 프론티어 인텔리전스의 새로운 시대",
+   "번역": false
+  },
+  {
+   "번호": 55,
+   "title": "Last.fm용 RSS 피드",
+   "번역": true
+  },
+  {
+   "번호": 56,
+   "title": "\"앤트로픽 몸값 1.5조 달러로 하향해야\"…월가의 AI IPO '거품' 경고",
+   "번역": false
+  },
+  {
+   "번호": 57,
+   "title": "Hearing tech startup Legato launches its AI hearing glasses",
+   "번역": true
+  },
+  {
+   "번호": 58,
+   "title": "Least to most expensive (Somewhat modern) GPU's with 32gb of vram (Under $1600) Based on ebay listings",
+   "번역": true
+  },
+  {
+   "번호": 59,
+   "title": "국가AI전략위 \"AI 속도조절보다 RSI 초지능 완성 전 기술 추격 우선\"",
+   "번역": false
+  },
+  {
+   "번호": 60,
+   "title": "‘Minecraft 플레이’에 열광하는 America.gov",
+   "번역": false
+  }
+ ]
+}
