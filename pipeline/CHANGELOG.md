@@ -1,5 +1,6 @@
 # pipeline/ CHANGELOG
 
+- 2026-10-16 · run_daily: 큐레이터에 fresh_since(실행 시각 - curator.FRESH_NEWS 26시간) 전달, 가짜 모델 검수는 옛 날짜 항목이라 넘기지 않음 · 사용자 뉴스 새로움 · run_daily --fake 통과
 - 2026-10-16 · run_daily: 큐레이터 전에 select_memo.load(오늘·어제 판정), 뒤에 select_memo.save(오늘 모델 판정), 보고에 select_reused·select_memo_saved. 가짜 모델 검수에서는 DB 기록을 읽고 쓰지 않음 · 같은 기사 이틀 판정 없애기 · run_daily --fake 통과
 - 2026-10-16 · promo: OpenAI 블로그 고객 사례 규칙 넓힘(제품 이름 뒤에 말이 붙는 "with ChatGPT and Codex"·"with OpenAI Daybreak"·"with GPT-6.1 Sol", 수치 자랑 동사 cuts·halves·saves·boosts, "into ChatGPT", 끝이 "with 회사명". OpenAI·ChatGPT가 주어인 자기 발표는 제외) · 10/8~10/11 골든셋에서 10/5 규칙을 지나 모델이 통과시킨 고객 사례 8건 · 골든셋 전체에서 걸린 것 38건 모두 정답 X(O 0건), 4일 합 정밀도 75.5% → 77.3%(재현율 그대로), check_promo 통과
 - 2026-10-15 · 메일 2라운드(회의 3장 2판): 세 무게(큰 소식 상자 없는 리드 28/22·둘째는 1px LINE+22, 뉴스 BG 위 LINE 괘선 목록·좋은/아쉬운 점 뺌, 흰 상자는 도구만), 머리 마크 타일칸(#15181E)+alt ">_"·"개발자용 AI·MCP 아침 브리핑"·날짜 36/26·둘째 줄 직군·장수만, '오늘 한눈에' → 도구 줄 상자(머리 verification.tool_head), 꼭지 "오늘의 큰 소식 ·" 삭제, ☆, 빈 날 웹과 같은 제목·본문 + "선별 기록 · {empty_reason}"·넓히기 먼저, LINE #C4C6BF / verification.tool_head·tool_counts 신규 / weekly MCP 줄 "샌드박스에서 설치해 본 MCP"(분모 원격 아닌 MCP) · 카드가 다 같은 상자라 위계가 없고 폰 길이가 길었음, 웹과 낱말·셈을 하나로 · check_mail_layout 44항목·check_weekly·check_deliver·check_headline 통과, demo_sample 메일 600 3324→2510px·390 3772→2832px

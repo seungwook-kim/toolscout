@@ -11,6 +11,7 @@
 """
 import random
 from dataclasses import asdict
+from datetime import datetime, timedelta
 from urllib.parse import urlsplit
 
 import models
@@ -25,6 +26,9 @@ PICK_MAX_NEWS, PICK_MAX_TOOLS, PICK_REASON_CHARS, PICK_SUMMARY_CHARS = 60, 20, 6
 # 중요도(agent/importance.py, Jev) 이 값 이하 뉴스는 사용자 후보에서 뺀다. 남는 뉴스가 PICK_MIN_STRONG건 미만이면 빼지 않는다.
 # 9/25 본인 뉴스 5장 중 4장이 모델 출시로 잘못 분류된 고객 사례였고, Jev는 이런 사례에 2~2.5점을 줬다 (2026-09-25)
 LOW_IMPORTANCE, PICK_MIN_STRONG = 2, 10
+# 사용자 뉴스는 원문이 이 시간 안인 것만 (2026-10-16 사용자 "더 빠른 뉴스"). 하루 1회 실행 24시간 + 피드 지연 여유 2시간.
+# 수집 창(sources/collect.NEWS_WINDOW 48시간)은 큰 소식의 다룬 곳 세기에 그대로 쓴다
+FRESH_NEWS = timedelta(hours=26)
 TOOL_TYPES = ("mcp", "skill")
 TOPIC_LINES = "\n".join(f"  - {key}: {label}. {schemas.TOPIC_GUIDE[key]}" for key, label in schemas.TOPICS.items())
 JSON_ONLY = "출력은 JSON 객체 하나만 쓴다. 설명 문장이나 코드 블록을 붙이지 않는다."
@@ -152,13 +156,16 @@ def _rank_by_weight(picks: list[dict], weights: dict) -> list[dict]:
     return [item | {"rank": rank} for rank, item in enumerate(ordered, 1)]
 
 
-async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_call=None) -> dict:
-    """사용자 한 명의 후보. 반환: {user_id, news, tools, empty, empty_reason, failed, failure_reason, excluded}."""
+async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_call=None,
+                        fresh_since: datetime | None = None) -> dict:
+    """사용자 한 명의 후보. 반환: {user_id, news, tools, empty, empty_reason, failed, failure_reason, excluded}.
+    fresh_since가 있으면 원문이 그보다 오래된 뉴스는 뺀다(excluded.stale)."""
     if models.dev_mode() and not memory.get("is_test"):
         raise PermissionError("개발 모드에서는 is_test 사용자만 무료 모델에 보낸다 (작업 규칙 7)")
     seen, weights = set(memory.get("seen_urls", [])), memory.get("weights", {})
     fresh = [item for item in selected if item["url"] not in seen and weights.get(item["topic"], 0) > -5]
-    news_all = [item for item in fresh if item["type"] == "news"]
+    news_all = [item for item in fresh if item["type"] == "news" and headline.is_fresh(item, fresh_since)]
+    stale = sum(item["type"] == "news" for item in fresh) - len(news_all)
     tools_all = [item for item in fresh if item["type"] in TOOL_TYPES]
     news, tools = _pick_pool(news_all, tools_all, weights)
     tools, same_owner = owners.spread(tools, memory.get("seen_recent_urls", []))
@@ -167,7 +174,7 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
             "excluded": {"seen": sum(item["url"] in seen for item in selected), "weight_minus5": len(selected) - len(fresh)
                          - sum(item["url"] in seen for item in selected),
                          "over_pick_cap": len(news_all) + len(tools_all) - len(news) - len(tools) - same_owner,
-                         "same_owner": same_owner}}
+                         "same_owner": same_owner, "stale": stale}}
     if not news and not tools:
         return plan | {"empty": True, "empty_reason": "오늘 선별된 새 항목이 없거나 모두 이미 봤다"}
     payload = {"profile": memory["profile"], "weights": {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS},
@@ -276,11 +283,13 @@ async def verification_requests(selected: list[dict], stats: Stats, model_call=N
 
 
 async def run(items: list[dict], memories: list[dict], seed: int | None = None, model_call=None,
-              related_pools: dict[int, list[dict]] | None = None, known: dict | None = None) -> dict:
+              related_pools: dict[int, list[dict]] | None = None, known: dict | None = None,
+              fresh_since: datetime | None = None) -> dict:
     """큐레이터 전체. 반환: {selected, plans, verify, stats, seed, format_failed, select_failed, judged}. model_call은 검수용 가짜 모델 주입.
 
     related_pools(사용자별 관련 카드 후보)가 있으면 그 사용자 plan에 related를 붙인다 (월요일).
     known: 다시 판정하지 않을 뉴스 판정(agent/select_memo.load). judged: 오늘 모델이 판정한 뉴스(select_memo.save에 넘긴다).
+    fresh_since: 사용자 뉴스와 큰 소식에 쓸 원문 시각 하한(실행 시각 - FRESH_NEWS). 없으면 거르지 않는다(검수).
 
     select_failed: 선별 묶음이 모두 모델 장애였다. 이때 사용자별 후보는 만들지 않고 모두 failed로 둔다.
     """
@@ -299,9 +308,9 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
         else:
             plans = []
             scored = await importance.rescore(selected) if model_call is None else None  # 검수(가짜 모델)에서는 Jev를 부르지 않는다
-            tops = await headline.pick(selected, stats, model_call)
+            tops = await headline.pick(selected, stats, model_call, fresh_since)
             for memory in memories:
-                plan = headline.attach(await pick_for_user(selected, memory, stats, model_call), tops, memory)
+                plan = headline.attach(await pick_for_user(selected, memory, stats, model_call, fresh_since), tops, memory)
                 if related_pools is not None and not plan["failed"] and memory["user_id"] in related_pools:
                     today_urls = {i["url"] for i in plan["news"] + plan["tools"]}
                     plan["related"] = await pick_related(related_pools[memory["user_id"]], memory, today_urls, stats, model_call)
@@ -310,7 +319,7 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
                 plans.append(plan)
             verify = await verification_requests(selected, stats, model_call)
         result = {"selected": selected, "plans": plans, "verify": verify, "stats": asdict(stats), "seed": seed,
-                  "headlines": [{k: t[k] for k in ("title", "url", "coverage", "score")} for t in tops], "importance": scored,
+                  "headlines": [{k: t[k] for k in ("title", "url", "coverage", "score", "group_titles")} for t in tops], "importance": scored,
                   "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id, "judged": judged}
         span.update(output={"selected": len(selected), "reused": sum(_reused(i, known or {}) for i in items),
                             "plans": [(p["user_id"], len(p["news"]), len(p["tools"]), len(p.get("related", []))) for p in plans],
