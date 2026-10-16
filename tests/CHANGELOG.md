@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-16 · agent/check_review 10항목(검토 대상·뺀 뉴스·judged 최종 판정·형식 실패 시 1차 유지·curator.run 연결·프롬프트 기준·fetch_select 반영), golden/fetch_select가 2차 검토("reviews")에서 뺀 뉴스를 worth_today false로, pipeline/run_daily 가짜 모델에 검토 답(모두 남김) · 선별 2차 검토 · check_review·run_daily --fake·check_rollback·check_verifier·check_anthropic 통과
 - 2026-10-16 · agent/check_select_memo 10항목(재사용 뉴스는 모델에 안 보냄·도구는 보냄·judged·전부 재사용이면 모델 안 부름·DB 오늘·어제만·덮어쓰기·7일 정리), db/check_tables 표 19개 · 선별 판정 재사용 · 통과
 - 2026-10-16 · check_promo 고객 사례 항목에 10/8~10/11 고객 사례 6건과 걸리면 안 되는 OpenAI 자기 발표 4건 · promo 고객 사례 규칙 넓힘 · check_promo 통과
 - 2026-10-16 · review_select_2026-10-08_11.csv에 개발자 판정, select_10-09·10-11에서 다른 2건(llama.cpp Vulkan 벤치마크 모음, Lean 정리 증명기 글과 그 한국어판)을 개발자 판정 O로, 네 파일 labeler에 검토 기록 · 골든셋 개발자 표본 검토 · 일치 38/40(95%, 95% 구간 83.5~98.6%), 고친 뒤 정밀도 4일 합 75.5%·재현율 90.0%(10/9 R 95.2%, 10/11 P 73.2%·R 89.7%), check_score_select 통과

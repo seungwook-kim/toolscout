@@ -53,6 +53,17 @@ class SelectionBatch(BaseModel):
     judgments: list[Judgment]
 
 
+class Review(BaseModel):
+    """선별 2차 검토: 통과한 뉴스 하나를 남길지 (agent/review.py, 2026-10-16)."""
+    id: int
+    keep: bool
+    reason: str = Field(min_length=2, max_length=120)
+
+
+class ReviewBatch(BaseModel):
+    reviews: list[Review]
+
+
 class Pick(BaseModel):
     """사용자별 후보 하나. why는 카드의 why_this_card로 이어진다."""
     id: int

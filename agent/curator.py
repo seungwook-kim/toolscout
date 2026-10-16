@@ -14,7 +14,7 @@ from dataclasses import asdict
 from urllib.parse import urlsplit
 
 import models
-from agent import card_why, headline, importance, owners, same_story, schemas, structured, tracing
+from agent import card_why, headline, importance, owners, review, same_story, schemas, structured, tracing
 from agent.structured import Stats
 
 ROLE = "curator"
@@ -37,6 +37,13 @@ SELECT_PROMPT = f"""너는 toolscout 큐레이터다. AI 에이전트를 만드�
   (행사 자리에서 새 모델·제품을 실제로 발표한 기사는 true)
   에세이·칼럼·의견 글, 개인 사용기·비교 후기, 커뮤니티 토론 글도 false
   AI 기업의 투자 유치·인수·실적, AI 서비스 장애·보안 사고, 신제품 발표 예고, 연구 결과 공개는 true
+  뉴스(type news)는 아래 기준을 더 쓴다. 도구(mcp·skill)에는 쓰지 않는다 (2026-10-16 골든셋, 통과한 뉴스는 agent/review.py가 한 번 더 본다)
+  true: 논문·연구 결과·벤치마크 순위 발표, 누구나 받아 쓸 수 있게 공개한 모델·도구·앱(개인이 Show HN·GitHub·Hugging Face에 올린 오픈소스도),
+    오픈소스 프로젝트의 새 기능·지원 추가, 보도로 드러난 AI 기업의 사건·조사·철회·소송, 주요 AI 기업(OpenAI·Anthropic·Google·Meta·Microsoft·Nvidia 등)의 계약·제휴
+  false: 사람의 발언·인터뷰·경고·해명·반박만 있는 기사(그 발언이 곧 정책·결정 발표면 true), 전망·분석·시장 논평 글,
+    기업이 AI를 도입해 효과를 봤다는 고객·도입 사례, 주요 AI 기업이 아닌 회사끼리의 업무협약(MOU)·협력 동맹,
+    개인이 자기 장비·설정에서 속도·벤치마크를 재 본 글과 장비 구성 글(코드·모델을 공개하지 않은 것),
+    AI가 곁다리로만 나오는 사회·문화·지역·법원·인물 기사, AI와 직접 관련 없는 일반 개발 도구·기업·하드웨어 소식
 - topic: 아래 주제 id 중 하나. 제목에 나온 단어가 아니라 이 글이 주로 무엇을 발표·다루는지로 정한다
   (예: 은행이 기존 모델로 상담을 자동화한 사례는 model_release가 아니라 industry, 새 AI 칩 발표는 coding_tools가 아니라 industry)
   agent_framework·mcp_tools·coding_tools는 개발 방법·도구 자체를 다룰 때만 쓴다. 제품 출시·기업 소식은 industry, 사고·규제·사회 문제는 safety_policy
@@ -282,6 +289,7 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
     with tracing.span("curator", kind="chain", input={"items": len(items), "users": len(memories), "seed": seed}) as span:
         judged: list[dict] = []
         selected = await select(items, stats, random.Random(seed), model_call, known or {}, judged)
+        selected, reviewed = await review.run(selected, set(known or {}), stats, model_call, judged)  # 통과한 뉴스 2차 검토
         batches = -(-sum(not _reused(i, known or {}) for i in items) // BATCH)
         select_failed = batches > 0 and sum(f["label"].startswith("선별") for f in stats.model_failures) == batches
         tops, scored = [], None
@@ -304,8 +312,8 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
             verify = await verification_requests(selected, stats, model_call)
         result = {"selected": selected, "plans": plans, "verify": verify, "stats": asdict(stats), "seed": seed,
                   "headlines": [{k: t[k] for k in ("title", "url", "coverage", "score")} for t in tops], "importance": scored,
-                  "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id, "judged": judged}
-        span.update(output={"selected": len(selected), "reused": sum(_reused(i, known or {}) for i in items),
+                  "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id, "judged": judged, "review": reviewed}
+        span.update(output={"selected": len(selected), "reused": sum(_reused(i, known or {}) for i in items), "review": reviewed,
                             "plans": [(p["user_id"], len(p["news"]), len(p["tools"]), len(p.get("related", []))) for p in plans],
                             "weights": {p["user_id"]: p.get("weights", {}) for p in plans},
                             "headlines": result["headlines"], "importance": scored,  # 큰 소식이 빠진 날 원인을 트레이스에서 본다
