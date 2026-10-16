@@ -22,7 +22,14 @@ PATTERNS = {
     "강연 영상": re.compile(r"\[(?:영상|video)\]", re.I),
 }
 OLD_YEAR = re.compile(r"\(((?:19|20)\d{2})\)\s*$")  # Hacker News·GeekNews가 예전 글 제목 끝에 붙이는 연도
-CUSTOMER = re.compile(r"\bwith (?:OpenAI|ChatGPT(?: \w+)?)\s*$|^How .+ (?:is|are) (?:reimagining|using|transforming|scaling)\b", re.I)
+# 10/16 골든셋(10/8~10/11)에서 10/5 규칙을 지나 모델까지 간 고객 사례 8건: 제품 이름 뒤에 말이 붙거나("with ChatGPT and Codex",
+# "with OpenAI Daybreak", "with GPT-6.1 Sol"), 수치 자랑 동사("cuts", "halves"), "into ChatGPT", 끝이 "with 회사명"
+PRODUCT = r"(?:OpenAI|ChatGPT|Codex|GPT-[\w.]+)"
+CUSTOMER = re.compile(
+    rf"\bwith {PRODUCT}(?: \w+){{0,3}}\s*$"
+    r"|^How .+ (?:is|are) (?:reimagining|using|transforming|scaling)\b|^How \S+(?: \S+){0,3} (?:turns|uses|builds|scales)\b"
+    rf"|^(?!{PRODUCT}\b)\S+(?: \S+){{0,3}} (?:cuts|halves|saves|boosts|frees up|doubles|triples)\b"
+    r"|\binto ChatGPT\s*$|\bwith (?-i:[A-Z])[\w&.-]+\s*$", re.I)
 ANNOUNCED = re.compile(r"\b(?:launch(?:es|ed)?|unveil(?:s|ed)?|announce(?:s|d)?|debut(?:s|ed)?|release(?:s|d)?)\b|공개|출시|발표", re.I)
 
 

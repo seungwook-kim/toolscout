@@ -29,7 +29,15 @@ def title_rules() -> dict:
     customer = [({"type": "news", "source": "openai", "title": t}, want) for t, want in (
         ("How Albertsons Companies is reimagining retail from the inside out", "고객 사례"),
         ("Chatham scales its capital markets expertise with OpenAI", "고객 사례"), ("A model guide for the GPT-6 family", None),
-        ("Disrupting a coordinated model-distillation campaign", None))]
+        ("Disrupting a coordinated model-distillation campaign", None),
+        # 10/16: 10/8~10/11에 규칙을 지나 모델까지 간 고객 사례와, 걸리면 안 되는 OpenAI 자기 발표
+        ("How Oracle turns days of work into minutes with ChatGPT and Codex", "고객 사례"),
+        ("Sophos cuts threat investigation time by 96% with OpenAI Daybreak", "고객 사례"),
+        ("Asana cuts model costs 76x in browser tests with GPT-6.1 Sol", "고객 사례"),
+        ("LegalOn halves Codex costs while maintaining development speed", "고객 사례"),
+        ("Advancing computer use with Ironclad", "고객 사례"), ("Radisson Hotel Group brings hotel discovery into ChatGPT", "고객 사례"),
+        ("OpenAI cuts API prices by 50%", None), ("ChatGPT doubles context window", None), ("Introducing GPT-6 with memory", None),
+        ("Atlassian and OpenAI expand partnership to turn enterprise knowledge into action", None))]
     customer.append(({"type": "news", "source": "techcrunch", "title": "How startups are using OpenAI models"}, None))
     golden = [i for path in sorted(Path("tests/golden").glob("select_*.json")) for i in json.loads(path.read_text(encoding="utf-8"))["items"]]
     caught = [(i["label"], promo.reason({"type": "news", **i})) for i in golden]
