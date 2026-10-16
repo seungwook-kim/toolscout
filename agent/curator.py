@@ -1,7 +1,7 @@
 """큐레이터 (계획안 5장, 부록 B 1~3). 선별 → 사용자별 후보 → 검증 요청 목록.
 
 - 선별: 정리된 항목을 무작위로 섞어 20건씩 묶어 판정한다 (AI 관련·오늘 볼 만함·주제·근거 한 줄)
-- 사용자별: 기억(프로필·가중치·본 항목)을 읽어 뉴스 최대 5 + 도구 최대 3. 본 항목과 가중치 -5 주제는 뺀다
+- 사용자별: 기억(프로필·가중치·본 항목)을 읽어 뉴스 최대 10(별점 3 이상, 별점 순) + 도구 최대 3. 본 항목과 가중치 -5 주제는 뺀다
   성립하지 않으면 줄이고, 0건이면 "오늘 비움"과 이유를 남긴다
 - 검증 요청: MCP·스킬 후보 중 하루 최대 5건. 이번 단계에서는 목록만 만들고 검증관은 부르지 않는다
 - 관련 카드(F3-b, 월요일): 쌓인 도구 목록에서 미리 좁힌 후보(pipeline/persist.related_pool) 중 최대 3개. 오늘 후보와 겹치면 뺀다
@@ -23,15 +23,13 @@ BATCH = 20
 SUMMARY_CHARS = 200
 # 사용자별 후보 단계 입력 상한. 로컬 모델 문맥 8192토큰에서 후보 140건(약 7.7K토큰)을 넣자 답이 잘려 빈 후보가 됐다 (2026-09-15)
 PICK_MAX_NEWS, PICK_MAX_TOOLS, PICK_REASON_CHARS, PICK_SUMMARY_CHARS = 60, 20, 60, 120
-# 중요도(agent/importance.py, Jev) 이 값 이하 뉴스는 사용자 후보에서 뺀다. 남는 뉴스가 PICK_MIN_STRONG건 미만이면 빼지 않는다.
-# 9/25 본인 뉴스 5장 중 4장이 모델 출시로 잘못 분류된 고객 사례였고, Jev는 이런 사례에 2~2.5점을 줬다 (2026-09-25)
-LOW_IMPORTANCE, PICK_MIN_STRONG = 2, 10
+# 별점(중요도, agent/importance.py Jev) 이 값 미만 뉴스는 보여 주지 않는다. 모자라면 적게 보낸다
+# (2026-10-16 사용자 "점수 높은 순위로 뉴스 10개, 의미없는 것까지 다 보여줄 필요는 없어보임". Jev 2점은 작은 도구·작은 투자·고객 사례.
+# 9/25에는 남는 뉴스가 10건 미만이면 2점도 채웠다)
+MIN_IMPORTANCE = 3
 # 사용자 뉴스는 원문이 이 시간 안인 것만 (2026-10-16 사용자 "더 빠른 뉴스"). 하루 1회 실행 24시간 + 피드 지연 여유 2시간.
 # 수집 창(sources/collect.NEWS_WINDOW 48시간)은 큰 소식의 다룬 곳 세기에 그대로 쓴다
 FRESH_NEWS = timedelta(hours=26)
-# 사용자 뉴스 중 별점이 낮아도 프로필과 직접 이어지는 "맞춘 소식" 자리. 큰 소식이 자리를 차지해도 이 자리는 남긴다 (headline.attach)
-# 2026-10-16 사용자 "일반 AI가 뽑아오는 뉴스와 똑같음": 별점 순만 쓰면 여러 매체가 다룬 소식만 남는다
-MAX_MINE = 2
 TOOL_TYPES = ("mcp", "skill")
 TOPIC_LINES = "\n".join(f"  - {key}: {label}. {schemas.TOPIC_GUIDE[key]}" for key, label in schemas.TOPICS.items())
 JSON_ONLY = "출력은 JSON 객체 하나만 쓴다. 설명 문장이나 코드 블록을 붙이지 않는다."
@@ -55,18 +53,17 @@ SELECT_PROMPT = f"""너는 toolscout 큐레이터다. AI 에이전트를 만드�
 {JSON_ONLY} 형식: {{"judgments": [{{"id": 1, "ai_related": true, "worth_today": true, "topic": "mcp_tools", "importance": 3, "reason": "..."}}]}}"""
 
 PICK_PROMPT = f"""너는 toolscout 큐레이터다. 한 사용자의 기억(프로필·주제 가중치)을 보고 오늘 후보 중 이 사용자에게 보여줄 항목을 고른다.
-- news: 뉴스 후보에서 최대 {schemas.MAX_NEWS}건, tools: 도구 후보에서 최대 {schemas.MAX_TOOLS}건. 중요한 순서로 쓴다
-- 직군·쓰는 도구·자유 한 줄과 실제로 이어지는 항목만 고른다. 연결이 약하면 개수를 줄이고 억지로 채우지 않는다
+- news: 뉴스 후보에서 최대 {schemas.MAX_NEWS}건, tools: 도구 후보에서 최대 {schemas.MAX_TOOLS}건
+- 뉴스 후보는 importance(1~5, 별점) 높은 순으로 줄 서 있다. 별점이 높을수록 먼저, 앞에서부터 최대 {schemas.MAX_NEWS}건 고른다.
+  프로필과 연결이 약해도 별점이 높은 뉴스는 고른다. 빼는 것은 아래 같은 소식 중복과 보기 싫다고 적힌 것뿐이다
+- 도구는 직군·쓰는 도구·자유 한 줄과 실제로 이어지는 것만 고른다. 연결이 약하면 개수를 줄이고 억지로 채우지 않는다
 - 같은 발표·같은 출시·같은 사건을 다룬 뉴스는 언어·매체가 달라도 하나만 고른다(공식 발표 원문이 있으면 그것). 남는 자리는 다른 소식으로 채운다
 - 가중치가 음수인 주제는 뒤로 미루고 양수인 주제는 앞으로 당긴다
-- 뉴스의 importance(1~5, 별점)가 높을수록 먼저 고른다. 별점이 낮은 뉴스는 프로필과 분명히 이어질 때만 고른다
-- 뉴스 중 최대 {MAX_MINE}건은 mine: true인 "이 사용자에게 맞춘 소식" 자리다. 여러 매체가 다 다룬 큰 소식이 아니라 별점이 3 이하라도
-  쓰는 도구·자유 한 줄·가중치 높은 주제와 직접 이어지는 소식을 넣는다. 그런 소식이 없으면 mine 없이 별점 순으로 채운다
 - 자유 한 줄에 보기 싫다고 적힌 기술·주제·회사는 고르지 않는다. 이 제외는 다른 기준보다 먼저다
 - why: 이 사용자에게 왜 이 카드인지 한국어 한 줄 (80자 이내). 프로필의 무엇(직군·쓰는 도구·자유 한 줄·가중치 높은 주제)과 이어지는지
   구체적으로 쓰고 "~해서 골랐습니다"처럼 합니다체로 끝낸다. "관심 있는 개발자에게 유용한 도구입니다"처럼 어느 항목에나 붙는 말은 쓰지 않는다
 - 뉴스와 도구가 모두 0건이면 empty_reason에 이유를 한 줄로 쓴다
-{JSON_ONLY} 형식: {{"news": [{{"id": 1, "why": "...", "mine": false}}], "tools": [{{"id": 1, "why": "..."}}], "empty_reason": null}}"""
+{JSON_ONLY} 형식: {{"news": [{{"id": 1, "why": "..."}}], "tools": [{{"id": 1, "why": "..."}}], "empty_reason": null}}"""
 
 RELATED_PICK_INPUT, RELATED_DESCRIPTION_CHARS = 30, 100  # 로컬 모델 문맥 8192토큰 안에 들게 후보 단계와 비슷한 크기로
 RELATED_PROMPT = f"""너는 toolscout 큐레이터다. 주 1회 관련 카드로, 날짜와 상관없이 이 사용자에게 맞는 MCP·스킬을 최대 {schemas.MAX_RELATED}개 고른다.
@@ -142,16 +139,28 @@ async def select(items: list[dict], stats: Stats, rng: random.Random, model_call
 
 
 def _pick_pool(news: list[dict], tools: list[dict], weights: dict) -> tuple[list[dict], list[dict]]:
-    """후보 단계에 넣을 항목. 중요도 낮은 뉴스를 빼고(남는 게 충분할 때만), 상한을 넘으면 뉴스는 주제 가중치 > 별점(중요도) > 공식·매체·커뮤니티 > 최신,
-    도구는 가중치 > 별 수 순으로 자른다."""
+    """후보 단계에 넣을 항목. 별점 MIN_IMPORTANCE 미만 뉴스는 빼고, 뉴스는 별점 > 주제 가중치 > 공식·매체·커뮤니티 > 최신,
+    도구는 가중치 > 별 수 순으로 줄 세워 상한에서 자른다."""
     from pipeline.dedupe import SOURCE_TIER
 
-    strong = [i for i in news if i.get("importance", 3) > LOW_IMPORTANCE]
-    news = strong if len(strong) >= PICK_MIN_STRONG else news
+    news = [i for i in news if i.get("importance", 3) >= MIN_IMPORTANCE]
     news = sorted(news, key=lambda i: str(i.get("published_at") or ""), reverse=True)
-    news.sort(key=lambda i: (-weights.get(i["topic"], 0), -i.get("importance", 3), SOURCE_TIER.get(i["source"], 9)))
+    news.sort(key=_news_order(weights, SOURCE_TIER))
     tools = sorted(tools, key=lambda i: (-weights.get(i["topic"], 0), -(i.get("stars") or 0)))
     return news[:PICK_MAX_NEWS], tools[:PICK_MAX_TOOLS]
+
+
+def _news_order(weights: dict, tiers: dict):
+    """뉴스 순서: 별점(중요도) 높은 순, 같은 별점이면 주제 가중치(피드백), 그다음 공식·매체·커뮤니티 (2026-10-16 사용자 "점수 높은 순위로")."""
+    return lambda i: (-i.get("importance", 3), -weights.get(i["topic"], 0), tiers.get(i["source"], 9))
+
+
+def _rank_by_score(picks: list[dict], weights: dict) -> list[dict]:
+    """모델이 고른 뉴스를 별점 순(_news_order)으로 다시 세운다. 모델이 순서를 바꿔도 메일·화면은 별점 순이다."""
+    from pipeline.dedupe import SOURCE_TIER
+
+    ordered = sorted(picks, key=_news_order(weights, SOURCE_TIER))
+    return [item | {"rank": rank} for rank, item in enumerate(ordered, 1)]
 
 
 def _rank_by_weight(picks: list[dict], weights: dict) -> list[dict]:
@@ -201,11 +210,9 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
         return plan | {"failed": True, "failure_reason": stats.model_failed(label, exc)}
     if parsed is None:
         return plan | {"empty": True, "empty_reason": "후보 선정 응답 형식 실패"}
-    mine = [p.id for p in parsed.news if p.mine][:MAX_MINE]
-    picked, plan["same_story_dropped"] = await same_story.drop([{**news[p.id - 1], "why": p.why, "mine": p.id in mine}
-                                                                for p in parsed.news], stats, model_call)
+    picked, plan["same_story_dropped"] = await same_story.drop([{**news[p.id - 1], "why": p.why} for p in parsed.news], stats, model_call)
     # 카드의 "이 카드인 이유"는 데이터 근거로, 모델이 쓴 이유는 pick_why로 트레이스에만 (agent/card_why.py)
-    plan["news"] = card_why.attach(_rank_by_weight(picked, weights), memory)
+    plan["news"] = card_why.attach(_rank_by_score(picked, weights), memory)
     plan["tools"] = card_why.attach(_rank_by_weight([{**tools[p.id - 1], "why": p.why} for p in parsed.tools], weights), memory)
     plan["weights"] = {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS}  # 트레이스에 가중치가 보이게
     if not plan["news"] and not plan["tools"]:

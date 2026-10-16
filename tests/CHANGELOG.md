@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-16 · check_select_rule 맞춘 소식 3항목 → 뉴스 10건·별점 3 이상·모델 순서와 상관없이 별점 순·큰 소식 포함 10건(11항목), check_importance "10건 미만이면 빼지 않음" → "적어도 2점 이하는 채우지 않음" · 뉴스 10건 별점 순 · 통과
 - 2026-10-16 · sources/check_new_feeds 6항목(출처 등급·해설가 허용 도메인·--live 실제 수집) · 새 출처 8곳 · 통과
 - 2026-10-16 · agent/check_select_rule 7 → 10항목(맞춘 소식 최대 2건·프롬프트·큰 소식이 와도 남음) · 맞춘 소식 자리 · 통과
 - 2026-10-16 · agent/check_news_fresh 9항목(26시간 지난 뉴스 빠짐·시각 모름과 도구는 그대로·excluded.stale·큰 소식은 새 기사가 하나라도 있어야·group_titles) · 사용자 뉴스 새로움 · 통과

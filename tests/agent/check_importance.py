@@ -14,7 +14,7 @@
 - 번호가 빠진 답은 1회 다시 묻고 그래도 틀리면, 모델 장애면 그 묶음은 선별 점수 그대로
 공통
 - curator.run은 가짜 모델(검수)일 때 중요도 모델·Jev를 부르지 않는다
-- 중요도 2 이하 뉴스는 사용자 후보에서 빠짐(남는 게 10건 미만이면 그대로)
+- 중요도 2 이하 뉴스는 사용자 후보에서 빠짐. 남는 게 적어도 채우지 않는다 (2026-10-16 사용자 "의미없는 것까지 다 보여줄 필요는 없어보임")
 """
 import asyncio
 import json
@@ -236,7 +236,7 @@ async def main() -> None:
     pool, _ = curator._pick_pool([news_item(n, 2) for n in range(4)] + [news_item(n, 4) for n in range(10, 20)], [], {"model_release": 5})
     check("중요도 2 이하 뉴스는 후보에서 빠짐", len(pool) == 10 and all(i["importance"] > 2 for i in pool))
     few, _ = curator._pick_pool([news_item(n, 2) for n in range(4)] + [news_item(n, 4) for n in range(10, 15)], [], {})
-    check("남는 뉴스가 10건 미만이면 빼지 않음", len(few) == 9)
+    check("남는 뉴스가 적어도 2점 이하는 채우지 않음", len(few) == 5 and all(i["importance"] > 2 for i in few))
 
     called = []
     original = importance.rescore
