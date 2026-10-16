@@ -74,7 +74,11 @@ def attach(plan: dict, tops: list[dict], memory: dict) -> dict:
     if not tops:
         return plan
     covered = {u for t in tops for u in t["group_urls"]}
-    rest = [i for i in plan["news"] if i["url"] not in covered][:schemas.MAX_NEWS - len(tops)]
+    rest, room = [i for i in plan["news"] if i["url"] not in covered], schemas.MAX_NEWS - len(tops)
+    # 맞춘 소식(mine, curator.MAX_MINE)은 큰 소식이 자리를 차지해도 남기고 별점 순 뉴스를 줄인다
+    mine = [i["url"] for i in rest if i.get("mine")][:room]
+    keep = set(mine + [i["url"] for i in rest if not i.get("mine")][:room - len(mine)])
+    rest = [i for i in rest if i["url"] in keep]
     plan["news"] = [item | {"rank": rank} for rank, item in enumerate(tops + rest, 1)]
     plan["headline"] = [t["title"] for t in tops]
     if plan.get("empty"):

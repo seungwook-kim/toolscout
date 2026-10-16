@@ -58,6 +58,7 @@ class Pick(BaseModel):
     """사용자별 후보 하나. why는 카드의 why_this_card로 이어진다."""
     id: int
     why: str = Field(min_length=2, max_length=120)
+    mine: bool = False  # 뉴스만: 별점이 낮아도 이 사용자에게 맞춘 소식 자리 (agent/curator.MAX_MINE)
 
 
 class UserPicks(BaseModel):
@@ -152,6 +153,7 @@ class Card(BaseModel):
     notice: str | None = None  # "원문 확인 필요", "수집 실패, 전날 기준"을 " · "로 잇는다
     related: bool = False  # 관련 카드(F3-b, 월요일). 메일·화면에서 칸을 따로 둔다
     headline: bool = False  # 오늘의 큰 소식 (agent/headline.py). 뉴스 맨 위에 고정
+    mine: bool = False  # 맞춘 소식 자리 (agent/curator.MAX_MINE). 화면 표시는 아직 없고 효과 측정용
     verification_note: str | None = None  # 검증 결과 대신 메모 ("설치법 미확인", "설치 실패" 등, 세션 8)
     trace_id: str = Field(min_length=1)  # trace_id 없는 카드는 만들지 않는다 (작업 규칙 10)
 
