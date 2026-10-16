@@ -34,7 +34,7 @@ from sqlmodel import select
 import db
 import memory
 import models
-from agent import curator, explainer, loop, tracing
+from agent import curator, explainer, loop, select_memo, tracing
 from agent.structured import MAX_EXAMPLES, Stats
 from pipeline import persist, presend, promo, rollback, tool_updates, validate, verification
 from pipeline.dedupe import SOURCE_TIER, dedupe
@@ -143,7 +143,10 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
             memories.append(mem | {"seen_urls": [url for url in mem["seen_urls"] if url not in pending]})
 
         pools = {m["user_id"]: await asyncio.to_thread(persist.related_pool, m) for m in memories} if with_related else None
-        curated = await curator.run(curator_input, memories, model_call=model_call, related_pools=pools) if memories else None
+        # 오늘·어제 판정한 뉴스는 그 판정을 쓴다(agent/select_memo.py). 검수(가짜 모델)에서는 DB 기록을 읽거나 쓰지 않는다
+        known = await asyncio.to_thread(select_memo.load, today, curator_input) if memories and model_call is None else {}
+        curated = await curator.run(curator_input, memories, model_call=model_call, related_pools=pools, known=known) if memories else None
+        memo_saved = await asyncio.to_thread(select_memo.save, today, curated["judged"]) if curated and model_call is None else 0
         catalog_saved = await asyncio.to_thread(save_catalog, today, curated["selected"]) if curated else 0
         verify_saved = await asyncio.to_thread(verification.save_requests, today, curated["verify"]) if curated else 0
         # 받아 본 MCP의 새 버전은 도구 칸 맨 앞에 (pipeline/tool_updates.py). 발송 전 검증이 새 버전을 다시 설치해 본다
@@ -211,7 +214,7 @@ async def run(today: date | None = None, *, items: list[dict] | None = None, mcp
         report = {
             "date": str(today), "dev_mode": models.dev_mode(), "options": {"users": users, "limit": limit},
             "collected": len(items), "prepared": len(prepared), "curator_input": len(curator_input),
-            "source_failures": failures, "skipped_sent_users": sorted(sent), "catalog_saved": catalog_saved, "verify_saved": verify_saved, "skills_reviewed": skills_reviewed, "promo_dropped": promo_dropped, "tool_updates": updates_added,
+            "source_failures": failures, "skipped_sent_users": sorted(sent), "catalog_saved": catalog_saved, "verify_saved": verify_saved, "skills_reviewed": skills_reviewed, "promo_dropped": promo_dropped, "select_reused": len(known), "select_memo_saved": memo_saved, "tool_updates": updates_added,
             "mcps_probed": mcps_probed,
             "selected": len(curated["selected"]) if curated else 0, "verify_requests": len(curated["verify"]) if curated else 0,
             "users": results,

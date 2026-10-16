@@ -1,4 +1,4 @@
-"""SQLModel 데이터 표 12개 (계획안 9.5, used_tokens는 2026-09-15, invite_codes는 2026-09-16 추가).
+"""SQLModel 데이터 표 (계획안 9.5, used_tokens는 2026-09-15, invite_codes는 2026-09-16, select_memos는 2026-10-16 추가. 목록은 TABLES).
 
 DB는 Supabase(Postgres) 하나로 간다. 연결 문자열은 .env의 DATABASE_URL에만 둔다.
 드라이버는 psycopg 3. Supabase에서 복사한 postgresql:// 문자열을 그대로 넣으면 여기서 변환한다.
@@ -324,9 +324,25 @@ class AppSecret(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utcnow)
 
 
+class SelectMemo(SQLModel, table=True):
+    """뉴스 선별 판정 기록 (2026-10-16 사용자 결정, agent/select_memo.py). 수집 창이 48시간이라 전날 판정한 뉴스가 다시 들어오면
+    모델에 다시 보내지 않고 이 판정을 쓴다. 기사 본문·요약은 두지 않는다(작업 규칙 9). 7일 지난 행은 저장할 때 지운다."""
+    __tablename__ = "select_memos"
+
+    url: str = Field(primary_key=True)
+    day: Date = Field(primary_key=True)
+    title: str
+    ai_related: bool
+    worth_today: bool
+    topic: str
+    importance: int
+    reason: str
+    created_at: datetime = Field(default_factory=utcnow)
+
+
 TABLES = ["users", "weights", "seen", "items", "probes", "skill_reviews", "briefings", "feedback", "questions", "used_tokens",
           "verify_requests", "invite_codes", "status_changes", "email_codes",
-          "blocked_clients", "rate_counters", "app_secrets", "support_messages"]
+          "blocked_clients", "rate_counters", "app_secrets", "support_messages", "select_memos"]
 
 
 def database_url() -> URL:

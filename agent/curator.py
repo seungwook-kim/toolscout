@@ -87,11 +87,19 @@ def _brief(item: dict, n: int) -> dict:
     return {"id": n, "type": item["type"], "source": item["source"], "title": item["title"], "summary": item.get("summary", "")[:SUMMARY_CHARS]} | ({"link_site": site} if site else {})
 
 
-async def select(items: list[dict], stats: Stats, rng: random.Random, model_call=None) -> list[dict]:
-    """20건 묶음 판정. 반환: AI 관련이고 오늘 볼 만한 항목 (topic·reason이 붙는다)."""
-    order = list(range(len(items)))
+def _reused(item: dict, known: dict) -> bool:
+    return item["type"] == "news" and item.get("url") in known
+
+
+async def select(items: list[dict], stats: Stats, rng: random.Random, model_call=None, known: dict | None = None,
+                 judged: list | None = None) -> list[dict]:
+    """20건 묶음 판정. 반환: AI 관련이고 오늘 볼 만한 항목 (topic·reason이 붙는다).
+    known: 오늘·어제 판정이 있는 뉴스(agent/select_memo.py)는 모델에 보내지 않고 그 판정을 쓴다. judged: 모델이 판정한 뉴스를 여기에 모은다."""
+    known = known or {}
+    order = [i for i, item in enumerate(items) if not _reused(item, known)]
     rng.shuffle(order)
-    selected = []
+    selected = [{**item, **{k: known[item["url"]][k] for k in ("topic", "importance", "reason")}} for item in items
+                if _reused(item, known) and known[item["url"]]["ai_related"] and known[item["url"]]["worth_today"]]
     for start in range(0, len(order), BATCH):
         batch = order[start:start + BATCH]
 
@@ -108,6 +116,9 @@ async def select(items: list[dict], stats: Stats, rng: random.Random, model_call
             stats.model_failed(label, exc)
             continue
         for judgment in parsed.judgments if parsed else []:
+            if judged is not None and items[batch[judgment.id - 1]]["type"] == "news":
+                judged.append({"url": items[batch[judgment.id - 1]].get("url"), "title": items[batch[judgment.id - 1]]["title"],
+                               **judgment.model_dump(include={"ai_related", "worth_today", "topic", "importance", "reason"})})
             if judgment.ai_related and judgment.worth_today:
                 selected.append({**items[batch[judgment.id - 1]], "topic": judgment.topic, "importance": judgment.importance,
                                  "reason": judgment.reason})
@@ -258,18 +269,20 @@ async def verification_requests(selected: list[dict], stats: Stats, model_call=N
 
 
 async def run(items: list[dict], memories: list[dict], seed: int | None = None, model_call=None,
-              related_pools: dict[int, list[dict]] | None = None) -> dict:
-    """큐레이터 전체. 반환: {selected, plans, verify, stats, seed, format_failed, select_failed}. model_call은 검수용 가짜 모델 주입.
+              related_pools: dict[int, list[dict]] | None = None, known: dict | None = None) -> dict:
+    """큐레이터 전체. 반환: {selected, plans, verify, stats, seed, format_failed, select_failed, judged}. model_call은 검수용 가짜 모델 주입.
 
     related_pools(사용자별 관련 카드 후보)가 있으면 그 사용자 plan에 related를 붙인다 (월요일).
+    known: 다시 판정하지 않을 뉴스 판정(agent/select_memo.load). judged: 오늘 모델이 판정한 뉴스(select_memo.save에 넘긴다).
 
     select_failed: 선별 묶음이 모두 모델 장애였다. 이때 사용자별 후보는 만들지 않고 모두 failed로 둔다.
     """
     seed = seed if seed is not None else random.randrange(1 << 30)
     stats = Stats()
     with tracing.span("curator", kind="chain", input={"items": len(items), "users": len(memories), "seed": seed}) as span:
-        selected = await select(items, stats, random.Random(seed), model_call)
-        batches = -(-len(items) // BATCH)
+        judged: list[dict] = []
+        selected = await select(items, stats, random.Random(seed), model_call, known or {}, judged)
+        batches = -(-sum(not _reused(i, known or {}) for i in items) // BATCH)
         select_failed = batches > 0 and sum(f["label"].startswith("선별") for f in stats.model_failures) == batches
         tops, scored = [], None
         if select_failed:
@@ -291,8 +304,8 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
             verify = await verification_requests(selected, stats, model_call)
         result = {"selected": selected, "plans": plans, "verify": verify, "stats": asdict(stats), "seed": seed,
                   "headlines": [{k: t[k] for k in ("title", "url", "coverage", "score")} for t in tops], "importance": scored,
-                  "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id}
-        span.update(output={"selected": len(selected),
+                  "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id, "judged": judged}
+        span.update(output={"selected": len(selected), "reused": sum(_reused(i, known or {}) for i in items),
                             "plans": [(p["user_id"], len(p["news"]), len(p["tools"]), len(p.get("related", []))) for p in plans],
                             "weights": {p["user_id"]: p.get("weights", {}) for p in plans},
                             "headlines": result["headlines"], "importance": scored,  # 큰 소식이 빠진 날 원인을 트레이스에서 본다
