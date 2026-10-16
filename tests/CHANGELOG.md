@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-16 · golden/select_2026-10-08·09·10·11.json(뉴스 186·176·165·152건, Claude Code가 모델 판정을 보지 않고 채점)·run_select 10/9~10/11, 개발자 검토용 표본 review_select_2026-10-08_11.csv(날마다 O 5·X 5, 40건) · 10/5 제목 규칙 뒤 선별 정밀도 다시 재기(10/12~10/15는 Langfuse 클라우드 429로 못 꺼냄) · 정밀도 76.3%·81.6%·69.4%·71.8%(4일 합 75.2%, 10/2~10/4 합 66.2%), 재현율 88.7%·96.4%·85.5%·91.1%(4일 합 90.6%), check_score_select 통과
 - 2026-10-15 · README check_minify 설명에 'JS 원본 그대로' · 검사 항목 추가 반영 · 문서만
 - 2026-10-15 · check_minify: JS 파일이 경량화 뒤에도 원본과 같은지 보는 항목 추가, 크기 감소 항목은 HTML·CSS만 · 운영에서 rjsmin이 템플릿 문자열 안 공백을 지워 아이콘이 깨진 일 · check_minify 통과
 - 2026-10-15 · pipeline/check_mail_layout 44항목(세 무게·마크 alt와 타일칸·설명 글·날짜 36/26·리드 28/22·도구 줄 상자 머리·verdict_cases.json tool_head 사례를 파이썬 verification.tool_head로·빈 날 세 줄과 선별 기록·꼭지에 '오늘의 큰 소식' 없음·☆·고정폭 숫자 공백 없음·RULE 2px 넷), check_weekly 분모(원격 아닌 MCP, 미검증 포함)·새 MCP 줄 낱말, agent/check_headline 메일 항목을 '업계 큰 소식' 리드로 · 메일 2라운드(3장 2판 6절) · 넷 모두 통과
