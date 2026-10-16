@@ -34,7 +34,7 @@ def fake(sent: list[str]):
         if '"judgments"' in system:
             data = json.loads(messages[-1].content.split("<data>\n")[1].split("\n</data>")[0])
             sent.extend(d["title"] for d in data)
-            reply = {"judgments": [{"id": d["id"], "ai_related": True, "worth_today": "통과" in d["title"], "topic": "industry",
+            reply = {"judgments": [{"id": d["id"], "ai_related": "통과" in d["title"], "worth_today": "통과" in d["title"], "topic": "industry",
                                     "importance": 3, "reason": "모델 판정"} for d in data]}
         elif '"groups"' in system:
             reply = {"groups": []}
@@ -54,7 +54,7 @@ async def selection() -> None:
     items = [news(1, "어제 통과"), news(2, "어제 탈락"), news(3, "새 통과"), news(4, "새 탈락"),
              {"type": "mcp", "source": "mcp_registry", "title": "도구 통과", "url": f"{TEST_URL}1", "summary": "s"}]
     known = {f"{TEST_URL}1": {"ai_related": True, "worth_today": True, "topic": "model_release", "importance": 5, "reason": "어제 근거"},
-             f"{TEST_URL}2": {"ai_related": True, "worth_today": False, "topic": "industry", "importance": 2, "reason": "어제 근거"}}
+             f"{TEST_URL}2": {"ai_related": False, "worth_today": False, "topic": "industry", "importance": 2, "reason": "어제 근거"}}
     sent, judged = [], []
     selected = await curator.select(items, Stats(), random.Random(1), fake(sent), known, judged)
     by_title = {i["title"]: i for i in selected}

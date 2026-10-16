@@ -14,7 +14,7 @@ from dataclasses import asdict
 from urllib.parse import urlsplit
 
 import models
-from agent import card_why, headline, importance, owners, review, same_story, schemas, structured, tracing
+from agent import card_why, headline, importance, owners, same_story, schemas, structured, tracing
 from agent.structured import Stats
 
 ROLE = "curator"
@@ -37,13 +37,7 @@ SELECT_PROMPT = f"""너는 toolscout 큐레이터다. AI 에이전트를 만드�
   (행사 자리에서 새 모델·제품을 실제로 발표한 기사는 true)
   에세이·칼럼·의견 글, 개인 사용기·비교 후기, 커뮤니티 토론 글도 false
   AI 기업의 투자 유치·인수·실적, AI 서비스 장애·보안 사고, 신제품 발표 예고, 연구 결과 공개는 true
-  뉴스(type news)는 아래 기준을 더 쓴다. 도구(mcp·skill)에는 쓰지 않는다 (2026-10-16 골든셋, 통과한 뉴스는 agent/review.py가 한 번 더 본다)
-  true: 논문·연구 결과·벤치마크 순위 발표, 누구나 받아 쓸 수 있게 공개한 모델·도구·앱(개인이 Show HN·GitHub·Hugging Face에 올린 오픈소스도),
-    오픈소스 프로젝트의 새 기능·지원 추가, 보도로 드러난 AI 기업의 사건·조사·철회·소송, 주요 AI 기업(OpenAI·Anthropic·Google·Meta·Microsoft·Nvidia 등)의 계약·제휴
-  false: 사람의 발언·인터뷰·경고·해명·반박만 있는 기사(그 발언이 곧 정책·결정 발표면 true), 전망·분석·시장 논평 글,
-    기업이 AI를 도입해 효과를 봤다는 고객·도입 사례, 주요 AI 기업이 아닌 회사끼리의 업무협약(MOU)·협력 동맹,
-    개인이 자기 장비·설정에서 속도·벤치마크를 재 본 글과 장비 구성 글(코드·모델을 공개하지 않은 것),
-    AI가 곁다리로만 나오는 사회·문화·지역·법원·인물 기사, AI와 직접 관련 없는 일반 개발 도구·기업·하드웨어 소식
+  뉴스(type news)는 ai_related만으로 후보가 된다. worth_today는 뉴스에서는 기록용이고 도구 판정에 쓴다
 - topic: 아래 주제 id 중 하나. 제목에 나온 단어가 아니라 이 글이 주로 무엇을 발표·다루는지로 정한다
   (예: 은행이 기존 모델로 상담을 자동화한 사례는 model_release가 아니라 industry, 새 AI 칩 발표는 coding_tools가 아니라 industry)
   agent_framework·mcp_tools·coding_tools는 개발 방법·도구 자체를 다룰 때만 쓴다. 제품 출시·기업 소식은 industry, 사고·규제·사회 문제는 safety_policy
@@ -58,6 +52,7 @@ PICK_PROMPT = f"""너는 toolscout 큐레이터다. 한 사용자의 기억(프�
 - 직군·쓰는 도구·자유 한 줄과 실제로 이어지는 항목만 고른다. 연결이 약하면 개수를 줄이고 억지로 채우지 않는다
 - 같은 발표·같은 출시·같은 사건을 다룬 뉴스는 언어·매체가 달라도 하나만 고른다(공식 발표 원문이 있으면 그것). 남는 자리는 다른 소식으로 채운다
 - 가중치가 음수인 주제는 뒤로 미루고 양수인 주제는 앞으로 당긴다
+- 뉴스의 importance(1~5, 별점)가 높을수록 먼저 고른다. 별점이 낮은 뉴스는 프로필과 분명히 이어질 때만 고른다
 - 자유 한 줄에 보기 싫다고 적힌 기술·주제·회사는 고르지 않는다. 이 제외는 다른 기준보다 먼저다
 - why: 이 사용자에게 왜 이 카드인지 한국어 한 줄 (80자 이내). 프로필의 무엇(직군·쓰는 도구·자유 한 줄·가중치 높은 주제)과 이어지는지
   구체적으로 쓰고 "~해서 골랐습니다"처럼 합니다체로 끝낸다. "관심 있는 개발자에게 유용한 도구입니다"처럼 어느 항목에나 붙는 말은 쓰지 않는다
@@ -94,6 +89,11 @@ def _brief(item: dict, n: int) -> dict:
     return {"id": n, "type": item["type"], "source": item["source"], "title": item["title"], "summary": item.get("summary", "")[:SUMMARY_CHARS]} | ({"link_site": site} if site else {})
 
 
+def _passes(item: dict, judgment: dict) -> bool:
+    """뉴스는 AI 관련이면 후보, 도구는 AI 관련이고 오늘 볼 만해야 후보 (2026-10-16 사용자 결정 \"B로 가자\": 뉴스는 별점(중요도) 순으로 고른다)."""
+    return bool(judgment["ai_related"] and (item["type"] == "news" or judgment["worth_today"]))
+
+
 def _reused(item: dict, known: dict) -> bool:
     return item["type"] == "news" and item.get("url") in known
 
@@ -106,7 +106,7 @@ async def select(items: list[dict], stats: Stats, rng: random.Random, model_call
     order = [i for i, item in enumerate(items) if not _reused(item, known)]
     rng.shuffle(order)
     selected = [{**item, **{k: known[item["url"]][k] for k in ("topic", "importance", "reason")}} for item in items
-                if _reused(item, known) and known[item["url"]]["ai_related"] and known[item["url"]]["worth_today"]]
+                if _reused(item, known) and _passes(item, known[item["url"]])]
     for start in range(0, len(order), BATCH):
         batch = order[start:start + BATCH]
 
@@ -126,21 +126,21 @@ async def select(items: list[dict], stats: Stats, rng: random.Random, model_call
             if judged is not None and items[batch[judgment.id - 1]]["type"] == "news":
                 judged.append({"url": items[batch[judgment.id - 1]].get("url"), "title": items[batch[judgment.id - 1]]["title"],
                                **judgment.model_dump(include={"ai_related", "worth_today", "topic", "importance", "reason"})})
-            if judgment.ai_related and judgment.worth_today:
+            if _passes(items[batch[judgment.id - 1]], judgment.model_dump()):
                 selected.append({**items[batch[judgment.id - 1]], "topic": judgment.topic, "importance": judgment.importance,
                                  "reason": judgment.reason})
     return selected
 
 
 def _pick_pool(news: list[dict], tools: list[dict], weights: dict) -> tuple[list[dict], list[dict]]:
-    """후보 단계에 넣을 항목. 중요도 낮은 뉴스를 빼고(남는 게 충분할 때만), 상한을 넘으면 뉴스는 주제 가중치 > 공식·매체·커뮤니티 > 최신,
+    """후보 단계에 넣을 항목. 중요도 낮은 뉴스를 빼고(남는 게 충분할 때만), 상한을 넘으면 뉴스는 주제 가중치 > 별점(중요도) > 공식·매체·커뮤니티 > 최신,
     도구는 가중치 > 별 수 순으로 자른다."""
     from pipeline.dedupe import SOURCE_TIER
 
     strong = [i for i in news if i.get("importance", 3) > LOW_IMPORTANCE]
     news = strong if len(strong) >= PICK_MIN_STRONG else news
     news = sorted(news, key=lambda i: str(i.get("published_at") or ""), reverse=True)
-    news.sort(key=lambda i: (-weights.get(i["topic"], 0), SOURCE_TIER.get(i["source"], 9)))
+    news.sort(key=lambda i: (-weights.get(i["topic"], 0), -i.get("importance", 3), SOURCE_TIER.get(i["source"], 9)))
     tools = sorted(tools, key=lambda i: (-weights.get(i["topic"], 0), -(i.get("stars") or 0)))
     return news[:PICK_MAX_NEWS], tools[:PICK_MAX_TOOLS]
 
@@ -171,7 +171,7 @@ async def pick_for_user(selected: list[dict], memory: dict, stats: Stats, model_
     if not news and not tools:
         return plan | {"empty": True, "empty_reason": "오늘 선별된 새 항목이 없거나 모두 이미 봤다"}
     payload = {"profile": memory["profile"], "weights": {schemas.TOPICS[t]: w for t, w in weights.items() if t in schemas.TOPICS},
-               "news": [{"id": n, "title": i["title"], "topic": schemas.TOPICS[i["topic"]],
+               "news": [{"id": n, "title": i["title"], "topic": schemas.TOPICS[i["topic"]], "importance": i.get("importance", 3),
                          "reason": i["reason"][:PICK_REASON_CHARS]} for n, i in enumerate(news, 1)],
                "tools": [{"id": n, "title": i["title"], "topic": schemas.TOPICS[i["topic"]],
                           "summary": i.get("summary", "")[:PICK_SUMMARY_CHARS]} for n, i in enumerate(tools, 1)]}
@@ -289,7 +289,6 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
     with tracing.span("curator", kind="chain", input={"items": len(items), "users": len(memories), "seed": seed}) as span:
         judged: list[dict] = []
         selected = await select(items, stats, random.Random(seed), model_call, known or {}, judged)
-        selected, reviewed = await review.run(selected, set(known or {}), stats, model_call, judged)  # 통과한 뉴스 2차 검토
         batches = -(-sum(not _reused(i, known or {}) for i in items) // BATCH)
         select_failed = batches > 0 and sum(f["label"].startswith("선별") for f in stats.model_failures) == batches
         tops, scored = [], None
@@ -312,8 +311,8 @@ async def run(items: list[dict], memories: list[dict], seed: int | None = None, 
             verify = await verification_requests(selected, stats, model_call)
         result = {"selected": selected, "plans": plans, "verify": verify, "stats": asdict(stats), "seed": seed,
                   "headlines": [{k: t[k] for k in ("title", "url", "coverage", "score")} for t in tops], "importance": scored,
-                  "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id, "judged": judged, "review": reviewed}
-        span.update(output={"selected": len(selected), "reused": sum(_reused(i, known or {}) for i in items), "review": reviewed,
+                  "format_failed": stats.unrecovered > 0, "select_failed": select_failed, "trace_id": span.trace_id, "judged": judged}
+        span.update(output={"selected": len(selected), "reused": sum(_reused(i, known or {}) for i in items),
                             "plans": [(p["user_id"], len(p["news"]), len(p["tools"]), len(p.get("related", []))) for p in plans],
                             "weights": {p["user_id"]: p.get("weights", {}) for p in plans},
                             "headlines": result["headlines"], "importance": scored,  # 큰 소식이 빠진 날 원인을 트레이스에서 본다

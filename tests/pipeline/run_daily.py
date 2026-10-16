@@ -59,8 +59,6 @@ def fake_model(mode: str = "normal"):
                     "tools": [{"id": i["id"], "why": "검수용 선택 이유"} for i in data["tools"][:3]], "empty_reason": None}
         elif "관련 카드로" in system:  # 관련 카드(F3-b): 검수용 도구만, 순서는 거꾸로 골라 정렬이 이름 일치로 되는지 본다
             body = {"tools": [{"id": i["id"], "why": "검수용 관련 이유"} for i in data["tools"] if i["title"].startswith("검수 관련")][::-1][:3]}
-        elif '"reviews"' in system:  # 선별 2차 검토(agent/review.py, 2026-10-16): 검수 데이터는 모두 남긴다
-            body = {"reviews": [{"id": i["id"], "keep": True, "reason": "검수용 검토"} for i in data]}
         elif '"requests"' in system:
             body = {"requests": []}
         elif '"groups"' in system:  # 같은 소식 묶기(agent/same_story.py): 검수 데이터에는 겹치는 소식이 없다
