@@ -18,6 +18,12 @@ jobs:
       - name: app 이미지 빌드
         run: docker compose build app
 
+      # 키 없이 health만 본다. 세션 서명 값은 시험용 가짜, 예약 작업(아침 실행·발송)은 끈다
+      - name: 시험용 .env
+        run: |
+          echo "SESSION_SECRET=ci-only-not-a-real-secret-0000" > .env
+          echo "SCHEDULER_ENABLED=0" >> .env
+
       - name: app 기동
         run: docker compose up -d app
 
