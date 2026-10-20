@@ -10,7 +10,7 @@ A personal agent that picks AI news and new MCP servers and skills for you every
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?logo=supabase&logoColor=white)
 ![Langfuse](https://img.shields.io/badge/Langfuse-tracing-0A0A0A)
 
-> 현재 상태: 0단계 준비와 1단계 뼈대 앞부분 진행 중. 진행 이력은 [CHANGELOG.md](CHANGELOG.md)를 본다.
+> 현재 상태: 2026-09-17부터 매일 아침 발송 운영 중. 진행 이력은 [CHANGELOG.md](CHANGELOG.md)를 본다.
 
 ## 📬 무엇을 하나
 
@@ -76,11 +76,11 @@ flowchart TD
 
 세 에이전트는 같은 루프(`agent/loop.py`)를 쓰고 프롬프트, 허용 도구, 모델만 다르다.
 
-| 에이전트 | 역할 | 모델 (기본 / 대체) | 스스로 정하는 것 |
+| 에이전트 | 역할 | 운영 모델 (기본 / 대체, 2026-10-11부터) | 스스로 정하는 것 |
 |---|---|---|---|
-| 큐레이터 | 140건 중 오늘 볼 것을 고르고 사용자별로 정렬, 검증할 도구 항목 선정 | Gemini 3.6 Flash 유료 / Claude Haiku 4.5 | 몇 건 낼지, 카드를 비울지, 어느 항목을 얼마나 깊이 검증할지 |
-| 검증관 | MCP는 샌드박스 4단계 검증, 스킬은 원문 판독과 위험 신호 분석 | Claude Opus 5 / Claude Sonnet 5 | 설치 명령을 어디서 뽑을지, 원격 전용인지, 도구 목록 조회까지 갈지, "확인 필요"로 멈출지 |
-| 해설가 | 사용자별 요약, "나한테는", 장단점 작성 | Claude Sonnet 5 / GPT-5.6 Terra | 원문을 읽을지, 근거가 부족하면 재검증을 요청할지, "나한테는"이 안 서면 카드를 반려할지 |
+| 큐레이터 | 140건 중 오늘 볼 것을 고르고 사용자별로 정렬, 검증할 도구 항목 선정 | Claude Haiku 5.5 / gpt-4o-mini | 몇 건 낼지, 카드를 비울지, 어느 항목을 얼마나 깊이 검증할지 |
+| 검증관 | MCP는 샌드박스 4단계 검증, 스킬은 원문 판독과 위험 신호 분석 | Claude Haiku 5.5 / gpt-4o-mini | 설치 명령을 어디서 뽑을지, 원격 전용인지, 도구 목록 조회까지 갈지, "확인 필요"로 멈출지 |
+| 해설가 | 사용자별 요약, "나한테는", 장단점 작성 | Claude Haiku 5.5 / gpt-4o-mini | 원문을 읽을지, 근거가 부족하면 재검증을 요청할지, "나한테는"이 안 서면 카드를 반려할지 |
 
 ## 🧰 기술 스택
 
@@ -105,8 +105,6 @@ flowchart TD
 - LangGraph: 루프, 도구 호출, 재시도, 되돌림을 직접 짜야 에이전트의 판단 지점을 코드와 트레이스에서 바로 짚을 수 있다.
 
 ## 🚀 빠른 시작
-
-뼈대 완성 전이라 4단계의 브리핑 생성은 아직 동작하지 않는다.
 
 1. 환경 파일 복사: `cp .env.example .env`
 2. `.env`에 키 채우기: `DATABASE_URL`(Supabase), `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `MCP_SERVICE_KEY` 등
@@ -223,4 +221,4 @@ toolscout/
 
 - 라이선스: MIT
 - 설계 문서: [docs/계획안.md](docs/계획안.md)
-- 작성자: (작성자 이름)
+- 작성자: 김승욱
