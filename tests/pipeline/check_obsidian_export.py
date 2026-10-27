@@ -3,8 +3,10 @@
 실행: uv run python -m tests.pipeline.check_obsidian_export
 - 도구마다 노트 하나, 처음 나간 날의 `날짜 (요일)` 폴더 아래 mcp-skills/mcp/·mcp-skills/skill/로 갈린다 / 며칠 나가도 노트는 하나, 발송일만 늘어남
 - 노트에 요약·이럴 때 쓰면 좋다·확인 결과·좋은 점·아쉬운 점·설치가 들어가고 HTML과 사용자 정보는 없음
+- 노트는 모음 노트로 링크를 걸고 그래프 색 묶음이 설정에 더해짐(기존 설정 유지)
 - 제목에 못 쓰는 글자는 바뀌고, 제목이 같은 다른 도구는 번호를 붙여 덮어쓰지 않음 / 같은 입력을 다시 돌려도 같은 결과
 """
+import json
 import sys
 import tempfile
 from datetime import date
@@ -58,6 +60,18 @@ with tempfile.TemporaryDirectory() as tmp:
     other = tool(9, "mcp", "canvas-mcp (a/b)", "https://github.com/other/canvas")
     clash = ox.note_path(vault, other, d1)
     check("제목만 같은 다른 도구는 번호를 붙임", clash.name == "canvas-mcp (a b) (9).md" and clash != first)
+    ox.write_hubs(vault)
+    check("노트가 MCP 모음·스킬 모음에 링크, 모음은 전체 모음에 링크",
+          "[[mcp-skills/mcp/MCP 모음|MCP 모음]]" in text and "[[mcp-skills/skill/스킬 모음|스킬 모음]]" in skill_path.read_text(encoding="utf-8")
+          and "[[mcp-skills/MCP·스킬 모음|" in (vault / "mcp-skills/mcp/MCP 모음.md").read_text(encoding="utf-8"))
+    graph = vault / ".obsidian" / "graph.json"
+    graph.parent.mkdir()
+    graph.write_text('{"colorGroups": [{"query": "path:mcp-skills/mcp", "color": {"a": 1, "rgb": 1}}], "scale": 2}', encoding="utf-8")
+    ox.ensure_graph_colors(vault)
+    ox.ensure_graph_colors(vault)
+    config = json.loads(graph.read_text(encoding="utf-8"))
+    check("그래프 색 묶음은 없는 것만 한 번 더하고 기존 설정은 유지", [g["query"] for g in config["colorGroups"]] == ["path:mcp-skills/mcp", "path:mcp-skills/skill"]
+          and config["colorGroups"][0]["color"]["rgb"] == 1 and config["scale"] == 2)
     check("다시 돌려도 같은 내용", write(vault, mcp, [d1, d2], ["MCP 설계를 참고할 때"]).read_text(encoding="utf-8") == text)
 
 failed = [name for name, ok in results if not ok]

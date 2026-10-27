@@ -6,6 +6,7 @@ vault 위치는 환경변수 OBSIDIAN_VAULT, 없으면 C:\\Users\\Wook\\Document
 - 내용: 요약, 확인 결과, 좋은 점·아쉬운 점, 설치 명령, 링크. 사용자별 글(for_me)과 사용자 정보는 넣지 않는다. 기사 본문은 없다
 """
 import argparse
+import json
 import os
 import re
 import sys
@@ -19,6 +20,9 @@ from pipeline.run_daily import KST
 
 DEFAULT_VAULT = r"C:\Users\Wook\Documents\ObsidianVault"
 FOLDERS = {"mcp": "mcp-skills/mcp", "skill": "mcp-skills/skill"}
+ROOT_HUB = "mcp-skills/MCP·스킬 모음"
+HUBS = {"mcp": "mcp-skills/mcp/MCP 모음", "skill": "mcp-skills/skill/스킬 모음"}
+GRAPH_GROUPS = [("path:mcp-skills/mcp", 5017087), ("path:mcp-skills/skill", 16752451)]  # 그래프 뷰 색: MCP 파랑, 스킬 주황
 WEEKDAYS = "월화수목금토일"
 UNSAFE =re.compile(r'[\\/:*?"<>|#^\[\]]')
 
@@ -75,7 +79,7 @@ def render(item, card: dict, dates: list[date], uses: list[str] | None = None) -
     if item.stars is not None:
         lines.append(f"stars: {item.stars}")
     lines += ["발송일:", *[f"  - {d}" for d in dates], "tags: [toolscout]", "---", "", f"# {item.title}", "",
-              f"> [!summary] 한 줄 요약\n> {summary or '요약 없음'}", "", f"원문: {item.url}", ""]
+              f"> [!summary] 한 줄 요약\n> {summary or '요약 없음'}", "", f"원문: {item.url}", f"묶음: [[{HUBS[item.type]}|{Path(HUBS[item.type]).name}]]", ""]
     if uses:
         lines += ["## 이럴 때 쓰면 좋다", "", *[f"- {use}" for use in uses[:3]], ""]
     checks = _check_rows(card.get("verification"))
@@ -106,10 +110,37 @@ def note_path(vault: Path, item, first_day: date) -> Path:
     return path
 
 
+def write_hubs(vault: Path) -> None:
+    """그래프 뷰에서 한 덩어리로 보이게 하는 묶음 노트. 도구 노트가 위로 링크를 걸어 MCP 모음·스킬 모음 → 전체 모음으로 이어진다."""
+    notes = {ROOT_HUB: f"# MCP·스킬 모음\n\n- [[{HUBS['mcp']}|MCP 모음]]\n- [[{HUBS['skill']}|스킬 모음]]\n"}
+    for kind, hub in HUBS.items():
+        kind_name = "MCP" if kind == "mcp" else "스킬"
+        notes[hub] = (f"# {Path(hub).name}\n\n상위: [[{ROOT_HUB}|MCP·스킬 모음]]\n\n"
+                      f"{kind_name} 노트가 이 노트로 링크를 걸어 그래프 뷰에서 한 묶음으로 보인다. 도구는 날짜(요일) 폴더에 있다.\n")
+    for name, text in notes.items():
+        path = vault / f"{name}.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+
+def ensure_graph_colors(vault: Path) -> None:
+    """그래프 뷰 색 묶음 두 개를 없을 때만 더한다. 사용자가 이미 둔 설정은 그대로 둔다."""
+    path = vault / ".obsidian" / "graph.json"
+    if not path.exists():
+        return
+    config = json.loads(path.read_text(encoding="utf-8"))
+    groups = config.setdefault("colorGroups", [])
+    have = {g.get("query") for g in groups}
+    groups += [{"query": q, "color": {"a": 1, "rgb": rgb}} for q, rgb in GRAPH_GROUPS if q not in have]
+    path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def export_day(day: date, vault: Path | None = None) -> dict:
     """반환: {date, tools, written}. 같은 날 다시 돌려도 같은 파일을 같은 내용으로 덮어쓴다."""
     vault = vault or vault_dir()
     tools = collect(day)
+    write_hubs(vault)
+    ensure_graph_colors(vault)
     for entry in tools:
         path = note_path(vault, entry["item"], entry["dates"][0])
         path.parent.mkdir(parents=True, exist_ok=True)
