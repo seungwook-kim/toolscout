@@ -1,5 +1,7 @@
 # pipeline/ CHANGELOG
 
+- 2026-10-27 · obsidian_export.py 추가: 메일에 나간 MCP·스킬을 옵시디언 vault의 MCP/·스킬/ 아래 날짜(요일) 폴더에 도구당 노트 하나로 쌓음 · 사용자 요청(요약·쓰면 좋은 때를 카드 글로 옮기고 로컬 LLM 토큰 안 씀, 이 PC 작업 스케줄러로 매일) · check_obsidian_export 8항목 통과, 최근 5일 운영 DB 읽기로 임시 vault 시험(노트 48개, 도구당 하나)
+
 - 2026-10-16 · dedupe.SOURCE_TIER에 새 출처 8곳(회사 원문 1, 더 디코더·더 버지 2, 사이먼 윌리슨 3) · RSS 출처 추가 · check_new_feeds 통과
 - 2026-10-16 · run_daily: 큐레이터에 fresh_since(실행 시각 - curator.FRESH_NEWS 26시간) 전달, 가짜 모델 검수는 옛 날짜 항목이라 넘기지 않음 · 사용자 뉴스 새로움 · run_daily --fake 통과
 - 2026-10-16 · run_daily: 큐레이터 전에 select_memo.load(오늘·어제 판정), 뒤에 select_memo.save(오늘 모델 판정), 보고에 select_reused·select_memo_saved. 가짜 모델 검수에서는 DB 기록을 읽고 쓰지 않음 · 같은 기사 이틀 판정 없애기 · run_daily --fake 통과
