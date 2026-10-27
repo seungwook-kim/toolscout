@@ -16,15 +16,17 @@ from pathlib import Path
 from sqlalchemy import select
 
 import db
+from agent.schemas import TOPICS
 from pipeline.run_daily import KST
 
 DEFAULT_VAULT = r"C:\Users\Wook\Documents\ObsidianVault"
 FOLDERS = {"mcp": "mcp-skills/mcp", "skill": "mcp-skills/skill"}
 ROOT_HUB = "mcp-skills/MCP·스킬 모음"
 HUBS = {"mcp": "mcp-skills/mcp/MCP 모음", "skill": "mcp-skills/skill/스킬 모음"}
-GRAPH_GROUPS = [("path:mcp-skills/mcp", 5017087), ("path:mcp-skills/skill", 16752451)]  # 그래프 뷰 색: MCP 파랑, 스킬 주황
+GRAPH_GROUPS = [("path:mcp-skills/mcp", 5017087), ("path:mcp-skills/skill", 16752451),  # 그래프 뷰 색: MCP 파랑, 스킬 주황
+                ("path:mcp-skills/주제", 5025616), ("path:mcp-skills/출처", 10066329)]  # 주제 초록, 출처 회색
 WEEKDAYS = "월화수목금토일"
-UNSAFE =re.compile(r'[\\/:*?"<>|#^\[\]]')
+UNSAFE = re.compile(r'[\\/:*?"<>|#^\[\]]')
 
 
 def vault_dir() -> Path:
@@ -45,10 +47,12 @@ def collect(day: date) -> list[dict]:
             use = ((card or {}).get("for_me") or "").strip()
             if use and use not in entry["uses"]:
                 entry["uses"].append(use)
-        for entry in tools.values():
-            dates = s.execute(select(db.Briefing.date).where(db.Briefing.item_id == entry["item"].id,
-                                                             db.Briefing.sent_at.is_not(None)).distinct()).scalars().all()
-            entry["dates"] = sorted(dates)
+        sent: dict[int, set] = {}
+        for item_id, sent_day in s.execute(select(db.Briefing.item_id, db.Briefing.date).where(
+                db.Briefing.item_id.in_(list(tools)), db.Briefing.sent_at.is_not(None)).distinct()).all():
+            sent.setdefault(item_id, set()).add(sent_day)
+        for item_id, entry in tools.items():
+            entry["dates"] = sorted(sent.get(item_id, {day}))
         return list(tools.values())
 
 
@@ -70,6 +74,18 @@ def _check_rows(verification) -> list[str]:
     return (["| 항목 | 결과 |", "|---|---|", *rows] + ([f"\n검증: {verification['probed_at']}"] if verification.get("probed_at") else [])) if rows else []
 
 
+def group_hubs(item) -> list[tuple[str, str]]:
+    """도구가 링크를 거는 묶음 노트 [(vault 기준 경로, 이름)]. 종류(MCP·스킬 모음), 주제, 출처 순."""
+    hubs = [(HUBS[item.type], Path(HUBS[item.type]).name)]
+    topic = TOPICS.get(getattr(item, "topic", None) or "")
+    if topic:
+        hubs.append((f"mcp-skills/주제/{topic}", topic))
+    source = UNSAFE.sub(" ", getattr(item, "source", None) or "").strip()
+    if source:
+        hubs.append((f"mcp-skills/출처/{source}", source))
+    return hubs
+
+
 def render(item, card: dict, dates: list[date], uses: list[str] | None = None) -> str:
     """노트 본문. 속성, 요약 콜아웃, 확인 결과 표, 좋은 점·아쉬운 점, 설치 명령. HTML은 쓰지 않는다."""
     summary = (card.get("summary_ko") or item.summary_ko or "").strip()
@@ -79,7 +95,7 @@ def render(item, card: dict, dates: list[date], uses: list[str] | None = None) -
     if item.stars is not None:
         lines.append(f"stars: {item.stars}")
     lines += ["발송일:", *[f"  - {d}" for d in dates], "tags: [toolscout]", "---", "", f"# {item.title}", "",
-              f"> [!summary] 한 줄 요약\n> {summary or '요약 없음'}", "", f"원문: {item.url}", f"묶음: [[{HUBS[item.type]}|{Path(HUBS[item.type]).name}]]", ""]
+              f"> [!summary] 한 줄 요약\n> {summary or '요약 없음'}", "", f"원문: {item.url}", "묶음: " + " · ".join(f"[[{path}|{name}]]" for path, name in group_hubs(item)), ""]
     if uses:
         lines += ["## 이럴 때 쓰면 좋다", "", *[f"- {use}" for use in uses[:3]], ""]
     checks = _check_rows(card.get("verification"))
@@ -110,13 +126,18 @@ def note_path(vault: Path, item, first_day: date) -> Path:
     return path
 
 
-def write_hubs(vault: Path) -> None:
-    """그래프 뷰에서 한 덩어리로 보이게 하는 묶음 노트. 도구 노트가 위로 링크를 걸어 MCP 모음·스킬 모음 → 전체 모음으로 이어진다."""
+def write_hubs(vault: Path, items=()) -> None:
+    """그래프 뷰에서 한 덩어리로 보이게 하는 묶음 노트. 도구 노트가 종류·주제·출처 묶음으로 링크를 걸고, 묶음은 전체 모음으로 이어진다.
+    주제·출처 묶음은 items에 나온 것만 만든다."""
     notes = {ROOT_HUB: f"# MCP·스킬 모음\n\n- [[{HUBS['mcp']}|MCP 모음]]\n- [[{HUBS['skill']}|스킬 모음]]\n"}
     for kind, hub in HUBS.items():
         kind_name = "MCP" if kind == "mcp" else "스킬"
         notes[hub] = (f"# {Path(hub).name}\n\n상위: [[{ROOT_HUB}|MCP·스킬 모음]]\n\n"
                       f"{kind_name} 노트가 이 노트로 링크를 걸어 그래프 뷰에서 한 묶음으로 보인다. 도구는 날짜(요일) 폴더에 있다.\n")
+    for item in items:
+        for hub, name in group_hubs(item)[1:]:
+            group = "주제" if "/주제/" in hub else "출처"
+            notes[hub] = f"# {name}\n\n상위: [[{ROOT_HUB}|MCP·스킬 모음]]\n\n같은 {group}의 도구 노트가 이 노트로 링크를 건다.\n"
     for name, text in notes.items():
         path = vault / f"{name}.md"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -139,7 +160,7 @@ def export_day(day: date, vault: Path | None = None) -> dict:
     """반환: {date, tools, written}. 같은 날 다시 돌려도 같은 파일을 같은 내용으로 덮어쓴다."""
     vault = vault or vault_dir()
     tools = collect(day)
-    write_hubs(vault)
+    write_hubs(vault, [entry["item"] for entry in tools])
     ensure_graph_colors(vault)
     for entry in tools:
         path = note_path(vault, entry["item"], entry["dates"][0])

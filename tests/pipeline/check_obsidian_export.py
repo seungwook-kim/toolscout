@@ -3,7 +3,7 @@
 실행: uv run python -m tests.pipeline.check_obsidian_export
 - 도구마다 노트 하나, 처음 나간 날의 `날짜 (요일)` 폴더 아래 mcp-skills/mcp/·mcp-skills/skill/로 갈린다 / 며칠 나가도 노트는 하나, 발송일만 늘어남
 - 노트에 요약·이럴 때 쓰면 좋다·확인 결과·좋은 점·아쉬운 점·설치가 들어가고 HTML과 사용자 정보는 없음
-- 노트는 모음 노트로 링크를 걸고 그래프 색 묶음이 설정에 더해짐(기존 설정 유지)
+- 노트는 종류·주제·출처 모음 노트로 링크를 걸고 그래프 색 묶음이 설정에 더해짐(기존 설정 유지)
 - 제목에 못 쓰는 글자는 바뀌고, 제목이 같은 다른 도구는 번호를 붙여 덮어쓰지 않음 / 같은 입력을 다시 돌려도 같은 결과
 """
 import json
@@ -25,7 +25,7 @@ def check(name: str, ok: bool) -> None:
 
 def tool(item_id: int, kind: str, title: str, url: str) -> SimpleNamespace:
     return SimpleNamespace(id=item_id, type=kind, title=title, url=url, source="github_search", version="1.2.0", stars=115,
-                           summary_ko="Canvas 강의 정보를 묻는 MCP 서버입니다.")
+                           summary_ko="Canvas 강의 정보를 묻는 MCP 서버입니다.", topic="mcp_tools")
 
 
 CARD = {"summary_ko": "Canvas 강의 정보를 묻는 MCP 서버입니다.", "install_cmd": "npx canvas-mcp",
@@ -60,17 +60,21 @@ with tempfile.TemporaryDirectory() as tmp:
     other = tool(9, "mcp", "canvas-mcp (a/b)", "https://github.com/other/canvas")
     clash = ox.note_path(vault, other, d1)
     check("제목만 같은 다른 도구는 번호를 붙임", clash.name == "canvas-mcp (a b) (9).md" and clash != first)
-    ox.write_hubs(vault)
+    ox.write_hubs(vault, [mcp, skill])
     check("노트가 MCP 모음·스킬 모음에 링크, 모음은 전체 모음에 링크",
           "[[mcp-skills/mcp/MCP 모음|MCP 모음]]" in text and "[[mcp-skills/skill/스킬 모음|스킬 모음]]" in skill_path.read_text(encoding="utf-8")
           and "[[mcp-skills/MCP·스킬 모음|" in (vault / "mcp-skills/mcp/MCP 모음.md").read_text(encoding="utf-8"))
+    check("주제·출처 묶음에도 링크하고 묶음 노트가 전체 모음에 이어짐",
+          "[[mcp-skills/주제/MCP·도구 연동|MCP·도구 연동]]" in text and "[[mcp-skills/출처/github_search|github_search]]" in text
+          and "[[mcp-skills/MCP·스킬 모음|" in (vault / "mcp-skills/주제/MCP·도구 연동.md").read_text(encoding="utf-8")
+          and (vault / "mcp-skills/출처/github_search.md").exists() and not (vault / "mcp-skills/주제/None.md").exists())
     graph = vault / ".obsidian" / "graph.json"
     graph.parent.mkdir()
     graph.write_text('{"colorGroups": [{"query": "path:mcp-skills/mcp", "color": {"a": 1, "rgb": 1}}], "scale": 2}', encoding="utf-8")
     ox.ensure_graph_colors(vault)
     ox.ensure_graph_colors(vault)
     config = json.loads(graph.read_text(encoding="utf-8"))
-    check("그래프 색 묶음은 없는 것만 한 번 더하고 기존 설정은 유지", [g["query"] for g in config["colorGroups"]] == ["path:mcp-skills/mcp", "path:mcp-skills/skill"]
+    check("그래프 색 묶음은 없는 것만 한 번 더하고 기존 설정은 유지", [g["query"] for g in config["colorGroups"]] == ["path:mcp-skills/mcp", "path:mcp-skills/skill", "path:mcp-skills/주제", "path:mcp-skills/출처"]
           and config["colorGroups"][0]["color"]["rgb"] == 1 and config["scale"] == 2)
     check("다시 돌려도 같은 내용", write(vault, mcp, [d1, d2], ["MCP 설계를 참고할 때"]).read_text(encoding="utf-8") == text)
 

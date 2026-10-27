@@ -1,6 +1,7 @@
 # pipeline/ CHANGELOG
 
 - 2026-10-27 · obsidian_export.py 추가: 메일에 나간 MCP·스킬을 옵시디언 vault의 MCP/·스킬/ 아래 날짜(요일) 폴더에 도구당 노트 하나로 쌓음 · 사용자 요청(요약·쓰면 좋은 때를 카드 글로 옮기고 로컬 LLM 토큰 안 씀, 이 PC 작업 스케줄러로 매일) · check_obsidian_export 8항목 통과, 최근 5일 운영 DB 읽기로 임시 vault 시험(노트 48개, 도구당 하나)
+- 2026-10-27 · obsidian_export: 노트가 종류에 더해 주제(mcp-skills/주제/)·출처(mcp-skills/출처/) 묶음에도 링크, 그래프 색 묶음 2개 추가(주제 초록·출처 회색), 도구별 발송일 조회를 한 번의 쿼리로 바꿈(전체 다시 쓰기 10분 → 45초) · 사용자 요청("묶을 수 있는 것들은 묶어줘") · check_obsidian_export 11항목 통과
 - 2026-10-27 · obsidian_export: 노트마다 "묶음" 링크로 MCP 모음·스킬 모음 → MCP·스킬 모음에 이어 그래프 뷰에서 한 덩어리로 보이게, graph.json에 MCP 파랑·스킬 주황 색 묶음 추가(기존 설정 유지) · 사용자 요청 · check_obsidian_export 10항목 통과, 기존 노트 전부 다시 씀
 - 2026-10-27 · obsidian_export 폴더 이름을 mcp-skills/mcp, mcp-skills/skill로 변경, vault의 기존 노트 191개도 옮김 · 사용자 요청 · check_obsidian_export 8항목 통과
 
