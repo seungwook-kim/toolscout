@@ -1,4 +1,4 @@
-"""그날 메일에 나간 MCP·스킬을 옵시디언 vault의 `MCP/`·`스킬/` 폴더에 도구 하나당 노트 한 개로 쌓는다 (2026-10-27 사용자 요청).
+"""그날 메일에 나간 MCP·스킬을 옵시디언 vault의 `mcp-skills/mcp/`·`mcp-skills/skill/` 폴더에 도구 하나당 노트 한 개로 쌓는다 (2026-10-27 사용자 요청).
 
 실행: uv run python -m pipeline.obsidian_export [--day YYYY-MM-DD] [--days N]   (기본: 오늘과 어제, 켜지는 PC를 놓친 날을 따라잡음)
 vault 위치는 환경변수 OBSIDIAN_VAULT, 없으면 C:\\Users\\Wook\\Documents\\ObsidianVault. 운영 DB를 읽기만 하고 vault 파일만 쓴다.
@@ -18,7 +18,7 @@ import db
 from pipeline.run_daily import KST
 
 DEFAULT_VAULT = r"C:\Users\Wook\Documents\ObsidianVault"
-FOLDERS = {"mcp": "MCP", "skill": "스킬"}
+FOLDERS = {"mcp": "mcp-skills/mcp", "skill": "mcp-skills/skill"}
 WEEKDAYS = "월화수목금토일"
 UNSAFE =re.compile(r'[\\/:*?"<>|#^\[\]]')
 

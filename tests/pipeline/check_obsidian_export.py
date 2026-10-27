@@ -1,7 +1,7 @@
 """옵시디언 내보내기(pipeline/obsidian_export.py) 검수 (2026-10-27). DB·모델·네트워크를 쓰지 않고 가짜 도구와 임시 폴더로 확인한다.
 
 실행: uv run python -m tests.pipeline.check_obsidian_export
-- 도구마다 노트 하나, 처음 나간 날의 `날짜 (요일)` 폴더 아래 MCP/·스킬/로 갈린다 / 며칠 나가도 노트는 하나, 발송일만 늘어남
+- 도구마다 노트 하나, 처음 나간 날의 `날짜 (요일)` 폴더 아래 mcp-skills/mcp/·mcp-skills/skill/로 갈린다 / 며칠 나가도 노트는 하나, 발송일만 늘어남
 - 노트에 요약·이럴 때 쓰면 좋다·확인 결과·좋은 점·아쉬운 점·설치가 들어가고 HTML과 사용자 정보는 없음
 - 제목에 못 쓰는 글자는 바뀌고, 제목이 같은 다른 도구는 번호를 붙여 덮어쓰지 않음 / 같은 입력을 다시 돌려도 같은 결과
 """
@@ -47,8 +47,8 @@ with tempfile.TemporaryDirectory() as tmp:
     first = write(vault, mcp, [d1], ["MCP 설계를 참고할 때", "읽기 전용 도구를 고를 때"])
     second = write(vault, mcp, [d1, d2], ["MCP 설계를 참고할 때"])
     skill_path = write(vault, skill, [d2], [])
-    check("MCP는 MCP/날짜 (요일)/, 스킬은 스킬/ 아래", first.parent == vault / "MCP" / "2026-10-26 (월)" and skill_path.parent == vault / "스킬" / "2026-10-27 (화)")
-    check("며칠 나가도 노트는 하나(처음 나간 날 폴더)", first == second and len(list((vault / "MCP").rglob("*.md"))) == 1)
+    check("MCP는 mcp-skills/mcp/날짜 (요일)/, 스킬은 mcp-skills/skill/ 아래", first.parent == vault / "mcp-skills" / "mcp" / "2026-10-26 (월)" and skill_path.parent == vault / "mcp-skills" / "skill" / "2026-10-27 (화)")
+    check("며칠 나가도 노트는 하나(처음 나간 날 폴더)", first == second and len(list((vault / "mcp-skills" / "mcp").rglob("*.md"))) == 1)
     text = second.read_text(encoding="utf-8")
     check("발송일이 늘어남", "  - 2026-10-26" in text and "  - 2026-10-27" in text)
     check("요약·쓰면 좋은 때·확인·좋은 점·아쉬운 점·설치", all(s in text for s in (
