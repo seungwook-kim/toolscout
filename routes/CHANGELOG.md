@@ -1,5 +1,6 @@
 # routes/ CHANGELOG
 
+- 2026-10-31 · ask.find_candidates가 뜻이 가까운 항목(embeddings.search)을 키워드 상위 20개와 RRF로 합침, 키·표가 없거나 호출이 실패하면 키워드 순서 그대로 · 한국어로 풀어 쓴 질문은 키워드로 못 찾아서 · 합성 질문 60개 적중 47% → 77%(의미 검색만 시험 임베딩으로 대신), check_ask·check_embeddings 통과
 - 2026-10-30 · ask.keywords가 한글 이름(큐웬·코덱스 등)의 영어 표기를 원래 낱말 뒤에 덧붙이고 낱말 상한 5 → 8, 사전 파일이 없으면 확장 없이 동작 · 질문이 한글로 읽은 이름이면 영어 제목에 안 걸려서 · 합성 질문 60개 후보 5안 적중 40% → 47%, check_ask·check_ask_terms 통과
 - 2026-10-14 · briefings: 카드 topic·topic_label·item_meta 조립을 pipeline/persist.card_extras로 옮겨 메일 발송(deliver.outbox)과 같이 씀(published_at …Z 형식 그대로) · 메일 메타 줄이 웹과 같은 값을 쓰게(복사 금지) · check_deliver 통과(웹 응답 형식 변화 없음)
 - 2026-10-09 · support.py 신규(POST /api/support 비로그인 가능·저장·관리자 메일 한 통·Reply-To·1시간 3건/10건 제한·꿀단지·중복 거름, 관리자 GET /api/admin/support·POST .../handled), pages에 /policy·/support, INDEXABLE·robots Allow · 로그인 못 하는 사람도 문의할 수 있게(문의자 주소로는 자동 메일 없음) · check_support 통과

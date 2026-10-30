@@ -20,6 +20,7 @@
   `ANTHROPIC_API_KEY`(Railway·Vercel 둘 다 필요, 운영 첫 모델) `OPENROUTER_API_KEY`(둘째 칸) `LANGFUSE_PUBLIC_KEY` `LANGFUSE_SECRET_KEY` `LANGFUSE_HOST` `MCP_SERVICE_KEY` `APP_BASE_URL`(= Vercel 주소),
   `DEV_MODE=0` `SCHEDULER_ENABLED=0` `MCP_URL=inproc`
 - Vercel만: `JOBS_EXTERNAL=1` `DAILY_QUESTION_LIMIT`
+- 질문창 의미 검색(결정 0019): `CF_ACCOUNT_ID` `CF_API_TOKEN`(Cloudflare Workers AI 무료 요금제, 토큰 권한은 Workers AI만, 만료일 2027-10-31). Vercel(질문 임베딩)과 Railway(새 항목 벡터) 둘 다 필요. 처음 한 번 운영 DB에서 `uv run python -m pipeline.embed_items --init` 후 `--backfill`. 비우면 키워드 검색만 쓴다
 - Railway만: `JEV_API_KEY` `E2B_API_KEY` `GITHUB_TOKEN` `SKILLSMP_API_KEY` `DAILY_PROBE_LIMIT`
 
 ## 올리는 방법

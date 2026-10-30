@@ -2,6 +2,7 @@
 
 새 세션은 맨 위 항목을 읽고 시작한다. 폴더별 상세 이력은 각 폴더의 `CHANGELOG.md`, 남은 작업은 각 폴더 README의 `## 할 일`에 있다.
 
+- 2026-10-31 · 질문창 의미 검색 구현(브랜치 feat/ask-embedding): Cloudflare bge-m3 + Supabase pgvector, 합성 질문 적중 47% → 77%. **운영 DB에 pgvector 표를 아직 만들지 않았고 배포도 안 했다.** 다음: `python -m pipeline.embed_items --init`·`--backfill` 실행(운영 DB 변경, 사용자 확인 후), Vercel·Railway에 CF_ACCOUNT_ID·CF_API_TOKEN 넣기, 배포
 - 2026-10-16 · 선별 골든셋 10/8~10/11(뉴스 679건)과 개발자 표본 검토(브랜치 golden-1009-1015)
   - 결정(사용자): "표본은 뽑아주고 7일 기준으로", Langfuse 클라우드 429로 10/12~10/15를 못 꺼내 "A로 진행"(받은 4일로). 표본 40건 개발자 판정 일치 38건(95%), 다른 2건은 개발자 판정으로 고침
   - 결과: 정밀도 4일 합 75.5%(10/2~10/4 66.2%), 재현율 90.0%. README 품질 지표 갱신

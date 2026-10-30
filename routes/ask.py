@@ -21,6 +21,7 @@ from sqlalchemy import exc as sa_exc
 from sqlalchemy import case, func, insert, literal, or_, select
 
 import db
+import embeddings
 import gate
 import models
 from agent import explainer, tracing
@@ -34,6 +35,7 @@ QUESTION_MAX = 300
 RECENT_TURNS = 3
 CANDIDATE_LIMIT = 5
 SEARCH_POOL = 60
+FUSE_DEPTH = 20
 OUT_ANSWER = "이 질문창은 AI 소식과 MCP·스킬 같은 AI 도구 질문만 받아요. 브리핑에 나온 항목이나 찾는 도구를 물어봐 주세요."
 NOT_FOUND = "우리 소스에서 못 찾았어요. 지어내지 않으려고 답을 비워 둘게요."
 WHICH_TOOL = "어느 도구 말씀이세요? 도구 이름을 같이 적어 주세요."
@@ -106,8 +108,10 @@ def keywords(question: str) -> list[str]:
 
 
 def find_candidates(user_id: int, question: str, turns: list) -> list[dict]:
-    """앞선 턴의 출처 항목 + 키워드가 든 항목. 점수는 제목 일치 2·요약이나 원문 설명 일치 1, 같으면 내 브리핑에 나온 것·최신 순."""
+    """앞선 턴의 출처 항목 + 키워드가 든 항목 + 뜻이 가까운 항목. 키워드 점수는 제목 일치 2·요약이나 원문 설명 일치 1, 같으면 내 브리핑에 나온 것·최신 순.
+    뜻이 가까운 항목(embeddings.search)은 키워드 순위와 RRF로 합친다. 키·표가 없거나 실패하면 빈 목록이라 키워드 순서 그대로다."""
     words = keywords(question)
+    dense_ids = embeddings.search(question, SEARCH_POOL // 3)
     context_urls = [s["url"] for t in turns[-RECENT_TURNS:] if t.gate != "out" for s in (t.sources_json or [])]
     columns = (db.Item.id, db.Item.title, db.Item.url, db.Item.type, db.Item.source, db.Item.date, db.Item.summary_ko,
                db.Item.description)
@@ -123,6 +127,8 @@ def find_candidates(user_id: int, question: str, turns: list) -> list[dict]:
             rows += conn.execute(ordered).all()
             rows += conn.execute(ordered.join(db.Briefing, db.Briefing.item_id == db.Item.id)
                                  .where(db.Briefing.user_id == user_id)).all()
+        if dense_ids:
+            rows += conn.execute(select(*columns).where(db.Item.id.in_(dense_ids))).all()
         ids = list({r.id for r in rows})
         mine = {r.item_id: r for r in conn.execute(select(db.Briefing.item_id, db.Briefing.date, db.Briefing.card_json)
                                                    .where(db.Briefing.user_id == user_id, db.Briefing.item_id.in_(ids))
@@ -134,7 +140,10 @@ def find_candidates(user_id: int, question: str, turns: list) -> list[dict]:
         return (row.url in context_urls, hits, row.id in mine, row.date)
 
     unique = {r.id: r for r in rows}.values()
-    ranked = [r for r in sorted(unique, key=score, reverse=True) if r.url in context_urls or score(r)[1] > 0][:CANDIDATE_LIMIT]
+    by_keyword = [r for r in sorted(unique, key=score, reverse=True) if score(r)[1] > 0]
+    fused = embeddings.fuse([r.id for r in by_keyword[:FUSE_DEPTH]], dense_ids)  # 키워드 순위는 상위만 합친다(길게 보태면 뜻이 가까운 1~3위가 밀림)
+    pool = [r for r in unique if r.url in context_urls or r.id in fused]
+    ranked = sorted(pool, key=lambda r: (r.url in context_urls, fused.get(r.id, 0.0), score(r)), reverse=True)[:CANDIDATE_LIMIT]
     candidates = []
     for row in ranked:
         entry = {"title": row.title, "url": row.url, "type": row.type, "source": row.source, "date": str(row.date),
