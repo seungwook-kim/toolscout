@@ -142,6 +142,7 @@ toolscout/
 ├── db.py                SQLModel 데이터 표 9개 (Supabase)
 ├── config.py            .env 로더 (값은 출력하지 않음)
 ├── events.py, gate.py, memory.py
+├── embeddings.py        질문창 의미 검색 (Cloudflare bge-m3 + pgvector, 키 없으면 꺼짐)
 ├── agent/               loop.py, tracing.py, curator.py, verifier.py, explainer.py
 ├── sources/             소스별 수집 파서
 ├── pipeline/            normalize.py, dedupe.py, validate.py, persist.py, run_daily.py, deliver.py, briefing_mail.py
