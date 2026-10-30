@@ -15,6 +15,7 @@
 - `deliver.py`: 미발송 briefings를 사용자마다 한 통 Gmail SMTP 발송(MAIL_TRANSPORT=gmail_api면 `gmail_api.py`의 Gmail API(HTTPS), Railway용: 연결 토큰 암호화 보관·재사용·재시도, mode=gmail_api)(개발 모드도 운영과 같은 모양), 한 통마다 sent_at, Item outerjoin(빈 날 행 포함)·X-Toolscout-Trace 헤더. 개발 모드의 가짜 테스트 프로필은
   ADMIN_EMAILS로 가고 제목 앞에 [테스트 프로필 직군], 본인 계정은 본인 주소로. ADMIN_EMAILS 없으면 콘솔·DB만, 메일 설정 없으면 기록 안 함. `send_alert`: 실패 알림
 - `scheduler.py`: 앱이 떠 있는 동안 06:00 검증(W1-a, 따로 도는 작업), 06:55 예열·DB 깨우기, 07:00 하루 실행, 알림 시각마다 발송 (KST). 놓친 실행은 22:00 전에 따라잡음. 실행 실패·빠진 사용자는 30분 뒤 그 사용자만 2번 더, 발송 실패는 10분 간격 2번 더, 끝내 실패하면 실패 알림 한 통, 월요일은 실행 전 기억 합치기(W4) / `cron.py`: 배포용 Railway 크론(30분마다 시각·DB만 보고 검증·실행·발송·지금 만들기 요청 처리(같은 차례 정기 실행 대상은 두 번 만들지 않음) 뒤 종료, `--rehearse` 서버 첫 점검, docs/deploy.md)
+- `backfill_descriptions.py`: 설명이 빈 MCP 항목을 공식 레지스트리 원문 설명으로 채움(한 번 돌리는 도구, 기본 드라이런, `--apply`로 쓰기, 쓴 뒤 `embed_items --backfill`)
 - `embed_items.py`: 질문창 의미 검색용 항목 벡터(`--init` 표 만들기, `--backfill` 채우기, `--status`). 크론 차례마다 `cron.tick`이 새 항목을 조금씩 채움
 - `autorestart.py`: 할 일을 마칠 때마다 main 커밋이 바뀌었고 한가하면(06~09시 아님·실행 없음·다음 예정 10분 넘게) 스스로 꺼져 런처가 새 코드로 다시 띄움
 - `watchdog.py`: 앱 바깥 감시. 작업 `toolscout watchdog`(10분마다, ps1이 먼저 꺼진 런처·멈춘 앱을 되살림)이 앱 응답과 알림 시각 30분 지난 사용자의 발송 여부를 보고 문제면 실패 알림(같은 날 같은 문제 한 번) / `obsidian_export.py`: 이 PC에서만 돌림. 그날 메일에 나간 MCP·스킬을 vault `mcp-skills/mcp/`·`mcp-skills/skill/`의 `날짜 (요일)` 폴더에 도구당 노트 하나로(중복은 발송일만 추가, 종류·주제·출처 묶음 링크로 그래프 뷰에서 묶임), 카드에 있던 글만 옮기고 모델 호출 없음
