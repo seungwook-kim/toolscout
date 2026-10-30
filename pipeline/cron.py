@@ -22,6 +22,7 @@ import sys
 from datetime import date, datetime, time, timedelta, timezone
 
 import config  # noqa: F401  .env를 os.environ에 채운다 (Railway에서는 서비스 변수)
+import embeddings
 from agent import tracing
 from pipeline import deliver, persist, run_daily
 from pipeline import scheduler as jobs
@@ -97,6 +98,7 @@ async def tick(s: jobs.Scheduler | None = None) -> dict:
         report["did"].append("requested")
     if "run" in report["did"] or "requested" in report["did"]:
         report["send_after"] = await _send_due(s, s.now())
+    report["embed"] = await asyncio.to_thread(embeddings.embed_missing)  # 새 항목 벡터(키·표가 없으면 0, 실패해도 크론은 계속)
     return report
 
 
