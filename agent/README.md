@@ -11,6 +11,7 @@
   월요일은 관련 카드(F3-b): 도구 목록 30건에서 최대 3개, 이름 일치 > 가중치 (`pick_related`). `replan_failed`: 되돌림 1 대체·비움 판단
 - `explainer.py`: 해설가. 항목마다 fetch_article 1회 + 모델 1회로 초안 카드. 관련도 3 미만·프로필과 안 이어지면 반려, 못 읽으면 "원문 확인 필요"(피드 글 본문 source_text는 읽은 것으로). 장단점 근거 링크는 카드 링크로 맞추고 다른 사이트 근거는 뺌
   `answer()`: 질문 답(후보·맥락 입력, fetch_article 3회, 600자, 후보 링크만 출처, 형식 틀리면 1회 재시도)
+- `term_dict.json`: 영어 이름 → 한글 표기 사전. 질문창 `routes/ask.py` 키워드 확장용(Claude가 만든 초안, 사람 검토 전)
 - `glossary.md`: 해설가 용어집 30개와 표기 원칙. 프롬프트에 그대로 붙는다
 - `schemas.py`: 주제 10개(확정)와 주제별 경계(TOPIC_GUIDE, 선별 프롬프트에 붙음), 선별·후보·검증 요청·해설가 출력·카드·질문 답 규격(pydantic). 검증 노드도 같은 규격을 쓴다
 - `verifier.py`: 검증관. MCP는 레지스트리 설치 정보로 바로(`registry_plan`), 없을 때만 모델이 README로 판단 → probe_mcp, 스킬은 read_skill → 판독과 정규식 비교

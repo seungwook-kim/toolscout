@@ -9,9 +9,11 @@
 - 한도(DAILY_QUESTION_LIMIT)는 in·unclear 턴 수. 넘으면 게이트도 부르지 않는다
 질문 한 번이 트레이스 하나(ask 아래 gate·answer)이고 questions.trace_id에 남는다.
 """
+import json
 import logging
 import os
 import re
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -39,6 +41,10 @@ FORMAT_FAILED = "답을 규격대로 만들지 못했어요. 질문을 조금 �
 LIMIT_MESSAGE = "오늘 질문 한도를 다 썼어요. 내일 다시 물어봐 주세요."
 UNAVAILABLE = "지금은 답을 만들 수 없어요. 잠시 뒤 다시 물어봐 주세요."
 EXAMPLES = ["오늘 브리핑에 나온 MCP 중에 노션이랑 붙는 거 있어?", "낚시 앱 만들 때 쓸 만한 MCP 있어?", "요즘 나온 코딩 에이전트 소식 알려줘"]
+KEYWORD_MAX = 8
+# 한글로 읽어 쓴 이름("큐웬", "코덱스")을 영어 제목에서도 찾도록 영어 표기를 덧붙이는 사전 {영어: [한글 표기]}
+TERMS = {ko: en for en, kos in json.loads((Path(__file__).resolve().parents[1] / "agent" / "term_dict.json").read_text("utf-8")).items()
+         for ko in kos}
 DEMONSTRATIVE = re.compile(r"그거|그것|이거|이것|저거|그 도구|그건|아까")
 PARTICLE = re.compile(r"(이랑|에서|으로|이야|해줘|은|는|이|가|을|를|에|로|와|과|랑|의|도|만|야|줘)$")
 STOPWORDS = {"있어", "있나", "있을까", "어때", "알려", "알려줘", "뭐야", "뭐가", "관련", "오늘", "브리핑", "그거", "이거", "저거",
@@ -73,6 +79,7 @@ def context_turns(turns: list) -> list[dict]:
 
 
 def keywords(question: str) -> list[str]:
+    """질문의 핵심어. 사전에 있는 한글 이름은 영어 표기를 바로 뒤에 덧붙인다(원래 한글 낱말은 그대로 둔다)."""
     words: list[str] = []
     for raw in re.findall(r"[0-9A-Za-z가-힣.+#-]+", question):
         word = raw.strip(".-")
@@ -80,7 +87,10 @@ def keywords(question: str) -> list[str]:
         word = stripped if len(stripped) >= 2 else word
         if len(word) >= 2 and word.lower() not in STOPWORDS and word not in words:
             words.append(word)
-    return words[:5]
+        english = TERMS.get(raw.lower()) or TERMS.get(word.lower())
+        if english and english not in words:
+            words.append(english)
+    return words[:KEYWORD_MAX]
 
 
 def find_candidates(user_id: int, question: str, turns: list) -> list[dict]:
