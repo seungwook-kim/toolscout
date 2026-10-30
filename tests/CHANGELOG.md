@@ -1,5 +1,6 @@
 # tests/ CHANGELOG
 
+- 2026-10-31 · pipeline/check_backfill_descriptions 신규 5항목(저장소 주소 키·300자 자르기·빈 설명과 저장소 없음 건너뛰기·쪽 이어받기) · 네트워크·DB 없이 통과
 - 2026-10-31 · web/check_embeddings 신규 17항목(응답 형식·한도 초과·시간 초과·차원 다름·키 없음일 때 빈 결과, 순위 합치기) · 네트워크·DB 없이 통과
 - 2026-10-30 · agent/check_injection: scan 공격 10종 → 12종(탈옥 문구·빼돌리기), 같은 종류 다른 꼴 8개, 보통 기사 6개 추가(기사에 흔한 "AI agents must be audited"·"send an API key to…" 등이 안 걸리는지) · 통과
 - 2026-10-16 · check_select_rule 맞춘 소식 3항목 → 뉴스 10건·별점 3 이상·모델 순서와 상관없이 별점 순·큰 소식 포함 10건(11항목), check_importance "10건 미만이면 빼지 않음" → "적어도 2점 이하는 채우지 않음" · 뉴스 10건 별점 순 · 통과
