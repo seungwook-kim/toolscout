@@ -22,18 +22,21 @@ CHAT_TOKEN = re.compile(r"<\|[^|<>\n]{1,40}\|>|\[/?INST\]|<<\s*/?\s*SYS\s*>>", r
 
 # 읽는 AI에게 시키려는 문장. 일반 기사 문장에 잘 안 나오는 꼴만 넣는다(오탐은 경고만 늘린다)
 PATTERNS = {
-    "이전 지시 무시(en)": r"\b(?:ignore|disregard|forget|override)\s+(?:all\s+|any\s+|the\s+|your\s+)*(?:previous|prior|above|earlier|preceding|system)\s+(?:instructions?|prompts?|directions?|rules?|messages?|context)",
+    "이전 지시 무시(en)": r"\b(?:ignore|disregard|forget|override)\s+(?:all\s+|any\s+|the\s+|your\s+)*(?:previous|prior|above|earlier|preceding|system)\s+(?:instructions?|prompts?|directions?|rules?|messages?|context|tasks?|information|conversation|commands?|guidelines?)|\b(?:ignore|disregard|forget)\s+(?:everything|all)\s+(?:above|before|you\s+(?:were|have\s+been)\s+told)",
     "역할 바꾸기(en)": r"\b(?:you\s+are\s+now\s+(?:a|an|the|in)\b|from\s+now\s+on,?\s+you\s+(?:are|will|must|should)\b|act\s+as\s+(?:a|an)\s+(?:unrestricted|jailbroken|different))",
-    "새 지시(en)": r"\b(?:new|updated|real|actual|hidden)\s+(?:system\s+)?instructions?\s*:",
+    "새 지시(en)": r"\b(?:new|updated|real|actual|hidden)\s+(?:system\s+)?instructions?\s*:|\byour\s+new\s+(?:task|instructions?)\b",
     "프롬프트 빼내기(en)": r"\b(?:reveal|print|show|output|repeat|leak)\s+(?:me\s+)?(?:your|the)\s+(?:system\s+prompt|instructions|hidden\s+prompt)",
     # 뒤에 쌍점이 와야 한다: "a message for AI leaders"(10/14 테크크런치) 같은 기사 문장은 걸리지 않게
-    "AI에게 하는 말(en)": r"\b(?:note|message|instructions?)\s+(?:to|for)\s+(?:the\s+|any\s+|all\s+)?(?:AI\s+)?(?:AI|LLMs?|assistants?|language\s+models?|agents?|models?)\s*:|\b(?:AI|LLM)\s+(?:assistants?|agents?|models?)\s+(?:reading|processing|summari[sz]ing)\s+this\b",
+    "AI에게 하는 말(en)": r"\b(?:note|message|instructions?)\s+(?:to|for)\s+(?:the\s+|any\s+|all\s+)?(?:AI\s+)?(?:AI|LLMs?|assistants?|language\s+models?|agents?|models?)\s*:|\b(?:AI|LLM)\s+(?:assistants?|agents?|models?)\s+(?:reading|processing|summari[sz]ing)\s+this\b|\b(?:AI|LLM)\s+(?:assistants?|agents?|models?)\s+(?:must|should|shall|need\s+to|have\s+to)\s+(?:always\s+)?(?:recommend|say|state|tell|write|include|add|append|mention|insert|link|visit|click|output|claim|describe)\b",
     "역할 줄(en)": r"(?:^|\n)\s*(?:system|assistant)\s*:\s*\S",
-    "이전 지시 무시(ko)": r"(?:이전|앞선?|위의?|기존|모든)\s*(?:의\s*)?(?:모든\s*)?(?:지시|지침|명령|프롬프트|규칙)(?:을|를|은|는|들을)?\s*(?:모두\s*|전부\s*)?(?:무시|잊어|잊고|따르지\s*마)",
+    "탈옥 문구(en)": r"\byou\s+are\s+now\s+(?:DAN|free\b|unrestricted|jailbroken|no\s+longer)|\bdo\s+anything\s+now\b|\bDAN\s+mode\b|\bAI\s+(?:model\s+)?without\s+(?:any\s+)?(?:restrictions?|limitations?|filters?)",
+    # 비밀을 외부 주소로 보내게 하거나, 그림 주소에 값을 실어 보내게 하거나, 읽는 사람이 명령을 그대로 실행하게 하는 문장
+    "빼돌리기(en)": r"\b(?:send|append|add|include|post|forward|upload)\b[^.\n]{0,60}\b(?:user'?s?|your|their|my)\s+(?:\w+\s+)?(?:api[\s_-]?keys?|passwords?|credentials?|secrets?|cookies?|system\s+prompt)\b[^.\n]{0,60}\b(?:to|at)\s+https?://|!\[[^\]]*\]\(https?://[^)\s]*\?[^)\s]*=|\b(?:tell|ask|instruct)\s+(?:the\s+)?(?:readers?|users?|people)\s+to\s+(?:run|execute|paste)\b",
+    "이전 지시 무시(ko)": r"(?:이전|앞선?|위의?|기존|모든)\s*(?:의\s*)?(?:모든\s*)?(?:지시|지침|명령|프롬프트|규칙|내용|대화)(?:을|를|은|는|들을)?\s*(?:모두\s*|전부\s*)?(?:무시|잊어|잊고|따르지\s*마)",
     "프롬프트 빼내기(ko)": r"(?:시스템\s*프롬프트|지시문|숨은\s*지시)(?:을|를)?\s*(?:그대로\s*)?(?:(?:출력|공개)\s*(?:해|하라|해라|해줘|하세요|할\s*것)|(?:보여|알려)\s*(?:줘|주세요|라)|써\s*(?:줘|라))",
     "역할 바꾸기(ko)": r"(?:지금부터|이제부터|이제)\s*(?:너|당신)(?:는|은)\s|(?:너|당신)(?:는|은)\s*이제\s",
     # 사이에 주소가 끼어도 걸리게 마침표는 막지 않는다(한 줄 안, 60자 이내)
-    "AI에게 하는 말(ko)": r"(?:AI|LLM|에이전트|인공지능|어시스턴트|요약\s*모델)(?:는|은|에게|야|여)\s*[^\n]{0,40}?(?:반드시|무조건|꼭)\s*[^\n]{0,60}?(?:써|쓰|작성|포함|넣|추천|출력|답)",
+    "AI에게 하는 말(ko)": r"읽는\s*(?:AI|LLM|에이전트|인공지능|어시스턴트)|(?:AI|LLM|에이전트|인공지능|어시스턴트|요약\s*모델)(?:는|은|에게|야|여)\s*[^\n]{0,40}?(?:반드시|무조건|꼭)\s*[^\n]{0,60}?(?:써|쓰|작성|포함|넣|추천|출력|답)",
 }
 COMPILED = {name: re.compile(pattern, re.I) for name, pattern in PATTERNS.items()}
 
