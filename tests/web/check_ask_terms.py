@@ -29,4 +29,13 @@ check("사전에 없는 말은 그대로", ask.keywords("낚시 앱 만들 때 �
 check("영어가 이미 있으면 겹쳐 넣지 않는다", ask.keywords("qwen 큐웬").count("qwen") == 1)
 check(f"낱말은 {ask.KEYWORD_MAX}개까지", len(ask.keywords("큐웬 클로드 제미나이 코덱스 노션 슬랙 피그마 도커 깃허브 플레이라이트")) <= ask.KEYWORD_MAX)
 
+check("같은 한글이 영어 둘에 걸리면 둘 다 쓴다 (그록 -> grok, groq)", {"grok", "groq"} <= set(ask.keywords("그록 모델")))
+
+_orig = ask.Path
+ask.Path = lambda *a, **k: Path("/없는/경로/term_dict.json")
+try:
+    check("사전 파일이 없으면 빈 사전으로 동작한다", ask.load_terms() == {})
+finally:
+    ask.Path = _orig
+
 sys.exit(1 if failed else 0)
